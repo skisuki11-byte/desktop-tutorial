@@ -580,6 +580,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .verdict--good { background: var(--good-bg); color: var(--good); }
 .verdict--bad { background: var(--bad-bg); color: var(--bad); }
 
+/* 不正解のとき、正解の選択肢番号を判定バッジの横に出す */
+.verdict__answer {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  font-size: 13.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .fadein { animation: fadein .18s ease both; }
 }
@@ -1510,8 +1521,7 @@ label.quickbtn { display: block; cursor: pointer; }
         <div class="section__head">
           <h2 class="section__title">記録の保存・引っ越し</h2>
         </div>
-        <p class="seghint"><strong>記録は解くたびに自動で保存され、次に開いたときに自動で読み込まれます。</strong>保存先は5か所（この端末の保存領域が4つと、いま開いている URL）に分けてあるので、どれかが消えても残ったものから元に戻ります。<br>
-          いま開いている URL そのものが記録つきのリンクです。<strong>ホーム画面に追加</strong>しておくと、そのアイコンから開くだけで記録つきで立ち上がります。機種変更のときは下のボタンでリンクを自分あてに送ってください。</p>
+        <p class="seghint" id="backup-note"></p>
         <div class="quickgrid">
           <button class="quickbtn" id="btn-export" type="button">
             <span class="quickbtn__label">記録を書き出す</span>
@@ -2901,12 +2911,21 @@ window.SEKAISHI.ch9 = [
 
   function renderHome() {
     var warn = $("#storage-warn");
-    if (storageWorks()) {
-      warn.style.display = "none";
-    } else {
+    if (!storageWorks()) {
       warn.style.display = "";
       warn.textContent = "この開き方では記録が残せません。右上の「…」から Safari や Chrome で開き直してください。";
+    } else if (inFrame) {
+      // 枠の中では、書き込めても閉じたときに捨てられることがある（iPhone の Safari など）。
+      // 書けたかどうかの確認だけでは見抜けないので、開き方そのものを根拠に伝える。
+      warn.style.display = "";
+      warn.textContent = "この開き方（ページに埋め込まれた枠の中）では、閉じると記録が消えることがあります。記録を確実に残すには、アプリ自体のリンクを直接開いてください。";
+    } else {
+      warn.style.display = "none";
     }
+
+    $("#backup-note").textContent = inFrame
+      ? "記録は解くたびに自動で保存されますが、いまは枠の中で開かれているため、閉じたときに消えることがあります。心配なときは下の「文字でコピー」でメモアプリに貼っておいてください。貼りつけて読み込めば元に戻せます。"
+      : "記録は解くたびに自動で保存され、次に開いたときに自動で読み込まれます。保存先は5か所（この端末の保存領域が4つと、いま開いている URL）に分けてあるので、どれかが消えても残ったものから元に戻ります。いま開いている URL そのものが記録つきのリンクです。ホーム画面に追加しておくと、そのアイコンから開くだけで記録つきで立ち上がります。";
 
     var g = goalStats();
     var d = daysLeft();
@@ -3258,6 +3277,9 @@ window.SEKAISHI.ch9 = [
     if (!skipExplain) {
       var v = el("div", "verdict fadein " + (ok ? "verdict--good" : "verdict--bad"),
         ok ? "◯　正解" : "×　不正解");
+      // 間違えたときは、どれが正解だったかを番号で言い切る。
+      // 色分けだけだと、選択肢まで目を戻さないと分からない。
+      if (!ok) v.appendChild(el("span", "verdict__answer", "正解は " + (view.answer + 1) + "番"));
       $("#quiz-body").appendChild(v);
       appendExplain(item);
     }

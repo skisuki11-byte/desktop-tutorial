@@ -571,6 +571,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .verdict--good { background: var(--good-bg); color: var(--good); }
 .verdict--bad { background: var(--bad-bg); color: var(--bad); }
 
+/* 不正解のとき、正解の選択肢番号を判定バッジの横に出す */
+.verdict__answer {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  font-size: 13.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .fadein { animation: fadein .18s ease both; }
 }
