@@ -20,76 +20,98 @@
       </div>
     </header>
 
-    <div class="hero">
-      <p class="hero__eyebrow">基礎学力到達度テスト・世界史探究</p>
-      <h1 class="hero__title">目標は80点。<br>必須の①〜⑥で決める。</h1>
-      <p class="hero__sub" id="home-sub"></p>
+    <!-- ゴールまでの距離。ここを見れば「あとどれくらいか」が一目で分かる -->
+    <div class="goal">
+      <div class="goal__ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="goal__track" cx="60" cy="60" r="52"></circle>
+          <circle class="goal__arc" id="goal-arc" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="goal__center">
+          <span class="goal__pct" id="goal-pct">0</span><span class="goal__pctunit">%</span>
+        </div>
+      </div>
+      <div class="goal__body">
+        <p class="goal__days" id="goal-days"></p>
+        <p class="goal__headline" id="goal-headline"></p>
+        <p class="goal__detail" id="goal-detail"></p>
+      </div>
     </div>
+    <div class="chips" id="goal-chips"></div>
 
+    <!-- 今日やることは、これ1つだけ -->
     <div class="section">
       <div class="section__head">
         <h2 class="section__title">きょう やること</h2>
+        <span class="section__note" id="streak"></span>
       </div>
-      <button class="bigbtn" id="btn-today" type="button">
-        <span class="bigbtn__icon">▶</span>
-        <span>
-          <span class="bigbtn__label">今日の20問</span>
-          <span class="bigbtn__desc">全範囲から、苦手を優先して出題（本番と同じ4択）</span>
-        </span>
-        <span class="bigbtn__chev">›</span>
+      <button class="mission" id="btn-today" type="button">
+        <div class="mission__top">
+          <span class="mission__label" id="mission-label"></span>
+          <span class="mission__count" id="mission-count"></span>
+        </div>
+        <div class="mission__bar"><span id="mission-fill"></span></div>
+        <div class="mission__cta" id="mission-cta"></div>
       </button>
-
-      <div class="spacer"></div>
-      <button class="bigbtn" id="btn-mock" type="button">
-        <span class="bigbtn__icon">60</span>
-        <span>
-          <span class="bigbtn__label">本番形式 60問</span>
-          <span class="bigbtn__desc">必須40問＋選択20問。令和7と同じ構成で通し演習</span>
-        </span>
-        <span class="bigbtn__chev">›</span>
-      </button>
-
-      <div class="quickgrid">
-        <button class="quickbtn" id="btn-qa" type="button">
-          <span class="quickbtn__label">一問一答</span>
-          <span class="quickbtn__desc">答えを隠して20問</span>
-        </button>
-        <button class="quickbtn" id="btn-weak" type="button">
-          <span class="quickbtn__label">まちがい直し</span>
-          <span class="quickbtn__desc" id="btn-weak-desc"></span>
-        </button>
-        <button class="quickbtn" id="btn-resume" type="button">
-          <span class="quickbtn__label">続きから</span>
-          <span class="quickbtn__desc" id="btn-resume-desc"></span>
-        </button>
-        <button class="quickbtn" id="btn-stats" type="button">
-          <span class="quickbtn__label">記録を見る</span>
-          <span class="quickbtn__desc">大問ごとの正答率</span>
-        </button>
-      </div>
+      <p class="pace" id="pace"></p>
     </div>
 
+    <!-- 一本道。いまどこにいるかを1つだけ示す -->
     <div class="section">
       <div class="section__head">
-        <h2 class="section__title">本番で解く選択問題</h2>
+        <h2 class="section__title">すすめ方</h2>
       </div>
-      <div class="seggroup" id="elective-seg"></div>
-      <p class="seghint">選んだ枠だけが「今日の20問」に混ざります。<span id="elective-note"></span></p>
+      <ol class="steps" id="steps"></ol>
     </div>
 
-    <div class="section">
-      <div class="section__head">
-        <h2 class="section__title">大問べつに解く</h2>
-        <span class="section__note">①〜⑤は3年連続で固定</span>
+    <details class="more">
+      <summary class="more__summary">ほかのやり方・設定</summary>
+
+      <div class="section">
+        <div class="section__head"><h2 class="section__title">別のかたちで解く</h2></div>
+        <div class="quickgrid">
+          <button class="quickbtn" id="btn-mock" type="button">
+            <span class="quickbtn__label">本番形式 60問</span>
+            <span class="quickbtn__desc">必須40＋選択20</span>
+          </button>
+          <button class="quickbtn" id="btn-qa" type="button">
+            <span class="quickbtn__label">一問一答</span>
+            <span class="quickbtn__desc">答えを隠して20問</span>
+          </button>
+          <button class="quickbtn" id="btn-weak" type="button">
+            <span class="quickbtn__label">まちがい直し</span>
+            <span class="quickbtn__desc" id="btn-weak-desc"></span>
+          </button>
+          <button class="quickbtn" id="btn-stats" type="button">
+            <span class="quickbtn__label">記録を見る</span>
+            <span class="quickbtn__desc">大問ごとの正答率</span>
+          </button>
+        </div>
       </div>
-      <div class="chapters" id="chapter-list"></div>
-    </div>
+
+      <div class="section">
+        <div class="section__head"><h2 class="section__title">本番で解く選択問題</h2></div>
+        <div class="seggroup" id="elective-seg"></div>
+        <p class="seghint">選んだ枠だけが出題に混ざります。<span id="elective-note"></span></p>
+      </div>
+
+      <div class="section">
+        <div class="section__head"><h2 class="section__title">試験日</h2></div>
+        <input class="dateinput" type="date" id="exam-date">
+      </div>
+
+      <div class="section">
+        <div class="section__head">
+          <h2 class="section__title">大問べつに解く</h2>
+          <span class="section__note">①〜⑤は3年連続で固定</span>
+        </div>
+        <div class="chapters" id="chapter-list"></div>
+      </div>
+    </details>
 
     <p class="footnote">
-      令和5・6・7年度の実物過去問（全28ページ）を1枚ずつ読み、日大付属向けの対策塾各社の公開情報と突き合わせて作成。難易度は「教科書レベル〜共通テスト相当・奇問なし」に合わせています。<br>
-      章立ては問題冊子の区分そのままです。<strong>必須の①〜⑥（古代〜19世紀の近代欧米）は全員が解きます。</strong>選択問題は3つのうち1題だけを選んで解答するので、どれか1つに絞って仕上げれば十分です。履修が世界史探究なら、令和7と同じ形式なら「テーマ史・史料型」を解くことになります。<br>
-      <strong>地図・写真・系図の問題はこのアプリでは出せません。</strong>王朝や都市の位置、建築や肖像、ハプスブルク家の系図は資料集で必ず確認してください。<br>
-      記録はこの端末のブラウザにだけ保存されます。
+      <strong>地図・写真・系図の問題だけは、このアプリでは出せません。</strong>王朝や都市の位置、建築や肖像、ハプスブルク家の系図は資料集で確認してください（本番で毎年5問前後）。<br>
+      令和5・6・7の実物過去問 全28ページと、対策塾各社の情報にもとづいて作成。記録はこの端末にだけ保存されます。
     </p>
   </section>
 
@@ -178,6 +200,7 @@
         <div class="score__value"><span id="result-value">0</span><span class="score__unit">％</span></div>
         <div class="score__detail" id="result-detail"></div>
         <p class="score__msg" id="result-msg"></p>
+        <p class="resulttoday" id="result-today"></p>
       </div>
     </div>
 
