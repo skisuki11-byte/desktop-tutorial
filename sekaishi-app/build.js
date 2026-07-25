@@ -53,6 +53,14 @@ fs.mkdirSync(path.join(root, "dist"), { recursive: true });
 fs.writeFileSync(path.join(root, "dist/artifact.html"), fragment + "\n");
 fs.writeFileSync(path.join(root, "dist/index.html"), standalone);
 
+// GitHub Pages の公開場所。リポジトリ直下の docs/ を「Source」に指定すると
+// https://<ユーザー名>.github.io/<リポジトリ名>/ でそのまま開ける。
+const docs = path.join(root, "..", "docs");
+fs.mkdirSync(docs, { recursive: true });
+fs.writeFileSync(path.join(docs, "index.html"), standalone);
+fs.writeFileSync(path.join(docs, ".nojekyll"), ""); // Jekyll の変換を通さない
+
 const kb = (s) => Math.round(Buffer.byteLength(s) / 1024) + "KB";
+console.log("docs/index.html   ", kb(standalone), "(GitHub Pages 用)");
 console.log("dist/artifact.html", kb(fragment));
 console.log("dist/index.html   ", kb(standalone));
