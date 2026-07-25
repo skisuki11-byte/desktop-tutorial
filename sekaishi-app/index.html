@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="土浦日大 基礎学力到達度テスト（世界史探究）の過去問3年分の分析にもとづく一問一答アプリ。">
+<meta name="theme-color" content="#f1f1f4">
+<title>世界史 一問一答 ｜ 基礎学 対策</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ホーム -->
+  <section class="view is-active" id="view-home">
+    <header class="topbar">
+      <div class="topbar__row">
+        <div class="topbar__title">世界史 一問一答</div>
+        <button class="iconbtn" id="theme-toggle" type="button" aria-label="明るさを切り替える">◐</button>
+      </div>
+    </header>
+
+    <div class="hero">
+      <p class="hero__eyebrow">基礎学力到達度テスト・世界史探究</p>
+      <h1 class="hero__title">目標は80点。<br>大問①〜⑤で決める。</h1>
+      <p class="hero__sub" id="home-sub"></p>
+    </div>
+
+    <div class="section">
+      <div class="section__head">
+        <h2 class="section__title">きょう やること</h2>
+      </div>
+      <button class="bigbtn" id="btn-today" type="button">
+        <span class="bigbtn__icon">▶</span>
+        <span>
+          <span class="bigbtn__label">今日の20問</span>
+          <span class="bigbtn__desc">全範囲から、苦手を優先して出題（本番と同じ4択）</span>
+        </span>
+        <span class="bigbtn__chev">›</span>
+      </button>
+
+      <div class="quickgrid">
+        <button class="quickbtn" id="btn-qa" type="button">
+          <span class="quickbtn__label">一問一答</span>
+          <span class="quickbtn__desc">答えを隠して20問</span>
+        </button>
+        <button class="quickbtn" id="btn-weak" type="button">
+          <span class="quickbtn__label">まちがい直し</span>
+          <span class="quickbtn__desc" id="btn-weak-desc"></span>
+        </button>
+        <button class="quickbtn" id="btn-resume" type="button">
+          <span class="quickbtn__label">続きから</span>
+          <span class="quickbtn__desc" id="btn-resume-desc"></span>
+        </button>
+        <button class="quickbtn" id="btn-stats" type="button">
+          <span class="quickbtn__label">記録を見る</span>
+          <span class="quickbtn__desc">大問ごとの正答率</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section__head">
+        <h2 class="section__title">大問べつに解く</h2>
+        <span class="section__note">①〜⑤は3年連続で固定</span>
+      </div>
+      <div class="chapters" id="chapter-list"></div>
+    </div>
+
+    <p class="footnote">
+      令和5・6・7年度の実物過去問と、Notion に残した3年分の横断分析にもとづいて作成。<br>
+      大問①〜⑤（古代ギリシア・ローマ／古代インド・中国／オリエント・イスラーム／モンゴル・中世東アジア／近世ヨーロッパ）は3年とも同じ並びで出題されたため、ここを最優先に配分しています。大問⑥は年度で構成が変わる変動枠です。<br>
+      記録はこの端末のブラウザにだけ保存されます。
+    </p>
+  </section>
+
+  <!-- 大問メニュー -->
+  <section class="view" id="view-chapter">
+    <header class="topbar">
+      <div class="topbar__row">
+        <button class="iconbtn" id="chapter-back" type="button" aria-label="ホームへ戻る">←</button>
+        <div class="topbar__title" id="chapter-title"></div>
+      </div>
+    </header>
+
+    <div class="pad">
+      <div class="qcard" id="chapter-head">
+        <div class="qcard__eyebrow"><span id="chapter-sub"></span></div>
+        <p class="qcard__q" id="chapter-name"></p>
+        <p class="hero__sub" id="chapter-count"></p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section__head"><h2 class="section__title">やり方をえらぶ</h2></div>
+      <div class="stack">
+        <button class="bigbtn" id="chapter-mc" type="button">
+          <span class="bigbtn__icon">４</span>
+          <span>
+            <span class="bigbtn__label">本番形式 20問</span>
+            <span class="bigbtn__desc">4択。正誤・年代整序もふくむ</span>
+          </span>
+          <span class="bigbtn__chev">›</span>
+        </button>
+        <button class="bigbtn" id="chapter-qa" type="button">
+          <span class="bigbtn__icon">答</span>
+          <span>
+            <span class="bigbtn__label">一問一答 20問</span>
+            <span class="bigbtn__desc">答えを隠して、自分で○×をつける</span>
+          </span>
+          <span class="bigbtn__chev">›</span>
+        </button>
+      </div>
+      <div class="quickgrid">
+        <button class="quickbtn" id="chapter-weak" type="button">
+          <span class="quickbtn__label">苦手だけ</span>
+          <span class="quickbtn__desc" id="chapter-weak-desc"></span>
+        </button>
+        <button class="quickbtn" id="chapter-all" type="button">
+          <span class="quickbtn__label">全問 通し</span>
+          <span class="quickbtn__desc">この大問を最初から最後まで</span>
+        </button>
+      </div>
+    </div>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- 出題 -->
+  <section class="view" id="view-quiz">
+    <header class="topbar">
+      <div class="topbar__row">
+        <button class="iconbtn" id="quiz-back" type="button" aria-label="ホームへ戻る">←</button>
+        <div class="topbar__title" id="quiz-title"></div>
+        <div class="counter" id="quiz-counter"></div>
+      </div>
+      <div class="rail"><div class="rail__fill" id="quiz-rail"></div></div>
+    </header>
+
+    <div class="quiz">
+      <div class="qcard" id="quiz-card"></div>
+      <div id="quiz-body"></div>
+    </div>
+
+    <div class="actionbar" id="quiz-actions"></div>
+  </section>
+
+  <!-- 結果 -->
+  <section class="view" id="view-result">
+    <header class="topbar">
+      <div class="topbar__row">
+        <button class="iconbtn" data-home type="button" aria-label="ホームへ戻る">←</button>
+        <div class="topbar__title">結果</div>
+      </div>
+    </header>
+
+    <div class="pad">
+      <div class="score">
+        <div class="score__label">せいとうりつ</div>
+        <div class="score__value"><span id="result-value">0</span><span class="score__unit">％</span></div>
+        <div class="score__detail" id="result-detail"></div>
+        <p class="score__msg" id="result-msg"></p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section__head" id="result-review-head">
+        <h2 class="section__title">まちがえた問題</h2>
+        <span class="section__note">ここだけ読み直す</span>
+      </div>
+      <div class="review" id="result-review"></div>
+    </div>
+
+    <div class="actionbar">
+      <button class="btn" id="result-weak" type="button">苦手だけ復習</button>
+      <button class="btn btn--primary" id="result-again" type="button">もう一度</button>
+    </div>
+  </section>
+
+  <!-- 記録 -->
+  <section class="view" id="view-stats">
+    <header class="topbar">
+      <div class="topbar__row">
+        <button class="iconbtn" data-home type="button" aria-label="ホームへ戻る">←</button>
+        <div class="topbar__title">記録</div>
+      </div>
+    </header>
+
+    <div class="section">
+      <div class="section__head">
+        <h2 class="section__title">大問べつの正答率</h2>
+      </div>
+      <p class="hero__sub" id="stats-overall"></p>
+      <div class="spacer"></div>
+      <div class="stack" id="stats-list"></div>
+    </div>
+
+    <div class="section">
+      <div class="section__head">
+        <h2 class="section__title">いま いちばん苦手な問題</h2>
+        <span class="section__note">正答率の低い順</span>
+      </div>
+      <div class="review" id="stats-weak"></div>
+    </div>
+
+    <div class="actionbar">
+      <button class="btn btn--primary" data-home type="button">ホームへ</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="data/ch1.js"></script>
+<script src="data/ch2.js"></script>
+<script src="data/ch3.js"></script>
+<script src="data/ch4.js"></script>
+<script src="data/ch5.js"></script>
+<script src="data/ch6.js"></script>
+<script src="data/ch7.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
