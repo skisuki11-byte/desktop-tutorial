@@ -1310,9 +1310,86 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* 3つになったときは最後の1つを横いっぱいに */
 .quickgrid > :last-child:nth-child(odd) { grid-column: span 2; }
 
+/* ---------- JavaScript が動かない開き方への案内 ---------- */
+
+.nojs {
+  padding: 32px 22px;
+  text-align: center;
+}
+.nojs__title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 18px;
+}
+.nojs__lead {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bad);
+  line-height: 1.7;
+}
+.nojs__how {
+  margin: 0 auto 16px;
+  max-width: 26rem;
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 15px;
+  line-height: 1.9;
+  text-align: left;
+}
+.nojs__note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.75;
+}
+
+/* 保存が効かない開き方をしているときの警告 */
+.warnbar {
+  margin: 14px 16px 0;
+  padding: 13px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--bad-bg);
+  border: 1px solid var(--bad);
+  color: var(--bad);
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.backupbox {
+  width: 100%;
+  min-height: 96px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+label.quickbtn { display: block; cursor: pointer; }
+
 </style>
 
 <div class="app">
+
+  <!-- JavaScript が動かない開き方（ファイルアプリのプレビュー等）ではここだけが見える -->
+  <div class="nojs" id="nojs">
+    <h1 class="nojs__title">日大基礎学テスト 世界史</h1>
+    <p class="nojs__lead">この画面が出ているときは、問題を表示できない開き方になっています。</p>
+    <p class="nojs__how"><strong>ブラウザで開き直してください。</strong><br>
+      iPhone … 右上の共有ボタンから「Safariで開く」<br>
+      Android … 右上の「…」から「ブラウザで開く」</p>
+    <p class="nojs__note">ファイルをそのままタップするとプレビューで開いてしまい、問題が出ず、記録も保存されません。</p>
+  </div>
 
   <!-- ホーム -->
   <section class="view is-active" id="view-home">
@@ -1325,6 +1402,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <button class="iconbtn" id="theme-toggle" type="button" aria-label="明るさを切り替える">◐</button>
       </div>
     </header>
+
+    <p class="warnbar" id="storage-warn" style="display:none"></p>
 
     <p class="aim"><span class="aim__lead">目指せ</span>危機管理学部！</p>
 
@@ -1418,6 +1497,35 @@ button { font: inherit; color: inherit; cursor: pointer; }
       <div class="section">
         <div class="section__head"><h2 class="section__title">試験日</h2></div>
         <input class="dateinput" type="date" id="exam-date">
+      </div>
+
+      <div class="section">
+        <div class="section__head">
+          <h2 class="section__title">記録の保存・引っ越し</h2>
+        </div>
+        <p class="seghint">記録はこの端末のブラウザに入っています。消えると困るので、ときどき書き出して保存しておくと安心です。機種変更のときもこれで引き継げます。</p>
+        <div class="quickgrid">
+          <button class="quickbtn" id="btn-export" type="button">
+            <span class="quickbtn__label">記録を書き出す</span>
+            <span class="quickbtn__desc">ファイルに保存</span>
+          </button>
+          <button class="quickbtn" id="btn-copy" type="button">
+            <span class="quickbtn__label">文字でコピー</span>
+            <span class="quickbtn__desc">メモアプリに貼る</span>
+          </button>
+        </div>
+        <textarea class="backupbox" id="backup-box" style="display:none" spellcheck="false" placeholder="ここに、保存しておいた記録を貼りつけます"></textarea>
+        <div class="quickgrid">
+          <button class="quickbtn" id="btn-import" type="button">
+            <span class="quickbtn__label">貼りつけて読み込む</span>
+            <span class="quickbtn__desc">上の欄の内容を反映</span>
+          </button>
+          <label class="quickbtn" for="import-file">
+            <span class="quickbtn__label">ファイルから読み込む</span>
+            <span class="quickbtn__desc">書き出したファイルを選ぶ</span>
+          </label>
+        </div>
+        <input type="file" id="import-file" accept=".txt,.json,text/plain,application/json" hidden>
       </div>
 
       <div class="section">
@@ -2172,7 +2280,55 @@ window.SEKAISHI.ch9 = [
   }
 
   function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(store));
+      store._savedAt = Date.now();
+    } catch (e) { /* 保存できない環境では黙って続行する */ }
+  }
+
+  // 保存が本当に効くかを往復で確かめる。LINE内ブラウザやプレビューでは効かないことがある。
+  function storageWorks() {
+    try {
+      var k = STORE_KEY + ".probe";
+      localStorage.setItem(k, "1");
+      var v = localStorage.getItem(k);
+      localStorage.removeItem(k);
+      return v === "1";
+    } catch (e) { return false; }
+  }
+
+  /* ---------- 記録の持ち出し ----------
+     端末を変えるときや、保存が効かない開き方をしてしまったときのために、
+     記録を短いテキストに書き出して読み込めるようにする。 */
+
+  function exportCode() {
+    var rows = [];
+    Object.keys(store.stats).forEach(function (id) {
+      var s = store.stats[id];
+      if (!s || (s.c + s.w) === 0) return;
+      rows.push(id + "," + s.c + "," + s.w + "," + (s.run || 0));
+    });
+    return JSON.stringify({
+      v: 1, d: store.examDate, e: store.elective,
+      m: store.mock, day: store.days, s: rows
+    });
+  }
+
+  function importCode(text) {
+    var p = JSON.parse(text);
+    if (!p || p.v !== 1 || !Array.isArray(p.s)) throw new Error("形式が違います");
+    var stats = {};
+    p.s.forEach(function (row) {
+      var a = String(row).split(",");
+      if (a.length < 4) return;
+      stats[a[0]] = { c: +a[1] || 0, w: +a[2] || 0, run: +a[3] || 0, lastWrong: (+a[3] || 0) === 0 };
+    });
+    store.stats = stats;
+    if (p.d) store.examDate = p.d;
+    if (p.e) store.elective = p.e;
+    if (p.m) store.mock = p.m;
+    if (p.day) store.days = p.day;
+    save();
   }
 
   function stat(id) {
@@ -2514,6 +2670,14 @@ window.SEKAISHI.ch9 = [
   /* ---------- ホーム ---------- */
 
   function renderHome() {
+    var warn = $("#storage-warn");
+    if (storageWorks()) {
+      warn.style.display = "none";
+    } else {
+      warn.style.display = "";
+      warn.textContent = "この開き方では記録が保存されません。右上の「…」から Safari や Chrome で開き直してください。";
+    }
+
     var g = goalStats();
     var d = daysLeft();
     var target = dailyTarget();
@@ -3100,6 +3264,67 @@ window.SEKAISHI.ch9 = [
     });
     $("#btn-stats").addEventListener("click", function () { renderStats(); show("stats"); });
 
+    // 記録の書き出し・読み込み
+    $("#btn-export").addEventListener("click", function () {
+      var code = exportCode();
+      $("#backup-box").value = code;
+      $("#backup-box").style.display = "";
+      // ファイルとして保存できる環境ではファイルに、だめならテキストをコピーする
+      try {
+        var blob = new Blob([code], { type: "application/json" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "sekaishi-kiroku-" + todayKey() + ".txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+        toast("記録を書き出しました。ファイルが保存できないときは、下の文字をコピーしてメモに貼ってください");
+      } catch (e) {
+        toast("下の文字をすべてコピーして、メモアプリに貼って保存してください");
+      }
+    });
+    $("#btn-copy").addEventListener("click", function () {
+      var box = $("#backup-box");
+      if (!box.value) box.value = exportCode();
+      box.style.display = "";
+      box.select();
+      box.setSelectionRange(0, 999999);
+      var done = false;
+      try { done = document.execCommand("copy"); } catch (e) {}
+      if (!done && navigator.clipboard) {
+        navigator.clipboard.writeText(box.value).then(function () { toast("記録をコピーしました"); });
+        return;
+      }
+      toast(done ? "記録をコピーしました。メモアプリに貼って保存してください" : "下の文字を長押しして全部コピーしてください");
+    });
+    $("#btn-import").addEventListener("click", function () {
+      var box = $("#backup-box");
+      box.style.display = "";
+      if (!box.value.trim()) { toast("先に、保存しておいた記録を下の欄に貼りつけてください"); box.focus(); return; }
+      try {
+        importCode(box.value.trim());
+        renderHome();
+        toast("記録を読み込みました");
+      } catch (e) {
+        toast("読み込めませんでした。書き出したときの文字を、そのまま全部貼りつけてください");
+      }
+    });
+    $("#import-file").addEventListener("change", function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          importCode(String(r.result).trim());
+          renderHome();
+          toast("記録を読み込みました");
+        } catch (e) { toast("このファイルは読み込めませんでした"); }
+      };
+      r.readAsText(f);
+      this.value = "";
+    });
+
     $("#chapter-mc").addEventListener("click", function () {
       start({ chapters: [currentChapter.id], mode: "mc", count: 20, title: currentChapter.name + "・本番形式 20問" });
     });
@@ -3135,6 +3360,10 @@ window.SEKAISHI.ch9 = [
       }
     });
   }
+
+  // JavaScript が動いた＝ちゃんと開けている。静的な案内は消す。
+  var nojs = document.getElementById("nojs");
+  if (nojs && nojs.parentNode) nojs.parentNode.removeChild(nojs);
 
   load();
   build();

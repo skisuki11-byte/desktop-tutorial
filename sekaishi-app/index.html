@@ -11,6 +11,16 @@
 <body>
 <div class="app">
 
+  <!-- JavaScript が動かない開き方（ファイルアプリのプレビュー等）ではここだけが見える -->
+  <div class="nojs" id="nojs">
+    <h1 class="nojs__title">日大基礎学テスト 世界史</h1>
+    <p class="nojs__lead">この画面が出ているときは、問題を表示できない開き方になっています。</p>
+    <p class="nojs__how"><strong>ブラウザで開き直してください。</strong><br>
+      iPhone … 右上の共有ボタンから「Safariで開く」<br>
+      Android … 右上の「…」から「ブラウザで開く」</p>
+    <p class="nojs__note">ファイルをそのままタップするとプレビューで開いてしまい、問題が出ず、記録も保存されません。</p>
+  </div>
+
   <!-- ホーム -->
   <section class="view is-active" id="view-home">
     <header class="topbar">
@@ -22,6 +32,8 @@
         <button class="iconbtn" id="theme-toggle" type="button" aria-label="明るさを切り替える">◐</button>
       </div>
     </header>
+
+    <p class="warnbar" id="storage-warn" style="display:none"></p>
 
     <p class="aim"><span class="aim__lead">目指せ</span>危機管理学部！</p>
 
@@ -115,6 +127,35 @@
       <div class="section">
         <div class="section__head"><h2 class="section__title">試験日</h2></div>
         <input class="dateinput" type="date" id="exam-date">
+      </div>
+
+      <div class="section">
+        <div class="section__head">
+          <h2 class="section__title">記録の保存・引っ越し</h2>
+        </div>
+        <p class="seghint">記録はこの端末のブラウザに入っています。消えると困るので、ときどき書き出して保存しておくと安心です。機種変更のときもこれで引き継げます。</p>
+        <div class="quickgrid">
+          <button class="quickbtn" id="btn-export" type="button">
+            <span class="quickbtn__label">記録を書き出す</span>
+            <span class="quickbtn__desc">ファイルに保存</span>
+          </button>
+          <button class="quickbtn" id="btn-copy" type="button">
+            <span class="quickbtn__label">文字でコピー</span>
+            <span class="quickbtn__desc">メモアプリに貼る</span>
+          </button>
+        </div>
+        <textarea class="backupbox" id="backup-box" style="display:none" spellcheck="false" placeholder="ここに、保存しておいた記録を貼りつけます"></textarea>
+        <div class="quickgrid">
+          <button class="quickbtn" id="btn-import" type="button">
+            <span class="quickbtn__label">貼りつけて読み込む</span>
+            <span class="quickbtn__desc">上の欄の内容を反映</span>
+          </button>
+          <label class="quickbtn" for="import-file">
+            <span class="quickbtn__label">ファイルから読み込む</span>
+            <span class="quickbtn__desc">書き出したファイルを選ぶ</span>
+          </label>
+        </div>
+        <input type="file" id="import-file" accept=".txt,.json,text/plain,application/json" hidden>
       </div>
 
       <div class="section">

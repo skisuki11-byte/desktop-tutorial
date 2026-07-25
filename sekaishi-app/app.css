@@ -1306,3 +1306,70 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* 3つになったときは最後の1つを横いっぱいに */
 .quickgrid > :last-child:nth-child(odd) { grid-column: span 2; }
+
+/* ---------- JavaScript が動かない開き方への案内 ---------- */
+
+.nojs {
+  padding: 32px 22px;
+  text-align: center;
+}
+.nojs__title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 18px;
+}
+.nojs__lead {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bad);
+  line-height: 1.7;
+}
+.nojs__how {
+  margin: 0 auto 16px;
+  max-width: 26rem;
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 15px;
+  line-height: 1.9;
+  text-align: left;
+}
+.nojs__note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.75;
+}
+
+/* 保存が効かない開き方をしているときの警告 */
+.warnbar {
+  margin: 14px 16px 0;
+  padding: 13px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--bad-bg);
+  border: 1px solid var(--bad);
+  color: var(--bad);
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.backupbox {
+  width: 100%;
+  min-height: 96px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+label.quickbtn { display: block; cursor: pointer; }

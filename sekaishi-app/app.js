@@ -85,7 +85,55 @@
   }
 
   function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(store));
+      store._savedAt = Date.now();
+    } catch (e) { /* 保存できない環境では黙って続行する */ }
+  }
+
+  // 保存が本当に効くかを往復で確かめる。LINE内ブラウザやプレビューでは効かないことがある。
+  function storageWorks() {
+    try {
+      var k = STORE_KEY + ".probe";
+      localStorage.setItem(k, "1");
+      var v = localStorage.getItem(k);
+      localStorage.removeItem(k);
+      return v === "1";
+    } catch (e) { return false; }
+  }
+
+  /* ---------- 記録の持ち出し ----------
+     端末を変えるときや、保存が効かない開き方をしてしまったときのために、
+     記録を短いテキストに書き出して読み込めるようにする。 */
+
+  function exportCode() {
+    var rows = [];
+    Object.keys(store.stats).forEach(function (id) {
+      var s = store.stats[id];
+      if (!s || (s.c + s.w) === 0) return;
+      rows.push(id + "," + s.c + "," + s.w + "," + (s.run || 0));
+    });
+    return JSON.stringify({
+      v: 1, d: store.examDate, e: store.elective,
+      m: store.mock, day: store.days, s: rows
+    });
+  }
+
+  function importCode(text) {
+    var p = JSON.parse(text);
+    if (!p || p.v !== 1 || !Array.isArray(p.s)) throw new Error("形式が違います");
+    var stats = {};
+    p.s.forEach(function (row) {
+      var a = String(row).split(",");
+      if (a.length < 4) return;
+      stats[a[0]] = { c: +a[1] || 0, w: +a[2] || 0, run: +a[3] || 0, lastWrong: (+a[3] || 0) === 0 };
+    });
+    store.stats = stats;
+    if (p.d) store.examDate = p.d;
+    if (p.e) store.elective = p.e;
+    if (p.m) store.mock = p.m;
+    if (p.day) store.days = p.day;
+    save();
   }
 
   function stat(id) {
@@ -427,6 +475,14 @@
   /* ---------- ホーム ---------- */
 
   function renderHome() {
+    var warn = $("#storage-warn");
+    if (storageWorks()) {
+      warn.style.display = "none";
+    } else {
+      warn.style.display = "";
+      warn.textContent = "この開き方では記録が保存されません。右上の「…」から Safari や Chrome で開き直してください。";
+    }
+
     var g = goalStats();
     var d = daysLeft();
     var target = dailyTarget();
@@ -1013,6 +1069,67 @@
     });
     $("#btn-stats").addEventListener("click", function () { renderStats(); show("stats"); });
 
+    // 記録の書き出し・読み込み
+    $("#btn-export").addEventListener("click", function () {
+      var code = exportCode();
+      $("#backup-box").value = code;
+      $("#backup-box").style.display = "";
+      // ファイルとして保存できる環境ではファイルに、だめならテキストをコピーする
+      try {
+        var blob = new Blob([code], { type: "application/json" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "sekaishi-kiroku-" + todayKey() + ".txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+        toast("記録を書き出しました。ファイルが保存できないときは、下の文字をコピーしてメモに貼ってください");
+      } catch (e) {
+        toast("下の文字をすべてコピーして、メモアプリに貼って保存してください");
+      }
+    });
+    $("#btn-copy").addEventListener("click", function () {
+      var box = $("#backup-box");
+      if (!box.value) box.value = exportCode();
+      box.style.display = "";
+      box.select();
+      box.setSelectionRange(0, 999999);
+      var done = false;
+      try { done = document.execCommand("copy"); } catch (e) {}
+      if (!done && navigator.clipboard) {
+        navigator.clipboard.writeText(box.value).then(function () { toast("記録をコピーしました"); });
+        return;
+      }
+      toast(done ? "記録をコピーしました。メモアプリに貼って保存してください" : "下の文字を長押しして全部コピーしてください");
+    });
+    $("#btn-import").addEventListener("click", function () {
+      var box = $("#backup-box");
+      box.style.display = "";
+      if (!box.value.trim()) { toast("先に、保存しておいた記録を下の欄に貼りつけてください"); box.focus(); return; }
+      try {
+        importCode(box.value.trim());
+        renderHome();
+        toast("記録を読み込みました");
+      } catch (e) {
+        toast("読み込めませんでした。書き出したときの文字を、そのまま全部貼りつけてください");
+      }
+    });
+    $("#import-file").addEventListener("change", function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          importCode(String(r.result).trim());
+          renderHome();
+          toast("記録を読み込みました");
+        } catch (e) { toast("このファイルは読み込めませんでした"); }
+      };
+      r.readAsText(f);
+      this.value = "";
+    });
+
     $("#chapter-mc").addEventListener("click", function () {
       start({ chapters: [currentChapter.id], mode: "mc", count: 20, title: currentChapter.name + "・本番形式 20問" });
     });
@@ -1048,6 +1165,10 @@
       }
     });
   }
+
+  // JavaScript が動いた＝ちゃんと開けている。静的な案内は消す。
+  var nojs = document.getElementById("nojs");
+  if (nojs && nojs.parentNode) nojs.parentNode.removeChild(nojs);
 
   load();
   build();
