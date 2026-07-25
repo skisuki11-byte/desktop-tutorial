@@ -20,10 +20,20 @@
 
   var LEVELS = { 1: "基本", 2: "標準", 3: "やや難" };
   var STORE_KEY = "sekaishi.v1";
+  var REQUIRED_IDS = [1, 2, 3, 4, 5, 6];
+  // 本番は選択問題を1題しか解かない。選ばない枠を出題しても得点にならないので、
+  // どれを解くかを決めてもらい、全範囲の出題は「必須6章＋選んだ1枠」に限定する。
+  var ELECTIVES = [
+    { id: 7, label: "テーマ史・史料型", note: "世界史探究を履修しているならこれ" },
+    { id: 8, label: "ロシア史", note: "令和5 大問Ⅶ 型" },
+    { id: 9, label: "19世紀半ば以降〜現代", note: "令和5 大問Ⅷ 型" }
+  ];
+  // 令和7は必須40問・選択20問。全範囲の出題もこの 7:3 に合わせる。
+  var REQUIRED_RATIO = 2 / 3;
 
   var ALL = [];
   var BY_ID = {};
-  var store = { stats: {}, last: null };
+  var store = { stats: {}, last: null, elective: 7 };
   var session = null;
 
   /* ---------- 保存 ---------- */
@@ -33,7 +43,7 @@
       var raw = localStorage.getItem(STORE_KEY);
       if (raw) {
         var p = JSON.parse(raw);
-        if (p && p.stats) store = { stats: p.stats, last: p.last || null };
+        if (p && p.stats) store = { stats: p.stats, last: p.last || null, elective: p.elective || 7 };
       }
     } catch (e) { /* 保存が使えない環境でも動かす */ }
   }
@@ -118,14 +128,48 @@
     return s.lastWrong || s.c / total < 0.7;
   }
 
+  function take(pool, n) {
+    return pool.map(function (it) { return { it: it, s: score(it) }; })
+      .sort(function (a, b) { return b.s - a.s; })
+      .slice(0, n)
+      .map(function (o) { return o.it; });
+  }
+
+  // 必須の6大問は本番でどれも同じ配点なので、収録数の多い章に偏らないよう
+  // 章ごとに順番に取っていく。収録30問の⑥と67問の①が同じ重みになる。
+  function takeBalanced(pool, n) {
+    var byCh = {};
+    pool.forEach(function (it) { (byCh[it.ch] = byCh[it.ch] || []).push(it); });
+    var chapters = Object.keys(byCh);
+    chapters.forEach(function (c) {
+      byCh[c] = take(byCh[c], byCh[c].length);
+    });
+    shuffle(chapters);
+    var out = [], i = 0;
+    while (out.length < n) {
+      var progressed = false;
+      for (var k = 0; k < chapters.length && out.length < n; k++) {
+        var list = byCh[chapters[k]];
+        if (i < list.length) { out.push(list[i]); progressed = true; }
+      }
+      if (!progressed) break;
+      i++;
+    }
+    return out;
+  }
+
   function pool(opts) {
-    var p = ALL.filter(function (it) {
-      if (opts.chapters && opts.chapters.indexOf(it.ch) < 0) return false;
+    return ALL.filter(function (it) {
+      if (opts.chapters) {
+        if (opts.chapters.indexOf(it.ch) < 0) return false;
+      } else if (REQUIRED_IDS.indexOf(it.ch) < 0 && it.ch !== store.elective) {
+        // 章を指定しない出題では、選んでいない選択枠は最初から除く
+        return false;
+      }
       if (opts.mode === "qa" && it.t !== "qa") return false;
       if (opts.weakOnly && !isWeak(it)) return false;
       return true;
     });
-    return p;
   }
 
   function prepare(item) {
@@ -156,11 +200,17 @@
     var picked;
     if (opts.count === "all") {
       picked = shuffle(p.slice());
+    } else if (!opts.chapters) {
+      // 全範囲のときは本番の配点比に合わせ、必須と選択枠を分けて抽出する
+      var reqPool = p.filter(function (it) { return REQUIRED_IDS.indexOf(it.ch) >= 0; });
+      var optPool = p.filter(function (it) { return REQUIRED_IDS.indexOf(it.ch) < 0; });
+      var nReq = Math.min(Math.round(opts.count * REQUIRED_RATIO), reqPool.length);
+      var nOpt = Math.min(opts.count - nReq, optPool.length);
+      nReq = Math.min(opts.count - nOpt, reqPool.length);
+      picked = takeBalanced(reqPool, nReq).concat(take(optPool, nOpt));
+      shuffle(picked);
     } else {
-      picked = p.map(function (it) { return { it: it, s: score(it) }; })
-        .sort(function (a, b) { return b.s - a.s; })
-        .slice(0, Math.min(opts.count, p.length))
-        .map(function (o) { return o.it; });
+      picked = take(p, Math.min(opts.count, p.length));
       shuffle(picked);
     }
 
@@ -216,6 +266,22 @@
       resumeBtn.disabled = true;
       $("#btn-resume-desc").textContent = "まだ記録がありません";
     }
+
+    var seg = $("#elective-seg");
+    seg.textContent = "";
+    ELECTIVES.forEach(function (e) {
+      var b = el("button", "seg" + (store.elective === e.id ? " is-on" : ""));
+      b.style.setProperty("--accent", accentFor(e.id));
+      b.appendChild(el("span", "seg__label", e.label));
+      b.addEventListener("click", function () {
+        store.elective = e.id;
+        save();
+        renderHome();
+      });
+      seg.appendChild(b);
+    });
+    var chosen = ELECTIVES.filter(function (e) { return e.id === store.elective; })[0];
+    $("#elective-note").textContent = chosen.note;
 
     var list = $("#chapter-list");
     list.textContent = "";
@@ -407,6 +473,15 @@
     ex.appendChild(el("div", "explain__label", "解説"));
     ex.appendChild(el("p", "explain__body", item.e));
     $("#quiz-body").appendChild(ex);
+    // 解説の下端が操作バーに隠れることがあるので、出したら見える位置まで送る
+    if (ex.scrollIntoView) {
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      try {
+        ex.scrollIntoView({ block: "end", behavior: reduce ? "auto" : "smooth" });
+      } catch (e) {
+        ex.scrollIntoView(false);
+      }
+    }
   }
 
   function finish(ok, skipExplain) {
@@ -450,8 +525,14 @@
     $("#result-value").textContent = p;
     $("#result-detail").textContent = total + "問中 " + right + "問正解　（" + session.title + "）";
 
+    var isMock = session.views.length >= 50;
     var msg;
-    if (p >= 90) msg = "この精度なら十分。9月まで落とさないことだけ考えれば大丈夫です。";
+    if (isMock) {
+      // 60問通しのときだけ、目標ラインとの差を点数で伝える
+      var diff = right - Math.round(total * 0.8);
+      if (p >= 80) msg = "目標の80点を超えました（80点ラインまであと" + Math.abs(diff) + "問の余裕）。この精度を9月まで保てば十分です。";
+      else msg = "80点まであと" + Math.abs(diff) + "問。下の「まちがえた問題」がそのまま伸びしろです。必須の①〜⑥から先に潰すと点が動きます。";
+    } else if (p >= 90) msg = "この精度なら十分。9月まで落とさないことだけ考えれば大丈夫です。";
     else if (p >= 80) msg = "目標の80点ライン。あとは間違えた問題の解説を読んで、取りこぼしを潰していきましょう。";
     else if (p >= 60) msg = "あと一歩。下に出ている間違えた問題だけ、もう一周してみてください。";
     else msg = "いまは覚える段階。解説を読んでから「まちがい直し」でもう一度解くと、次はぐっと上がります。";
@@ -566,6 +647,9 @@
   function bind() {
     $("#btn-today").addEventListener("click", function () {
       start({ chapters: null, mode: "mc", count: 20, title: "今日の20問（全範囲・本番形式）" });
+    });
+    $("#btn-mock").addEventListener("click", function () {
+      start({ chapters: null, mode: "mc", count: 60, title: "本番形式 60問" });
     });
     $("#btn-qa").addEventListener("click", function () {
       start({ chapters: null, mode: "qa", count: 20, title: "一問一答 20問（全範囲）" });
