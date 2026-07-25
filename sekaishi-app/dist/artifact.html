@@ -2431,6 +2431,11 @@ window.SEKAISHI.ch9 = [
   // アドレスバーの URL 自体を、つねに最新のバックアップにしておく。
   // こうしておけば、ホーム画面に追加する・ブックマークする・自分にリンクを送る、
   // どれをしても記録つきのリンクが手元に残る。
+  // 枠（iframe）の中で開かれているときは、アドレスバーに出るのは外側の URL。
+  // こちらで書き換えた URL は本人に見えないので、リンクとしては配れない。
+  var inFrame = false;
+  try { inFrame = window.top !== window.self; } catch (e) { inFrame = true; }
+
   var hashOk = true, lastWritten = "";
   function writeHash(packed) {
     if (!hashOk) return;
@@ -3546,20 +3551,22 @@ window.SEKAISHI.ch9 = [
     // いま開いている URL がそのまま記録つきのリンクになっている。それを渡すだけ。
     $("#btn-share-link").addEventListener("click", function () {
       save(true);
+      var asLink = hashOk && !inFrame;
       var box = $("#backup-box");
-      box.value = hashOk ? location.href : exportCode();
+      box.value = asLink ? location.href : exportCode();
       box.style.display = "";
       box.select();
       box.setSelectionRange(0, 999999);
+      var what = asLink ? "記録つきのリンク" : "記録";
       var done = false;
       try { done = document.execCommand("copy"); } catch (e) {}
       if (!done && navigator.clipboard) {
-        navigator.clipboard.writeText(box.value).then(function () { toast("記録つきのリンクをコピーしました"); });
+        navigator.clipboard.writeText(box.value).then(function () { toast(what + "をコピーしました"); });
         return;
       }
       toast(done
-        ? "記録つきのリンクをコピーしました。自分あてに送って保存しておくと安心です"
-        : "下のリンクを長押しして全部コピーしてください");
+        ? what + "をコピーしました。自分あてに送って保存しておくと安心です"
+        : "下の文字を長押しして全部コピーしてください");
     });
 
     // アプリを開いたまま記録つきリンクを踏んだときのため。
