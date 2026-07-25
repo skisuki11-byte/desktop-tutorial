@@ -27,6 +27,8 @@
   --ch5: #7a4fb5;
   --ch6: #6b7a22;
   --ch7: #6b6e7e;
+  --ch8: #5b6b80;
+  --ch9: #7a6660;
 
   /* 書体：問題文は明朝（試験問題の声）、操作系はゴシック */
   --font-serif: "Hiragino Mincho ProN", "HiraMinProN-W3", "Yu Mincho", YuMincho,
@@ -61,6 +63,8 @@
     --ch5: #9268cc;
     --ch6: #869623;
     --ch7: #8a8d9c;
+    --ch8: #8298b3;
+    --ch9: #a89189;
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .28);
   }
 }
@@ -86,6 +90,8 @@
   --ch5: #9268cc;
   --ch6: #869623;
   --ch7: #8a8d9c;
+  --ch8: #8298b3;
+  --ch9: #a89189;
   --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .28);
 }
 
@@ -109,6 +115,8 @@
   --ch5: #7a4fb5;
   --ch6: #6b7a22;
   --ch7: #6b6e7e;
+  --ch8: #5b6b80;
+  --ch9: #7a6660;
   --shadow: 0 1px 2px rgba(20, 21, 30, .05), 0 8px 24px rgba(20, 21, 30, .06);
 }
 
@@ -766,3 +774,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .hero__title { font-size: 31px; }
   .qcard__q { font-size: 22px; }
 }
+
+/* 必須／選択のグループ見出し。問題冊子の区分をそのまま画面に写している */
+.grouphead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 2px 2px;
+}
+.chapters > .grouphead:first-child { padding-top: 0; }
+.grouphead__label {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--ink-2);
+}
+.grouphead__note { font-size: 12px; color: var(--ink-3); }

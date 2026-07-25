@@ -3,14 +3,19 @@
 (function () {
   "use strict";
 
+  // 実物の表紙にある「必須／選択」の区分をそのまま章立てにしている。
+  // 令和5＝大問Ⅰ〜Ⅵが必須＋Ⅶ(ロシア史)かⅧ(19世紀半ば以降)を選択、
+  // 令和7＝大問1〜5が必須＋6(世界史探究)か7(歴史総合)を選択。
   var CHAPTERS = [
-    { id: 1, key: "ch1", badge: "①", name: "古代ギリシア・ローマ", sub: "＋中世西欧の入口", note: "3年連続 大問1" },
-    { id: 2, key: "ch2", badge: "②", name: "古代インド・古代中国", sub: "＋東南アジア", note: "3年連続 大問2" },
-    { id: 3, key: "ch3", badge: "③", name: "古代オリエント・イスラーム世界", sub: "", note: "3年連続 大問3" },
-    { id: 4, key: "ch4", badge: "④", name: "モンゴル帝国・中世〜近世東アジア", sub: "宋・元・明・清", note: "3年連続 大問4" },
-    { id: 5, key: "ch5", badge: "⑤", name: "近世ヨーロッパ", sub: "大航海〜宗教改革〜市民革命", note: "3年連続 大問5" },
-    { id: 6, key: "ch6", badge: "⑥", name: "近代欧米・ロシア・19〜20世紀", sub: "産業革命〜第一次世界大戦・ロシア革命", note: "必須範囲は第一次大戦まで" },
-    { id: 7, key: "ch7", badge: "探", name: "テーマ史・史料型", sub: "世界史探究の選択問題", note: "令和7 大問6 対応" }
+    { id: 1, key: "ch1", badge: "①", name: "古代ギリシア・ローマ", sub: "＋中世西欧の入口", note: "必須・3年連続 大問1", req: true },
+    { id: 2, key: "ch2", badge: "②", name: "古代インド・古代中国", sub: "＋東南アジア", note: "必須・3年連続 大問2", req: true },
+    { id: 3, key: "ch3", badge: "③", name: "古代オリエント・イスラーム世界", sub: "オスマン帝国まで", note: "必須・3年連続 大問3", req: true },
+    { id: 4, key: "ch4", badge: "④", name: "モンゴル帝国・中世〜近世東アジア", sub: "宋・元・明・清", note: "必須・3年連続 大問4", req: true },
+    { id: 5, key: "ch5", badge: "⑤", name: "近世ヨーロッパ", sub: "大航海〜宗教改革〜市民革命", note: "必須・3年連続 大問5", req: true },
+    { id: 6, key: "ch6", badge: "⑥", name: "近代欧米", sub: "産業革命〜19世紀の国民国家", note: "必須・令和5 大問Ⅵ", req: true },
+    { id: 8, key: "ch8", badge: "選", name: "ロシア史", sub: "キエフ公国〜ロシア革命", note: "選択・令和5 大問Ⅶ", req: false },
+    { id: 9, key: "ch9", badge: "選", name: "19世紀半ば以降〜現代", sub: "アヘン戦争・帝国主義・二つの大戦・冷戦", note: "選択・令和5 大問Ⅷ", req: false },
+    { id: 7, key: "ch7", badge: "探", name: "テーマ史・史料型", sub: "世界史探究の選択問題", note: "選択・令和7 大問6", req: false }
   ];
 
   var LEVELS = { 1: "基本", 2: "標準", 3: "やや難" };
@@ -214,7 +219,18 @@
 
     var list = $("#chapter-list");
     list.textContent = "";
+    var groupShown = { req: false, opt: false };
     CHAPTERS.forEach(function (ch) {
+      // 必須と選択の切り替わりに見出しを挟む。実際の問題冊子と同じ区分。
+      var key = ch.req ? "req" : "opt";
+      if (!groupShown[key]) {
+        groupShown[key] = true;
+        var h = el("div", "grouphead");
+        h.appendChild(el("span", "grouphead__label", ch.req ? "必須問題" : "選択問題"));
+        h.appendChild(el("span", "grouphead__note",
+          ch.req ? "全員がここを解く" : "この中から1題を選んで解答"));
+        list.appendChild(h);
+      }
       var items = ALL.filter(function (it) { return it.ch === ch.id; });
       var right = 0, tries = 0, touched = 0;
       items.forEach(function (it) {
