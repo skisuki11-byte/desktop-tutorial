@@ -57,122 +57,294 @@
   var store = { stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE, days: {}, mock: { round: 1, cleared: [] } };
   var session = null;
 
-  /* ---------- 保存 ---------- */
-
-  function encodeStateToUrl(data) {
-    var json = JSON.stringify(data);
-    return btoa(json);
-  }
-
-  function decodeStateFromUrl(encoded) {
-    try {
-      var json = atob(encoded);
-      return JSON.parse(json);
-    } catch (e) { return null; }
-  }
-
-  function loadFromUrl() {
-    var hash = window.location.hash;
-    if (!hash || hash.indexOf("#state=") !== 0) return false;
-    var encoded = hash.substring(7);
-    var p = decodeStateFromUrl(encoded);
-    if (p && p.s && Array.isArray(p.s)) {
-      var stats = {};
-      p.s.forEach(function (row) {
-        var a = String(row).split(",");
-        if (a.length < 4) return;
-        stats[a[0]] = { c: +a[1] || 0, w: +a[2] || 0, run: +a[3] || 0, lastWrong: (+a[3] || 0) === 0 };
-      });
-      store = {
-        stats: stats,
-        last: p.last || null,
-        elective: p.e || 7,
-        examDate: (!p.d || OLD_DEFAULT_EXAM_DATES.indexOf(p.d) >= 0)
-          ? DEFAULT_EXAM_DATE : p.d,
-        days: p.day || {},
-        mock: p.m || { round: 1, cleared: [] }
-      };
-      return true;
-    }
-    return false;
-  }
-
-  function load() {
-    if (loadFromUrl()) return;
-    try {
-      var raw = localStorage.getItem(STORE_KEY);
-      if (raw) {
-        var p = JSON.parse(raw);
-        if (p && p.stats) {
-          store = {
-            stats: p.stats,
-            last: p.last || null,
-            elective: p.elective || 7,
-            examDate: (!p.examDate || OLD_DEFAULT_EXAM_DATES.indexOf(p.examDate) >= 0)
-              ? DEFAULT_EXAM_DATE : p.examDate,
-            days: p.days || {},
-            mock: p.mock || { round: 1, cleared: [] }
-          };
-        }
-      }
-    } catch (e) { /* 保存が使えない環境でも動かす */ }
-  }
-
   function todayKey(d) {
     d = d || new Date();
     return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
   }
 
-  function save() {
-    try {
-      localStorage.setItem(STORE_KEY, JSON.stringify(store));
-      store._savedAt = Date.now();
-    } catch (e) { /* 保存できない環境では黙って続行する */ }
+  /* ---------- 記録の保存 ----------
+     保存先が1か所だけだと消えることがある。LINE内ブラウザは閉じると中身ごと消え、
+     iOS Safari には「7日間開かないと消す」規則がある。
+     そこで localStorage・sessionStorage・Cookie・IndexedDB・URL の5か所へ毎回同時に書き、
+     起動時はいちばん進んでいるものを自動で読み込んで、消えていた保存先に書き戻す。
+     どれか1つでも生き残っていれば記録は続く。 */
+
+  var COOKIE_KEY = "sk1";
+  var IDB_NAME = "sekaishi";
+  var HASH_PREFIX = "#s=";
+  var EPOCH = Date.UTC(2020, 0, 1); // 日付を通算日で持つと文字数が減る
+
+  function b36(n, len) {
+    var s = Math.max(0, Math.round(n || 0)).toString(36);
+    while (s.length < len) s = "0" + s;
+    return s.length > len ? s.slice(-len) : s;
+  }
+  function n36(s) { var v = parseInt(s, 36); return v === v ? v : 0; }
+  function dayNum(iso) {
+    var t = Date.parse(String(iso) + "T00:00:00Z");
+    return t === t ? Math.round((t - EPOCH) / 86400000) : 0;
+  }
+  function dayIso(n) {
+    var d = new Date(EPOCH + n * 86400000);
+    return d.getUTCFullYear() + "-" + ("0" + (d.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + d.getUTCDate()).slice(-2);
   }
 
-  // 保存が本当に効くかを往復で確かめる。LINE内ブラウザやプレビューでは効かないことがある。
-  function storageWorks() {
+  /* 434問ぶんの記録を数KBの文字列に詰める。URL に丸ごと載る長さにするため。
+     1問あたり6文字＝章1・番号2・正答数1・誤答数1・連続正解1。 */
+  function packState(st) {
+    var ids = Object.keys(st.stats).sort(), rec = [], i;
+    for (i = 0; i < ids.length; i++) {
+      var m = /^c(\d+)-(\d+)$/.exec(ids[i]);
+      if (!m) continue;
+      var s = st.stats[ids[i]];
+      if (!s || (s.c + s.w) === 0) continue;
+      rec.push(b36(+m[1], 1) + b36(+m[2], 2) + b36(Math.min(35, s.c), 1)
+        + b36(Math.min(35, s.w), 1) + b36(Math.min(35, s.run || 0), 1));
+    }
+    var dk = Object.keys(st.days).sort(), base = dk.length ? dayNum(dk[0]) : 0, days = [];
+    for (i = 0; i < dk.length; i++) {
+      days.push(b36(dayNum(dk[i]) - base, 2) + b36(Math.min(1295, st.days[dk[i]]), 2));
+    }
+    var mock = st.mock || { round: 1, cleared: [] };
+    return [
+      "2",
+      b36(Math.round(Date.now() / 60000), 0),
+      b36(dayNum(st.examDate), 0),
+      b36(st.elective, 0),
+      b36(mock.round || 1, 0) + "." + (mock.cleared || []).map(function (r) { return b36(r, 1); }).join(""),
+      b36(base, 0) + "." + days.join(""),
+      rec.join("")
+    ].join("~");
+  }
+
+  function unpackState(text) {
+    var f = String(text).split("~");
+    if (f[0] !== "2" || f.length < 7) return null;
+    var stats = {}, rec = f[6], i;
+    for (i = 0; i + 6 <= rec.length; i += 6) {
+      var id = "c" + n36(rec.charAt(i)) + "-" + ("0" + n36(rec.substr(i + 1, 2))).slice(-2);
+      var run = n36(rec.charAt(i + 5));
+      stats[id] = { c: n36(rec.charAt(i + 3)), w: n36(rec.charAt(i + 4)), run: run, lastWrong: run === 0 };
+    }
+    var days = {}, dp = f[5].split("."), dbase = n36(dp[0]), ds = dp[1] || "";
+    for (i = 0; i + 4 <= ds.length; i += 4) {
+      days[dayIso(dbase + n36(ds.substr(i, 2)))] = n36(ds.substr(i + 2, 2));
+    }
+    var mp = f[4].split("."), cleared = [];
+    for (i = 0; i < (mp[1] || "").length; i++) cleared.push(n36(mp[1].charAt(i)));
+    var exam = dayIso(n36(f[2]));
+    return {
+      t: n36(f[1]) * 60000,
+      state: {
+        stats: stats, last: null,
+        elective: n36(f[3]) || 7,
+        examDate: OLD_DEFAULT_EXAM_DATES.indexOf(exam) >= 0 ? DEFAULT_EXAM_DATE : exam,
+        days: days,
+        mock: { round: n36(mp[0]) || 1, cleared: cleared }
+      }
+    };
+  }
+
+  // 新しい詰め方も、前の版が書いた JSON も、どちらも読めるようにしておく。
+  function parseCandidate(text) {
+    if (!text) return null;
+    var s = String(text).trim();
+    if (!s) return null;
+    if (s.slice(0, 2) === "2~") return unpackState(s);
+    if (s.charAt(0) !== "{") return null;
+    var p;
+    try { p = JSON.parse(s); } catch (e) { return null; }
+    if (!p) return null;
+    var stats = {};
+    if (Array.isArray(p.s)) {
+      p.s.forEach(function (row) {
+        var a = String(row).split(",");
+        if (a.length < 4) return;
+        stats[a[0]] = { c: +a[1] || 0, w: +a[2] || 0, run: +a[3] || 0, lastWrong: (+a[3] || 0) === 0 };
+      });
+    } else if (p.stats) {
+      stats = p.stats;
+    } else { return null; }
+    var exam = p.examDate || p.d || DEFAULT_EXAM_DATE;
+    return {
+      t: p._savedAt || 0,
+      state: {
+        stats: stats, last: null,
+        elective: p.elective || p.e || 7,
+        examDate: OLD_DEFAULT_EXAM_DATES.indexOf(exam) >= 0 ? DEFAULT_EXAM_DATE : exam,
+        days: p.days || p.day || {},
+        mock: p.mock || p.m || { round: 1, cleared: [] }
+      }
+    };
+  }
+
+  /* 5か所への読み書き。どれが失敗しても他が動けばいいので、1つずつ try で囲む。 */
+
+  function writeWebStorage(packed) {
+    try { localStorage.setItem(STORE_KEY, packed); } catch (e) {}
+    try { sessionStorage.setItem(STORE_KEY, packed); } catch (e) {}
+  }
+
+  function writeCookie(packed) {
     try {
-      var k = STORE_KEY + ".probe";
+      if (packed.length > 3500) return; // Cookie は約4KBまで。あふれる分は他の保存先に任せる
+      var exp = new Date(Date.now() + 400 * 86400000).toUTCString();
+      document.cookie = COOKIE_KEY + "=" + packed + ";expires=" + exp + ";path=/;SameSite=Lax";
+    } catch (e) {}
+  }
+  function readCookie() {
+    try {
+      var m = new RegExp("(?:^|; *)" + COOKIE_KEY + "=([^;]*)").exec(document.cookie || "");
+      return m ? decodeURIComponent(m[1]) : null;
+    } catch (e) { return null; }
+  }
+
+  var idb, idbTried = false;
+  function idbOpen(cb) {
+    if (idb || idbTried) { cb(idb || null); return; }
+    try {
+      var req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = function () { req.result.createObjectStore("kv"); };
+      req.onsuccess = function () { idbTried = true; idb = req.result; cb(idb); };
+      req.onerror = function () { idbTried = true; cb(null); };
+    } catch (e) { idbTried = true; cb(null); }
+  }
+  function writeIDB(packed) {
+    idbOpen(function (db) {
+      if (!db) return;
+      try { db.transaction("kv", "readwrite").objectStore("kv").put(packed, STORE_KEY); } catch (e) {}
+    });
+  }
+  function readIDB(cb) {
+    idbOpen(function (db) {
+      if (!db) { cb(null); return; }
+      try {
+        var r = db.transaction("kv", "readonly").objectStore("kv").get(STORE_KEY);
+        r.onsuccess = function () { cb(r.result || null); };
+        r.onerror = function () { cb(null); };
+      } catch (e) { cb(null); }
+    });
+  }
+
+  // アドレスバーの URL 自体を、つねに最新のバックアップにしておく。
+  // こうしておけば、ホーム画面に追加する・ブックマークする・自分にリンクを送る、
+  // どれをしても記録つきのリンクが手元に残る。
+  var hashOk = true, lastWritten = "";
+  function writeHash(packed) {
+    if (!hashOk) return;
+    try {
+      lastWritten = packed;
+      history.replaceState(null, "", location.pathname + location.search + HASH_PREFIX + packed);
+    } catch (e) {
+      hashOk = false; // file:// など replaceState が使えない環境では諦める
+    }
+  }
+  function readHash() {
+    var h = String(location.hash || "");
+    if (h.indexOf(HASH_PREFIX) === 0) return decodeURIComponent(h.slice(HASH_PREFIX.length));
+    if (h.indexOf("#state=") === 0) { // 前の版で配ったリンクも読める
+      try { return atob(h.slice(7)); } catch (e) { return null; }
+    }
+    return null;
+  }
+
+  /* 解いた回数の合計。どの記録がいちばん進んでいるかの物差しにする。
+     解答数は減ることがないので、これが多いほうを残せば取りこぼしがない。 */
+  function weigh(state) {
+    var n = 0, k;
+    for (k in state.stats) {
+      var s = state.stats[k];
+      if (s) n += (s.c || 0) + (s.w || 0);
+    }
+    return n;
+  }
+
+  function persist() {
+    var packed = packState(store);
+    store._savedAt = Date.now();
+    writeWebStorage(packed);
+    writeCookie(packed);
+    writeIDB(packed);
+    writeHash(packed);
+  }
+
+  // 1問ごとに5か所へ書くと重いので少しまとめる。
+  // ただし閉じられるときは取りこぼさないよう、その場で書き切る（save(true)）。
+  var saveTimer = null;
+  function save(now) {
+    if (now) { clearTimeout(saveTimer); saveTimer = null; persist(); return; }
+    if (saveTimer) return;
+    saveTimer = setTimeout(function () { saveTimer = null; persist(); }, 400);
+  }
+
+  // 起動時。すぐ読める4か所を見て、いちばん進んでいる記録を自動で採用する。
+  function load() {
+    var cands = [parseCandidate(readHash()), parseCandidate(readCookie())];
+    try { cands.push(parseCandidate(localStorage.getItem(STORE_KEY))); } catch (e) {}
+    try { cands.push(parseCandidate(sessionStorage.getItem(STORE_KEY))); } catch (e) {}
+    var best = null, bestW = 0;
+    cands.forEach(function (c) {
+      if (!c) return;
+      var w = weigh(c.state);
+      if (w > bestW || (w === bestW && best && c.t > best.t)) { best = c; bestW = w; }
+    });
+    if (best && bestW > 0) { store = best.state; store._savedAt = best.t; }
+  }
+
+  // IndexedDB だけは非同期。あとから届いた記録のほうが進んでいれば乗り換える。
+  // 最後に必ず書き戻して、消えていた保存先を復旧させる。
+  function loadAsync(done) {
+    var finish = function () {
+      persist();
+      done();
+    };
+    var settled = false;
+    var once = function () { if (!settled) { settled = true; finish(); } };
+    setTimeout(once, 1500); // IndexedDB が固まる環境でも起動を止めない
+    readIDB(function (text) {
+      var c = parseCandidate(text);
+      if (c && weigh(c.state) > weigh(store)) { store = c.state; store._savedAt = c.t; }
+      once();
+    });
+  }
+
+  // 記録がどこかに残せる状態かを確かめる。1か所でも書ければ大丈夫。
+  function storageWorks() {
+    var k = STORE_KEY + ".probe";
+    try {
       localStorage.setItem(k, "1");
       var v = localStorage.getItem(k);
       localStorage.removeItem(k);
-      return v === "1";
-    } catch (e) { return false; }
+      if (v === "1") return true;
+    } catch (e) {}
+    try {
+      document.cookie = k + "=1;path=/";
+      if ((document.cookie || "").indexOf(k + "=1") >= 0) {
+        document.cookie = k + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        return true;
+      }
+    } catch (e) {}
+    return hashOk;
   }
 
   /* ---------- 記録の持ち出し ----------
-     端末を変えるときや、保存が効かない開き方をしてしまったときのために、
-     記録を短いテキストに書き出して読み込めるようにする。 */
+     端末を変えるときのために、記録を短いテキストに書き出して読み込めるようにする。
+     読み込みは、この文字列でも、記録つきのリンクをまるごと貼っても効く。 */
 
-  function exportCode() {
-    var rows = [];
-    Object.keys(store.stats).forEach(function (id) {
-      var s = store.stats[id];
-      if (!s || (s.c + s.w) === 0) return;
-      rows.push(id + "," + s.c + "," + s.w + "," + (s.run || 0));
-    });
-    return JSON.stringify({
-      v: 1, d: store.examDate, e: store.elective,
-      m: store.mock, day: store.days, s: rows
-    });
-  }
+  function exportCode() { return packState(store); }
 
   function importCode(text) {
-    var p = JSON.parse(text);
-    if (!p || p.v !== 1 || !Array.isArray(p.s)) throw new Error("形式が違います");
-    var stats = {};
-    p.s.forEach(function (row) {
-      var a = String(row).split(",");
-      if (a.length < 4) return;
-      stats[a[0]] = { c: +a[1] || 0, w: +a[2] || 0, run: +a[3] || 0, lastWrong: (+a[3] || 0) === 0 };
-    });
-    store.stats = stats;
-    if (p.d) store.examDate = p.d;
-    if (p.e) store.elective = p.e;
-    if (p.m) store.mock = p.m;
-    if (p.day) store.days = p.day;
-    save();
+    var s = String(text).trim();
+    var at = s.indexOf(HASH_PREFIX);
+    if (at >= 0) {
+      s = decodeURIComponent(s.slice(at + HASH_PREFIX.length));
+    } else if (s.indexOf("#state=") >= 0) {
+      try { s = atob(s.slice(s.indexOf("#state=") + 7)); } catch (e) {}
+    }
+    var c = parseCandidate(s);
+    if (!c) throw new Error("形式が違います");
+    store = c.state;
+    save(true);
   }
 
   function stat(id) {
@@ -519,7 +691,7 @@
       warn.style.display = "none";
     } else {
       warn.style.display = "";
-      warn.textContent = "この開き方では記録が保存されません。右上の「…」から Safari や Chrome で開き直してください。";
+      warn.textContent = "この開き方では記録が残せません。右上の「…」から Safari や Chrome で開き直してください。";
     }
 
     var g = goalStats();
@@ -1169,29 +1341,48 @@
       this.value = "";
     });
 
+    // いま開いている URL がそのまま記録つきのリンクになっている。それを渡すだけ。
     $("#btn-share-link").addEventListener("click", function () {
-      var p = {
-        v: 1, d: store.examDate, e: store.elective,
-        m: store.mock, day: store.days,
-        s: Object.keys(store.stats).map(function (id) {
-          var s = store.stats[id];
-          return id + "," + s.c + "," + s.w + "," + (s.run || 0);
-        })
-      };
-      var encoded = encodeStateToUrl(p);
-      var link = window.location.origin + window.location.pathname + "#state=" + encoded;
+      save(true);
       var box = $("#backup-box");
-      box.value = link;
+      box.value = hashOk ? location.href : exportCode();
       box.style.display = "";
       box.select();
       box.setSelectionRange(0, 999999);
       var done = false;
       try { done = document.execCommand("copy"); } catch (e) {}
       if (!done && navigator.clipboard) {
-        navigator.clipboard.writeText(box.value).then(function () { toast("シェアリンクをコピーしました"); });
+        navigator.clipboard.writeText(box.value).then(function () { toast("記録つきのリンクをコピーしました"); });
         return;
       }
-      toast(done ? "シェアリンクをコピーしました。メールやSNSで共有できます" : "下のリンクを長押しして全部コピーしてください");
+      toast(done
+        ? "記録つきのリンクをコピーしました。自分あてに送って保存しておくと安心です"
+        : "下のリンクを長押しして全部コピーしてください");
+    });
+
+    // アプリを開いたまま記録つきリンクを踏んだときのため。
+    // ハッシュだけが違うリンクではページが読み直されないので、ここで取り込む。
+    window.addEventListener("hashchange", function () {
+      var raw = readHash();
+      if (!raw || raw === lastWritten) return;
+      var c = parseCandidate(raw);
+      if (c && weigh(c.state) > weigh(store)) {
+        store = c.state;
+        store._savedAt = c.t;
+        save(true);
+        renderHome();
+        show("home");
+        toast("リンクから記録を読み込みました");
+      } else {
+        save(true); // 進んでいない記録で上書きされないよう、いまの記録を書き戻す
+      }
+    });
+
+    // 閉じられる・別のアプリに切り替わるときは、書きかけを取りこぼさないよう即座に保存する。
+    window.addEventListener("pagehide", function () { save(true); });
+    window.addEventListener("beforeunload", function () { save(true); });
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") save(true);
     });
 
     $("#chapter-mc").addEventListener("click", function () {
@@ -1240,4 +1431,7 @@
   bind();
   renderHome();
   show("home");
+  // IndexedDB の記録は少し遅れて届く。届いたら画面を描き直し、
+  // 生き残っていた記録をすべての保存先へ書き戻す（自動バックアップ復元）。
+  loadAsync(function () { renderHome(); });
 })();
