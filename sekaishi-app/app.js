@@ -38,7 +38,8 @@
   // 38日間のシミュレーションで、この係数だと必要なペースがちょうど出る。
   // 理屈だけだと 2.8 程度だが、間違えて振り出しに戻るぶんを含めると約4回かかる。
   var TRIES_PER_MASTER = 4;
-  var DEFAULT_EXAM_DATE = "2026-09-01";
+  var DEFAULT_EXAM_DATE = "2026-09-24";
+  var OLD_DEFAULT_EXAM_DATES = ["2026-09-01"];
 
   var ALL = [];
   var BY_ID = {};
@@ -57,7 +58,8 @@
             stats: p.stats,
             last: p.last || null,
             elective: p.elective || 7,
-            examDate: p.examDate || DEFAULT_EXAM_DATE,
+            examDate: (!p.examDate || OLD_DEFAULT_EXAM_DATES.indexOf(p.examDate) >= 0)
+              ? DEFAULT_EXAM_DATE : p.examDate,
             days: p.days || {}
           };
         }
@@ -105,6 +107,23 @@
     return MASTERY.SHAKY;
   }
 
+  // 自分で「もう覚えた」と宣言できるようにする。判定を待たずに進捗へ反映される。
+  // 外したときは元の状態に戻せるよう、直前の連続正解数を控えておく。
+  function setMastered(id, on) {
+    var s = store.stats[id] || { c: 0, w: 0, lastWrong: false, run: 0 };
+    if (on) {
+      if (s.prev == null) s.prev = s.run || 0;
+      s.run = 2;
+      s.lastWrong = false;
+      if (s.c + s.w === 0) s.c = 1; // 未着手のまま覚えた扱いにしない
+    } else {
+      s.run = s.prev != null ? s.prev : 0;
+      delete s.prev;
+    }
+    store.stats[id] = s;
+    save();
+  }
+
   /* ---------- 目標からの逆算 ---------- */
 
   function inScope(item) {
@@ -132,7 +151,9 @@
       total: req + opt, goal: goal, mastered: mastered,
       remaining: Math.max(0, goal - mastered),
       counts: counts,
-      pct: goal ? Math.min(100, Math.round((progress / goal) * 100)) : 0
+      // 1問解いただけだと四捨五入で0%になり「進んでいない」ように見えるので、
+      // 少しでも進んでいれば最低1%を表示する
+      pct: goal && progress > 0 ? Math.max(1, Math.min(100, Math.round((progress / goal) * 100))) : 0
     };
   }
 
@@ -149,7 +170,8 @@
     var need = Math.ceil((g.remaining * TRIES_PER_MASTER) / d);
     // 上限45問。これ以上を毎日課すと続かないので、遅れたら増やすより
     // 「間に合わない」と正直に伝える方向にする。
-    return Math.max(20, Math.min(45, Math.round(need / 5) * 5 || 20));
+    // 5問単位に切り上げる。切り捨てると必要量にわずかに届かない
+    return Math.max(20, Math.min(45, Math.ceil(need / 5) * 5 || 20));
   }
 
   // いまのペースで間に合うか。間に合わないなら早めに気づけるようにする。
@@ -685,12 +707,45 @@
       appendExplain(item);
     }
 
+    appendMasterToggle(item);
+
     var isLast = session.idx === session.views.length - 1;
     setActions([{
       label: isLast ? "結果を見る" : "次の問題へ",
       cls: "btn btn--primary",
       fn: next
     }]);
+  }
+
+  // 「もう覚えた」チェック。押した瞬間に覚えた扱いになり、以後ほとんど出題されなくなる。
+  function appendMasterToggle(item) {
+    var box = el("button", "masterchk");
+    box.type = "button";
+    var mark = el("span", "masterchk__box");
+    var text = el("span", "masterchk__text");
+    var note = el("span", "masterchk__note");
+    box.appendChild(mark);
+    var body = el("span");
+    body.appendChild(text);
+    body.appendChild(note);
+    box.appendChild(body);
+
+    function paint() {
+      var on = masteryOf(item) === MASTERY.MASTERED;
+      box.classList.toggle("is-on", on);
+      box.setAttribute("aria-pressed", on ? "true" : "false");
+      mark.textContent = on ? "✓" : "";
+      text.textContent = on ? "覚えた" : "もう覚えた";
+      note.textContent = on
+        ? "この問題はほとんど出なくなります（押すと取り消し）"
+        : "チェックすると、覚えた問題として進捗に入ります";
+    }
+    box.addEventListener("click", function () {
+      setMastered(item.id, masteryOf(item) !== MASTERY.MASTERED);
+      paint();
+    });
+    paint();
+    $("#quiz-body").appendChild(box);
   }
 
   function next() {
