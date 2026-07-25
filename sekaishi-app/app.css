@@ -10,8 +10,8 @@
   --border: #e3e3e9;
   --border-strong: #cfd0d9;
   --ink: #1a1b22;
-  --ink-2: #565863;
-  --ink-3: #8a8c99;
+  --ink-2: #4a4c57;
+  --ink-3: #6f7180;
 
   /* 判定（章の色とは別系統。正誤の意味だけに使う） */
   --good: #1f7a5a;
@@ -37,7 +37,7 @@
   --radius: 14px;
   --radius-sm: 10px;
   --shadow: 0 1px 2px rgba(20, 21, 30, .05), 0 8px 24px rgba(20, 21, 30, .06);
-  --tap: 52px;
+  --tap: 56px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -48,8 +48,8 @@
     --border: #2e3040;
     --border-strong: #3d3f52;
     --ink: #e9e9f0;
-    --ink-2: #a4a6b4;
-    --ink-3: #767889;
+    --ink-2: #b3b5c2;
+    --ink-3: #9092a1;
     --good: #4fbe96;
     --good-bg: #16302a;
     --bad: #f0736b;
@@ -73,8 +73,8 @@
   --border: #2e3040;
   --border-strong: #3d3f52;
   --ink: #e9e9f0;
-  --ink-2: #a4a6b4;
-  --ink-3: #767889;
+  --ink-2: #b3b5c2;
+  --ink-3: #9092a1;
   --good: #4fbe96;
   --good-bg: #16302a;
   --bad: #f0736b;
@@ -96,8 +96,8 @@
   --border: #e3e3e9;
   --border-strong: #cfd0d9;
   --ink: #1a1b22;
-  --ink-2: #565863;
-  --ink-3: #8a8c99;
+  --ink-2: #4a4c57;
+  --ink-3: #6f7180;
   --good: #1f7a5a;
   --good-bg: #e4f2ec;
   --bad: #b3352f;
@@ -119,8 +119,9 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 17px;
+  line-height: 1.75;
+  letter-spacing: .015em;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
@@ -228,9 +229,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .hero__sub {
   margin: 10px 0 0;
-  font-size: 13.5px;
+  font-size: 14.5px;
   color: var(--ink-2);
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 .section { padding: 22px 16px 0; }
@@ -291,8 +292,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font-size: 18px;
 }
 .bigbtn > span:not([class]) { min-width: 0; }
-.bigbtn__label { display: block; font-size: 15.5px; font-weight: 700; }
-.bigbtn__desc { display: block; font-size: 12.5px; color: var(--ink-2); margin-top: 2px; line-height: 1.5; }
+.bigbtn__label { display: block; font-size: 16.5px; font-weight: 700; }
+.bigbtn__desc { display: block; font-size: 13.5px; color: var(--ink-2); margin-top: 2px; line-height: 1.5; }
 .bigbtn__chev { flex: none; color: var(--ink-3); font-size: 18px; }
 
 .quickgrid {
@@ -310,8 +311,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   text-align: left;
 }
 .quickbtn:hover { border-color: var(--border-strong); }
-.quickbtn__label { display: block; font-size: 14px; font-weight: 600; }
-.quickbtn__desc { display: block; font-size: 11.5px; color: var(--ink-3); margin-top: 2px; line-height: 1.45; }
+.quickbtn__label { display: block; font-size: 15px; font-weight: 600; }
+.quickbtn__desc { display: block; font-size: 12.5px; color: var(--ink-3); margin-top: 2px; line-height: 1.45; }
 .quickbtn[disabled] { opacity: .45; cursor: default; }
 
 /* 章リスト */
@@ -349,16 +350,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .chrow__name {
   display: block;
-  font-size: 14.5px;
+  font-size: 15.5px;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 .chrow__meta {
   display: block;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--ink-3);
-  margin-top: 3px;
-  line-height: 1.45;
+  margin-top: 4px;
+  line-height: 1.55;
   font-variant-numeric: tabular-nums;
 }
 
@@ -398,7 +399,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 18px 16px 0;
+  /* 下端は操作バーが重なるので、解説が張りつかないよう余白を残す */
+  padding: 18px 16px 14px;
 }
 
 .qcard {
@@ -414,7 +416,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .08em;
   color: var(--accent, var(--ink-3));
@@ -433,9 +435,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .qcard__q {
   font-family: var(--font-serif);
-  font-size: 19px;
-  line-height: 1.85;
-  letter-spacing: .01em;
+  font-size: 21px;
+  line-height: 1.95;
+  letter-spacing: .02em;
   margin: 0;
   white-space: pre-wrap;
   text-wrap: pretty;
@@ -460,8 +462,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--surface);
   border-radius: var(--radius-sm);
   text-align: left;
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: 16.5px;
+  line-height: 1.7;
   transition: border-color .12s ease, background-color .12s ease;
 }
 .choice:hover:not(:disabled) { border-color: var(--border-strong); }
@@ -519,9 +521,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .reveal__answer {
   font-family: var(--font-serif);
-  font-size: 24px;
+  font-size: 27px;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.55;
   margin: 0;
 }
 
@@ -542,9 +544,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   margin-bottom: 6px;
 }
 .explain__body {
-  font-size: 14px;
-  line-height: 1.85;
-  color: var(--ink-2);
+  font-size: 15.5px;
+  line-height: 1.95;
+  color: var(--ink);
   margin: 0;
 }
 
@@ -588,7 +590,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: var(--surface);
-  font-size: 15.5px;
+  font-size: 16.5px;
   font-weight: 700;
   letter-spacing: .02em;
 }
@@ -657,21 +659,21 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .reviewitem__q {
   font-family: var(--font-serif);
-  font-size: 15px;
-  line-height: 1.7;
-  margin: 0 0 6px;
+  font-size: 16px;
+  line-height: 1.8;
+  margin: 0 0 8px;
   white-space: pre-wrap;
 }
 .reviewitem__a {
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--good);
 }
 .reviewitem__e {
-  font-size: 12.5px;
-  line-height: 1.75;
+  font-size: 14px;
+  line-height: 1.9;
   color: var(--ink-2);
-  margin: 6px 0 0;
+  margin: 8px 0 0;
 }
 
 .statrow {
@@ -685,9 +687,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--surface);
   border-radius: var(--radius-sm);
 }
-.statrow__name { font-size: 13.5px; font-weight: 600; line-height: 1.4; }
+.statrow__name { font-size: 14.5px; font-weight: 600; line-height: 1.4; }
 .statrow__sub {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
   margin-top: 2px;
@@ -724,8 +726,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .footnote {
   padding: 26px 16px calc(26px + env(safe-area-inset-bottom));
-  font-size: 11.5px;
-  line-height: 1.8;
+  font-size: 12.5px;
+  line-height: 1.9;
   color: var(--ink-3);
   text-wrap: pretty;
 }
@@ -761,6 +763,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 @media (min-width: 480px) {
-  .hero__title { font-size: 30px; }
-  .qcard__q { font-size: 20px; }
+  .hero__title { font-size: 31px; }
+  .qcard__q { font-size: 22px; }
 }
