@@ -1,0 +1,3 @@
+
+/* 3つになったときは最後の1つを横いっぱいに */
+.quickgrid > :last-child:nth-child(odd) { grid-column: span 2; }

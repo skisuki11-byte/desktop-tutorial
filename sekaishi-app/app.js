@@ -43,7 +43,18 @@
 
   var ALL = [];
   var BY_ID = {};
-  var store = { stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE, days: {} };
+  // 模擬試験の称号。1回クリアするごとに次へ進む。
+  var BADGES = [
+    { name: "ポリスの市民", icon: "🏛" },
+    { name: "ローマの執政官", icon: "🦅" },
+    { name: "シルクロードの旅人", icon: "🐫" },
+    { name: "大航海の航海士", icon: "⛵" },
+    { name: "革命の目撃者", icon: "🔥" },
+    { name: "世界史マスター", icon: "👑" }
+  ];
+  var MOCK_PASS = 80; // 本番の目標と同じ80点でクリア
+
+  var store = { stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE, days: {}, mock: { round: 1, cleared: [] } };
   var session = null;
 
   /* ---------- 保存 ---------- */
@@ -60,7 +71,8 @@
             elective: p.elective || 7,
             examDate: (!p.examDate || OLD_DEFAULT_EXAM_DATES.indexOf(p.examDate) >= 0)
               ? DEFAULT_EXAM_DATE : p.examDate,
-            days: p.days || {}
+            days: p.days || {},
+            mock: p.mock || { round: 1, cleared: [] }
           };
         }
       }
@@ -185,6 +197,33 @@
 
   function todayCount() { return store.days[todayKey()] || 0; }
 
+  /* ---------- 模擬試験 ---------- */
+
+  function badgeFor(round) {
+    if (round <= BADGES.length) return BADGES[round - 1];
+    // 6回を超えたら「世界史マスター」を周回でつづける
+    return { name: BADGES[BADGES.length - 1].name + "（" + (round - BADGES.length + 1) + "周目）", icon: "👑" };
+  }
+
+  function startMock() {
+    var round = store.mock.round;
+    start({
+      chapters: null, mode: "mc", count: 60, isMock: true, mockRound: round,
+      title: "第" + round + "回 模擬試験"
+    });
+  }
+
+  // 80点以上で合格。合格したら称号を得て、次の回が出る。
+  function finishMock(pctScore) {
+    if (pctScore < MOCK_PASS) return null;
+    var round = session.mockRound || store.mock.round;
+    var b = badgeFor(round);
+    store.mock.cleared.push({ round: round, pct: pctScore, date: todayKey(), name: b.name, icon: b.icon });
+    store.mock.round = round + 1;
+    save();
+    return b;
+  }
+
   function streakDays() {
     var n = 0, d = new Date();
     if (!store.days[todayKey(d)]) d.setDate(d.getDate() - 1); // 今日まだなら昨日から数える
@@ -201,7 +240,7 @@
     if (g.remaining > 0) {
       return { n: 2, label: "あやふやな問題をマスターにする", rest: g.remaining, unit: "問でゴール" };
     }
-    return { n: 3, label: "本番形式60問で80点を確認する", rest: 0, unit: "" };
+    return { n: 3, label: "模擬試験で80点を確認する", rest: 0, unit: "" };
   }
 
   /* ---------- 小道具 ---------- */
@@ -363,6 +402,8 @@
       mode: opts.mode,
       title: opts.title,
       chapters: opts.chapters || null,
+      isMock: !!opts.isMock,
+      mockRound: opts.mockRound || 0,
       results: [],
       answered: false
     };
@@ -401,8 +442,8 @@
     // 見出しは今いるステップに合わせる。1周目から数字が毎日動くようにするため。
     var st = currentStep();
     $("#goal-headline").textContent =
-      st.n === 1 ? "まず1周。あと " + st.rest + "問"
-      : st.n === 2 ? "80点ラインまで あと " + g.remaining + "問"
+      st.n === 1 ? "あと " + st.rest + "問"
+      : st.n === 2 ? "あと " + g.remaining + "問"
       : "仕上げ。本番形式で確認しよう";
     $("#goal-detail").textContent =
       "覚えた " + g.mastered + " / " + g.goal + "問　（全" + g.total + "問中）";
@@ -449,6 +490,30 @@
       pace.className = "pace is-warn";
     }
 
+    // 模擬試験（家でやる用）
+    var round = store.mock.round;
+    $("#mock-label").textContent = "第" + round + "回 模擬試験";
+    $("#mock-desc").textContent = "60問・本番と同じ構成。" + MOCK_PASS + "点で合格し、称号がもらえます";
+    var next = badgeFor(round);
+    $("#mock-next").textContent = "ねらう称号：" + next.icon + " " + next.name;
+
+    var bl = $("#badge-list");
+    bl.textContent = "";
+    if (store.mock.cleared.length) {
+      $("#badge-section").style.display = "";
+      store.mock.cleared.forEach(function (c) {
+        var b = el("div", "badge");
+        b.appendChild(el("span", "badge__icon", c.icon));
+        var t = el("span");
+        t.appendChild(el("span", "badge__name", c.name));
+        t.appendChild(el("span", "badge__meta", "第" + c.round + "回 ・ " + c.pct + "点"));
+        b.appendChild(t);
+        bl.appendChild(b);
+      });
+    } else {
+      $("#badge-section").style.display = "none";
+    }
+
     var sd = streakDays();
     $("#streak").textContent = sd >= 2 ? "🔥 " + sd + "日つづいています" : "";
 
@@ -457,7 +522,7 @@
     var STEPS = [
       { n: 1, label: "ぜんぶ一度は解く", desc: "まず全問に触れて、知らないものを洗い出す" },
       { n: 2, label: "あやふやな問題をマスターにする", desc: "2回続けて正解できたら「覚えた」" },
-      { n: 3, label: "本番形式60問で80点を確認する", desc: "令和7と同じ構成で通し演習" }
+      { n: 3, label: "模擬試験で80点を確認する", desc: "60問・令和7と同じ構成。合格すると称号がもらえる" }
     ];
     var list = $("#steps");
     list.textContent = "";
@@ -680,7 +745,16 @@
   function appendExplain(item) {
     var ex = el("div", "explain fadein");
     ex.style.setProperty("--accent", accentFor(item.ch));
-    ex.appendChild(el("div", "explain__label", "解説"));
+    var head = el("div", "explain__head");
+    head.appendChild(el("span", "explain__label", "解説"));
+    if (item.y) {
+      // 実物の過去問と一致する知識かどうかを示す。類題＝同じ範囲・レベルの想定問題。
+      var isReal = item.y !== "類題";
+      var tag = el("span", "yeartag" + (isReal ? " yeartag--real" : ""),
+        isReal ? "令和" + item.y : "類題");
+      head.appendChild(tag);
+    }
+    ex.appendChild(head);
     ex.appendChild(el("p", "explain__body", item.e));
     $("#quiz-body").appendChild(ex);
     // 解説の下端が操作バーに隠れることがあるので、出したら見える位置まで送る
@@ -768,13 +842,32 @@
     $("#result-value").textContent = p;
     $("#result-detail").textContent = total + "問中 " + right + "問正解　（" + session.title + "）";
 
-    var isMock = session.views.length >= 50;
+    var awarded = session.isMock ? finishMock(p) : null;
+    var banner = $("#result-badge");
+    banner.textContent = "";
+    banner.className = "resultbadge";
+    if (session.isMock) {
+      if (awarded) {
+        banner.classList.add("is-cleared");
+        banner.appendChild(el("div", "resultbadge__icon", awarded.icon));
+        banner.appendChild(el("div", "resultbadge__title", "第" + session.mockRound + "回 合格！"));
+        banner.appendChild(el("div", "resultbadge__name", "称号「" + awarded.name + "」を獲得"));
+        banner.appendChild(el("div", "resultbadge__next", "次は第" + store.mock.round + "回 模擬試験に挑戦できます"));
+      } else {
+        banner.classList.add("is-failed");
+        var needMore = Math.ceil(total * MOCK_PASS / 100) - right;
+        banner.appendChild(el("div", "resultbadge__icon", "◔"));
+        banner.appendChild(el("div", "resultbadge__title", "合格まで あと " + needMore + "問"));
+        banner.appendChild(el("div", "resultbadge__name", "合格ラインは" + MOCK_PASS + "点。第" + session.mockRound + "回にもう一度挑戦できます"));
+      }
+    }
+
+    var isMock = session.isMock;
     var msg;
     if (isMock) {
-      // 60問通しのときだけ、目標ラインとの差を点数で伝える
       var diff = right - Math.round(total * 0.8);
-      if (p >= 80) msg = "目標の80点を超えました（80点ラインまであと" + Math.abs(diff) + "問の余裕）。この精度を9月まで保てば十分です。";
-      else msg = "80点まであと" + Math.abs(diff) + "問。下の「まちがえた問題」がそのまま伸びしろです。必須の①〜⑥から先に潰すと点が動きます。";
+      if (p >= MOCK_PASS) msg = "この精度を試験まで保てば十分です。間違えた問題だけ読み直しておきましょう。";
+      else msg = "下の「まちがえた問題」がそのまま伸びしろです。必須の①〜⑥から先に潰すと点が動きます。";
     } else if (p >= 90) msg = "この精度なら十分。9月まで落とさないことだけ考えれば大丈夫です。";
     else if (p >= 80) msg = "目標の80点ライン。あとは間違えた問題の解説を読んで、取りこぼしを潰していきましょう。";
     else if (p >= 60) msg = "あと一歩。下に出ている間違えた問題だけ、もう一周してみてください。";
@@ -810,6 +903,7 @@
     });
 
     $("#result-again").onclick = function () {
+      if (session.isMock) { startMock(); return; }
       start({
         chapters: session.chapters, mode: session.mode,
         count: session.views.length, title: session.title
@@ -910,9 +1004,7 @@
     $("#exam-date").addEventListener("change", function () {
       if (this.value) { store.examDate = this.value; save(); renderHome(); }
     });
-    $("#btn-mock").addEventListener("click", function () {
-      start({ chapters: null, mode: "mc", count: 60, title: "本番形式 60問" });
-    });
+    $("#btn-mock-main").addEventListener("click", startMock);
     $("#btn-qa").addEventListener("click", function () {
       start({ chapters: null, mode: "qa", count: 20, title: "一問一答 20問（全範囲）" });
     });

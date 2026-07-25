@@ -23,7 +23,7 @@
       </div>
     </header>
 
-    <p class="aim">目指せ、危機管理学部！</p>
+    <p class="aim"><span class="aim__lead">目指せ</span>危機管理学部！</p>
 
     <!-- ゴールまでの距離。ここを見れば「あとどれくらいか」が一目で分かる -->
     <div class="goal">
@@ -60,6 +60,21 @@
         <div class="mission__cta" id="mission-cta"></div>
       </button>
       <p class="pace" id="pace"></p>
+
+      <div class="spacer"></div>
+      <button class="mock" id="btn-mock-main" type="button">
+        <div class="mock__top">
+          <span class="mock__label" id="mock-label"></span>
+          <span class="mock__badge">🏅</span>
+        </div>
+        <div class="mock__desc" id="mock-desc"></div>
+        <div class="mock__next" id="mock-next"></div>
+      </button>
+    </div>
+
+    <div class="section" id="badge-section">
+      <div class="section__head"><h2 class="section__title">獲得した称号</h2></div>
+      <div class="badges" id="badge-list"></div>
     </div>
 
     <!-- 一本道。いまどこにいるかを1つだけ示す -->
@@ -76,10 +91,6 @@
       <div class="section">
         <div class="section__head"><h2 class="section__title">別のかたちで解く</h2></div>
         <div class="quickgrid">
-          <button class="quickbtn" id="btn-mock" type="button">
-            <span class="quickbtn__label">本番形式 60問</span>
-            <span class="quickbtn__desc">必須40＋選択20</span>
-          </button>
           <button class="quickbtn" id="btn-qa" type="button">
             <span class="quickbtn__label">一問一答</span>
             <span class="quickbtn__desc">答えを隠して20問</span>
@@ -117,7 +128,7 @@
 
     <p class="footnote">
       <strong>地図・写真・系図の問題だけは、このアプリでは出せません。</strong>王朝や都市の位置、建築や肖像、ハプスブルク家の系図は資料集で確認してください（本番で毎年5問前後）。<br>
-      令和5・6・7の実物過去問 全28ページと、対策塾各社の情報にもとづいて作成。記録はこの端末にだけ保存されます。
+      解説の「令和◯ 出題」はその年度の実物で問われた知識、「類題」は同じ範囲・同じレベルで作った想定問題です。<br>令和5・6・7の実物過去問 全28ページと、対策塾各社の情報にもとづいて作成。記録はこの端末にだけ保存されます。
     </p>
   </section>
 
@@ -201,6 +212,7 @@
     </header>
 
     <div class="pad">
+      <div class="resultbadge" id="result-badge"></div>
       <div class="score">
         <div class="score__label">せいとうりつ</div>
         <div class="score__value"><span id="result-value">0</span><span class="score__unit">％</span></div>

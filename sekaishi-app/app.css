@@ -1171,3 +1171,138 @@ button { font: inherit; color: inherit; cursor: pointer; }
   color: var(--ink-3);
 }
 .chipsnote strong { color: var(--ink-2); }
+
+/* ---------- 合言葉を強く ---------- */
+
+.aim {
+  margin: 16px 16px 0;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--ch1);
+  color: #fff;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-align: center;
+  line-height: 1.4;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--ch1) 32%, transparent);
+}
+.aim__lead {
+  display: inline-block;
+  margin-right: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .22);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  vertical-align: middle;
+}
+
+/* ---------- 模擬試験 ---------- */
+
+.mock {
+  display: block;
+  width: 100%;
+  padding: 16px 18px;
+  border: 2px solid var(--ink);
+  background: var(--surface);
+  border-radius: var(--radius);
+  text-align: left;
+  box-shadow: var(--shadow);
+}
+.mock:hover { background: var(--surface-2); }
+.mock__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mock__label { font-size: 18px; font-weight: 700; letter-spacing: .01em; }
+.mock__badge { font-size: 22px; line-height: 1; }
+.mock__desc { font-size: 13px; color: var(--ink-2); margin-top: 5px; line-height: 1.6; }
+.mock__next {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ch1);
+  margin-top: 7px;
+}
+
+/* ---------- 称号 ---------- */
+
+.badges { display: flex; flex-direction: column; gap: 8px; }
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--ch1) 30%, var(--border));
+  background: color-mix(in srgb, var(--ch1) 6%, var(--surface));
+  border-radius: var(--radius-sm);
+}
+.badge__icon { font-size: 24px; line-height: 1; }
+.badge__name { display: block; font-size: 15px; font-weight: 700; }
+.badge__meta {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  margin-top: 1px;
+}
+
+.resultbadge { display: none; }
+.resultbadge.is-cleared,
+.resultbadge.is-failed {
+  display: block;
+  margin-bottom: 12px;
+  padding: 22px 18px;
+  border-radius: var(--radius);
+  text-align: center;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.resultbadge.is-cleared {
+  border-color: var(--ch1);
+  background: color-mix(in srgb, var(--ch1) 9%, var(--surface));
+}
+.resultbadge__icon { font-size: 44px; line-height: 1.1; }
+.resultbadge__title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+.resultbadge.is-cleared .resultbadge__title { color: var(--ch1); }
+.resultbadge__name { font-size: 14.5px; font-weight: 700; margin-top: 6px; }
+.resultbadge__next { font-size: 12.5px; color: var(--ink-3); margin-top: 8px; }
+
+/* ---------- 解説の出題年度 ---------- */
+
+.explain__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.explain__head .explain__label { margin-bottom: 0; }
+.yeartag {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+}
+.yeartag--real {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: var(--accent);
+}
+
+/* 3つになったときは最後の1つを横いっぱいに */
+.quickgrid > :last-child:nth-child(odd) { grid-column: span 2; }
