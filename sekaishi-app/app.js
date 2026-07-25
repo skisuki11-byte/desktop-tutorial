@@ -59,7 +59,46 @@
 
   /* ---------- 保存 ---------- */
 
+  function encodeStateToUrl(data) {
+    var json = JSON.stringify(data);
+    return btoa(json);
+  }
+
+  function decodeStateFromUrl(encoded) {
+    try {
+      var json = atob(encoded);
+      return JSON.parse(json);
+    } catch (e) { return null; }
+  }
+
+  function loadFromUrl() {
+    var hash = window.location.hash;
+    if (!hash || hash.indexOf("#state=") !== 0) return false;
+    var encoded = hash.substring(7);
+    var p = decodeStateFromUrl(encoded);
+    if (p && p.s && Array.isArray(p.s)) {
+      var stats = {};
+      p.s.forEach(function (row) {
+        var a = String(row).split(",");
+        if (a.length < 4) return;
+        stats[a[0]] = { c: +a[1] || 0, w: +a[2] || 0, run: +a[3] || 0, lastWrong: (+a[3] || 0) === 0 };
+      });
+      store = {
+        stats: stats,
+        last: p.last || null,
+        elective: p.e || 7,
+        examDate: (!p.d || OLD_DEFAULT_EXAM_DATES.indexOf(p.d) >= 0)
+          ? DEFAULT_EXAM_DATE : p.d,
+        days: p.day || {},
+        mock: p.m || { round: 1, cleared: [] }
+      };
+      return true;
+    }
+    return false;
+  }
+
   function load() {
+    if (loadFromUrl()) return;
     try {
       var raw = localStorage.getItem(STORE_KEY);
       if (raw) {
@@ -1128,6 +1167,31 @@
       };
       r.readAsText(f);
       this.value = "";
+    });
+
+    $("#btn-share-link").addEventListener("click", function () {
+      var p = {
+        v: 1, d: store.examDate, e: store.elective,
+        m: store.mock, day: store.days,
+        s: Object.keys(store.stats).map(function (id) {
+          var s = store.stats[id];
+          return id + "," + s.c + "," + s.w + "," + (s.run || 0);
+        })
+      };
+      var encoded = encodeStateToUrl(p);
+      var link = window.location.origin + window.location.pathname + "#state=" + encoded;
+      var box = $("#backup-box");
+      box.value = link;
+      box.style.display = "";
+      box.select();
+      box.setSelectionRange(0, 999999);
+      var done = false;
+      try { done = document.execCommand("copy"); } catch (e) {}
+      if (!done && navigator.clipboard) {
+        navigator.clipboard.writeText(box.value).then(function () { toast("シェアリンクをコピーしました"); });
+        return;
+      }
+      toast(done ? "シェアリンクをコピーしました。メールやSNSで共有できます" : "下のリンクを長押しして全部コピーしてください");
     });
 
     $("#chapter-mc").addEventListener("click", function () {
