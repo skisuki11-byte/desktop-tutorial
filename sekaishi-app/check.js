@@ -11,6 +11,7 @@ files.forEach((f) => eval(fs.readFileSync(path.join(dir, f), "utf8")));
 const data = global.window.SEKAISHI;
 const errors = [];
 const ids = new Set();
+const questions = new Map();
 let total = 0;
 const byChapter = {};
 const byType = { qa: 0, mc: 0 };
@@ -37,6 +38,10 @@ Object.keys(data).forEach((key) => {
     if (![1, 2, 3].includes(it.lv)) errors.push(`${at}: lv が 1-3 でない`);
     else byLevel[it.lv]++;
     if (it.e && it.e.length < 30) errors.push(`${at}: 解説が短すぎる（${it.e.length}字）`);
+    if (questions.has(it.q)) errors.push(`${at}: ${questions.get(it.q)} と問題文が重複`);
+    else questions.set(it.q, at);
+    // 一問一答で表示するのは a なので、語句問題の答えが一文になっていないか見る
+    if (it.t === "qa" && it.a.length > 24) errors.push(`${at}: 一問一答の答えが長すぎる（${it.a.length}字）。t:"mc" にすべき`);
   });
 });
 

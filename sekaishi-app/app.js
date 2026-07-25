@@ -66,6 +66,15 @@
     return a;
   }
   function pct(n, d) { return d ? Math.round((n / d) * 100) : 0; }
+
+  var toastTimer = null;
+  function toast(msg) {
+    var n = $("#toast");
+    n.textContent = msg;
+    n.classList.add("is-shown");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { n.classList.remove("is-shown"); }, 2800);
+  }
   function chapterOf(id) {
     for (var i = 0; i < CHAPTERS.length; i++) if (CHAPTERS[i].id === id) return CHAPTERS[i];
     return CHAPTERS[0];
@@ -133,7 +142,8 @@
   function start(opts) {
     var p = pool(opts);
     if (!p.length) {
-      alert(opts.weakOnly
+      // サンドボックス内では alert/confirm が無視されるため、画面内で知らせる
+      toast(opts.weakOnly
         ? "苦手な問題はまだありません。まずは何問か解いてみてください。"
         : "この条件に合う問題がありません。");
       return;
@@ -290,19 +300,34 @@
     body.textContent = "";
 
     if (session.mode === "mc") {
-      var choices = el("div", "choices");
-      view.choices.forEach(function (text, i) {
-        var b = el("button", "choice");
-        b.appendChild(el("span", "choice__no", String(i + 1)));
-        b.appendChild(el("span", null, text));
-        b.addEventListener("click", function () { answerMC(i); });
-        choices.appendChild(b);
-      });
-      body.appendChild(choices);
+      body.appendChild(buildChoices(view));
       setActions([]);
     } else {
-      setActions([{ label: "答えを見る", cls: "btn btn--primary", fn: revealQA }]);
+      // 一問一答：まず思い出す。出てこなければ選択肢をヒントに使える。
+      setActions([
+        { label: "選択肢を見る", cls: "btn", fn: showChoices },
+        { label: "答えを見る", cls: "btn btn--primary", fn: revealQA }
+      ]);
     }
+  }
+
+  function buildChoices(view, extraClass) {
+    var wrap = el("div", "choices" + (extraClass ? " " + extraClass : ""));
+    view.choices.forEach(function (text, i) {
+      var b = el("button", "choice");
+      b.appendChild(el("span", "choice__no", String(i + 1)));
+      b.appendChild(el("span", null, text));
+      b.addEventListener("click", function () { answerMC(i); });
+      wrap.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function showChoices() {
+    if (session.answered || $("#quiz-body").querySelector(".choice")) return;
+    var view = session.views[session.idx];
+    $("#quiz-body").appendChild(buildChoices(view, "fadein"));
+    setActions([{ label: "わからない・答えを見る", cls: "btn btn--primary", fn: revealQA }]);
   }
 
   function setActions(buttons) {
@@ -332,8 +357,17 @@
   }
 
   function revealQA() {
+    if (session.answered) return;
     var view = session.views[session.idx];
     var item = view.item;
+
+    // 選択肢をヒントに出していた場合は、正解の位置も示してから答えを見せる
+    var nodes = $("#quiz-body").querySelectorAll(".choice");
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].disabled = true;
+      nodes[i].classList.add(i === view.answer ? "is-correct" : "is-dim");
+    }
+
     var box = el("div", "reveal fadein");
     box.appendChild(el("div", "reveal__label", "こたえ"));
     box.appendChild(el("p", "reveal__answer", item.a));
@@ -545,14 +579,15 @@
       b.addEventListener("click", function () { renderHome(); show("home"); });
     });
     $("#chapter-back").addEventListener("click", function () { renderHome(); show("home"); });
+    // 解答は1問ごとに保存ずみなので、確認をはさまずそのまま戻る
     $("#quiz-back").addEventListener("click", function () {
-      if (session && session.results.length && !confirm("ここまでの結果は保存されます。ホームに戻りますか？")) return;
-      renderHome(); show("home");
+      renderHome();
+      show("home");
     });
 
     document.addEventListener("keydown", function (e) {
       if (!$("#view-quiz").classList.contains("is-active")) return;
-      if (e.key >= "1" && e.key <= "4" && session.mode === "mc" && !session.answered) {
+      if (e.key >= "1" && e.key <= "4" && !session.answered) {
         var nodes = $("#quiz-body").querySelectorAll(".choice");
         var i = parseInt(e.key, 10) - 1;
         if (nodes[i]) nodes[i].click();
