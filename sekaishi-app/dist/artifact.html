@@ -2446,7 +2446,7 @@ window.SEKAISHI.ch9 = [
 
   // 版。build.js が書き出すときに更新日時を差し込む。
   // 置き換わっていなければ、束ねる前のファイルを直接開いている＝開発中。
-  var VERSION = "2026.07.26 15:57";
+  var VERSION = "2026.07.26 16:04";
 
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
@@ -2791,14 +2791,21 @@ window.SEKAISHI.ch9 = [
     return s;
   }
 
-  function record(id, ok) {
+  // fromMock のときは「今日の◯問」に数えない。模試60問で日課が終わった扱いになると、
+  // その日の積み上げが見えなくなるため、別枠にしておく。
+  function record(id, ok, fromMock) {
     var s = store.stats[id] || { c: 0, w: 0, lastWrong: false, run: 0 };
     if (s.run == null) s.run = 0;
     if (ok) { s.c++; s.run++; } else { s.w++; s.run = 0; }
     s.lastWrong = !ok;
     store.stats[id] = s;
     var k = todayKey();
-    store.days[k] = (store.days[k] || 0) + 1;
+    if (fromMock) {
+      // 模試だけやった日も「解いた日」として連続日数には入れたいので、印だけ残す
+      if (store.days[k] == null) store.days[k] = 0;
+    } else {
+      store.days[k] = (store.days[k] || 0) + 1;
+    }
     save();
   }
 
@@ -3022,8 +3029,9 @@ window.SEKAISHI.ch9 = [
 
   function streakDays() {
     var n = 0, d = new Date();
-    if (!store.days[todayKey(d)]) d.setDate(d.getDate() - 1); // 今日まだなら昨日から数える
-    while (store.days[todayKey(d)]) { n++; d.setDate(d.getDate() - 1); }
+    // 0 は「模試だけやった日」の印。数ではなく、あるかどうかで判定する。
+    if (store.days[todayKey(d)] == null) d.setDate(d.getDate() - 1); // 今日まだなら昨日から
+    while (store.days[todayKey(d)] != null) { n++; d.setDate(d.getDate() - 1); }
     return n;
   }
 
@@ -3311,7 +3319,8 @@ window.SEKAISHI.ch9 = [
     var cleared = (store.mock.cleared || []).length;
     var prog = runProgress();
     $("#mock-label").textContent = prog ? "模擬試験（途中）" : "模擬試験";
-    $("#mock-desc").textContent = "60問・本番と同じ構成。" + MOCK_PASS + "点で合格し、称号がもらえます";
+    $("#mock-desc").textContent = "60問・本番と同じ構成。" + MOCK_PASS
+      + "点で合格し、称号がもらえます（「今日の◯問」とは別枠）";
     var nextBadge = badgeFor(round);
     $("#mock-next").textContent = prog
       ? "第" + prog.round + "回を " + prog.done + " / " + prog.total + "問まで解いています。つづきから再開できます"
@@ -3599,7 +3608,7 @@ window.SEKAISHI.ch9 = [
   function finish(ok, skipExplain) {
     var view = session.views[session.idx];
     var item = view.item;
-    record(item.id, ok);
+    record(item.id, ok, session.isMock);
     session.results.push({ item: item, ok: ok });
     // 模試は1問ごとにどこまで解いたかを控える。閉じても続きから戻れるように。
     if (session.isMock && store.run && store.run.round === session.mockRound) {
