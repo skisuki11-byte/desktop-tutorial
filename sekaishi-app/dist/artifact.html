@@ -1529,6 +1529,7 @@ label.quickbtn { display: block; cursor: pointer; }
     </div>
     <div class="chips" id="goal-chips"></div>
     <p class="chipsnote">「覚えた」＝<strong>2回続けて正解</strong>できた問題。解いたあとに出る<strong>「もう覚えた」</strong>を自分でチェックしてもOKです。</p>
+    <p class="chipsnote" id="scope-note"></p>
 
     <!-- 今日やることは、これ1つだけ -->
     <div class="section">
@@ -2409,7 +2410,7 @@ window.SEKAISHI.ch9 = [
 
   // 版。build.js が書き出すときに更新日時を差し込む。
   // 置き換わっていなければ、束ねる前のファイルを直接開いている＝開発中。
-  var VERSION = "2026.07.26 13:25";
+  var VERSION = "2026.07.26 13:40";
 
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
@@ -3118,8 +3119,13 @@ window.SEKAISHI.ch9 = [
       st.n === 1 ? "あと " + st.rest + "問"
       : st.n === 2 ? "あと " + g.remaining + "問"
       : "仕上げ。本番形式で確認しよう";
-    $("#goal-detail").textContent =
-      "覚えた " + g.mastered + " / " + g.goal + "問　（全" + g.total + "問中）";
+    // 数字が3つ（覚えた・目標・出題範囲）あるので、どれが何かを言葉で示す。
+    // 「3 / 326（全369問中）」のように並べると、どこと比べた数字か分からなくなる。
+    $("#goal-detail").textContent = "覚えた " + g.mastered + "問　／　目標 " + g.goal + "問";
+    $("#scope-note").textContent = "出題されるのは、必須①〜⑥と選んだ選択枠1つの " + g.total
+      + "問です。アプリには全" + ALL.length + "問が入っていますが、選んでいない選択枠の "
+      + (ALL.length - g.total) + "問は出ません。目標の " + g.goal
+      + "問は、必須9割・選択7割で本番80点に届く数です。";
 
     // 4段階の内訳。ここが動くと「進んでいる」ことが分かる。
     var BREAK = [
