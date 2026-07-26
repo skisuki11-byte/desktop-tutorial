@@ -416,9 +416,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  /* 下の操作バーは画面に貼りついたままなので、その高さぶん余白を空けておく。
-     これがないと、いちばん下まで送っても最後の行がボタンに隠れる。 */
-  padding: 18px 16px calc(92px + env(safe-area-inset-bottom));
+  padding: 18px 16px 0;
 }
 
 .qcard {
@@ -553,10 +551,21 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 3px solid var(--accent, var(--ink));
-  /* 答えた直後に解説へ自動スクロールする。行き先が画面の下端だと
-     操作バーの裏に入ってしまうので、バーの高さぶん手前で止める。 */
-  scroll-margin-bottom: calc(92px + env(safe-area-inset-bottom));
 }
+
+/* 出題画面のボタンだけは画面に貼りつけない。
+   貼りつけると、解説や「もう覚えた」がその裏に入って読めなくなる。
+   解説 →「もう覚えた」→ ボタン と上から順に並べ、読み終えた先に置く。 */
+#quiz-actions {
+  position: static;
+  background: none;
+  padding-top: 14px;
+}
+
+/* 答えた直後は、判定（◯／×）が上に来るように送る。
+   そこから解説・もう覚えた・ボタンが下へ続けて読める。 */
+.verdict,
+.reveal { scroll-margin-top: 70px; }
 .explain__label {
   font-size: 11px;
   font-weight: 700;
@@ -2457,7 +2466,7 @@ window.SEKAISHI.ch9 = [
 
   // 版。build.js が書き出すときに更新日時を差し込む。
   // 置き換わっていなければ、束ねる前のファイルを直接開いている＝開発中。
-  var VERSION = "2026.07.26 16:14";
+  var VERSION = "2026.07.26 16:27";
 
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
@@ -3582,6 +3591,7 @@ window.SEKAISHI.ch9 = [
       { label: "できなかった", cls: "btn btn--bad", fn: function () { finishQA(false); } },
       { label: "できた", cls: "btn btn--good", fn: function () { finishQA(true); } }
     ]);
+    scrollToAnswer(box);
   }
 
   function finishQA(ok) {
@@ -3605,13 +3615,17 @@ window.SEKAISHI.ch9 = [
     ex.appendChild(head);
     ex.appendChild(el("p", "explain__body", item.e));
     $("#quiz-body").appendChild(ex);
-    // 解説の下端が操作バーに隠れることがあるので、出したら見える位置まで送る
-    if (ex.scrollIntoView) {
+  }
+
+  // 答えを出したら、そこから下（解説・もう覚えた・次へ）が読める位置まで送る。
+  // 画面の上端はトップバーが重なるので、CSS の scroll-margin-top で少し下げてある。
+  function scrollToAnswer(node) {
+    if (node && node.scrollIntoView) {
       var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       try {
-        ex.scrollIntoView({ block: "end", behavior: reduce ? "auto" : "smooth" });
+        node.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
       } catch (e) {
-        ex.scrollIntoView(false);
+        node.scrollIntoView(true);
       }
     }
   }
@@ -3627,13 +3641,14 @@ window.SEKAISHI.ch9 = [
       save();
     }
 
+    var verdict = null;
     if (!skipExplain) {
-      var v = el("div", "verdict fadein " + (ok ? "verdict--good" : "verdict--bad"),
+      verdict = el("div", "verdict fadein " + (ok ? "verdict--good" : "verdict--bad"),
         ok ? "◯　正解" : "×　不正解");
       // 間違えたときは、どれが正解だったかを番号で言い切る。
       // 色分けだけだと、選択肢まで目を戻さないと分からない。
-      if (!ok) v.appendChild(el("span", "verdict__answer", "正解は " + (view.answer + 1) + "番"));
-      $("#quiz-body").appendChild(v);
+      if (!ok) verdict.appendChild(el("span", "verdict__answer", "正解は " + (view.answer + 1) + "番"));
+      $("#quiz-body").appendChild(verdict);
       appendExplain(item);
     }
 
@@ -3645,6 +3660,9 @@ window.SEKAISHI.ch9 = [
       cls: "btn btn--primary",
       fn: next
     }]);
+
+    // 判定を画面の上に持ってくると、解説・もう覚えた・次へ が続けて目に入る
+    scrollToAnswer(verdict);
   }
 
   // 「もう覚えた」チェック。押した瞬間に覚えた扱いになり、以後ほとんど出題されなくなる。

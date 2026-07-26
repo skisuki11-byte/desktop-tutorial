@@ -1187,6 +1187,7 @@
       { label: "できなかった", cls: "btn btn--bad", fn: function () { finishQA(false); } },
       { label: "できた", cls: "btn btn--good", fn: function () { finishQA(true); } }
     ]);
+    scrollToAnswer(box);
   }
 
   function finishQA(ok) {
@@ -1210,13 +1211,17 @@
     ex.appendChild(head);
     ex.appendChild(el("p", "explain__body", item.e));
     $("#quiz-body").appendChild(ex);
-    // 解説の下端が操作バーに隠れることがあるので、出したら見える位置まで送る
-    if (ex.scrollIntoView) {
+  }
+
+  // 答えを出したら、そこから下（解説・もう覚えた・次へ）が読める位置まで送る。
+  // 画面の上端はトップバーが重なるので、CSS の scroll-margin-top で少し下げてある。
+  function scrollToAnswer(node) {
+    if (node && node.scrollIntoView) {
       var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       try {
-        ex.scrollIntoView({ block: "end", behavior: reduce ? "auto" : "smooth" });
+        node.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
       } catch (e) {
-        ex.scrollIntoView(false);
+        node.scrollIntoView(true);
       }
     }
   }
@@ -1232,13 +1237,14 @@
       save();
     }
 
+    var verdict = null;
     if (!skipExplain) {
-      var v = el("div", "verdict fadein " + (ok ? "verdict--good" : "verdict--bad"),
+      verdict = el("div", "verdict fadein " + (ok ? "verdict--good" : "verdict--bad"),
         ok ? "◯　正解" : "×　不正解");
       // 間違えたときは、どれが正解だったかを番号で言い切る。
       // 色分けだけだと、選択肢まで目を戻さないと分からない。
-      if (!ok) v.appendChild(el("span", "verdict__answer", "正解は " + (view.answer + 1) + "番"));
-      $("#quiz-body").appendChild(v);
+      if (!ok) verdict.appendChild(el("span", "verdict__answer", "正解は " + (view.answer + 1) + "番"));
+      $("#quiz-body").appendChild(verdict);
       appendExplain(item);
     }
 
@@ -1250,6 +1256,9 @@
       cls: "btn btn--primary",
       fn: next
     }]);
+
+    // 判定を画面の上に持ってくると、解説・もう覚えた・次へ が続けて目に入る
+    scrollToAnswer(verdict);
   }
 
   // 「もう覚えた」チェック。押した瞬間に覚えた扱いになり、以後ほとんど出題されなくなる。
