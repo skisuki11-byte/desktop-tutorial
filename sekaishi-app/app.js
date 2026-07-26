@@ -939,7 +939,7 @@
     $("#stats-teaser").textContent = weak
       ? "いま苦手なのは " + weak.ch.badge + " " + weak.ch.name
         + "（正答率 " + Math.round(weak.acc * 100) + "％）"
-      : "大問ごとの正答率と、苦手な問題がわかります";
+      : "解くとここに、大問ごとの正解した割合が出ます";
 
     var bl = $("#badge-list");
     bl.textContent = "";
