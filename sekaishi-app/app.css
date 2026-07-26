@@ -407,8 +407,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  /* 下端は操作バーが重なるので、解説が張りつかないよう余白を残す */
-  padding: 18px 16px 14px;
+  /* 下の操作バーは画面に貼りついたままなので、その高さぶん余白を空けておく。
+     これがないと、いちばん下まで送っても最後の行がボタンに隠れる。 */
+  padding: 18px 16px calc(92px + env(safe-area-inset-bottom));
 }
 
 .qcard {
@@ -543,6 +544,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 3px solid var(--accent, var(--ink));
+  /* 答えた直後に解説へ自動スクロールする。行き先が画面の下端だと
+     操作バーの裏に入ってしまうので、バーの高さぶん手前で止める。 */
+  scroll-margin-bottom: calc(92px + env(safe-area-inset-bottom));
 }
 .explain__label {
   font-size: 11px;
