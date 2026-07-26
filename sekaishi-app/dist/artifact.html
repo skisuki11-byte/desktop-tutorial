@@ -1077,6 +1077,31 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .chip--shaky .chip__n { color: var(--bad); }
 .chip--new .chip__n { color: var(--ink-3); }
 
+/* 押すとその段階の問題一覧へ行ける */
+.chip {
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .12s ease;
+}
+.chip::after {
+  content: "見る ›";
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  letter-spacing: .02em;
+}
+.chip:hover { border-color: var(--ink-3); }
+
+/* 一覧の1件。左の線は大問の色にそろえる */
+.reviewitem--plain { border-left-color: var(--accent, var(--ink-3)); }
+.reviewitem__ch {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--accent, var(--ink-3));
+  margin-bottom: 6px;
+}
+
 .pace {
   margin: 9px 2px 0;
   font-size: 12.5px;
@@ -1358,18 +1383,63 @@ button { font: inherit; color: inherit; cursor: pointer; }
   line-height: 1.75;
 }
 
-/* 保存が効かない開き方をしているときの警告 */
-.warnbar {
-  margin: 14px 16px 0;
-  padding: 13px 16px;
-  border-radius: var(--radius-sm);
-  background: var(--bad-bg);
-  border: 1px solid var(--bad);
-  color: var(--bad);
-  font-size: 13.5px;
-  font-weight: 700;
-  line-height: 1.7;
+/* ---------- あいことば ---------- */
+
+.login {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 32px 24px calc(32px + env(safe-area-inset-bottom));
+  max-width: 24rem;
+  margin: 0 auto;
+  width: 100%;
+  text-align: center;
 }
+.login__eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: var(--ink-3);
+}
+.login__title {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  margin: 6px 0 10px;
+}
+.login__lead {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ink-2);
+}
+.login__input {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 12px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: .5em;
+  text-align: center;
+  text-indent: .5em; /* letter-spacing のぶん、見た目の中央をそろえる */
+}
+.login__error {
+  min-height: 1.5em;
+  margin: 10px 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bad);
+}
+.login .btn { flex: none; }
 
 .backupbox {
   width: 100%;
@@ -1402,6 +1472,19 @@ label.quickbtn { display: block; cursor: pointer; }
     <p class="nojs__note">ファイルをそのままタップするとプレビューで開いてしまい、問題が出ず、記録も保存されません。</p>
   </div>
 
+  <!-- あいことば。初回だけ聞いて、次からは聞かない -->
+  <section class="view" id="view-login">
+    <div class="login">
+      <p class="login__eyebrow">日大基礎学テスト 世界史</p>
+      <h1 class="login__title">あいことば</h1>
+      <p class="login__lead">4けたの数字を入れてください。<br>聞くのは最初の1回だけです。</p>
+      <input class="login__input" id="login-input" type="password" inputmode="numeric"
+             autocomplete="off" maxlength="8" placeholder="••••" aria-label="あいことば">
+      <p class="login__error" id="login-error"></p>
+      <button class="btn btn--primary" id="login-go" type="button">はじめる</button>
+    </div>
+  </section>
+
   <!-- ホーム -->
   <section class="view is-active" id="view-home">
     <header class="topbar">
@@ -1413,8 +1496,6 @@ label.quickbtn { display: block; cursor: pointer; }
         <button class="iconbtn" id="theme-toggle" type="button" aria-label="明るさを切り替える">◐</button>
       </div>
     </header>
-
-    <p class="warnbar" id="storage-warn" style="display:none"></p>
 
     <p class="aim"><span class="aim__lead">目指せ</span>危機管理学部！</p>
 
@@ -1607,6 +1688,48 @@ label.quickbtn { display: block; cursor: pointer; }
           <span class="quickbtn__desc">この大問を最初から最後まで</span>
         </button>
       </div>
+    </div>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- 段階べつの問題一覧（「覚えた」などを押すとここへ来る） -->
+  <section class="view" id="view-list">
+    <header class="topbar">
+      <div class="topbar__row">
+        <button class="iconbtn" data-home type="button" aria-label="ホームへ戻る">←</button>
+        <div class="topbar__title" id="list-title"></div>
+      </div>
+    </header>
+
+    <div class="section">
+      <div class="section__head">
+        <h2 class="section__title" id="list-desc"></h2>
+        <span class="section__note" id="list-count"></span>
+      </div>
+      <div class="review" id="list-items"></div>
+    </div>
+
+    <div class="actionbar">
+      <button class="btn btn--primary" id="list-solve" type="button">この中から解く</button>
+    </div>
+  </section>
+
+  <!-- 模擬試験の回をえらぶ -->
+  <section class="view" id="view-mock">
+    <header class="topbar">
+      <div class="topbar__row">
+        <button class="iconbtn" data-home type="button" aria-label="ホームへ戻る">←</button>
+        <div class="topbar__title">模擬試験</div>
+      </div>
+    </header>
+
+    <div class="section">
+      <div class="section__head">
+        <h2 class="section__title">回をえらぶ</h2>
+        <span class="section__note">どの回からでもOK</span>
+      </div>
+      <div class="chapters" id="mock-list"></div>
+      <p class="seghint">60問・本番と同じ構成です。80点で合格すると、その回の称号がもらえます。何度でも受け直せます。</p>
     </div>
     <div class="spacer"></div>
   </section>
@@ -2266,7 +2389,13 @@ window.SEKAISHI.ch9 = [
   ];
   var MOCK_PASS = 80; // 本番の目標と同じ80点でクリア
 
-  var store = { stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE, days: {}, mock: { round: 1, cleared: [] } };
+  // 初回だけ聞くあいことば。中身を隠すためのものではなく、他の人に触られないための目印。
+  var PASSCODE = "0402";
+
+  var store = {
+    stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
+    days: {}, mock: { round: 1, cleared: [] }, unlocked: false
+  };
   var session = null;
 
   function todayKey(d) {
@@ -2317,21 +2446,29 @@ window.SEKAISHI.ch9 = [
     for (i = 0; i < dk.length; i++) {
       days.push(b36(dayNum(dk[i]) - base, 2) + b36(Math.min(1295, st.days[dk[i]]), 2));
     }
+    // 合格した回は {round, pct, date, …} の形。称号名と絵文字は round から引き直せるので、
+    // 回・点数・日付の3つだけを 6文字（1＋2＋3）に詰める。
     var mock = st.mock || { round: 1, cleared: [] };
+    var cleared = (mock.cleared || []).map(function (c) {
+      if (!c || typeof c !== "object") return "";
+      return b36(c.round, 1) + b36(Math.min(1295, c.pct || 0), 2) + b36(dayNum(c.date), 3);
+    }).join("");
     return [
-      "2",
+      "3",
       b36(Math.round(Date.now() / 60000), 0),
       b36(dayNum(st.examDate), 0),
       b36(st.elective, 0),
-      b36(mock.round || 1, 0) + "." + (mock.cleared || []).map(function (r) { return b36(r, 1); }).join(""),
+      b36(mock.round || 1, 0) + "." + cleared,
       b36(base, 0) + "." + days.join(""),
-      rec.join("")
+      rec.join(""),
+      st.unlocked ? "1" : "0"
     ].join("~");
   }
 
   function unpackState(text) {
     var f = String(text).split("~");
-    if (f[0] !== "2" || f.length < 7) return null;
+    var v = f[0];
+    if ((v !== "3" && v !== "2") || f.length < 7) return null;
     var stats = {}, rec = f[6], i;
     for (i = 0; i + 6 <= rec.length; i += 6) {
       var id = "c" + n36(rec.charAt(i)) + "-" + ("0" + n36(rec.substr(i + 1, 2))).slice(-2);
@@ -2342,8 +2479,16 @@ window.SEKAISHI.ch9 = [
     for (i = 0; i + 4 <= ds.length; i += 4) {
       days[dayIso(dbase + n36(ds.substr(i, 2)))] = n36(ds.substr(i + 2, 2));
     }
-    var mp = f[4].split("."), cleared = [];
-    for (i = 0; i < (mp[1] || "").length; i++) cleared.push(n36(mp[1].charAt(i)));
+    // 版2は合格記録を詰められていなかった（回だけの想定で、実際は入っていない）。
+    // 統計と日付はそのまま読めるので、称号だけ空で受け入れる。
+    var mp = f[4].split("."), cs = v === "3" ? (mp[1] || "") : "", cleared = [];
+    for (i = 0; i + 6 <= cs.length; i += 6) {
+      var round = n36(cs.charAt(i)), b = badgeFor(round);
+      cleared.push({
+        round: round, pct: n36(cs.substr(i + 1, 2)), date: dayIso(n36(cs.substr(i + 3, 3))),
+        name: b.name, icon: b.icon
+      });
+    }
     var exam = dayIso(n36(f[2]));
     return {
       t: n36(f[1]) * 60000,
@@ -2352,7 +2497,8 @@ window.SEKAISHI.ch9 = [
         elective: n36(f[3]) || 7,
         examDate: OLD_DEFAULT_EXAM_DATES.indexOf(exam) >= 0 ? DEFAULT_EXAM_DATE : exam,
         days: days,
-        mock: { round: n36(mp[0]) || 1, cleared: cleared }
+        mock: { round: n36(mp[0]) || 1, cleared: cleared },
+        unlocked: f[7] === "1"
       }
     };
   }
@@ -2362,7 +2508,7 @@ window.SEKAISHI.ch9 = [
     if (!text) return null;
     var s = String(text).trim();
     if (!s) return null;
-    if (s.slice(0, 2) === "2~") return unpackState(s);
+    if (s.slice(0, 2) === "3~" || s.slice(0, 2) === "2~") return unpackState(s);
     if (s.charAt(0) !== "{") return null;
     var p;
     try { p = JSON.parse(s); } catch (e) { return null; }
@@ -2385,7 +2531,8 @@ window.SEKAISHI.ch9 = [
         elective: p.elective || p.e || 7,
         examDate: OLD_DEFAULT_EXAM_DATES.indexOf(exam) >= 0 ? DEFAULT_EXAM_DATE : exam,
         days: p.days || p.day || {},
-        mock: p.mock || p.m || { round: 1, cleared: [] }
+        mock: p.mock || p.m || { round: 1, cleared: [] },
+        unlocked: !!p.unlocked
       }
     };
   }
@@ -2499,13 +2646,15 @@ window.SEKAISHI.ch9 = [
     var cands = [parseCandidate(readHash()), parseCandidate(readCookie())];
     try { cands.push(parseCandidate(localStorage.getItem(STORE_KEY))); } catch (e) {}
     try { cands.push(parseCandidate(sessionStorage.getItem(STORE_KEY))); } catch (e) {}
-    var best = null, bestW = 0;
+    var best = null, bestW = 0, everUnlocked = false;
     cands.forEach(function (c) {
       if (!c) return;
+      if (c.state.unlocked) everUnlocked = true; // 一度入っていれば、もう聞かない
       var w = weigh(c.state);
       if (w > bestW || (w === bestW && best && c.t > best.t)) { best = c; bestW = w; }
     });
     if (best && bestW > 0) { store = best.state; store._savedAt = best.t; }
+    if (everUnlocked) store.unlocked = true;
   }
 
   // IndexedDB だけは非同期。あとから届いた記録のほうが進んでいれば乗り換える。
@@ -2525,24 +2674,6 @@ window.SEKAISHI.ch9 = [
     });
   }
 
-  // 記録がどこかに残せる状態かを確かめる。1か所でも書ければ大丈夫。
-  function storageWorks() {
-    var k = STORE_KEY + ".probe";
-    try {
-      localStorage.setItem(k, "1");
-      var v = localStorage.getItem(k);
-      localStorage.removeItem(k);
-      if (v === "1") return true;
-    } catch (e) {}
-    try {
-      document.cookie = k + "=1;path=/";
-      if ((document.cookie || "").indexOf(k + "=1") >= 0) {
-        document.cookie = k + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-        return true;
-      }
-    } catch (e) {}
-    return hashOk;
-  }
 
   /* ---------- 記録の持ち出し ----------
      端末を変えるときのために、記録を短いテキストに書き出して読み込めるようにする。
@@ -2560,7 +2691,10 @@ window.SEKAISHI.ch9 = [
     }
     var c = parseCandidate(s);
     if (!c) throw new Error("形式が違います");
+    // すでに中に入っている人を、読み込んだ記録の都合で閉め出さない
+    var wasUnlocked = store.unlocked;
     store = c.state;
+    store.unlocked = store.unlocked || wasUnlocked;
     save(true);
   }
 
@@ -2681,21 +2815,42 @@ window.SEKAISHI.ch9 = [
     return { name: BADGES[BADGES.length - 1].name + "（" + (round - BADGES.length + 1) + "周目）", icon: "👑" };
   }
 
-  function startMock() {
-    var round = store.mock.round;
+  function startMock(round) {
+    round = round || store.mock.round;
     start({
       chapters: null, mode: "mc", count: 60, isMock: true, mockRound: round,
       title: "第" + round + "回 模擬試験"
     });
   }
 
-  // 80点以上で合格。合格したら称号を得て、次の回が出る。
+  function clearedMock(round) {
+    var found = null;
+    (store.mock.cleared || []).forEach(function (c) { if (c && c.round === round) found = c; });
+    return found;
+  }
+
+  // 選べる回。称号のぶんは常に出し、それを超えて進んでいればその先も出す。
+  function mockRounds() {
+    var max = Math.max(BADGES.length, store.mock.round);
+    var out = [];
+    for (var r = 1; r <= max; r++) out.push(r);
+    return out;
+  }
+
+  // 80点以上で合格。どの回からでも受けられ、受け直して点を伸ばすこともできる。
   function finishMock(pctScore) {
     if (pctScore < MOCK_PASS) return null;
     var round = session.mockRound || store.mock.round;
     var b = badgeFor(round);
-    store.mock.cleared.push({ round: round, pct: pctScore, date: todayKey(), name: b.name, icon: b.icon });
-    store.mock.round = round + 1;
+    var prev = clearedMock(round);
+    if (prev) {
+      if (pctScore > prev.pct) { prev.pct = pctScore; prev.date = todayKey(); }
+    } else {
+      store.mock.cleared.push({ round: round, pct: pctScore, date: todayKey(), name: b.name, icon: b.icon });
+      store.mock.cleared.sort(function (x, y) { return x.round - y.round; });
+    }
+    // まだ受けていない回まで飛ばさない。合格した回の次を「つぎの回」にする。
+    if (round >= store.mock.round) store.mock.round = round + 1;
     save();
     return b;
   }
@@ -2817,6 +2972,7 @@ window.SEKAISHI.ch9 = [
   }
 
   function pool(opts) {
+    if (opts.items) return opts.items.slice(); // 一覧から「この中から解く」で来たとき
     return ALL.filter(function (it) {
       if (opts.chapters) {
         if (opts.chapters.indexOf(it.ch) < 0) return false;
@@ -2858,7 +3014,7 @@ window.SEKAISHI.ch9 = [
     var picked;
     if (opts.count === "all") {
       picked = shuffle(p.slice());
-    } else if (!opts.chapters) {
+    } else if (!opts.chapters && !opts.items) {
       // 全範囲のときは本番の配点比に合わせ、必須と選択枠を分けて抽出する
       var reqPool = p.filter(function (it) { return REQUIRED_IDS.indexOf(it.ch) >= 0; });
       var optPool = p.filter(function (it) { return REQUIRED_IDS.indexOf(it.ch) < 0; });
@@ -2892,7 +3048,7 @@ window.SEKAISHI.ch9 = [
   /* ---------- 画面切替 ---------- */
 
   function show(name) {
-    ["home", "chapter", "quiz", "result", "stats"].forEach(function (v) {
+    ["login", "home", "chapter", "quiz", "result", "stats", "list", "mock"].forEach(function (v) {
       $("#view-" + v).classList.toggle("is-active", v === name);
     });
     window.scrollTo(0, 0);
@@ -2903,19 +3059,6 @@ window.SEKAISHI.ch9 = [
   /* ---------- ホーム ---------- */
 
   function renderHome() {
-    var warn = $("#storage-warn");
-    if (!storageWorks()) {
-      warn.style.display = "";
-      warn.textContent = "この開き方では記録が残せません。右上の「…」から Safari や Chrome で開き直してください。";
-    } else if (inFrame) {
-      // 枠の中では、書き込めても閉じたときに捨てられることがある（iPhone の Safari など）。
-      // 書けたかどうかの確認だけでは見抜けないので、開き方そのものを根拠に伝える。
-      warn.style.display = "";
-      warn.textContent = "この開き方（ページに埋め込まれた枠の中）では、閉じると記録が消えることがあります。記録を確実に残すには、アプリ自体のリンクを直接開いてください。";
-    } else {
-      warn.style.display = "none";
-    }
-
     $("#backup-note").textContent = inFrame
       ? "記録は解くたびに自動で保存されますが、いまは枠の中で開かれているため、閉じたときに消えることがあります。心配なときは下の「文字でコピー」でメモアプリに貼っておいてください。貼りつけて読み込めば元に戻せます。"
       : "記録は解くたびに自動で保存され、次に開いたときに自動で読み込まれます。保存先は5か所（この端末の保存領域が4つと、いま開いている URL）に分けてあるので、どれかが消えても残ったものから元に戻ります。いま開いている URL そのものが記録つきのリンクです。ホーム画面に追加しておくと、そのアイコンから開くだけで記録つきで立ち上がります。";
@@ -2951,9 +3094,11 @@ window.SEKAISHI.ch9 = [
     var chips = $("#goal-chips");
     chips.textContent = "";
     BREAK.forEach(function (b) {
-      var c = el("span", "chip " + b.cls);
+      var c = el("button", "chip " + b.cls);
+      c.type = "button";
       c.appendChild(el("span", "chip__n", String(g.counts[b.i])));
       c.appendChild(el("span", null, b.label));
+      c.addEventListener("click", function () { openList(b.i); });
       chips.appendChild(c);
     });
 
@@ -2983,12 +3128,15 @@ window.SEKAISHI.ch9 = [
       pace.className = "pace is-warn";
     }
 
-    // 模擬試験（家でやる用）
+    // 模擬試験（家でやる用）。押すと回を選ぶ画面へ。
     var round = store.mock.round;
-    $("#mock-label").textContent = "第" + round + "回 模擬試験";
+    var cleared = (store.mock.cleared || []).length;
+    $("#mock-label").textContent = "模擬試験";
     $("#mock-desc").textContent = "60問・本番と同じ構成。" + MOCK_PASS + "点で合格し、称号がもらえます";
     var next = badgeFor(round);
-    $("#mock-next").textContent = "ねらう称号：" + next.icon + " " + next.name;
+    $("#mock-next").textContent = cleared
+      ? cleared + "回 合格ずみ ・ つぎは第" + round + "回（" + next.icon + " " + next.name + "）"
+      : "第1回から挑戦できます（" + next.icon + " " + next.name + "）";
 
     var bl = $("#badge-list");
     bl.textContent = "";
@@ -3467,6 +3615,89 @@ window.SEKAISHI.ch9 = [
     });
   }
 
+  /* ---------- 段階べつの問題一覧 ----------
+     ホームの「覚えた／あと一歩／あやふや／まだ」を押すと、その中身を見られる。
+     数字だけ見えても、どの問題のことなのか分からないままなので。 */
+
+  var LIST_INFO = {};
+  LIST_INFO[MASTERY.MASTERED] = { label: "覚えた", desc: "2回続けて正解できた問題" };
+  LIST_INFO[MASTERY.ALMOST] = { label: "あと一歩", desc: "あと1回正解すれば「覚えた」になる問題" };
+  LIST_INFO[MASTERY.SHAKY] = { label: "あやふや", desc: "解いたことはあるが、直近で間違えた問題" };
+  LIST_INFO[MASTERY.NEW] = { label: "まだ", desc: "まだ一度も解いていない問題" };
+
+  var LIST_CAP = 100; // 多すぎると開くのが重いので、先頭だけ出して残りは件数で伝える
+  var listItems = [], listLabel = "";
+
+  function openList(level) {
+    var info = LIST_INFO[level];
+    listLabel = info.label;
+    listItems = ALL.filter(function (it) {
+      return inScope(it) && masteryOf(it) === level;
+    }).sort(function (a, b) {
+      return a.ch - b.ch || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    });
+
+    $("#list-title").textContent = "「" + info.label + "」の問題";
+    $("#list-desc").textContent = info.desc;
+    $("#list-count").textContent = listItems.length + "問";
+
+    var box = $("#list-items");
+    box.textContent = "";
+    if (!listItems.length) {
+      box.appendChild(el("div", "empty", "この段階の問題はまだありません。"));
+    }
+    listItems.slice(0, LIST_CAP).forEach(function (it) {
+      var ch = chapterOf(it.ch);
+      var n = el("div", "reviewitem reviewitem--plain");
+      n.style.setProperty("--accent", accentFor(it.ch));
+      n.appendChild(el("div", "reviewitem__ch", ch.badge + " " + ch.name));
+      n.appendChild(el("p", "reviewitem__q", it.q));
+      n.appendChild(el("div", "reviewitem__a", "こたえ：" + it.a));
+      n.appendChild(el("p", "reviewitem__e", it.e));
+      box.appendChild(n);
+    });
+    if (listItems.length > LIST_CAP) {
+      box.appendChild(el("div", "empty",
+        "ほか " + (listItems.length - LIST_CAP) + "問。多いので先頭 " + LIST_CAP + "問だけ出しています。"));
+    }
+
+    var solve = $("#list-solve");
+    solve.style.display = listItems.length ? "" : "none";
+    solve.textContent = "この中から " + Math.min(20, listItems.length) + "問 解く";
+    show("list");
+  }
+
+  /* ---------- 模擬試験の回をえらぶ ---------- */
+
+  function renderMockList() {
+    var list = $("#mock-list");
+    list.textContent = "";
+    mockRounds().forEach(function (round) {
+      var b = badgeFor(round);
+      var done = clearedMock(round);
+      var row = el("button", "chrow");
+      row.type = "button";
+      // 称号ごとに色を変える。6回を超えたら先頭の色に戻す。
+      row.style.setProperty("--accent", accentFor(((round - 1) % 6) + 1));
+      row.appendChild(el("span", "chrow__num", done ? "✓" : String(round)));
+
+      var body = el("span");
+      body.appendChild(el("span", "chrow__name", "第" + round + "回 模擬試験"));
+      body.appendChild(el("span", "chrow__meta", b.icon + " " + b.name
+        + (done ? " ・ " + done.date + " に合格" : " ・ 60問")));
+      row.appendChild(body);
+
+      var right = el("span", "chrow__right");
+      right.appendChild(el("span", "chrow__pct" + (done ? "" : " chrow__pct--none"),
+        done ? done.pct + "点" : "—"));
+      right.appendChild(el("span", "chrow__meta", done ? "受け直す" : "挑戦する"));
+      row.appendChild(right);
+
+      row.addEventListener("click", function () { startMock(round); });
+      list.appendChild(row);
+    });
+  }
+
   /* ---------- テーマ ---------- */
 
   function initTheme() {
@@ -3500,7 +3731,34 @@ window.SEKAISHI.ch9 = [
     $("#exam-date").addEventListener("change", function () {
       if (this.value) { store.examDate = this.value; save(); renderHome(); }
     });
-    $("#btn-mock-main").addEventListener("click", startMock);
+    $("#btn-mock-main").addEventListener("click", function () { renderMockList(); show("mock"); });
+
+    $("#list-solve").addEventListener("click", function () {
+      if (!listItems.length) return;
+      start({
+        items: listItems, mode: "mc", count: Math.min(20, listItems.length),
+        title: "「" + listLabel + "」から " + Math.min(20, listItems.length) + "問"
+      });
+    });
+
+    function tryLogin() {
+      var input = $("#login-input");
+      if ((input.value || "").trim() === PASSCODE) {
+        store.unlocked = true;
+        save(true);
+        input.value = "";
+        $("#login-error").textContent = "";
+        renderHome();
+        show("home");
+      } else {
+        $("#login-error").textContent = "ちがうようです。もう一度入れてください。";
+        input.select();
+      }
+    }
+    $("#login-go").addEventListener("click", tryLogin);
+    $("#login-input").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); tryLogin(); }
+    });
     $("#btn-qa").addEventListener("click", function () {
       start({ chapters: null, mode: "qa", count: 20, title: "一問一答 20問（全範囲）" });
     });
@@ -3661,10 +3919,15 @@ window.SEKAISHI.ch9 = [
   initTheme();
   bind();
   renderHome();
-  show("home");
+  show(store.unlocked ? "home" : "login");
+  if (!store.unlocked) $("#login-input").focus();
   // IndexedDB の記録は少し遅れて届く。届いたら画面を描き直し、
   // 生き残っていた記録をすべての保存先へ書き戻す（自動バックアップ復元）。
-  loadAsync(function () { renderHome(); });
+  loadAsync(function () {
+    renderHome();
+    // 遅れて届いた記録に「入ったことがある」と書いてあれば、あいことばは省く
+    if (store.unlocked && $("#view-login").classList.contains("is-active")) show("home");
+  });
 })();
 
 </script>

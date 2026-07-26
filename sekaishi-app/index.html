@@ -21,6 +21,19 @@
     <p class="nojs__note">ファイルをそのままタップするとプレビューで開いてしまい、問題が出ず、記録も保存されません。</p>
   </div>
 
+  <!-- あいことば。初回だけ聞いて、次からは聞かない -->
+  <section class="view" id="view-login">
+    <div class="login">
+      <p class="login__eyebrow">日大基礎学テスト 世界史</p>
+      <h1 class="login__title">あいことば</h1>
+      <p class="login__lead">4けたの数字を入れてください。<br>聞くのは最初の1回だけです。</p>
+      <input class="login__input" id="login-input" type="password" inputmode="numeric"
+             autocomplete="off" maxlength="8" placeholder="••••" aria-label="あいことば">
+      <p class="login__error" id="login-error"></p>
+      <button class="btn btn--primary" id="login-go" type="button">はじめる</button>
+    </div>
+  </section>
+
   <!-- ホーム -->
   <section class="view is-active" id="view-home">
     <header class="topbar">
@@ -32,8 +45,6 @@
         <button class="iconbtn" id="theme-toggle" type="button" aria-label="明るさを切り替える">◐</button>
       </div>
     </header>
-
-    <p class="warnbar" id="storage-warn" style="display:none"></p>
 
     <p class="aim"><span class="aim__lead">目指せ</span>危機管理学部！</p>
 
@@ -226,6 +237,48 @@
           <span class="quickbtn__desc">この大問を最初から最後まで</span>
         </button>
       </div>
+    </div>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- 段階べつの問題一覧（「覚えた」などを押すとここへ来る） -->
+  <section class="view" id="view-list">
+    <header class="topbar">
+      <div class="topbar__row">
+        <button class="iconbtn" data-home type="button" aria-label="ホームへ戻る">←</button>
+        <div class="topbar__title" id="list-title"></div>
+      </div>
+    </header>
+
+    <div class="section">
+      <div class="section__head">
+        <h2 class="section__title" id="list-desc"></h2>
+        <span class="section__note" id="list-count"></span>
+      </div>
+      <div class="review" id="list-items"></div>
+    </div>
+
+    <div class="actionbar">
+      <button class="btn btn--primary" id="list-solve" type="button">この中から解く</button>
+    </div>
+  </section>
+
+  <!-- 模擬試験の回をえらぶ -->
+  <section class="view" id="view-mock">
+    <header class="topbar">
+      <div class="topbar__row">
+        <button class="iconbtn" data-home type="button" aria-label="ホームへ戻る">←</button>
+        <div class="topbar__title">模擬試験</div>
+      </div>
+    </header>
+
+    <div class="section">
+      <div class="section__head">
+        <h2 class="section__title">回をえらぶ</h2>
+        <span class="section__note">どの回からでもOK</span>
+      </div>
+      <div class="chapters" id="mock-list"></div>
+      <p class="seghint">60問・本番と同じ構成です。80点で合格すると、その回の称号がもらえます。何度でも受け直せます。</p>
     </div>
     <div class="spacer"></div>
   </section>
