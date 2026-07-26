@@ -8,7 +8,10 @@ const root = __dirname;
 const read = (p) => fs.readFileSync(path.join(root, p), "utf8");
 
 const css = read("app.css");
-const js = read("app.js");
+// 版は書き出した日時（日本時間）。端末に更新が届いたかを画面の下で確かめられるようにする。
+const stamp = new Date(Date.now() + 9 * 3600 * 1000)
+  .toISOString().slice(0, 16).replace("T", " ").replace(/-/g, ".");
+const js = read("app.js").replace('"__BUILD__"', JSON.stringify(stamp));
 const dataFiles = fs.readdirSync(path.join(root, "data")).filter((f) => f.endsWith(".js")).sort();
 const data = dataFiles.map((f) => read(path.join("data", f))).join("\n");
 
@@ -61,6 +64,7 @@ fs.writeFileSync(path.join(docs, "index.html"), standalone);
 fs.writeFileSync(path.join(docs, ".nojekyll"), ""); // Jekyll の変換を通さない
 
 const kb = (s) => Math.round(Buffer.byteLength(s) / 1024) + "KB";
+console.log("版:", stamp);
 console.log("docs/index.html   ", kb(standalone), "(GitHub Pages 用)");
 console.log("dist/artifact.html", kb(fragment));
 console.log("dist/index.html   ", kb(standalone));

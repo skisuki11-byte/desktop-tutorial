@@ -60,6 +60,10 @@
   // 今日のぶんを終えたあとの「おかわり」の問題数
   var EXTRA_COUNT = 10;
 
+  // 版。build.js が書き出すときに更新日時を差し込む。
+  // 置き換わっていなければ、束ねる前のファイルを直接開いている＝開発中。
+  var VERSION = "__BUILD__";
+
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
     days: {}, mock: { round: 1, cleared: [] }, unlocked: false, plan: null
@@ -1608,6 +1612,8 @@
   // JavaScript が動いた＝ちゃんと開けている。静的な案内は消す。
   var nojs = document.getElementById("nojs");
   if (nojs && nojs.parentNode) nojs.parentNode.removeChild(nojs);
+
+  $("#app-ver").textContent = /^\d/.test(VERSION) ? VERSION : "開発版";
 
   load();
   build();

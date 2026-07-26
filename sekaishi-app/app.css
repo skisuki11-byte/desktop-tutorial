@@ -1454,3 +1454,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 label.quickbtn { display: block; cursor: pointer; }
+
+/* いちばん下の版表示。更新が端末に届いたかを確かめるための目印 */
+.ver {
+  margin: -14px 0 0;
+  padding: 0 16px calc(22px + env(safe-area-inset-bottom));
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  opacity: .7;
+  font-variant-numeric: tabular-nums;
+}

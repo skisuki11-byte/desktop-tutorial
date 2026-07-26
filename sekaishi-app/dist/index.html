@@ -1464,6 +1464,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 label.quickbtn { display: block; cursor: pointer; }
 
+/* いちばん下の版表示。更新が端末に届いたかを確かめるための目印 */
+.ver {
+  margin: -14px 0 0;
+  padding: 0 16px calc(22px + env(safe-area-inset-bottom));
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  opacity: .7;
+  font-variant-numeric: tabular-nums;
+}
+
 </style>
 </head>
 <body>
@@ -1646,6 +1657,7 @@ label.quickbtn { display: block; cursor: pointer; }
       <strong>地図・写真・系図の問題だけは、このアプリでは出せません。</strong>王朝や都市の位置、建築や肖像、ハプスブルク家の系図は資料集で確認してください（本番で毎年5問前後）。<br>
       解説の「令和◯ 出題」はその年度の実物で問われた知識、「類題」は同じ範囲・同じレベルで作った想定問題です。<br>令和5・6・7の実物過去問 全28ページと、対策塾各社の情報にもとづいて作成。記録はこの端末にだけ保存されます。
     </p>
+    <p class="ver">版 <span id="app-ver"></span></p>
   </section>
 
   <!-- 大問メニュー -->
@@ -2401,6 +2413,10 @@ window.SEKAISHI.ch9 = [
 
   // 今日のぶんを終えたあとの「おかわり」の問題数
   var EXTRA_COUNT = 10;
+
+  // 版。build.js が書き出すときに更新日時を差し込む。
+  // 置き換わっていなければ、束ねる前のファイルを直接開いている＝開発中。
+  var VERSION = "2026.07.26 13:25";
 
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
@@ -3950,6 +3966,8 @@ window.SEKAISHI.ch9 = [
   // JavaScript が動いた＝ちゃんと開けている。静的な案内は消す。
   var nojs = document.getElementById("nojs");
   if (nojs && nojs.parentNode) nojs.parentNode.removeChild(nojs);
+
+  $("#app-ver").textContent = /^\d/.test(VERSION) ? VERSION : "開発版";
 
   load();
   build();
