@@ -57,9 +57,12 @@
   // 初回だけ聞くあいことば。中身を隠すためのものではなく、他の人に触られないための目印。
   var PASSCODE = "0402";
 
+  // 今日のぶんを終えたあとの「おかわり」の問題数
+  var EXTRA_COUNT = 10;
+
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
-    days: {}, mock: { round: 1, cleared: [] }, unlocked: false
+    days: {}, mock: { round: 1, cleared: [] }, unlocked: false, plan: null
   };
   var session = null;
 
@@ -126,7 +129,8 @@
       b36(mock.round || 1, 0) + "." + cleared,
       b36(base, 0) + "." + days.join(""),
       rec.join(""),
-      st.unlocked ? "1" : "0"
+      st.unlocked ? "1" : "0",
+      st.plan ? b36(dayNum(st.plan.date), 0) + "." + b36(st.plan.n, 0) : ""
     ].join("~");
   }
 
@@ -155,6 +159,9 @@
       });
     }
     var exam = dayIso(n36(f[2]));
+    // その日の目標問題数。無ければ、次に開いたときに決め直す。
+    var plan = null, pp = String(f[8] || "").split(".");
+    if (pp.length === 2 && pp[0]) plan = { date: dayIso(n36(pp[0])), n: n36(pp[1]) };
     return {
       t: n36(f[1]) * 60000,
       state: {
@@ -163,7 +170,8 @@
         examDate: OLD_DEFAULT_EXAM_DATES.indexOf(exam) >= 0 ? DEFAULT_EXAM_DATE : exam,
         days: days,
         mock: { round: n36(mp[0]) || 1, cleared: cleared },
-        unlocked: f[7] === "1"
+        unlocked: f[7] === "1",
+        plan: plan
       }
     };
   }
@@ -197,7 +205,8 @@
         examDate: OLD_DEFAULT_EXAM_DATES.indexOf(exam) >= 0 ? DEFAULT_EXAM_DATE : exam,
         days: p.days || p.day || {},
         mock: p.mock || p.m || { round: 1, cleared: [] },
-        unlocked: !!p.unlocked
+        unlocked: !!p.unlocked,
+        plan: p.plan || null
       }
     };
   }
@@ -451,7 +460,7 @@
     return Math.max(0, Math.round((exam - now) / 86400000));
   }
 
-  function dailyTarget() {
+  function computeTarget() {
     var g = goalStats();
     var d = Math.max(1, daysLeft());
     var need = Math.ceil((g.remaining * TRIES_PER_MASTER) / d);
@@ -459,6 +468,18 @@
     // 「間に合わない」と正直に伝える方向にする。
     // 5問単位に切り上げる。切り捨てると必要量にわずかに届かない
     return Math.max(20, Math.min(45, Math.ceil(need / 5) * 5 || 20));
+  }
+
+  // その日の目標は、最初に開いたときに決めて、日付が変わるまで動かさない。
+  // 解くたびに計算し直すと、覚えた問題が増えたぶん目標が下がり、
+  // 「今日の25問」が途中で20問に変わって、何問やればいいのか分からなくなる。
+  function dailyTarget() {
+    var key = todayKey();
+    if (store.plan && store.plan.date === key && store.plan.n > 0) return store.plan.n;
+    var n = computeTarget();
+    store.plan = { date: key, n: n };
+    save();
+    return n;
   }
 
   // いまのペースで間に合うか。間に合わないなら早めに気づけるようにする。
@@ -767,13 +788,17 @@
       chips.appendChild(c);
     });
 
-    // 今日のミッション
-    $("#mission-label").textContent = "今日の" + target + "問";
+    // 今日のミッション。大きな文字は「いま押したら何問出るか」に合わせる。
+    // ここが目標問題数のままだと、途中まで解いた日に数が合わなくて混乱する。
+    var rest = target - done;
+    $("#mission-label").textContent = done === 0 ? "今日の" + target + "問"
+      : rest > 0 ? "残り " + rest + "問"
+      : "おかわり " + EXTRA_COUNT + "問";
     $("#mission-count").textContent = done + " / " + target + "問";
     $("#mission-fill").style.width = Math.min(100, Math.round((done / target) * 100)) + "%";
     var cta = $("#mission-cta");
     cta.textContent = done === 0 ? "はじめる"
-      : done < target ? "つづきをやる（あと " + (target - done) + "問）"
+      : rest > 0 ? "つづきをやる（今日の目標は " + target + "問）"
       : "今日のぶんは完了。もう少しやる？";
     cta.className = "mission__cta" + (done >= target ? " is-done" : "");
     $("#btn-today").classList.toggle("is-done", done >= target);
@@ -1387,11 +1412,16 @@
 
   function bind() {
     $("#btn-today").addEventListener("click", function () {
-      // 今日の残りぶんだけ出す。終わっていたら追加で10問。
+      // 今日の残りぶんだけ出す。終わっていたら「おかわり」。
+      // 画面の見出しも、ホームのボタンと同じ言い方にそろえる。
       var target = dailyTarget();
-      var rest = target - todayCount();
-      var n = rest > 0 ? rest : 10;
-      start({ chapters: null, mode: "mc", count: n, title: "今日の" + n + "問" });
+      var done = todayCount();
+      var rest = target - done;
+      var n = rest > 0 ? rest : EXTRA_COUNT;
+      var title = done === 0 ? "今日の" + n + "問"
+        : rest > 0 ? "残り " + n + "問"
+        : "おかわり " + n + "問";
+      start({ chapters: null, mode: "mc", count: n, title: title });
     });
     $("#exam-date").addEventListener("change", function () {
       if (this.value) { store.examDate = this.value; save(); renderHome(); }
