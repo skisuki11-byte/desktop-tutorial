@@ -521,6 +521,27 @@
 
   function todayCount() { return store.days[todayKey()] || 0; }
 
+  // いま正答率がいちばん低い大問。ホームの「記録を見る」に出して、
+  // 開かなくても弱点が目に入るようにする。
+  function weakestChapter() {
+    var worst = null;
+    CHAPTERS.forEach(function (ch) {
+      if (REQUIRED_IDS.indexOf(ch.id) < 0 && ch.id !== store.elective) return;
+      var right = 0, tries = 0;
+      ALL.forEach(function (it) {
+        if (it.ch !== ch.id) return;
+        var s = stat(it.id);
+        right += s.c;
+        tries += s.c + s.w;
+      });
+      // 数問しか解いていない大問を「苦手」と言い切ると外れるので、ある程度たまってから
+      if (tries < 5) return;
+      var acc = right / tries;
+      if (!worst || acc < worst.acc) worst = { ch: ch, acc: acc };
+    });
+    return worst;
+  }
+
   /* ---------- 模擬試験 ---------- */
 
   function badgeFor(round) {
@@ -911,6 +932,12 @@
       : cleared
         ? cleared + "回 合格ずみ ・ つぎは第" + round + "回（" + nextBadge.icon + " " + nextBadge.name + "）"
         : "第1回から挑戦できます（" + nextBadge.icon + " " + nextBadge.name + "）";
+
+    var weak = weakestChapter();
+    $("#stats-teaser").textContent = weak
+      ? "いま苦手なのは " + weak.ch.badge + " " + weak.ch.name
+        + "（正答率 " + Math.round(weak.acc * 100) + "％）"
+      : "大問ごとの正答率と、苦手な問題がわかります";
 
     var bl = $("#badge-list");
     bl.textContent = "";

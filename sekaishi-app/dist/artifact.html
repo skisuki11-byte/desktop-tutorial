@@ -1564,6 +1564,16 @@ label.quickbtn { display: block; cursor: pointer; }
         <div class="mock__desc" id="mock-desc"></div>
         <div class="mock__next" id="mock-next"></div>
       </button>
+
+      <div class="spacer"></div>
+      <button class="bigbtn" id="btn-stats" type="button">
+        <span class="bigbtn__icon">記</span>
+        <span>
+          <span class="bigbtn__label">記録を見る</span>
+          <span class="bigbtn__desc" id="stats-teaser"></span>
+        </span>
+        <span class="bigbtn__chev">›</span>
+      </button>
     </div>
 
     <div class="section" id="badge-section">
@@ -1592,10 +1602,6 @@ label.quickbtn { display: block; cursor: pointer; }
           <button class="quickbtn" id="btn-weak" type="button">
             <span class="quickbtn__label">まちがい直し</span>
             <span class="quickbtn__desc" id="btn-weak-desc"></span>
-          </button>
-          <button class="quickbtn" id="btn-stats" type="button">
-            <span class="quickbtn__label">記録を見る</span>
-            <span class="quickbtn__desc">大問ごとの正答率</span>
           </button>
         </div>
       </div>
@@ -2420,7 +2426,7 @@ window.SEKAISHI.ch9 = [
 
   // 版。build.js が書き出すときに更新日時を差し込む。
   // 置き換わっていなければ、束ねる前のファイルを直接開いている＝開発中。
-  var VERSION = "2026.07.26 15:23";
+  var VERSION = "2026.07.26 15:32";
 
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
@@ -2879,6 +2885,27 @@ window.SEKAISHI.ch9 = [
 
   function todayCount() { return store.days[todayKey()] || 0; }
 
+  // いま正答率がいちばん低い大問。ホームの「記録を見る」に出して、
+  // 開かなくても弱点が目に入るようにする。
+  function weakestChapter() {
+    var worst = null;
+    CHAPTERS.forEach(function (ch) {
+      if (REQUIRED_IDS.indexOf(ch.id) < 0 && ch.id !== store.elective) return;
+      var right = 0, tries = 0;
+      ALL.forEach(function (it) {
+        if (it.ch !== ch.id) return;
+        var s = stat(it.id);
+        right += s.c;
+        tries += s.c + s.w;
+      });
+      // 数問しか解いていない大問を「苦手」と言い切ると外れるので、ある程度たまってから
+      if (tries < 5) return;
+      var acc = right / tries;
+      if (!worst || acc < worst.acc) worst = { ch: ch, acc: acc };
+    });
+    return worst;
+  }
+
   /* ---------- 模擬試験 ---------- */
 
   function badgeFor(round) {
@@ -3269,6 +3296,12 @@ window.SEKAISHI.ch9 = [
       : cleared
         ? cleared + "回 合格ずみ ・ つぎは第" + round + "回（" + nextBadge.icon + " " + nextBadge.name + "）"
         : "第1回から挑戦できます（" + nextBadge.icon + " " + nextBadge.name + "）";
+
+    var weak = weakestChapter();
+    $("#stats-teaser").textContent = weak
+      ? "いま苦手なのは " + weak.ch.badge + " " + weak.ch.name
+        + "（正答率 " + Math.round(weak.acc * 100) + "％）"
+      : "大問ごとの正答率と、苦手な問題がわかります";
 
     var bl = $("#badge-list");
     bl.textContent = "";
