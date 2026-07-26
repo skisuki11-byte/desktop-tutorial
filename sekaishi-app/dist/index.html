@@ -1464,6 +1464,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 label.quickbtn { display: block; cursor: pointer; }
 
+/* 途中の模試を捨てて解き直すための小さなボタン */
+.mockrestart {
+  display: block;
+  margin: 12px auto 0;
+  padding: 6px 4px;
+  font-size: 12.5px;
+}
+
 /* いちばん下の版表示。更新が端末に届いたかを確かめるための目印 */
 .ver {
   margin: -14px 0 0;
@@ -1749,7 +1757,9 @@ label.quickbtn { display: block; cursor: pointer; }
         <span class="section__note">どの回からでもOK</span>
       </div>
       <div class="chapters" id="mock-list"></div>
-      <p class="seghint">60問・本番と同じ構成です。80点で合格すると、その回の称号がもらえます。何度でも受け直せます。</p>
+      <button class="linkbtn mockrestart" id="mock-restart" type="button" style="display:none"></button>
+      <p class="seghint">60問・本番と同じ構成です。80点で合格すると、その回の称号がもらえます。何度でも受け直せます。<br>
+        途中でホームに戻っても、解いたところまで残ります。同じ回をもう一度ひらけば、つづきから再開できます。</p>
     </div>
     <div class="spacer"></div>
   </section>
@@ -2417,11 +2427,11 @@ window.SEKAISHI.ch9 = [
 
   // 版。build.js が書き出すときに更新日時を差し込む。
   // 置き換わっていなければ、束ねる前のファイルを直接開いている＝開発中。
-  var VERSION = "2026.07.26 13:40";
+  var VERSION = "2026.07.26 15:23";
 
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
-    days: {}, mock: { round: 1, cleared: [] }, unlocked: false, plan: null
+    days: {}, mock: { round: 1, cleared: [] }, unlocked: false, plan: null, run: null
   };
   var session = null;
 
@@ -2457,16 +2467,25 @@ window.SEKAISHI.ch9 = [
     return d.getUTCFullYear() + "-" + ("0" + (d.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + d.getUTCDate()).slice(-2);
   }
 
+  // 問題の id（c3-07 のような形）を3文字に詰める＝章1文字＋番号2文字
+  function packId(id) {
+    var m = /^c(\d+)-(\d+)$/.exec(id);
+    return m ? b36(+m[1], 1) + b36(+m[2], 2) : "";
+  }
+  function unpackId(s) {
+    return "c" + n36(s.charAt(0)) + "-" + ("0" + n36(s.substr(1, 2))).slice(-2);
+  }
+
   /* 434問ぶんの記録を数KBの文字列に詰める。URL に丸ごと載る長さにするため。
      1問あたり6文字＝章1・番号2・正答数1・誤答数1・連続正解1。 */
   function packState(st) {
     var ids = Object.keys(st.stats).sort(), rec = [], i;
     for (i = 0; i < ids.length; i++) {
-      var m = /^c(\d+)-(\d+)$/.exec(ids[i]);
-      if (!m) continue;
+      var key = packId(ids[i]);
+      if (!key) continue;
       var s = st.stats[ids[i]];
       if (!s || (s.c + s.w) === 0) continue;
-      rec.push(b36(+m[1], 1) + b36(+m[2], 2) + b36(Math.min(35, s.c), 1)
+      rec.push(key + b36(Math.min(35, s.c), 1)
         + b36(Math.min(35, s.w), 1) + b36(Math.min(35, s.run || 0), 1));
     }
     var dk = Object.keys(st.days).sort(), base = dk.length ? dayNum(dk[0]) : 0, days = [];
@@ -2489,7 +2508,10 @@ window.SEKAISHI.ch9 = [
       b36(base, 0) + "." + days.join(""),
       rec.join(""),
       st.unlocked ? "1" : "0",
-      st.plan ? b36(dayNum(st.plan.date), 0) + "." + b36(st.plan.n, 0) : ""
+      st.plan ? b36(dayNum(st.plan.date), 0) + "." + b36(st.plan.n, 0) : "",
+      // 途中でやめた模擬試験。回・出題順・そこまでの正誤を持っておく
+      st.run ? b36(st.run.round, 1) + "." + st.run.ids.map(packId).join("")
+        + "." + st.run.ok.map(function (o) { return o ? "1" : "0"; }).join("") : ""
     ].join("~");
   }
 
@@ -2499,9 +2521,9 @@ window.SEKAISHI.ch9 = [
     if ((v !== "3" && v !== "2") || f.length < 7) return null;
     var stats = {}, rec = f[6], i;
     for (i = 0; i + 6 <= rec.length; i += 6) {
-      var id = "c" + n36(rec.charAt(i)) + "-" + ("0" + n36(rec.substr(i + 1, 2))).slice(-2);
-      var run = n36(rec.charAt(i + 5));
-      stats[id] = { c: n36(rec.charAt(i + 3)), w: n36(rec.charAt(i + 4)), run: run, lastWrong: run === 0 };
+      var streak = n36(rec.charAt(i + 5));
+      stats[unpackId(rec.substr(i, 3))] =
+        { c: n36(rec.charAt(i + 3)), w: n36(rec.charAt(i + 4)), run: streak, lastWrong: streak === 0 };
     }
     var days = {}, dp = f[5].split("."), dbase = n36(dp[0]), ds = dp[1] || "";
     for (i = 0; i + 4 <= ds.length; i += 4) {
@@ -2521,6 +2543,16 @@ window.SEKAISHI.ch9 = [
     // その日の目標問題数。無ければ、次に開いたときに決め直す。
     var plan = null, pp = String(f[8] || "").split(".");
     if (pp.length === 2 && pp[0]) plan = { date: dayIso(n36(pp[0])), n: n36(pp[1]) };
+    // 途中でやめた模擬試験
+    var run = null, rp = String(f[9] || "").split(".");
+    if (rp.length === 3 && rp[1]) {
+      var rids = [];
+      for (i = 0; i + 3 <= rp[1].length; i += 3) rids.push(unpackId(rp[1].substr(i, 3)));
+      run = {
+        round: n36(rp[0]) || 1, ids: rids,
+        ok: String(rp[2]).split("").map(function (c) { return c === "1"; })
+      };
+    }
     return {
       t: n36(f[1]) * 60000,
       state: {
@@ -2530,7 +2562,8 @@ window.SEKAISHI.ch9 = [
         days: days,
         mock: { round: n36(mp[0]) || 1, cleared: cleared },
         unlocked: f[7] === "1",
-        plan: plan
+        plan: plan,
+        run: run
       }
     };
   }
@@ -2565,7 +2598,8 @@ window.SEKAISHI.ch9 = [
         days: p.days || p.day || {},
         mock: p.mock || p.m || { round: 1, cleared: [] },
         unlocked: !!p.unlocked,
-        plan: p.plan || null
+        plan: p.plan || null,
+        run: p.run || null
       }
     };
   }
@@ -2866,6 +2900,52 @@ window.SEKAISHI.ch9 = [
       chapters: null, mode: "mc", count: 60, isMock: true, mockRound: round,
       title: "第" + round + "回 模擬試験"
     });
+    if (!session) return;
+    // 60問は一度に解き切れないことがあるので、出題順を控えて途中から戻れるようにする
+    store.run = {
+      round: round,
+      ids: session.views.map(function (v) { return v.item.id; }),
+      ok: []
+    };
+    save(true);
+  }
+
+  // 途中でやめた模試のつづき。出題順はそのまま、答えた問題は飛ばす。
+  function resumeMock() {
+    var run = store.run;
+    if (!run) return;
+    var items = [], i;
+    for (i = 0; i < run.ids.length; i++) {
+      if (BY_ID[run.ids[i]]) items.push(BY_ID[run.ids[i]]);
+    }
+    // 問題を入れ替えたあとなどで見つからないものがあれば、素直に最初からやり直す
+    if (items.length !== run.ids.length) {
+      var round = run.round;
+      store.run = null;
+      save(true);
+      toast("問題が更新されたため、第" + round + "回を最初から出題します");
+      startMock(round);
+      return;
+    }
+    start({
+      items: items, ordered: true, mode: "mc", count: items.length,
+      isMock: true, mockRound: run.round,
+      title: "第" + run.round + "回 模擬試験（つづき）"
+    });
+    if (!session) return;
+    var done = Math.min(run.ok.length, items.length);
+    session.results = [];
+    for (i = 0; i < done; i++) session.results.push({ item: items[i], ok: !!run.ok[i] });
+    if (done >= items.length) { renderResult(); show("result"); return; }
+    session.idx = done;
+    renderQuestion();
+  }
+
+  // 1問も答えていないうちは「途中」と呼ばない。
+  // 始めた直後に戻っただけで「0問まで解いた・つづきから」と出るのは、かえって分かりにくい。
+  function runProgress() {
+    if (!store.run || !store.run.ok.length) return null;
+    return { round: store.run.round, done: store.run.ok.length, total: store.run.ids.length };
   }
 
   function clearedMock(round) {
@@ -3057,7 +3137,9 @@ window.SEKAISHI.ch9 = [
       return;
     }
     var picked;
-    if (opts.count === "all") {
+    if (opts.ordered) {
+      picked = p.slice(0, opts.count || p.length); // つづきから。並べ替えない
+    } else if (opts.count === "all") {
       picked = shuffle(p.slice());
     } else if (!opts.chapters && !opts.items) {
       // 全範囲のときは本番の配点比に合わせ、必須と選択枠を分けて抽出する
@@ -3185,12 +3267,15 @@ window.SEKAISHI.ch9 = [
     // 模擬試験（家でやる用）。押すと回を選ぶ画面へ。
     var round = store.mock.round;
     var cleared = (store.mock.cleared || []).length;
-    $("#mock-label").textContent = "模擬試験";
+    var prog = runProgress();
+    $("#mock-label").textContent = prog ? "模擬試験（途中）" : "模擬試験";
     $("#mock-desc").textContent = "60問・本番と同じ構成。" + MOCK_PASS + "点で合格し、称号がもらえます";
-    var next = badgeFor(round);
-    $("#mock-next").textContent = cleared
-      ? cleared + "回 合格ずみ ・ つぎは第" + round + "回（" + next.icon + " " + next.name + "）"
-      : "第1回から挑戦できます（" + next.icon + " " + next.name + "）";
+    var nextBadge = badgeFor(round);
+    $("#mock-next").textContent = prog
+      ? "第" + prog.round + "回を " + prog.done + " / " + prog.total + "問まで解いています。つづきから再開できます"
+      : cleared
+        ? cleared + "回 合格ずみ ・ つぎは第" + round + "回（" + nextBadge.icon + " " + nextBadge.name + "）"
+        : "第1回から挑戦できます（" + nextBadge.icon + " " + nextBadge.name + "）";
 
     var bl = $("#badge-list");
     bl.textContent = "";
@@ -3468,6 +3553,11 @@ window.SEKAISHI.ch9 = [
     var item = view.item;
     record(item.id, ok);
     session.results.push({ item: item, ok: ok });
+    // 模試は1問ごとにどこまで解いたかを控える。閉じても続きから戻れるように。
+    if (session.isMock && store.run && store.run.round === session.mockRound) {
+      store.run.ok.push(!!ok);
+      save();
+    }
 
     if (!skipExplain) {
       var v = el("div", "verdict fadein " + (ok ? "verdict--good" : "verdict--bad"),
@@ -3533,6 +3623,9 @@ window.SEKAISHI.ch9 = [
   /* ---------- 結果 ---------- */
 
   function renderResult() {
+    // 最後まで解き切ったので、途中の記録はもう要らない
+    if (session.isMock && store.run) { store.run = null; save(true); }
+
     var right = session.results.filter(function (r) { return r.ok; }).length;
     var total = session.results.length;
     var p = pct(right, total);
@@ -3601,7 +3694,8 @@ window.SEKAISHI.ch9 = [
     });
 
     $("#result-again").onclick = function () {
-      if (session.isMock) { startMock(); return; }
+      // 同じ回をもう一度。合格して次の回に進んでいても、いま解いた回をやり直す。
+      if (session.isMock) { startMock(session.mockRound); return; }
       start({
         chapters: session.chapters, mode: session.mode,
         count: session.views.length, title: session.title
@@ -3725,31 +3819,42 @@ window.SEKAISHI.ch9 = [
 
   function renderMockList() {
     var list = $("#mock-list");
+    var prog = runProgress();
     list.textContent = "";
     mockRounds().forEach(function (round) {
       var b = badgeFor(round);
       var done = clearedMock(round);
+      var midway = prog && prog.round === round;
       var row = el("button", "chrow");
       row.type = "button";
       // 称号ごとに色を変える。6回を超えたら先頭の色に戻す。
       row.style.setProperty("--accent", accentFor(((round - 1) % 6) + 1));
-      row.appendChild(el("span", "chrow__num", done ? "✓" : String(round)));
+      row.appendChild(el("span", "chrow__num", midway ? "…" : done ? "✓" : String(round)));
 
       var body = el("span");
       body.appendChild(el("span", "chrow__name", "第" + round + "回 模擬試験"));
       body.appendChild(el("span", "chrow__meta", b.icon + " " + b.name
-        + (done ? " ・ " + done.date + " に合格" : " ・ 60問")));
+        + (midway ? " ・ " + prog.done + " / " + prog.total + "問まで解いた"
+          : done ? " ・ " + done.date + " に合格" : " ・ 60問")));
       row.appendChild(body);
 
       var right = el("span", "chrow__right");
       right.appendChild(el("span", "chrow__pct" + (done ? "" : " chrow__pct--none"),
         done ? done.pct + "点" : "—"));
-      right.appendChild(el("span", "chrow__meta", done ? "受け直す" : "挑戦する"));
+      right.appendChild(el("span", "chrow__meta",
+        midway ? "つづきから" : done ? "受け直す" : "挑戦する"));
       row.appendChild(right);
 
-      row.addEventListener("click", function () { startMock(round); });
+      row.addEventListener("click", function () {
+        if (midway) resumeMock(); else startMock(round);
+      });
       list.appendChild(row);
     });
+
+    // 途中のものを捨てて最初からやり直したいとき用
+    var restart = $("#mock-restart");
+    restart.style.display = prog ? "" : "none";
+    restart.textContent = "途中の第" + (prog ? prog.round : "") + "回をやめて、最初から解き直す";
   }
 
   /* ---------- テーマ ---------- */
@@ -3791,6 +3896,14 @@ window.SEKAISHI.ch9 = [
       if (this.value) { store.examDate = this.value; save(); renderHome(); }
     });
     $("#btn-mock-main").addEventListener("click", function () { renderMockList(); show("mock"); });
+
+    $("#mock-restart").addEventListener("click", function () {
+      var prog = runProgress();
+      if (!prog) return;
+      store.run = null;
+      save(true);
+      startMock(prog.round);
+    });
 
     $("#list-solve").addEventListener("click", function () {
       if (!listItems.length) return;

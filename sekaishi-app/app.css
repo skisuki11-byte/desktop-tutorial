@@ -1455,6 +1455,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 label.quickbtn { display: block; cursor: pointer; }
 
+/* 途中の模試を捨てて解き直すための小さなボタン */
+.mockrestart {
+  display: block;
+  margin: 12px auto 0;
+  padding: 6px 4px;
+  font-size: 12.5px;
+}
+
 /* いちばん下の版表示。更新が端末に届いたかを確かめるための目印 */
 .ver {
   margin: -14px 0 0;
