@@ -872,6 +872,22 @@ button { font: inherit; color: inherit; cursor: pointer; }
   box-shadow: var(--shadow);
 }
 
+/* リングの数字は正答率ではなく「目標までの進み具合」。
+   となりに「覚えた◯問」が並ぶので、何の割合かを添えて取り違えを防ぐ。 */
+.goal__left {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.goal__cap {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--ink-3);
+}
+
 .goal__ring {
   position: relative;
   flex: none;
@@ -1527,14 +1543,17 @@ label.quickbtn { display: block; cursor: pointer; }
 
     <!-- ゴールまでの距離。ここを見れば「あとどれくらいか」が一目で分かる -->
     <div class="goal">
-      <div class="goal__ring">
-        <svg viewBox="0 0 120 120" aria-hidden="true">
-          <circle class="goal__track" cx="60" cy="60" r="52"></circle>
-          <circle class="goal__arc" id="goal-arc" cx="60" cy="60" r="52"></circle>
-        </svg>
-        <div class="goal__center">
-          <span class="goal__pct" id="goal-pct">0</span><span class="goal__pctunit">%</span>
+      <div class="goal__left">
+        <div class="goal__ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="goal__track" cx="60" cy="60" r="52"></circle>
+            <circle class="goal__arc" id="goal-arc" cx="60" cy="60" r="52"></circle>
+          </svg>
+          <div class="goal__center">
+            <span class="goal__pct" id="goal-pct">0</span><span class="goal__pctunit">%</span>
+          </div>
         </div>
+        <span class="goal__cap">達成度</span>
       </div>
       <div class="goal__body">
         <p class="goal__days" id="goal-days"></p>
@@ -2433,7 +2452,7 @@ window.SEKAISHI.ch9 = [
 
   // 版。build.js が書き出すときに更新日時を差し込む。
   // 置き換わっていなければ、束ねる前のファイルを直接開いている＝開発中。
-  var VERSION = "2026.07.26 15:32";
+  var VERSION = "2026.07.26 15:49";
 
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
@@ -3241,7 +3260,9 @@ window.SEKAISHI.ch9 = [
     $("#scope-note").textContent = "出題されるのは、必須①〜⑥と選んだ選択枠1つの " + g.total
       + "問です。アプリには全" + ALL.length + "問が入っていますが、選んでいない選択枠の "
       + (ALL.length - g.total) + "問は出ません。目標の " + g.goal
-      + "問は、必須9割・選択7割で本番80点に届く数です。";
+      + "問は、必須9割・選択7割で本番80点に届く数です。"
+      + "上の「達成度」は正答率ではなく目標までの進み具合で、"
+      + "「あと一歩」を0.6問、「あやふや」を0.2問と数えるため、覚えた問題数だけの割合より先に進みます。";
 
     // 4段階の内訳。ここが動くと「進んでいる」ことが分かる。
     var BREAK = [

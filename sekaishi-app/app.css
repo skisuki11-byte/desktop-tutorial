@@ -863,6 +863,22 @@ button { font: inherit; color: inherit; cursor: pointer; }
   box-shadow: var(--shadow);
 }
 
+/* リングの数字は正答率ではなく「目標までの進み具合」。
+   となりに「覚えた◯問」が並ぶので、何の割合かを添えて取り違えを防ぐ。 */
+.goal__left {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.goal__cap {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--ink-3);
+}
+
 .goal__ring {
   position: relative;
   flex: none;

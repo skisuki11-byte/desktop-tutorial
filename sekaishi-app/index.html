@@ -50,14 +50,17 @@
 
     <!-- ゴールまでの距離。ここを見れば「あとどれくらいか」が一目で分かる -->
     <div class="goal">
-      <div class="goal__ring">
-        <svg viewBox="0 0 120 120" aria-hidden="true">
-          <circle class="goal__track" cx="60" cy="60" r="52"></circle>
-          <circle class="goal__arc" id="goal-arc" cx="60" cy="60" r="52"></circle>
-        </svg>
-        <div class="goal__center">
-          <span class="goal__pct" id="goal-pct">0</span><span class="goal__pctunit">%</span>
+      <div class="goal__left">
+        <div class="goal__ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="goal__track" cx="60" cy="60" r="52"></circle>
+            <circle class="goal__arc" id="goal-arc" cx="60" cy="60" r="52"></circle>
+          </svg>
+          <div class="goal__center">
+            <span class="goal__pct" id="goal-pct">0</span><span class="goal__pctunit">%</span>
+          </div>
         </div>
+        <span class="goal__cap">達成度</span>
       </div>
       <div class="goal__body">
         <p class="goal__days" id="goal-days"></p>
