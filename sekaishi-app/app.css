@@ -638,6 +638,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn--good { border-color: var(--good); color: var(--good); }
 .btn--bad { border-color: var(--bad); color: var(--bad); }
 
+/* 前の問題へ戻るボタン。主役ではないので、幅は文字ぶんだけにして
+   「次の問題へ」に場所をゆずる。3つ並ぶときは折り返す。 */
+.btn--back {
+  flex: 0 1 auto;
+  padding-left: 14px;
+  padding-right: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.btn--backrow { flex: 1 0 100%; }
+.actionbar { flex-wrap: wrap; }
+
 /* ---------- 結果・記録 ---------- */
 
 .pad { padding: 20px 16px 0; }

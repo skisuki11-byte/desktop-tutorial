@@ -598,7 +598,13 @@
     if (!session) return;
     var done = Math.min(run.ok.length, items.length);
     session.results = [];
-    for (i = 0; i < done; i++) session.results.push({ item: items[i], ok: !!run.ok[i] });
+    for (i = 0; i < done; i++) {
+      session.results.push({ item: items[i], ok: !!run.ok[i] });
+      // 解きなおしにならないよう、答えた問題として印をつける。
+      // どの選択肢を選んだかまでは残していないので、正解だけを示す。
+      session.views[i].done = true;
+      session.views[i].ok = !!run.ok[i];
+    }
     if (done >= items.length) { renderResult(); show("result"); return; }
     session.idx = done;
     renderQuestion();
@@ -1109,7 +1115,10 @@
     var body = $("#quiz-body");
     body.textContent = "";
 
-    if (session.mode === "mc") {
+    if (view.done) {
+      // 「前の問題」で戻ってきた。答えたときの状態のまま出し直す。
+      replayQuestion(view);
+    } else if (session.mode === "mc") {
       body.appendChild(buildChoices(view));
       setActions([]);
     } else {
@@ -1119,6 +1128,47 @@
         { label: "答えを見る", cls: "btn btn--primary", fn: revealQA }
       ]);
     }
+  }
+
+  // すでに答えた問題を、答えたときの見た目で復元する。記録はつけ直さない。
+  function replayQuestion(view) {
+    var item = view.item, body = $("#quiz-body"), nodes, i;
+    session.answered = true;
+
+    body.appendChild(buildChoices(view));
+    nodes = body.querySelectorAll(".choice");
+    for (i = 0; i < nodes.length; i++) {
+      nodes[i].disabled = true;
+      if (i === view.answer) nodes[i].classList.add("is-correct");
+      // chosen が無いのは、模試を途中から再開したとき。どれを選んだかまでは残していない。
+      else if (i === view.chosen) nodes[i].classList.add("is-wrong");
+      else nodes[i].classList.add("is-dim");
+    }
+
+    if (session.mode !== "mc") {
+      var box = el("div", "reveal");
+      box.appendChild(el("div", "reveal__label", "こたえ"));
+      box.appendChild(el("p", "reveal__answer", item.a));
+      body.appendChild(box);
+    }
+
+    var v = el("div", "verdict " + (view.ok ? "verdict--good" : "verdict--bad"),
+      session.mode === "mc"
+        ? (view.ok ? "◯　正解" : "×　不正解")
+        : (view.ok ? "◯　できた" : "×　できなかった"));
+    if (session.mode === "mc" && !view.ok) {
+      v.appendChild(el("span", "verdict__answer", "正解は " + (view.answer + 1) + "番"));
+    }
+    body.appendChild(v);
+    appendExplain(item);
+    appendMasterToggle(item);
+
+    var isLast = session.idx === session.views.length - 1;
+    setActions([{
+      label: isLast ? "結果を見る" : "次の問題へ",
+      cls: "btn btn--primary",
+      fn: next
+    }]);
   }
 
   function buildChoices(view, extraClass) {
@@ -1143,11 +1193,25 @@
   function setActions(buttons) {
     var bar = $("#quiz-actions");
     bar.textContent = "";
+    // 2問目からは、いつでも前の問題を見返せるようにしておく。
+    // 解き終わってから「さっきのは何だったか」を確かめたい場面が多い。
+    var back = null;
+    if (session && session.idx > 0) {
+      back = el("button", "btn btn--back", "← 前の問題");
+      back.addEventListener("click", prev);
+    }
+    // ボタンが1つなら横に並べる。2つ以上あるときは、3つ並べると文字が折れるので
+    // 戻るだけ下の段へ回す。
+    if (back && buttons.length <= 1) bar.appendChild(back);
     buttons.forEach(function (b) {
       var n = el("button", b.cls, b.label);
       n.addEventListener("click", b.fn);
       bar.appendChild(n);
     });
+    if (back && buttons.length > 1) {
+      back.classList.add("btn--backrow");
+      bar.appendChild(back);
+    }
   }
 
   function answerMC(chosen) {
@@ -1155,6 +1219,7 @@
     session.answered = true;
     var view = session.views[session.idx];
     var ok = chosen === view.answer;
+    view.chosen = chosen; // 戻ってきたときに、選んだ選択肢を赤で示すため
 
     var nodes = $("#quiz-body").querySelectorAll(".choice");
     for (var i = 0; i < nodes.length; i++) {
@@ -1229,6 +1294,8 @@
   function finish(ok, skipExplain) {
     var view = session.views[session.idx];
     var item = view.item;
+    view.done = true;   // これで「前の問題」から見返せるようになる
+    view.ok = ok;
     record(item.id, ok, session.isMock);
     session.results.push({ item: item, ok: ok });
     // 模試は1問ごとにどこまで解いたかを控える。閉じても続きから戻れるように。
@@ -1290,6 +1357,12 @@
     });
     paint();
     $("#quiz-body").appendChild(box);
+  }
+
+  function prev() {
+    if (!session || session.idx <= 0) return;
+    session.idx--;
+    renderQuestion();
   }
 
   function next() {
