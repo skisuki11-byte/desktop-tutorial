@@ -77,6 +77,7 @@
         tag: tag,
         real: !!row.real,
         q: row.q,
+        qJa: row.qJa || '',
         qIsEn: /[A-Za-z].*[A-Za-z]/.test(row.q) && row.q.split(' ').length > 2,
         a: row.a,
         ja: row.ja || '',
@@ -449,6 +450,7 @@
     });
     if (!ok) btn.classList.add('wrong');
 
+    $('#quiz-q-ja').textContent = it.qJa || '';
     $('#quiz-ja').textContent = it.ja || it.a;
     $('#quiz-note').textContent = it.note;
     $('#quiz-feedback').hidden = false;
