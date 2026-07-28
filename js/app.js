@@ -611,8 +611,10 @@
 
     $('#btn-back-mode').addEventListener('click', goHome);
     $('#btn-back-analysis').addEventListener('click', goHome);
-    $('#btn-menu-flash').addEventListener('click', function () { openMode(currentDeck); });
-    $('#btn-menu-quiz').addEventListener('click', function () { openMode(currentDeck); });
+    // 「メニューへ」は名前どおりホーム（進捗表示）まで戻す。
+    // モード選択止まりだと、答えた直後の進捗が反映されて見えず分かりにくい。
+    $('#btn-menu-flash').addEventListener('click', goHome);
+    $('#btn-menu-quiz').addEventListener('click', goHome);
     $('#btn-back-result').addEventListener('click', function () { openMode(currentDeck); });
     $('#btn-back-list').addEventListener('click', function () { openMode(currentDeck); });
     $('#btn-prev-flash').addEventListener('click', goToPrevQuestion);
