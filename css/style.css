@@ -125,6 +125,14 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 }
 .back-btn:hover { color: var(--brand); background: var(--brand-soft); }
 
+/* 回答系ページ（一問一答／4択クイズ）は、判定・次へボタンのすぐ下に配置。
+   スマホでスクロールした後にちょうど見える位置にするため。 */
+.back-btn-bottom {
+  display: flex; width: 100%; justify-content: center;
+  margin: 18px 0 0; padding: 12px; border: 1px solid var(--line);
+}
+.back-btn-bottom:hover { border-color: var(--brand); }
+
 /* ---------- オプション（折りたたみ） ---------- */
 .option-block { margin-top: 26px; }
 .option-summary {
