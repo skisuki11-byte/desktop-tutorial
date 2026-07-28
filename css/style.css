@@ -326,6 +326,11 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 
 .quiz-feedback { margin-top: 18px; }
 .quiz-feedback .btn { width: 100%; margin-top: 14px; }
+.correct-callout {
+  display: inline-block; margin-bottom: 10px; padding: 6px 14px;
+  border-radius: 999px; background: var(--ng-soft); color: var(--ng);
+  font-size: 1rem; font-weight: 700;
+}
 
 /* ---------- 結果 ---------- */
 .result-card {

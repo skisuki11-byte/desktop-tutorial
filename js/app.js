@@ -443,12 +443,21 @@
     judge(it.id, ok ? 'ok' : 'ng');
     scoreOnce(it, ok);
 
-    Array.prototype.forEach.call(wrap.children, function (b) {
+    var correctNo = null;
+    Array.prototype.forEach.call(wrap.children, function (b, idx) {
       b.disabled = true;
       var label = b.lastChild.textContent;
-      if (label === it.a) b.classList.add('correct');
+      if (label === it.a) { b.classList.add('correct'); correctNo = idx + 1; }
     });
     if (!ok) btn.classList.add('wrong');
+
+    var callout = $('#quiz-correct-num');
+    if (!ok) {
+      callout.textContent = '正解は ' + correctNo + ' 番でした';
+      callout.hidden = false;
+    } else {
+      callout.hidden = true;
+    }
 
     $('#quiz-q-ja').textContent = it.qJa || '';
     $('#quiz-ja').textContent = it.ja || it.a;
