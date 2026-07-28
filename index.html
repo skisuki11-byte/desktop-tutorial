@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>日大基礎学 英単語 一問一答</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>日大基礎学 <span>英単語 一問一答</span></h1>
+  <button id="btn-home" class="icon-btn" title="ホームへ" hidden>✕</button>
+</header>
+
+<main id="main">
+
+  <!-- ============ ホーム ============ -->
+  <section id="view-home" class="view">
+
+    <div class="progress-card">
+      <div class="progress-ring-wrap">
+        <svg class="progress-ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-fg" id="ring-fg" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="progress-num"><strong id="stat-mastered">0</strong><small id="stat-total">/0</small></div>
+      </div>
+      <div class="progress-meta">
+        <p class="progress-label">習得済み</p>
+        <ul class="progress-list">
+          <li><span class="dot dot-weak"></span>苦手 <b id="stat-weak">0</b></li>
+          <li><span class="dot dot-new"></span>未学習 <b id="stat-new">0</b></li>
+          <li><span class="dot dot-streak"></span>連続 <b id="stat-streak">0</b> 日</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 class="section-title">出題形式から選ぶ</h2>
+    <p class="section-note">
+      令和2年度9月〜令和5年度9月の過去問7回分を分析して作成。
+      <a href="#" id="link-analysis">出題分析を見る</a>
+    </p>
+
+    <div class="deck-grid" id="deck-grid"><!-- JSで生成 --></div>
+
+    <h2 class="section-title">基礎単語（レベル別）</h2>
+    <p class="section-note">長文を読むための土台。過去問に入る前の基礎固めに。</p>
+    <div class="deck-grid" id="deck-grid-basic"><!-- JSで生成 --></div>
+
+    <div class="home-actions">
+      <button class="btn btn-ghost" id="btn-reset">学習記録をリセット</button>
+    </div>
+  </section>
+
+  <!-- ============ モード選択 ============ -->
+  <section id="view-mode" class="view" hidden>
+    <h2 class="mode-deck-title" id="mode-deck-title"></h2>
+    <p class="mode-deck-desc" id="mode-deck-desc"></p>
+
+    <div class="mode-list">
+      <button class="mode-btn" data-mode="flash">
+        <span class="mode-ico">📇</span>
+        <span class="mode-text"><b>一問一答</b><small>問題を見て、答えを思い出す</small></span>
+      </button>
+      <button class="mode-btn" data-mode="quiz">
+        <span class="mode-ico">✅</span>
+        <span class="mode-text"><b>4択クイズ</b><small>本番と同じ形式で解く</small></span>
+      </button>
+      <button class="mode-btn" data-mode="weak">
+        <span class="mode-ico">🔥</span>
+        <span class="mode-text"><b>苦手だけ</b><small>間違えた問題を集中復習</small></span>
+      </button>
+      <button class="mode-btn" data-mode="list">
+        <span class="mode-ico">📖</span>
+        <span class="mode-text"><b>一覧で確認</b><small>まとめて眺める</small></span>
+      </button>
+    </div>
+
+    <label class="shuffle-row">
+      <input type="checkbox" id="chk-shuffle" checked> 順番をシャッフルする
+    </label>
+  </section>
+
+  <!-- ============ 一問一答（カード） ============ -->
+  <section id="view-flash" class="view" hidden>
+    <div class="study-bar">
+      <div class="study-progress"><div id="flash-bar"></div></div>
+      <span class="study-count" id="flash-count"></span>
+    </div>
+
+    <div class="card" id="flash-card">
+      <div class="card-tag" id="flash-tag"></div>
+      <div class="card-q" id="flash-q"></div>
+      <div class="card-answer" id="flash-a" hidden>
+        <div class="answer-main" id="flash-answer"></div>
+        <div class="answer-ja" id="flash-ja"></div>
+        <div class="answer-note" id="flash-note"></div>
+      </div>
+      <button class="reveal-btn" id="btn-reveal">答えを見る</button>
+    </div>
+
+    <div class="judge-row" id="judge-row" hidden>
+      <button class="btn btn-ng" data-judge="ng">わからない</button>
+      <button class="btn btn-mid" data-judge="mid">あやふや</button>
+      <button class="btn btn-ok" data-judge="ok">わかった</button>
+    </div>
+  </section>
+
+  <!-- ============ 4択クイズ ============ -->
+  <section id="view-quiz" class="view" hidden>
+    <div class="study-bar">
+      <div class="study-progress"><div id="quiz-bar"></div></div>
+      <span class="study-count" id="quiz-count"></span>
+    </div>
+
+    <div class="card">
+      <div class="card-tag" id="quiz-tag"></div>
+      <div class="card-q" id="quiz-q"></div>
+    </div>
+
+    <div class="choice-list" id="choice-list"></div>
+
+    <div class="quiz-feedback" id="quiz-feedback" hidden>
+      <div class="answer-ja" id="quiz-ja"></div>
+      <div class="answer-note" id="quiz-note"></div>
+      <button class="btn btn-primary" id="btn-next">次へ</button>
+    </div>
+  </section>
+
+  <!-- ============ 結果 ============ -->
+  <section id="view-result" class="view" hidden>
+    <div class="result-card">
+      <p class="result-label">おつかれさま！</p>
+      <p class="result-score"><strong id="result-correct">0</strong><small id="result-total">/0</small></p>
+      <p class="result-msg" id="result-msg"></p>
+    </div>
+    <div class="result-actions">
+      <button class="btn btn-primary" id="btn-retry">もう一度</button>
+      <button class="btn btn-ghost" id="btn-retry-weak">間違えた問題だけ</button>
+      <button class="btn btn-ghost" id="btn-back-home">ホームへ</button>
+    </div>
+    <ul class="review-list" id="review-list"></ul>
+  </section>
+
+  <!-- ============ 一覧 ============ -->
+  <section id="view-list" class="view" hidden>
+    <input type="search" id="list-search" class="search-box" placeholder="英単語・日本語で検索">
+    <ul class="word-list" id="word-list"></ul>
+  </section>
+
+  <!-- ============ 出題分析 ============ -->
+  <section id="view-analysis" class="view" hidden>
+    <div class="analysis" id="analysis-body"></div>
+  </section>
+
+</main>
+
+<script src="data/exam-items.js"></script>
+<script src="data/words.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
