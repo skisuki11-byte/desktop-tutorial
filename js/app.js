@@ -5,40 +5,50 @@
   'use strict';
 
   var STORE_KEY = 'nichidai-eigo-v1';
+  var AUTH_KEY = 'nichidai-eigo-auth';
+  var LOGIN_PIN = '0402';
   var MASTER_LV = 2;   // このレベル以上で「習得済み」
 
   /* ---------------------------------------------------------
      1. デッキ定義
      --------------------------------------------------------- */
-  var EXAM_DECKS = [
-    { id: 'def', ico: '🔍', name: '英英定義 → 単語',
-      desc: '4月型 大問2(A)｜定義文を読んで単語を当てる' },
-    { id: 'idiom', ico: '🔗', name: '連語・イディオム',
-      desc: '4月型 大問2(B)｜正解＋誤答選択肢を全収録' },
-    { id: 'grammar', ico: '📐', name: '文法・語法',
-      desc: '4月型 大問3 / 9月型 大問2(A)｜13論点' },
-    { id: 'cloze', ico: '📝', name: '長文の空所補充',
-      desc: '9月型 大問4｜配点最大の語彙問題' },
-    { id: 'vocab', ico: '📚', name: '長文頻出単語',
-      desc: '統計・社会・科学の長文で繰り返し出る語' }
+  // トップ画面はレベル別の3択に絞る（各レベルは複数デッキの合算）
+  var LEVEL_DECKS = [
+    { id: 'beginner', ico: '①', name: '初級',
+      desc: '基礎単語＋英英定義｜まずはここから' },
+    { id: 'intermediate', ico: '②', name: '中級',
+      desc: '基本熟語・連語・長文頻出単語｜得点力を伸ばす' },
+    { id: 'advanced', ico: '③', name: '上級',
+      desc: '応用単語・文法・長文の空所補充｜差がつく範囲' }
   ];
 
-  var BASIC_DECKS = [
-    { id: 'lv1', ico: '①', name: '基礎レベル', desc: '必修｜まずここを完璧に' },
-    { id: 'lv2', ico: '②', name: '標準レベル', desc: '頻出｜合格ラインの土台' },
-    { id: 'lv3', ico: '③', name: '応用レベル', desc: '差がつく｜上位を狙うなら' },
-    { id: 'idiom-basic', ico: '🧩', name: '基本熟語', desc: '教科書レベルの必修イディオム' }
+  // 出題形式で絞りたい人向けのオプション（折りたたみ表示）
+  var OPTION_DECKS = [
+    { id: 'def', ico: '🔍', name: '英英定義 → 単語', desc: '4月型 大問2(A)' },
+    { id: 'idiom', ico: '🔗', name: '連語・イディオム', desc: '4月型 大問2(B)' },
+    { id: 'grammar', ico: '📐', name: '文法・語法', desc: '大問3 / 大問2(A)' },
+    { id: 'cloze', ico: '📝', name: '長文の空所補充', desc: '9月型 大問4' },
+    { id: 'vocab', ico: '📚', name: '長文頻出単語', desc: '統計・社会・科学の長文' }
   ];
+
+  // 元デッキ（過去問カテゴリ／基礎単語レベル）→ 表示レベルの対応
+  var LEVEL_OF_DECK = {
+    def: 'beginner',        lv1: 'beginner',  'idiom-basic': 'beginner',
+    idiom: 'intermediate',  lv2: 'intermediate', vocab: 'intermediate',
+    grammar: 'advanced',    lv3: 'advanced',  cloze: 'advanced'
+  };
 
   /* ---------------------------------------------------------
      2. データの正規化
      --------------------------------------------------------- */
   var items = [];   // 全設問（正規化済み）
-  var byDeck = {};  // deckId -> [item]
+  var byDeck = {};  // deckId or levelId -> [item]
 
   function pushItem(it) {
+    it.level = LEVEL_OF_DECK[it.deck] || null;
     items.push(it);
     (byDeck[it.deck] = byDeck[it.deck] || []).push(it);
+    if (it.level) (byDeck[it.level] = byDeck[it.level] || []).push(it);
   }
 
   function buildExamItems() {
@@ -168,14 +178,41 @@
     return a;
   }
 
-  var VIEWS = ['home', 'mode', 'flash', 'quiz', 'result', 'list', 'analysis'];
+  var VIEWS = ['login', 'home', 'mode', 'flash', 'quiz', 'result', 'list', 'analysis'];
   function show(name) {
     VIEWS.forEach(function (v) {
       var node = $('#view-' + v);
       if (node) node.hidden = (v !== name);
     });
-    $('#btn-home').hidden = (name === 'home');
+    var header = document.querySelector('.app-header');
+    if (header) header.hidden = (name === 'login');
+    $('#btn-home').hidden = (name === 'home' || name === 'login');
     window.scrollTo(0, 0);
+  }
+
+  /* ---------------------------------------------------------
+     4.5. ログイン（暗証番号）
+     --------------------------------------------------------- */
+  function isAuthed() {
+    try { return localStorage.getItem(AUTH_KEY) === '1'; } catch (e) { return false; }
+  }
+
+  function tryLogin() {
+    var input = $('#login-pin');
+    var val = (input.value || '').trim();
+    if (val === LOGIN_PIN) {
+      try { localStorage.setItem(AUTH_KEY, '1'); } catch (e) {}
+      renderHome();
+      show('home');
+      return;
+    }
+    $('#login-error').hidden = false;
+    input.value = '';
+    input.focus();
+    var card = document.querySelector('.login-card');
+    card.classList.remove('shake');
+    void card.offsetWidth; // reflow でアニメーションを再トリガー
+    card.classList.add('shake');
   }
 
   /* ---------------------------------------------------------
@@ -202,8 +239,8 @@
     ring.style.strokeDasharray = circ;
     ring.style.strokeDashoffset = circ * (1 - ratio);
 
-    renderDeckGrid('#deck-grid', EXAM_DECKS);
-    renderDeckGrid('#deck-grid-basic', BASIC_DECKS);
+    renderDeckGrid('#deck-grid', LEVEL_DECKS);
+    renderDeckGrid('#deck-grid-options', OPTION_DECKS);
   }
 
   function renderDeckGrid(sel, decks) {
@@ -517,7 +554,16 @@
      13. イベント配線
      --------------------------------------------------------- */
   function wire() {
+    $('#btn-login').addEventListener('click', tryLogin);
+    $('#login-pin').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); tryLogin(); }
+    });
+    $('#login-pin').addEventListener('input', function () { $('#login-error').hidden = true; });
+
     $('#btn-home').addEventListener('click', function () { renderHome(); show('home'); });
+
+    $('#btn-back-flash').addEventListener('click', function () { openMode(currentDeck); });
+    $('#btn-back-quiz').addEventListener('click', function () { openMode(currentDeck); });
 
     $('#link-analysis').addEventListener('click', function (e) {
       e.preventDefault();
@@ -593,6 +639,11 @@
   buildBasicItems();
   loadStore();
   wire();
-  renderHome();
-  show('home');
+  if (isAuthed()) {
+    renderHome();
+    show('home');
+  } else {
+    show('login');
+    setTimeout(function () { $('#login-pin').focus(); }, 50);
+  }
 })();

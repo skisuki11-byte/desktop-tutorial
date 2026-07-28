@@ -8,7 +8,20 @@
 </head>
 <body>
 
-<header class="app-header">
+<!-- ============ ログイン ============ -->
+<section id="view-login" class="login-view">
+  <div class="login-card">
+    <p class="login-eyebrow">日大基礎学 英単語 一問一答</p>
+    <h1 class="login-title">ログイン</h1>
+    <p class="login-desc">暗証番号を入力してください</p>
+    <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4"
+           id="login-pin" class="login-input" placeholder="••••" autocomplete="off">
+    <button class="btn btn-primary login-btn" id="btn-login">ログイン</button>
+    <p class="login-error" id="login-error" hidden>暗証番号が違います</p>
+  </div>
+</section>
+
+<header class="app-header" hidden>
   <h1>日大基礎学 <span>英単語 一問一答</span></h1>
   <button id="btn-home" class="icon-btn" title="ホームへ" hidden>✕</button>
 </header>
@@ -36,17 +49,18 @@
       </div>
     </div>
 
-    <h2 class="section-title">出題形式から選ぶ</h2>
-    <p class="section-note">
-      令和2年度9月〜令和5年度9月の過去問7回分を分析して作成。
-      <a href="#" id="link-analysis">出題分析を見る</a>
-    </p>
+    <h2 class="section-title">基礎学頻出英単語</h2>
+    <p class="section-note">まずはレベルを選んでください。</p>
+    <div class="deck-grid deck-grid-level" id="deck-grid"><!-- JSで生成 --></div>
 
-    <div class="deck-grid" id="deck-grid"><!-- JSで生成 --></div>
-
-    <h2 class="section-title">基礎単語（レベル別）</h2>
-    <p class="section-note">長文を読むための土台。過去問に入る前の基礎固めに。</p>
-    <div class="deck-grid" id="deck-grid-basic"><!-- JSで生成 --></div>
+    <details class="option-block">
+      <summary class="option-summary">オプション：出題形式で絞り込む</summary>
+      <p class="section-note">
+        令和2年度9月〜令和5年度9月の過去問7回分を分析して作成。
+        <a href="#" id="link-analysis">出題分析を見る</a>
+      </p>
+      <div class="deck-grid deck-grid-compact" id="deck-grid-options"><!-- JSで生成 --></div>
+    </details>
 
     <div class="home-actions">
       <button class="btn btn-ghost" id="btn-reset">学習記録をリセット</button>
@@ -84,6 +98,7 @@
 
   <!-- ============ 一問一答（カード） ============ -->
   <section id="view-flash" class="view" hidden>
+    <button class="back-btn" id="btn-back-flash" type="button">‹ 戻る</button>
     <div class="study-bar">
       <div class="study-progress"><div id="flash-bar"></div></div>
       <span class="study-count" id="flash-count"></span>
@@ -109,6 +124,7 @@
 
   <!-- ============ 4択クイズ ============ -->
   <section id="view-quiz" class="view" hidden>
+    <button class="back-btn" id="btn-back-quiz" type="button">‹ 戻る</button>
     <div class="study-bar">
       <div class="study-progress"><div id="quiz-bar"></div></div>
       <span class="study-count" id="quiz-count"></span>

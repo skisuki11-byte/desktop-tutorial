@@ -78,6 +78,72 @@ body {
 main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 .view[hidden] { display: none; }
 
+/* ---------- ログイン ---------- */
+.login-view[hidden] { display: none; }
+.login-view {
+  min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.login-card {
+  width: 100%; max-width: 320px; text-align: center;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 36px 28px;
+}
+.login-eyebrow {
+  margin: 0 0 4px; font-size: .72rem; letter-spacing: .06em; color: var(--ink-sub);
+}
+.login-title { margin: 0 0 6px; font-size: 1.3rem; }
+.login-desc { margin: 0 0 22px; font-size: .84rem; color: var(--ink-sub); }
+.login-input {
+  width: 100%; box-sizing: border-box; text-align: center;
+  font-size: 1.6rem; letter-spacing: .6em; padding: 14px 10px 14px 16px;
+  border: 1px solid var(--line); border-radius: 11px;
+  background: var(--bg); color: var(--ink); font-variant-numeric: tabular-nums;
+  margin-bottom: 16px;
+}
+.login-input:focus { outline: none; border-color: var(--brand); }
+.login-btn { width: 100%; }
+.login-error {
+  margin: 14px 0 0; font-size: .82rem; color: var(--ng);
+}
+.login-card.shake { animation: shake .3s; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-card.shake { animation: none; }
+}
+
+/* ---------- 戻るボタン ---------- */
+.back-btn {
+  display: inline-block; background: none; border: none; cursor: pointer;
+  color: var(--ink-sub); font: inherit; font-size: .84rem;
+  padding: 4px 0; margin-bottom: 12px;
+}
+.back-btn:hover { color: var(--brand); }
+
+/* ---------- オプション（折りたたみ） ---------- */
+.option-block { margin-top: 26px; }
+.option-summary {
+  cursor: pointer; font-size: .86rem; font-weight: 600; color: var(--ink-sub);
+  padding: 10px 2px; list-style: none;
+}
+.option-summary::-webkit-details-marker { display: none; }
+.option-summary::before { content: "▸ "; color: var(--brand); }
+.option-block[open] .option-summary::before { content: "▾ "; }
+.option-summary:hover { color: var(--ink); }
+.deck-grid-level .deck-card { padding: 18px 18px; }
+.deck-grid-level .deck-ico { width: 46px; height: 46px; font-size: 1.3rem; }
+.deck-grid-level .deck-name { font-size: 1.02rem; }
+.deck-grid-compact .deck-card { padding: 10px 13px; box-shadow: none; }
+.deck-grid-compact .deck-ico { width: 30px; height: 30px; font-size: .92rem; border-radius: 9px; }
+.deck-grid-compact .deck-name { font-size: .85rem; }
+.deck-grid-compact .deck-desc { font-size: .7rem; }
+.deck-grid-compact .deck-mini { margin-top: 5px; }
+
 /* ---------- 進捗カード ---------- */
 .progress-card {
   display: flex; align-items: center; gap: 20px;
