@@ -326,11 +326,17 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 
 .quiz-feedback { margin-top: 18px; }
 .quiz-feedback .btn { width: 100%; margin-top: 14px; }
-.correct-callout {
-  display: inline-block; margin-bottom: 10px; padding: 6px 14px;
-  border-radius: 999px; background: var(--ng-soft); color: var(--ng);
-  font-size: 1rem; font-weight: 700;
+.quiz-answer-row {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 10px;
+  margin-bottom: 10px;
 }
+.quiz-answer-row .answer-ja { margin-bottom: 0; }
+.correct-callout {
+  flex: none; display: inline-block; padding: 3px 11px;
+  border-radius: 999px; background: var(--ng-soft); color: var(--ng);
+  font-size: .82rem; font-weight: 700; white-space: nowrap;
+}
+.correct-callout.is-ok { background: var(--ok-soft); color: var(--ok); }
 
 /* ---------- 結果 ---------- */
 .result-card {

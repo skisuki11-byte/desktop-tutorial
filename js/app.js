@@ -452,12 +452,8 @@
     if (!ok) btn.classList.add('wrong');
 
     var callout = $('#quiz-correct-num');
-    if (!ok) {
-      callout.textContent = '正解は ' + correctNo + ' 番でした';
-      callout.hidden = false;
-    } else {
-      callout.hidden = true;
-    }
+    callout.textContent = '正解は' + correctNo + '番';
+    callout.classList.toggle('is-ok', ok);
 
     $('#quiz-q-ja').textContent = it.qJa || '';
     $('#quiz-ja').textContent = it.ja || it.a;
