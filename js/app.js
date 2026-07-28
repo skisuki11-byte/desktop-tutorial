@@ -382,7 +382,7 @@
     // 一問一答は常に「英語→日本語」。短い英語の語句だけを表示し、
     // 出題時の長い英文（空所補充・定義文など）は出さない。
     q.textContent = it.flashQ;
-    q.className = 'card-q';
+    q.className = 'card-q card-q-flash';
 
     $('#flash-answer').textContent = it.flashA;
     $('#flash-ja').textContent = '';
