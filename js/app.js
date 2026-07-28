@@ -473,11 +473,11 @@
     var ul = $('#review-list');
     ul.innerHTML = '';
     if (session.missed.length) {
+      // 一覧・一問一答と同じく「英語→日本語」で統一して表示する
       session.missed.forEach(function (it) {
         var li = el('li');
-        li.appendChild(el('div', 'review-q', it.q));
-        li.appendChild(el('div', 'review-a', it.a));
-        if (it.ja) li.appendChild(el('div', 'review-ja', it.ja));
+        li.appendChild(el('div', 'review-a', it.flashQ));
+        if (it.flashA) li.appendChild(el('div', 'review-ja', it.flashA));
         ul.appendChild(li);
       });
     }
@@ -492,7 +492,7 @@
     var q = (filter || '').trim().toLowerCase();
     if (q) {
       list = list.filter(function (it) {
-        return (it.q + ' ' + it.a + ' ' + it.ja + ' ' + it.note).toLowerCase().indexOf(q) !== -1;
+        return (it.flashQ + ' ' + it.flashA + ' ' + it.q + ' ' + it.a + ' ' + it.ja + ' ' + it.note).toLowerCase().indexOf(q) !== -1;
       });
     }
 
@@ -502,14 +502,17 @@
       ul.appendChild(el('li', 'empty', '該当する項目がありません。'));
       return;
     }
+    // 一覧も一問一答と同じ「英語→日本語」表示に統一する。
+    // 短い英語の語句・短い日本語の意味は必ず flashQ/flashA を使い、
+    // カテゴリによって用例文の長さがばらついて見た目が揃わないのを防ぐ。
     list.forEach(function (it) {
       var li = el('li');
       var head = el('div', 'wl-head');
-      head.appendChild(el('span', 'wl-a', it.a));
-      if (it.ja) head.appendChild(el('span', 'wl-ja', it.ja));
+      head.appendChild(el('span', 'wl-a', it.flashQ));
+      if (it.flashA) head.appendChild(el('span', 'wl-ja', it.flashA));
       head.appendChild(el('span', 'wl-src' + (it.real ? ' is-real' : ''), it.tag));
       li.appendChild(head);
-      li.appendChild(el('div', 'wl-q', it.q));
+      if (it.flashNote) li.appendChild(el('div', 'wl-q', it.flashNote));
       ul.appendChild(li);
     });
   }
