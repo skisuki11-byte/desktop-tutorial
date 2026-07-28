@@ -131,6 +131,9 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   display: flex; width: 100%; justify-content: center;
   margin: 18px 0 0; padding: 12px; border: 1px solid var(--line);
 }
+.back-btn-bottom:disabled {
+  cursor: default; opacity: .4; background: none;
+}
 .back-btn-bottom:hover { border-color: var(--brand); }
 
 /* ---------- オプション（折りたたみ） ---------- */

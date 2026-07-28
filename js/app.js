@@ -310,14 +310,14 @@
     }
     if ($('#chk-shuffle').checked) shuffle(list);
 
-    session = { mode: mode, list: list, i: 0, correct: 0, missed: [] };
+    session = { mode: mode, list: list, i: 0, correct: 0, missed: [], answered: {} };
 
     if (mode === 'flash') { show('flash'); renderFlash(); }
     else                  { show('quiz');  renderQuiz();  }
   }
 
   function startCustomSession(list, mode) {
-    session = { mode: mode, list: list.slice(), i: 0, correct: 0, missed: [] };
+    session = { mode: mode, list: list.slice(), i: 0, correct: 0, missed: [], answered: {} };
     if (mode === 'flash') { show('flash'); renderFlash(); }
     else                  { show('quiz');  renderQuiz();  }
   }
@@ -325,6 +325,21 @@
   function advance() {
     session.i++;
     if (session.i >= session.list.length) { renderResult(); return; }
+    if (session.mode === 'flash') renderFlash();
+    else renderQuiz();
+  }
+
+  // 同じ問題を2回以上採点しても結果画面の集計が二重にならないようにする
+  function scoreOnce(it, ok) {
+    if (session.answered[it.id]) return;
+    session.answered[it.id] = true;
+    if (ok) session.correct++;
+    else session.missed.push(it);
+  }
+
+  function goToPrevQuestion() {
+    if (session.i <= 0) return;
+    session.i--;
     if (session.mode === 'flash') renderFlash();
     else renderQuiz();
   }
@@ -351,6 +366,7 @@
     $('#flash-a').hidden = true;
     $('#btn-reveal').hidden = false;
     $('#judge-row').hidden = true;
+    $('#btn-prev-flash').disabled = (session.i === 0);
   }
 
   function revealFlash() {
@@ -390,12 +406,13 @@
     });
 
     $('#quiz-feedback').hidden = true;
+    $('#btn-prev-quiz').disabled = (session.i === 0);
   }
 
   function answerQuiz(btn, picked, it, wrap) {
     var ok = (picked === it.a);
-    if (ok) { session.correct++; judge(it.id, 'ok'); }
-    else    { session.missed.push(it); judge(it.id, 'ng'); }
+    judge(it.id, ok ? 'ok' : 'ng');
+    scoreOnce(it, ok);
 
     Array.prototype.forEach.call(wrap.children, function (b) {
       b.disabled = true;
@@ -566,10 +583,12 @@
 
     $('#btn-back-mode').addEventListener('click', goHome);
     $('#btn-back-analysis').addEventListener('click', goHome);
-    $('#btn-back-flash').addEventListener('click', function () { openMode(currentDeck); });
-    $('#btn-back-quiz').addEventListener('click', function () { openMode(currentDeck); });
+    $('#btn-menu-flash').addEventListener('click', function () { openMode(currentDeck); });
+    $('#btn-menu-quiz').addEventListener('click', function () { openMode(currentDeck); });
     $('#btn-back-result').addEventListener('click', function () { openMode(currentDeck); });
     $('#btn-back-list').addEventListener('click', function () { openMode(currentDeck); });
+    $('#btn-prev-flash').addEventListener('click', goToPrevQuestion);
+    $('#btn-prev-quiz').addEventListener('click', goToPrevQuestion);
 
     $('#link-analysis').addEventListener('click', function (e) {
       e.preventDefault();
@@ -592,7 +611,7 @@
         var kind = b.getAttribute('data-judge');
         var it = session.list[session.i];
         judge(it.id, kind);
-        if (kind !== 'ok') session.missed.push(it);
+        scoreOnce(it, kind === 'ok');
         advance();
       });
     });
