@@ -256,8 +256,8 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   background: var(--brand-soft); color: var(--brand);
   padding: 3px 9px; border-radius: 999px; margin-bottom: 14px;
 }
-.card-q { font-size: 1.32rem; font-weight: 600; word-break: break-word; }
-.card-q.is-en { font-size: 1.18rem; line-height: 1.7; }
+.card-q { font-size: 1.55rem; font-weight: 600; word-break: break-word; }
+.card-q.is-en { font-size: 1.42rem; line-height: 1.6; }
 
 /* 一問一答は常に短い英語の語句のみを表示するため、思い切って大きくする */
 .card-q-flash {

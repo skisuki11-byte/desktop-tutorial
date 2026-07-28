@@ -171,8 +171,11 @@
 
   function judge(id, kind) {
     var r = store.recs[id] || { lv: 0, miss: 0 };
-    if (kind === 'ok')       r.lv = Math.min(3, r.lv + 1);
-    else if (kind === 'mid') r.lv = 1;
+    // 「わかった」「正解」は初見でもその場で習得済みにする。
+    // 同じ問題を2回正解しないと反映されない仕組みだと、初見の問題を
+    // 次々解く通常の使い方では進捗がいつまでも動かないため。
+    if (kind === 'ok')       r.lv = MASTER_LV;
+    else if (kind === 'mid') r.lv = Math.max(r.lv, 1);
     else                   { r.lv = 0; r.miss++; }
     store.recs[id] = r;
     touchStreak();
