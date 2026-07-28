@@ -55,6 +55,22 @@
     (window.EXAM_ITEMS || []).forEach(function (row, i) {
       var tag = row.src + (row.no ? ' ' + row.no : '');
       if (row.real) tag += '（実出題）';
+
+      // 4択クイズは元の出題文脈（英文空所補充・英英定義など）をそのまま使う。
+      // 一問一答は「英語→日本語」で統一し、かつ長文を出さないため、
+      // 常に短い英語の語句を表、短い日本語の意味を裏にする。
+      // 熟語の一部（誤答選択肢・予想）だけ短い意味が q 側に入っているため、
+      // その場合だけ q を意味として使い、ja（用例文）は補足に回す。
+      var shortMeaningInQ = row.cat === 'idiom' && /^[^\x00-\x7F]/.test(row.q.trim());
+      var flashA, flashNote;
+      if (shortMeaningInQ) {
+        flashA = row.q;
+        flashNote = [row.ja, row.note].filter(Boolean).join('\n');
+      } else {
+        flashA = row.ja || row.a;
+        flashNote = row.note || '';
+      }
+
       pushItem({
         id: 'e' + i,
         deck: row.cat,
@@ -65,7 +81,10 @@
         a: row.a,
         ja: row.ja || '',
         note: row.note || '',
-        choices: (row.choices || []).slice()
+        choices: (row.choices || []).slice(),
+        flashQ: row.a,
+        flashA: flashA,
+        flashNote: flashNote
       });
     });
   }
@@ -90,6 +109,7 @@
       }
       shuffle(choices);
 
+      var basicNote = w.ex ? w.ex + '\n' + w.exJa : '';
       pushItem({
         id: 'w' + i,
         deck: deck,
@@ -99,8 +119,11 @@
         qIsEn: false,
         a: w.ja,
         ja: '',
-        note: w.ex ? w.ex + '\n' + w.exJa : '',
-        choices: choices
+        note: basicNote,
+        choices: choices,
+        flashQ: w.en,
+        flashA: w.ja,
+        flashNote: basicNote
       });
     });
   }
@@ -356,12 +379,14 @@
 
     $('#flash-tag').textContent = it.tag;
     var q = $('#flash-q');
-    q.textContent = it.q;
-    q.className = 'card-q' + (it.qIsEn ? ' is-en' : '');
+    // 一問一答は常に「英語→日本語」。短い英語の語句だけを表示し、
+    // 出題時の長い英文（空所補充・定義文など）は出さない。
+    q.textContent = it.flashQ;
+    q.className = 'card-q';
 
-    $('#flash-answer').textContent = it.a;
-    $('#flash-ja').textContent = it.ja;
-    $('#flash-note').textContent = it.note;
+    $('#flash-answer').textContent = it.flashA;
+    $('#flash-ja').textContent = '';
+    $('#flash-note').textContent = it.flashNote;
 
     $('#flash-a').hidden = true;
     $('#btn-reveal').hidden = false;

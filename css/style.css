@@ -273,6 +273,7 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   word-break: break-word; margin-bottom: 6px;
 }
 .answer-ja { font-size: 1.18rem; margin-bottom: 10px; }
+.answer-ja:empty { display: none; }
 .answer-note {
   font-size: .94rem; color: var(--ink-sub); background: var(--bg);
   border-radius: 9px; padding: 10px 12px; white-space: pre-wrap;
