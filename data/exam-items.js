@@ -1,0 +1,1094 @@
+/*
+ * 日大基礎学対策 一問一答データ（過去問ベース）
+ *
+ * 出典 : 令和2年度9月 〜 令和5年度9月 実施 基礎学力到達度テスト［英語］
+ * src  : "R2-9" = 令和2年度9月実施 / "R3-4" = 令和3年度4月実施 ...
+ *        real:true  = 実際に過去問で出題された問題
+ *        real:false = 同形式・同レベルで作成した類題
+ *
+ * cat  : "def"     英英定義 → 単語（4月型 大問2A）
+ *        "idiom"   連語・イディオム（4月型 大問2B）
+ *        "grammar" 文法・語法（4月型 大問3 / 9月型 大問2A）
+ *        "cloze"   長文空所補充（9月型 大問4）
+ *        "vocab"   長文頻出単語（日本語 → 英単語）
+ */
+window.EXAM_ITEMS = [
+
+  /* ============================================================
+   * 【1】英英定義 → 単語（4月型 大問2A）
+   * ========================================================== */
+  { cat: "def", src: "R3-4", no: "問7", real: true,
+    q: "This word means making you feel ashamed, nervous, or uncomfortable, especially in front of other people.",
+    a: "embarrassing", ja: "恥ずかしい、気まずい",
+    choices: ["embarrassing", "calm", "grateful", "boring"],
+    note: "calm 落ち着いた／grateful 感謝している／boring 退屈な" },
+
+  { cat: "def", src: "R3-4", no: "問8", real: true,
+    q: "This word means to take something that someone offers you, or to agree to do something that someone asks you to do.",
+    a: "accept", ja: "～を受け入れる",
+    choices: ["consider", "include", "deal", "accept"],
+    note: "consider よく考える／include 含む／deal (with) 対処する" },
+
+  { cat: "def", src: "R3-4", no: "問9", real: true,
+    q: "This word means a picture or shape that has a particular meaning or represents a particular organization or idea.",
+    a: "symbol", ja: "象徴、シンボル",
+    choices: ["resource", "factor", "model", "symbol"],
+    note: "resource 資源／factor 要因／model 模型・手本" },
+
+  { cat: "def", src: "R3-4", no: "問10", real: true,
+    q: "This word means to be very important or large, when compared to other things or people of a similar kind.",
+    a: "major", ja: "主要な、大きな",
+    choices: ["minor", "positive", "major", "obvious"],
+    note: "minor 小さい・重要でない／positive 肯定的な／obvious 明らかな" },
+
+  { cat: "def", src: "R4-4", no: "問7", real: true,
+    q: "This word means doing something fast. It also means being able to understand in a short time.",
+    a: "quick", ja: "すばやい、理解が早い",
+    choices: ["latent", "inclined", "quick", "learned"],
+    note: "latent 潜在的な／inclined 傾向がある／learned 学識のある" },
+
+  { cat: "def", src: "R4-4", no: "問8", real: true,
+    q: "This word means a situation in which people try to be more successful than others. It also means an event or contest in which people or teams try to be better than others.",
+    a: "competition", ja: "競争、大会",
+    choices: ["competition", "completion", "corporation", "contradiction"],
+    note: "【綴りが似た語に注意】completion 完成／corporation 企業／contradiction 矛盾" },
+
+  { cat: "def", src: "R4-4", no: "問9", real: true,
+    q: "This word means to work with someone else in order to achieve something. It also means to assist someone by doing what he or she wants you to do.",
+    a: "cooperate", ja: "協力する",
+    choices: ["communicate", "cooperate", "concentrate", "correlate"],
+    note: "【綴りが似た語に注意】communicate 伝え合う／concentrate 集中する／correlate 相関する" },
+
+  { cat: "def", src: "R4-4", no: "問10", real: true,
+    q: "This word means a strong feeling of interest and enjoyment about something and an eagerness to be involved in it.",
+    a: "enthusiasm", ja: "熱意、熱狂",
+    choices: ["disgust", "appeal", "indifference", "enthusiasm"],
+    note: "disgust 嫌悪／appeal 訴え・魅力／indifference 無関心（反意語）" },
+
+  { cat: "def", src: "R5-4", no: "問7", real: true,
+    q: "This word means to say no to someone's request or offer. It also means not to give something to someone.",
+    a: "refuse", ja: "～を断る、拒否する",
+    choices: ["propose", "refuse", "consider", "accept"],
+    note: "accept（受け入れる）の反意語。propose 提案する" },
+
+  { cat: "def", src: "R5-4", no: "問8", real: true,
+    q: "This word means a machine such as a car, bus, and van. It also means a way to do something.",
+    a: "vehicle", ja: "乗り物、手段",
+    choices: ["furniture", "traffic", "pedestrian", "vehicle"],
+    note: "furniture 家具／traffic 交通（量）／pedestrian 歩行者" },
+
+  { cat: "def", src: "R5-4", no: "問9", real: true,
+    q: "This word means having a great interest in something. It also means being rare and unique, or not being fitted into usual patterns.",
+    a: "curious", ja: "好奇心の強い、奇妙な",
+    choices: ["instant", "anxious", "typical", "curious"],
+    note: "instant 即座の／anxious 不安な／typical 典型的な" },
+
+  { cat: "def", src: "R5-4", no: "問10", real: true,
+    q: "This word is used when you describe something or someone that is far away from somewhere. It is also used to emphasize a negative sentence.",
+    a: "remotely", ja: "遠く離れて、（否定文で）少しも",
+    choices: ["obviously", "seldom", "remotely", "horizontally"],
+    note: "not remotely 〜 で「少しも〜ない」。seldom めったに〜ない／horizontally 水平に" },
+
+  /* 類題（同形式・同レベル） */
+  { cat: "def", src: "類題", no: "", real: false,
+    q: "This word means to make something better than it was before.",
+    a: "improve", ja: "～を改善する",
+    choices: ["improve", "approve", "impress", "imply"],
+    note: "【綴りが似た語に注意】approve 承認する／impress 感銘を与える／imply ほのめかす" },
+
+  { cat: "def", src: "類題", no: "", real: false,
+    q: "This word means to keep someone or something safe from harm or damage.",
+    a: "protect", ja: "～を守る",
+    choices: ["protect", "produce", "predict", "prevent"],
+    note: "produce 生産する／predict 予測する／prevent 妨げる" },
+
+  { cat: "def", src: "類題", no: "", real: false,
+    q: "This word means the chance to do something that you want to do.",
+    a: "opportunity", ja: "機会",
+    choices: ["opportunity", "responsibility", "possibility", "priority"],
+    note: "responsibility 責任／possibility 可能性／priority 優先事項" },
+
+  { cat: "def", src: "類題", no: "", real: false,
+    q: "This word means to show that something is true by giving facts or information.",
+    a: "prove", ja: "～を証明する",
+    choices: ["prove", "praise", "prefer", "provide"],
+    note: "praise ほめる／prefer より好む／provide 供給する" },
+
+  { cat: "def", src: "類題", no: "", real: false,
+    q: "This word means happening or done at once, without any delay.",
+    a: "immediate", ja: "即座の",
+    choices: ["immediate", "intermediate", "moderate", "delicate"],
+    note: "intermediate 中級の／moderate 適度な／delicate 繊細な" },
+
+  { cat: "def", src: "類題", no: "", real: false,
+    q: "This word means to make something known to people who did not know it before.",
+    a: "reveal", ja: "～を明らかにする",
+    choices: ["reveal", "reserve", "resolve", "recover"],
+    note: "R4-9 大問4でも出題。reserve 予約する／resolve 解決する／recover 回復する" },
+
+  { cat: "def", src: "類題", no: "", real: false,
+    q: "This word means the amount of money that a worker is paid for the work he or she does.",
+    a: "wage", ja: "賃金",
+    choices: ["wage", "wave", "wealth", "waste"],
+    note: "R4-9 大問4の題材。wealth 富／waste 浪費・ごみ" },
+
+  { cat: "def", src: "類題", no: "", real: false,
+    q: "This word means to think that something is true although you have no proof.",
+    a: "assume", ja: "～と思い込む、仮定する",
+    choices: ["assume", "assure", "assist", "assign"],
+    note: "【綴りが似た語に注意】assure 保証する／assist 手伝う／assign 割り当てる" },
+
+  { cat: "def", src: "類題", no: "", real: false,
+    q: "This word means a set of ideas that is intended to explain why something happens.",
+    a: "theory", ja: "理論",
+    choices: ["theory", "history", "memory", "factory"],
+    note: "R5-9 大問5（excitation transfer theory）で登場" },
+
+  { cat: "def", src: "類題", no: "", real: false,
+    q: "This word means to become smaller in size, amount, or number.",
+    a: "decrease", ja: "減少する",
+    choices: ["decrease", "increase", "release", "please"],
+    note: "increase（増える）の反意語。グラフ問題で必出" },
+
+  /* ============================================================
+   * 【2】連語・イディオム（4月型 大問2B）
+   * ========================================================== */
+  { cat: "idiom", src: "R3-4", no: "問11", real: true,
+    q: "____ playing the piano, no one in the class can play like Emily.",
+    a: "When it comes to", ja: "～のことになると、～に関して言えば",
+    choices: ["When it comes to", "When it stays up", "When it goes to", "When it looks at"],
+    note: "to は前置詞なので後ろは動名詞。最頻出イディオムの1つ" },
+
+  { cat: "idiom", src: "R3-4", no: "問12", real: true,
+    q: "The next international rugby games will ____ in France in 2023.",
+    a: "take place", ja: "行われる、起こる",
+    choices: ["take on", "take place", "take out", "take back"],
+    note: "take on 引き受ける／take out 取り出す／take back 撤回する" },
+
+  { cat: "idiom", src: "R3-4", no: "問13", real: true,
+    q: "Mr. Jackson, I would like to ask you about the report that we are supposed to ____ by next Friday.",
+    a: "hand in", ja: "～を提出する",
+    choices: ["throw away", "hand in", "pull back", "look after"],
+    note: "= turn in（R5-4で出題）。throw away 捨てる／look after 世話をする" },
+
+  { cat: "idiom", src: "R3-4", no: "問14", real: true,
+    q: "We are campaigning ____ thousands of refugees.",
+    a: "on behalf of", ja: "～を代表して、～のために",
+    choices: ["in terms of", "on behalf of", "regardless of", "in spite of"],
+    note: "in terms of ～の観点から／regardless of ～に関係なく／in spite of ～にもかかわらず" },
+
+  { cat: "idiom", src: "R4-4", no: "問11", real: true,
+    q: "Nancy was born in the UK, but she was ____ in Japan.",
+    a: "brought up", ja: "育てられた（bring up ～を育てる）",
+    choices: ["brought down", "brought up", "broke down", "broke up"],
+    note: "bring down 倒す／break down 故障する／break up 別れる" },
+
+  { cat: "idiom", src: "R4-4", no: "問12", real: true,
+    q: "A: May I speak to Ms. Yamamoto?  B: ____, please. I'll put you through.",
+    a: "Hang on", ja: "（電話を）切らずに待つ",
+    choices: ["Hang on", "Hold back", "Hook up", "Keep away"],
+    note: "= Hold on。put through は「電話をつなぐ」。hold back 抑える／keep away 近寄らない" },
+
+  { cat: "idiom", src: "R4-4", no: "問13", real: true,
+    q: "____ an earthquake, turn off the gas immediately.",
+    a: "In case of", ja: "～の場合には",
+    choices: ["In case of", "In spite of", "In terms of", "In the name of"],
+    note: "in the name of ～の名において。前置詞句系はまとめて暗記" },
+
+  { cat: "idiom", src: "R4-4", no: "問14", real: true,
+    q: "I hope all your efforts until now will ____ soon.",
+    a: "pay off", ja: "（努力が）報われる",
+    choices: ["call in", "calm down", "pay off", "pull up"],
+    note: "call in 呼び入れる／calm down 落ち着く／pull up 車を止める" },
+
+  { cat: "idiom", src: "R5-4", no: "問11", real: true,
+    q: "My electric bass broke, but fortunately, the maker offered to repair it ____.",
+    a: "for free", ja: "無料で",
+    choices: ["for free", "in vain", "for good", "on time"],
+    note: "in vain むだに／for good 永久に（「良いことのために」ではない）" },
+
+  { cat: "idiom", src: "R5-4", no: "問12", real: true,
+    q: "____ new books, the bookstore sells secondhand books.",
+    a: "In addition to", ja: "～に加えて",
+    choices: ["In contrast", "Regardless of", "Appealing to", "In addition to"],
+    note: "in contrast 対照的に／regardless of ～に関係なく／appeal to ～に訴える" },
+
+  { cat: "idiom", src: "R5-4", no: "問13", real: true,
+    q: "To Yua's surprise, she met Tomoki at the station ____.",
+    a: "by chance", ja: "偶然に",
+    choices: ["on purpose", "by chance", "on and off", "on earth"],
+    note: "on purpose わざと（反意）／on and off 断続的に／on earth 一体全体" },
+
+  { cat: "idiom", src: "R5-4", no: "問14", real: true,
+    q: "A: Kazu, are you free tonight?  B: No, I have to ____ my English essay by tomorrow.",
+    a: "turn in", ja: "～を提出する",
+    choices: ["look down on", "apply for", "settle in", "turn in"],
+    note: "look down on 見下す／apply for 応募する／settle in 落ち着く" },
+
+  /* 誤答選択肢として出た熟語も単独で収録（次年度の正解候補）
+     ※ 日本語 → 英語 の一問一答 */
+  { cat: "idiom", src: "選択肢 R3-4", no: "問14", real: false,
+    q: "～の観点から、～に関して", a: "in terms of",
+    ja: "We should think in terms of cost.（費用の観点から考えるべきだ）",
+    choices: ["in terms of", "on behalf of", "in case of", "in spite of"],
+    note: "R3-4 問14 の誤答選択肢。長文でも頻出" },
+
+  { cat: "idiom", src: "選択肢 R3-4/R5-4", no: "問14/問12", real: false,
+    q: "～に関係なく", a: "regardless of",
+    ja: "Anyone can join regardless of age.（年齢に関係なく誰でも参加できる）",
+    choices: ["regardless of", "in addition to", "because of", "instead of"],
+    note: "R3-4 問14 と R5-4 問12 の両方で誤答選択肢として登場（2回）" },
+
+  { cat: "idiom", src: "選択肢 R3-4/R4-4", no: "問14/問13", real: false,
+    q: "～にもかかわらず", a: "in spite of",
+    ja: "In spite of the rain, we went out.（雨にもかかわらず出かけた）",
+    choices: ["in spite of", "in case of", "in terms of", "in front of"],
+    note: "= despite（despite は of を付けない）" },
+
+  { cat: "idiom", src: "選択肢 R3-4", no: "問13", real: false,
+    q: "～を捨てる", a: "throw away",
+    ja: "Don't throw away this letter.（この手紙を捨てないで）",
+    choices: ["throw away", "hand in", "put off", "give up"],
+    note: "R3-4 問13 の誤答選択肢" },
+
+  { cat: "idiom", src: "選択肢 R3-4", no: "問13", real: false,
+    q: "～の世話をする", a: "look after",
+    ja: "She looks after her grandmother.（彼女は祖母の世話をしている）",
+    choices: ["look after", "look up to", "look down on", "look for"],
+    note: "= take care of。look 系の句動詞はまとめて覚える" },
+
+  { cat: "idiom", src: "選択肢 R5-4", no: "問14", real: false,
+    q: "～を見下す", a: "look down on",
+    ja: "Never look down on others.（決して他人を見下すな）",
+    choices: ["look down on", "look up to", "look after", "look into"],
+    note: "look up to ～を尊敬する（反意）／look into ～を調査する" },
+
+  { cat: "idiom", src: "選択肢 R5-4", no: "問14", real: false,
+    q: "～に応募する、～を申し込む", a: "apply for",
+    ja: "She applied for the scholarship.（彼女は奨学金に応募した）",
+    choices: ["apply for", "apply to", "reply to", "supply to"],
+    note: "apply to ～に当てはまる／～に適用される。前置詞で意味が変わる" },
+
+  { cat: "idiom", src: "選択肢 R4-4", no: "問11", real: false,
+    q: "故障する、（交渉が）決裂する", a: "break down",
+    ja: "My car broke down on the way.（途中で車が故障した）",
+    choices: ["break down", "break up", "break in", "break out"],
+    note: "break up 別れる／break in 侵入する／break out 勃発する" },
+
+  { cat: "idiom", src: "選択肢 R4-4", no: "問14", real: false,
+    q: "落ち着く", a: "calm down",
+    ja: "Calm down and take a deep breath.（落ち着いて深呼吸して）",
+    choices: ["calm down", "cool off", "hang on", "hold back"],
+    note: "R4-4 問14 の誤答選択肢" },
+
+  { cat: "idiom", src: "選択肢 R4-4", no: "問12", real: false,
+    q: "（～に）近寄らない", a: "keep away",
+    ja: "Keep away from the fire.（火に近づかないで）",
+    choices: ["keep away", "keep up", "keep on", "keep out"],
+    note: "keep up ついていく／keep on 続ける／keep out 締め出す" },
+
+  { cat: "idiom", src: "選択肢 R5-4", no: "問13", real: false,
+    q: "わざと、故意に", a: "on purpose",
+    ja: "He did it on purpose.（彼はわざとそれをした）",
+    choices: ["on purpose", "by chance", "by accident", "on time"],
+    note: "by chance / by accident（偶然に）の反意語。R5-4 問13 の誤答選択肢" },
+
+  { cat: "idiom", src: "選択肢 R5-4", no: "問13", real: false,
+    q: "（疑問詞を強めて）一体全体", a: "on earth",
+    ja: "Where on earth is he?（彼は一体どこにいるんだ）",
+    choices: ["on earth", "on purpose", "on and off", "for good"],
+    note: "R5-4 大問5本文にも Where on earth is he? として実際に登場" },
+
+  { cat: "idiom", src: "選択肢 R5-4", no: "問11", real: false,
+    q: "永久に、これを最後に", a: "for good",
+    ja: "He left Japan for good.（彼は永久に日本を去った）",
+    choices: ["for good", "for free", "for sure", "for now"],
+    note: "「良いことのために」ではない点が狙われる。for now 今のところ" },
+
+  { cat: "idiom", src: "選択肢 R5-4", no: "問11", real: false,
+    q: "むだに、いたずらに", a: "in vain",
+    ja: "All his efforts were in vain.（彼の努力はすべてむだだった）",
+    choices: ["in vain", "for free", "at ease", "in turn"],
+    note: "at ease くつろいで／in turn 順番に" },
+
+  { cat: "idiom", src: "R4-9", no: "問33", real: true,
+    q: "To make sure companies are not taking ____ of their workers and paying them too little, most countries have minimum wage laws.",
+    a: "advantage", ja: "take advantage of ～ ＝ ～を利用する、～につけこむ",
+    choices: ["advice", "care", "lots", "advantage"],
+    note: "take care of ～の世話をする も同形。長文空所補充だが実質はイディオム問題" },
+
+  /* 頻出だが未出題の重要イディオム（予想）※ 日本語 → 英語 */
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "～を延期する", a: "put off",
+    ja: "The game was put off until Sunday.（試合は日曜まで延期された）",
+    choices: ["put off", "put on", "put up with", "put out"],
+    note: "= postpone。put on 身につける／put out 消す" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "～を我慢する", a: "put up with",
+    ja: "I can't put up with this noise.（この騒音には我慢できない）",
+    choices: ["put up with", "put off", "keep up with", "catch up with"],
+    note: "keep up with ～についていく／catch up with ～に追いつく" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "（考えなど）を思いつく", a: "come up with",
+    ja: "She came up with a good idea.（彼女は良い案を思いついた）",
+    choices: ["come up with", "come across", "come about", "come by"],
+    note: "come across 偶然出会う／come about 起こる／come by 手に入れる" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "～を取り除く", a: "get rid of",
+    ja: "I want to get rid of this cold.（この風邪を治したい）",
+    choices: ["get rid of", "get along with", "get through", "get over"],
+    note: "R4-4 大問6本文に get rid of green algae として実際に登場" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "～を埋め合わせる、補う", a: "make up for",
+    ja: "I'll make up for the lost time.（失った時間を埋め合わせます）",
+    choices: ["make up for", "make out", "make up", "make for"],
+    note: "R4-9 大問4本文に to make up for the increased salaries として登場" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "～を理解する、解明する", a: "figure out",
+    ja: "I can't figure out this problem.（この問題が分からない）",
+    choices: ["figure out", "find out", "point out", "carry out"],
+    note: "R2-9 大問5本文に figure this out として登場。carry out 実行する" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "結局～になる", a: "end up",
+    ja: "Most of them end up as waste.（その大半は結局ごみになる）",
+    choices: ["end up", "end in", "end with", "end off"],
+    note: "R3-9 大問4本文に end up as waste として実際に登場。end up ~ing の形も頻出" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "～に頼る、～次第である", a: "depend on",
+    ja: "It depends on the weather.（それは天気次第だ）",
+    choices: ["depend on", "rely to", "count in", "trust on"],
+    note: "= rely on / count on。R3-4 大問6本文に depend on ... through imports として登場" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "～しそうだ、～する可能性が高い", a: "be likely to",
+    ja: "It is likely to rain tomorrow.（明日は雨が降りそうだ）",
+    choices: ["be likely to", "be able to", "be about to", "be willing to"],
+    note: "R2-9・R4-4 の長文で頻出。be about to まさに～しようとしている" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "～に関して言えば", a: "as for",
+    ja: "As for me, I prefer tea.（私に関して言えば、紅茶の方が好きだ）",
+    choices: ["as for", "as to", "as of", "as if"],
+    note: "R2-9 大問3本文に As for those who answered... として登場" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "他方では、これに対して", a: "on the other hand",
+    ja: "On the other hand, prices went up.（他方で、物価は上がった）",
+    choices: ["on the other hand", "in other words", "at the same time", "for one thing"],
+    note: "対比を示す語句。グラフ長文で毎回登場する" },
+
+  { cat: "idiom", src: "予想", no: "", real: false,
+    q: "対照的に", a: "in contrast",
+    ja: "In contrast, the U.S. had the highest percentage.（対照的に、米国が最高の割合だった）",
+    choices: ["in contrast", "in addition", "in fact", "in short"],
+    note: "R5-4 問12 の誤答選択肢。R3-9・R5-9 の本文にも In contrast として登場" },
+
+
+  /* ============================================================
+   * 【3】文法・語法（4月型 大問3 / 9月型 大問2A）
+   * ========================================================== */
+  { cat: "grammar", src: "R2-9", no: "問11", real: true,
+    q: "In my diary, I can write ____ I have in mind.",
+    a: "whatever", ja: "複合関係代名詞：心に思うことは何でも",
+    choices: ["wherever", "whenever", "whatever", "however"],
+    note: "write の目的語が欠けている → 名詞節を作る whatever" },
+
+  { cat: "grammar", src: "R2-9", no: "問12", real: true,
+    q: "I arrived at the station ____ to find that the train had already left.",
+    a: "only", ja: "結果の不定詞：…したが（結局）～しただけだった",
+    choices: ["so", "just", "yet", "only"],
+    note: "only to do は「（…したが）結局～するだけ」。ネガティブな結果を表す" },
+
+  { cat: "grammar", src: "R2-9", no: "問13", real: true,
+    q: "The performance at the show was ____ from being perfect.",
+    a: "far", ja: "far from ～ ＝ 決して～でない",
+    choices: ["across", "near", "beneath", "far"],
+    note: "far from perfect / far from being perfect どちらも可" },
+
+  { cat: "grammar", src: "R2-9", no: "問14", real: true,
+    q: "Sam is the one standing by the door ____ his arms crossed.",
+    a: "with", ja: "付帯状況の with ＋ O ＋ 分詞",
+    choices: ["with", "for", "under", "from"],
+    note: "腕は「組まれる」側なので過去分詞 crossed。R3-4 問16 でも同論点が出題" },
+
+  { cat: "grammar", src: "R3-9", no: "問11", real: true,
+    q: "Kate is reading a news article ____ in French.",
+    a: "written", ja: "過去分詞の後置修飾：フランス語で書かれた記事",
+    choices: ["write", "written", "writing", "wrote"],
+    note: "article は「書かれる」側 → 過去分詞" },
+
+  { cat: "grammar", src: "R3-9", no: "問12", real: true,
+    q: "Sam had already finished dinner when his brother ____ home.",
+    a: "came", ja: "大過去（had done）と過去（did）の使い分け",
+    choices: ["comes", "would come", "came", "had come"],
+    note: "先に起きた出来事が had finished、後が came" },
+
+  { cat: "grammar", src: "R3-9", no: "問13", real: true,
+    q: "Is there anything you want to ____ about?",
+    a: "talk", ja: "自動詞 talk about ／他動詞 discuss・mention",
+    choices: ["mention", "discuss", "say", "talk"],
+    note: "discuss / mention は他動詞なので about 不要。ここでは about があるので talk" },
+
+  { cat: "grammar", src: "R3-9", no: "問14", real: true,
+    q: "Jack fell asleep ____ watching TV.",
+    a: "while", ja: "接続詞 while ＋ ing（主語＋be の省略）",
+    choices: ["while", "as", "during", "since"],
+    note: "during は前置詞なので後ろに ing 節は取れない" },
+
+  { cat: "grammar", src: "R4-9", no: "問11", real: true,
+    q: "There were some children ____ in the park yesterday.",
+    a: "playing", ja: "現在分詞の後置修飾：遊んでいる子どもたち",
+    choices: ["play", "playing", "played", "to play"],
+    note: "children は「遊ぶ」側 → 現在分詞。R3-9 問11 の written と対比して覚える" },
+
+  { cat: "grammar", src: "R4-9", no: "問12", real: true,
+    q: "When I was a child, I had to go to bed ____ eight at night.",
+    a: "by", ja: "期限の by（～までには）／継続の until（～まで）",
+    choices: ["until", "by", "in", "on"],
+    note: "go to bed は一瞬の動作 → 期限の by" },
+
+  { cat: "grammar", src: "R4-9", no: "問13", real: true,
+    q: "I found ____ difficult to take pictures of the aurora.",
+    a: "it", ja: "形式目的語の it（find it C to do）",
+    choices: ["that", "this", "it", "its"],
+    note: "find / think / make + it + 形容詞 + to do は超頻出" },
+
+  { cat: "grammar", src: "R4-9", no: "問14", real: true,
+    q: "____ you see Jack, say hello to him.",
+    a: "When", ja: "接続詞の意味判別",
+    choices: ["Unless", "Though", "When", "Since"],
+    note: "「ジャックに会ったら」＝ When。Unless ～でない限り／Though ～だけれども" },
+
+  { cat: "grammar", src: "R5-9", no: "問9", real: true,
+    q: "It was only the day before yesterday that Meg ____ us about her leaving this job in a month.",
+    a: "told", ja: "tell + 人 + about ～（say は人を目的語に取れない）",
+    choices: ["talked", "said", "spoke", "told"],
+    note: "talk / speak は to が必要。say は say to 人。人を直接目的語にできるのは tell" },
+
+  { cat: "grammar", src: "R5-9", no: "問10", real: true,
+    q: "We have been studying English ____ quite a long time.",
+    a: "for", ja: "期間の for ／起点の since",
+    choices: ["on", "for", "since", "during"],
+    note: "a long time は期間の長さ → for。during は特定の期間（during the summer）" },
+
+  { cat: "grammar", src: "R5-9", no: "問11", real: true,
+    q: "The fresh air here is like ____ found in forests.",
+    a: "that", ja: "反復を避ける代名詞 that（不可算名詞を受ける）",
+    choices: ["those", "these", "that", "this"],
+    note: "air は不可算 → that。可算複数なら those" },
+
+  { cat: "grammar", src: "R5-9", no: "問12", real: true,
+    q: "Please leave your coat and backpack in a locker ____ you enjoy this exhibit.",
+    a: "while", ja: "接続詞 while（～する間）",
+    choices: ["however", "while", "during", "on"],
+    note: "during は前置詞。節を続けるので接続詞 while" },
+
+  { cat: "grammar", src: "R3-4", no: "問15", real: true,
+    q: "Kazuya is only ten, so he is ____ to participate in the election.",
+    a: "not old enough", ja: "enough to do（～するのに十分…）の否定",
+    choices: ["not old enough", "too old", "young enough", "not too young"],
+    note: "10歳＝選挙に参加するには「年齢が足りない」" },
+
+  { cat: "grammar", src: "R3-4", no: "問16", real: true,
+    q: "He sat on the sofa with his ____ and soon fell asleep.",
+    a: "legs crossed", ja: "付帯状況の with ＋ O ＋ 過去分詞",
+    choices: ["legs crossed", "legs crossing", "crossed legs", "crossing legs"],
+    note: "R2-9 問14 と同論点。脚は「組まれる」側 → 過去分詞" },
+
+  { cat: "grammar", src: "R3-4", no: "問17", real: true,
+    q: "After you pay a bill, ____ a receipt to show that you have paid.",
+    a: "you are given", ja: "受動態（give A B → A is given B）",
+    choices: ["you give", "you have given", "you are given", "you had been given"],
+    note: "レシートは「渡される」側" },
+
+  { cat: "grammar", src: "R3-4", no: "問18", real: true,
+    q: "When I got into the taxi, I noticed that I ____ my wallet at home.",
+    a: "had forgotten", ja: "大過去：気づいたときより前に忘れていた",
+    choices: ["forget", "have forgotten", "was forgotten", "had forgotten"],
+    note: "noticed（過去）より前の出来事 → 過去完了" },
+
+  { cat: "grammar", src: "R3-4", no: "問19", real: true,
+    q: "A: Have you decided ____ places you will visit in France?",
+    a: "which", ja: "疑問形容詞 which ＋ 名詞（どの～）",
+    choices: ["whose", "which", "where", "when"],
+    note: "places を修飾できるのは which。where / when は名詞を修飾しない" },
+
+  { cat: "grammar", src: "R4-4", no: "問15", real: true,
+    q: "My mother stopped ____ last month and she says she feels really good now.",
+    a: "smoking", ja: "stop ～ing（～するのをやめる）／stop to do（～するために立ち止まる）",
+    choices: ["smoking", "to smoke", "to smoking", "having smoked"],
+    note: "「タバコをやめた」＝ stop smoking" },
+
+  { cat: "grammar", src: "R4-4", no: "問16", real: true,
+    q: "Jeff saw a woman ____ the street yesterday.",
+    a: "cross", ja: "知覚動詞 see + O + 原形（動作の全体を見る）",
+    choices: ["cross", "crosses", "to cross", "to have crossed"],
+    note: "see / hear / feel + O + 原形不定詞。進行中なら crossing も可" },
+
+  { cat: "grammar", src: "R4-4", no: "問17", real: true,
+    q: "The time ____ the accident happened was 6:30 this morning.",
+    a: "when", ja: "関係副詞 when（時を表す先行詞）",
+    choices: ["which", "what", "where", "when"],
+    note: "先行詞 The time ＋ 完全な文 → 関係副詞 when" },
+
+  { cat: "grammar", src: "R4-4", no: "問18", real: true,
+    q: "____ that you were in Tokyo last week, I would have visited you.",
+    a: "Had I known", ja: "仮定法過去完了の倒置（If I had known → Had I known）",
+    choices: ["If I know", "Have I knew", "Did I know", "Had I known"],
+    note: "帰結節が would have visited → 条件節は had known。if を省略して倒置" },
+
+  { cat: "grammar", src: "R5-4", no: "問15", real: true,
+    q: "Meg likes ____ the famous singer sings.",
+    a: "how", ja: "関係副詞 how（～する方法・様子）",
+    choices: ["whose", "how", "which", "as"],
+    note: "the way how とは言わない。how 単独 or the way のどちらか" },
+
+  { cat: "grammar", src: "R5-4", no: "問16", real: true,
+    q: "Jeanne d'Arc is said ____ born in a small village in France.",
+    a: "to have been", ja: "不定詞の完了形（述語動詞より前の時制）",
+    choices: ["to have been", "to have", "having", "having been"],
+    note: "is said（現在）より前 → to have been born" },
+
+  { cat: "grammar", src: "R5-4", no: "問17", real: true,
+    q: "The woman had her blood ____ for a medical checkup at the hospital.",
+    a: "taken", ja: "have + O + 過去分詞（～してもらう／される）",
+    choices: ["take", "taken", "taking", "took"],
+    note: "血は「採られる」側 → 過去分詞。have my hair cut と同型" },
+
+  { cat: "grammar", src: "R5-4", no: "問18", real: true,
+    q: "Was ____ your little brother who broke your tablet?",
+    a: "it", ja: "強調構文 It is 〜 that/who …",
+    choices: ["only", "where", "what", "it"],
+    note: "It was your little brother who broke... の疑問文形" },
+
+  { cat: "grammar", src: "R5-4", no: "問19", real: true,
+    q: "Jim's cat had been sleeping when he ____ home.",
+    a: "returned", ja: "過去完了進行形 ＋ 過去（when 節）",
+    choices: ["returned", "returns", "has returned", "would have returned"],
+    note: "主節が過去完了進行形なので、when 節は単純過去" },
+
+  /* ============================================================
+   * 【4】長文の空所補充（9月型 大問4）
+   * ========================================================== */
+  { cat: "cloze", src: "R2-9", no: "問33", real: true,
+    q: "…there are ways to handle them ____ keeping our mind at peace.",
+    a: "while", ja: "～しながら（同時進行）",
+    choices: ["since", "while", "unless", "instead"],
+    note: "since ～以来・～なので／unless ～でない限り／instead その代わりに" },
+
+  { cat: "cloze", src: "R2-9", no: "問34", real: true,
+    q: "…being in control of our emotions is important to ____ a peaceful relationship with others.",
+    a: "maintain", ja: "～を維持する",
+    choices: ["challenge", "maintain", "exclude", "disturb"],
+    note: "challenge 異議を唱える／exclude 除外する／disturb 邪魔する" },
+
+  { cat: "cloze", src: "R2-9", no: "問35", real: true,
+    q: "…we need to understand that people have ____ opinions.",
+    a: "different", ja: "異なる、さまざまな",
+    choices: ["different", "violent", "whole", "exact"],
+    note: "violent 激しい・暴力的な／whole 全体の／exact 正確な" },
+
+  { cat: "cloze", src: "R2-9", no: "問36", real: true,
+    q: "…listen carefully to ____ others have to say.",
+    a: "what", ja: "関係代名詞 what（～すること）",
+    choices: ["what", "how", "that", "who"],
+    note: "say の目的語が欠けている → 先行詞を含む what" },
+
+  { cat: "cloze", src: "R2-9", no: "問37", real: true,
+    q: "Once all opinions are ____ and heard, we can see an area where people disagree.",
+    a: "expressed", ja: "表現される（express ～を表現する）",
+    choices: ["caused", "blamed", "expected", "expressed"],
+    note: "cause 引き起こす／blame 非難する／expect 予期する" },
+
+  { cat: "cloze", src: "R2-9", no: "問38", real: true,
+    q: "There has been a debate over whether America should be called a melting pot or a salad bowl, when it comes to defining its core ____.",
+    a: "characteristic", ja: "特徴、特性",
+    choices: ["restriction", "substitute", "conclusion", "characteristic"],
+    note: "restriction 制限／substitute 代用品／conclusion 結論" },
+
+  { cat: "cloze", src: "R2-9", no: "問39", real: true,
+    q: "The Census Bureau data for 2017 further ____ this trend.",
+    a: "supports", ja: "～を裏付ける、支持する",
+    choices: ["hides", "weakens", "supports", "separates"],
+    note: "hide 隠す／weaken 弱める／separate 分ける" },
+
+  { cat: "cloze", src: "R2-9", no: "問40", real: true,
+    q: "…the ____ has doubled over the past few decades.",
+    a: "percentage", ja: "割合、百分率",
+    choices: ["currency", "percentage", "discount", "income"],
+    note: "currency 通貨／discount 割引／income 収入。統計長文の必修語" },
+
+  { cat: "cloze", src: "R2-9", no: "問41", real: true,
+    q: "…obvious \"marks\" of people coming from outside of America, ____ what they grew up with and their cultural identities.",
+    a: "preserving", ja: "～を保存している（preserve ～を保つ）",
+    choices: ["preserving", "abolishing", "prohibiting", "detecting"],
+    note: "abolish 廃止する／prohibit 禁止する／detect 探知する" },
+
+  { cat: "cloze", src: "R3-9", no: "問33", real: true,
+    q: "In Japan, it often refers to a ____ that is imposed on women that keeps them from getting higher positions in their workplaces.",
+    a: "limit", ja: "限界、制限",
+    choices: ["career", "wage", "benefit", "limit"],
+    note: "career 経歴／wage 賃金／benefit 利益。glass ceiling（ガラスの天井）の話題" },
+
+  { cat: "cloze", src: "R3-9", no: "問34", real: true,
+    q: "There was no law to protect women from being treated unfairly at work, ____ for when they get pregnant and have children.",
+    a: "especially", ja: "特に",
+    choices: ["recently", "carefully", "annually", "especially"],
+    note: "annually 毎年／recently 最近" },
+
+  { cat: "cloze", src: "R3-9", no: "問35", real: true,
+    q: "Today, it seems that men and women are given the same ____ to advance in society.",
+    a: "opportunities", ja: "機会",
+    choices: ["opportunities", "industries", "experiments", "quantities"],
+    note: "industry 産業／experiment 実験／quantity 量" },
+
+  { cat: "cloze", src: "R3-9", no: "問36", real: true,
+    q: "A survey in 2009 revealed that 46% of people were supportive… Ten years later, in 2019, this figure had ____ to 61%.",
+    a: "increased", ja: "増加した",
+    choices: ["increased", "dropped", "returned", "remained"],
+    note: "46%→61% なので増加。drop 下がる／remain のままである" },
+
+  { cat: "cloze", src: "R3-9", no: "問37", real: true,
+    q: "It's important to have a system that assures gender equality, but ____ ultimately removes the glass ceiling is people's attitudes.",
+    a: "what", ja: "関係代名詞 what（～するもの）",
+    choices: ["that", "how", "which", "what"],
+    note: "主語が欠けた名詞節 → what。R2-9 問36 と同論点" },
+
+  { cat: "cloze", src: "R3-9", no: "問38", real: true,
+    q: "Plastic waste is one of the biggest ____ problems in the world today.",
+    a: "environmental", ja: "環境の",
+    choices: ["medical", "environmental", "traditional", "bilingual"],
+    note: "environment（環境）の形容詞形。長文テーマとして頻出" },
+
+  { cat: "cloze", src: "R3-9", no: "問39", real: true,
+    q: "Since July 1, 2020, retail stores in Japan have been ____ to charge for plastic bags.",
+    a: "required", ja: "要求されている（require ～を必要とする・要求する）",
+    choices: ["required", "explained", "competed", "criticized"],
+    note: "be required to do ～するよう義務づけられる。compete 競争する／criticize 批判する" },
+
+  { cat: "cloze", src: "R3-9", no: "問40", real: true,
+    q: "This island has more plastic waste than any other area of its size, which means it has the highest ____ of plastic waste in the world.",
+    a: "density", ja: "密度",
+    choices: ["priority", "density", "stability", "quality"],
+    note: "priority 優先事項／stability 安定／quality 質" },
+
+  { cat: "cloze", src: "R3-9", no: "問41", real: true,
+    q: "It's so easy to forget about problems like this ____ our house gets covered with plastic waste that someone else has thrown away.",
+    a: "unless", ja: "～でない限り",
+    choices: ["if", "when", "unless", "because"],
+    note: "「自分の家がごみだらけにならない限り、忘れがち」という文脈" },
+
+  { cat: "cloze", src: "R4-9", no: "問34", real: true,
+    q: "This means companies cannot pay their employees anything ____ than the set amount of money.",
+    a: "less", ja: "より少ない（little の比較級）",
+    choices: ["better", "other", "less", "more"],
+    note: "最低賃金の話 → 「定められた額より少なく」払えない" },
+
+  { cat: "cloze", src: "R4-9", no: "問35", real: true,
+    q: "____ having more money is good, a higher minimum wage is not a perfect solution.",
+    a: "While", ja: "～だけれども（譲歩）",
+    choices: ["While", "Because", "Thus", "If"],
+    note: "while は「～する間」だけでなく「～だが」の譲歩でも使う。R5-9 問35 でも同用法" },
+
+  { cat: "cloze", src: "R4-9", no: "問36", real: true,
+    q: "But even the biggest companies would have to ____ some of their employees to make up for the increased salaries.",
+    a: "remove", ja: "～を取り除く、解雇する",
+    choices: ["employ", "introduce", "recruit", "remove"],
+    note: "employ 雇う／recruit 採用する（いずれも逆の意味）" },
+
+  { cat: "cloze", src: "R4-9", no: "問37", real: true,
+    q: "A healthy minimum wage is ____ good for workers. But if that rate goes too high, it can create problems.",
+    a: "indeed", ja: "確かに、実に",
+    choices: ["doubtfully", "indeed", "uncertainly", "hardly"],
+    note: "「確かに良い。しかし～」という譲歩の流れ" },
+
+  { cat: "cloze", src: "R4-9", no: "問38", real: true,
+    q: "The holders with the \"X\" do not have to ____ themselves female or a male.",
+    a: "describe", ja: "～を描写する、～と表現する",
+    choices: ["know", "realize", "predict", "describe"],
+    note: "predict 予測する／realize 気づく" },
+
+  { cat: "cloze", src: "R4-9", no: "問39", real: true,
+    q: "This was a major step forward for gender equality, but some worry that it just ____ their sexuality in public.",
+    a: "reveals", ja: "～を明らかにする、暴露する",
+    choices: ["equals", "reveals", "motivates", "creates"],
+    note: "equal ～に等しい／motivate 動機づける" },
+
+  { cat: "cloze", src: "R4-9", no: "問40", real: true,
+    q: "People would hesitate to choose all-gender restrooms ____ three options like men, women, and all-gender.",
+    a: "among", ja: "（3つ以上）の中で",
+    choices: ["during", "between", "among", "through"],
+    note: "2つなら between、3つ以上なら among" },
+
+  { cat: "cloze", src: "R4-9", no: "問41", real: true,
+    q: "That is because the ____ of restrooms itself possibly announces who you are.",
+    a: "choice", ja: "選択",
+    choices: ["choice", "belief", "goal", "objective"],
+    note: "belief 信念／objective 目的" },
+
+  { cat: "cloze", src: "R5-9", no: "問31", real: true,
+    q: "Over thousands of years, ____ part of a cheetah's body has adapted to help it run fast.",
+    a: "every", ja: "あらゆる（every + 単数名詞）",
+    choices: ["all", "only", "every", "same"],
+    note: "part は単数形 → every。all なら all parts" },
+
+  { cat: "cloze", src: "R5-9", no: "問32", real: true,
+    q: "____ these legs and the shape of its face, not much wind will hit the animal as it runs.",
+    a: "Because of", ja: "～のために（理由）",
+    choices: ["According to", "Regarding", "Without", "Because of"],
+    note: "according to ～によれば／regarding ～に関して／without ～なしで" },
+
+  { cat: "cloze", src: "R5-9", no: "問33", real: true,
+    q: "They only weigh about 50 kilograms — ____ lions can grow to be four times as heavy.",
+    a: "by comparison", ja: "それに比べて",
+    choices: ["by comparison", "needless to say", "apart from that", "in other words"],
+    note: "needless to say 言うまでもなく／apart from that それはさておき／in other words 言い換えれば" },
+
+  { cat: "cloze", src: "R5-9", no: "問34", real: true,
+    q: "Being lightweight allows their legs to carry them ____.",
+    a: "farther", ja: "より遠くへ（far の比較級）",
+    choices: ["wealthier", "farther", "brighter", "deeper"],
+    note: "wealthy 裕福な／bright 明るい・賢い" },
+
+  { cat: "cloze", src: "R5-9", no: "問35", real: true,
+    q: "____ cheetahs are great at running, they are not good fighters.",
+    a: "While", ja: "～だが（譲歩）",
+    choices: ["Unless", "Provided that", "As if", "While"],
+    note: "provided that ～という条件で／as if まるで～のように" },
+
+  { cat: "cloze", src: "R5-9", no: "問36", real: true,
+    q: "When Qatar was announced as the host country of the 2022 World Cup, it was a ____ choice.",
+    a: "surprising", ja: "驚くべき",
+    choices: ["boring", "predictable", "simple", "surprising"],
+    note: "predictable 予測できる（反意）。「どこにあるの？」と皆が思った文脈" },
+
+  { cat: "cloze", src: "R5-9", no: "問37", real: true,
+    q: "It is ____ that the country had spent over $220 billion preparing for the event.",
+    a: "estimated", ja: "見積もられている（estimate ～を見積もる）",
+    choices: ["impossible", "believable", "estimated", "complicated"],
+    note: "It is estimated that ～ 「～と推定される」は長文頻出表現" },
+
+  { cat: "cloze", src: "R5-9", no: "問38", real: true,
+    q: "Grass does not grow in Qatar, so they ____ grass from America and built giant indoor farms in the sand.",
+    a: "imported", ja: "～を輸入した",
+    choices: ["dedicated", "maintained", "imported", "donated"],
+    note: "export（輸出する）の反意語。dedicate 捧げる／donate 寄付する" },
+
+  { cat: "cloze", src: "R5-9", no: "問39", real: true,
+    q: "In addition, they needed new infrastructure… Before any ____ started, World Cup officials alone would take up nearly every hotel room.",
+    a: "construction", ja: "建設",
+    choices: ["measuring", "construction", "farming", "prevention"],
+    note: "construct（建設する）の名詞形。prevention 予防" },
+
+  { cat: "cloze", src: "R5-9", no: "問40", real: true,
+    q: "This amount of ____ has never been seen before. Will it be enough to make the world interested in Qatar?",
+    a: "development", ja: "開発、発展",
+    choices: ["development", "pressure", "fame", "audience"],
+    note: "pressure 圧力／fame 名声／audience 聴衆" },
+
+  /* ============================================================
+   * 【5】長文頻出単語（日本語 → 英単語）
+   *      統計・調査の長文で毎回登場する必修語
+   * ========================================================== */
+  { cat: "vocab", src: "全年度", no: "", real: true,
+    q: "調査、アンケート", a: "survey", ja: "調査、アンケート",
+    choices: ["survey", "service", "supply", "source"],
+    note: "グラフ長文の冒頭に必ず出る。a survey conducted in 2018「2018年に行われた調査」" },
+
+  { cat: "vocab", src: "全年度", no: "", real: true,
+    q: "参加者", a: "participant", ja: "参加者",
+    choices: ["participant", "president", "patient", "passenger"],
+    note: "participate in ～に参加する の名詞形。patient 患者／passenger 乗客" },
+
+  { cat: "vocab", src: "R2-9/R4-9", no: "", real: true,
+    q: "割合、百分率", a: "percentage", ja: "割合、百分率",
+    choices: ["percentage", "package", "passage", "message"],
+    note: "the percentage of ～ が主語のときは単数扱い" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "～を明らかにする、示す", a: "reveal", ja: "～を明らかにする",
+    choices: ["reveal", "recall", "recover", "reserve"],
+    note: "The survey revealed that ～「調査は～を明らかにした」の形で頻出" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "～を示す、指し示す", a: "indicate", ja: "～を示す",
+    choices: ["indicate", "imitate", "invite", "invent"],
+    note: "The graph indicates that ～ の形で頻出" },
+
+  { cat: "vocab", src: "R3-9", no: "", real: true,
+    q: "数字、図、人物", a: "figure", ja: "数字、図、人物",
+    choices: ["figure", "feature", "future", "failure"],
+    note: "R3-9 問36 に this figure had increased「この数字は増加していた」" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "傾向", a: "trend", ja: "傾向",
+    choices: ["trend", "trade", "travel", "treat"],
+    note: "R2-9 大問4に this trend が2回登場" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "大多数、過半数", a: "majority", ja: "大多数",
+    choices: ["majority", "minority", "authority", "quantity"],
+    note: "the majority of ～「～の大多数」。minority 少数派" },
+
+  { cat: "vocab", src: "R3-9", no: "", real: true,
+    q: "～を減らす", a: "reduce", ja: "～を減らす",
+    choices: ["reduce", "produce", "induce", "deduce"],
+    note: "reduce the use of plastic「プラスチックの使用を減らす」" },
+
+  { cat: "vocab", src: "R3-4", no: "", real: true,
+    q: "～を輸入する ／ ～を輸出する", a: "import / export", ja: "輸入する／輸出する",
+    choices: ["import / export", "export / import", "report / support", "transport / deport"],
+    note: "R3-4（食料自給率）・R5-9（カタール）の両方で登場" },
+
+  { cat: "vocab", src: "R3-4", no: "", real: true,
+    q: "消費者", a: "consumer", ja: "消費者",
+    choices: ["consumer", "customer", "container", "conductor"],
+    note: "consume（消費する）の名詞形。customer（客）と区別" },
+
+  { cat: "vocab", src: "R4-9", no: "", real: true,
+    q: "従業員", a: "employee", ja: "従業員",
+    choices: ["employee", "employer", "employment", "emperor"],
+    note: "employer は「雇い主」。-ee は「される側」、-er は「する側」" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "移民", a: "immigrant", ja: "移民（入ってくる人）",
+    choices: ["immigrant", "emigrant", "ingredient", "instrument"],
+    note: "emigrate は「（他国へ）移住する」。R3-9 グラフの選択肢に emigrate が登場" },
+
+  { cat: "vocab", src: "R5-4", no: "", real: true,
+    q: "読み書き能力 ／ 計算能力", a: "literacy / numeracy", ja: "識字力／計算力",
+    choices: ["literacy / numeracy", "library / nursery", "liberty / memory", "literature / number"],
+    note: "R5-4 大問6のキーワード" },
+
+  { cat: "vocab", src: "R4-4", no: "", real: true,
+    q: "戦略", a: "strategy", ja: "戦略",
+    choices: ["strategy", "strength", "structure", "struggle"],
+    note: "R4-4（じゃんけん）・R4-4（チェス）の両方で登場" },
+
+  { cat: "vocab", src: "R3-9", no: "", real: true,
+    q: "～を禁止する", a: "ban", ja: "～を禁止する",
+    choices: ["ban", "bar", "bat", "bend"],
+    note: "ban all single-use plastics「使い捨てプラスチックを全面禁止する」" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "対立、紛争", a: "conflict", ja: "対立、紛争",
+    choices: ["conflict", "contact", "contract", "contest"],
+    note: "R2-9 大問4[A]のテーマ語。have conflicts with ～と対立する" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "～に適応する", a: "adapt", ja: "～に適応する",
+    choices: ["adapt", "adopt", "admit", "advance"],
+    note: "adopt（採用する）と混同注意。R5-9 チーターの本文に adapted" },
+
+  { cat: "vocab", src: "R4-4", no: "", real: true,
+    q: "～を打ち負かす", a: "defeat", ja: "～を打ち負かす",
+    choices: ["defeat", "defend", "define", "delay"],
+    note: "R4-4 チェスの長文で頻出。a computer defeated a Grand Master" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "～を見積もる、推定する", a: "estimate", ja: "～を見積もる",
+    choices: ["estimate", "estate", "eliminate", "elevate"],
+    note: "It is estimated that ～ で頻出" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "～を保存する、保つ", a: "preserve", ja: "～を保存する",
+    choices: ["preserve", "reserve", "deserve", "observe"],
+    note: "【綴りが似た語】reserve 予約する／deserve 値する／observe 観察する" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "～を強調する", a: "emphasize", ja: "～を強調する",
+    choices: ["emphasize", "emphasis", "empathize", "employ"],
+    note: "名詞形は emphasis（強調）" },
+
+  { cat: "vocab", src: "R4-9", no: "", real: true,
+    q: "ためらう", a: "hesitate", ja: "ためらう",
+    choices: ["hesitate", "imitate", "irritate", "hesitant"],
+    note: "R4-9 本文 People would hesitate to choose...。hesitate to do ～するのをためらう" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "～を解釈する", a: "interpret", ja: "～を解釈する、通訳する",
+    choices: ["interpret", "interrupt", "interfere", "introduce"],
+    note: "R4-9 大問5（感情と表情）のキーワード。interrupt 妨げる と混同注意" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "（睡眠などが）不可欠な", a: "essential", ja: "不可欠な",
+    choices: ["essential", "essence", "efficient", "excellent"],
+    note: "be essential for/to ～に不可欠である" },
+
+  { cat: "vocab", src: "R4-4", no: "", real: true,
+    q: "正確さ", a: "accuracy", ja: "正確さ",
+    choices: ["accuracy", "accident", "account", "accent"],
+    note: "形容詞 accurate（正確な）。with high accuracy「高い精度で」" },
+
+  { cat: "vocab", src: "R3-4", no: "", real: true,
+    q: "不足", a: "shortage", ja: "不足",
+    choices: ["shortage", "storage", "stage", "message"],
+    note: "a global food shortage「世界的な食料不足」" },
+
+  { cat: "vocab", src: "R5-4", no: "", real: true,
+    q: "発音", a: "pronunciation", ja: "発音",
+    choices: ["pronunciation", "pronounce", "production", "protection"],
+    note: "動詞は pronounce。綴りが変わる点に注意" },
+
+  { cat: "vocab", src: "R4-9", no: "", real: true,
+    q: "信頼性", a: "reliability", ja: "信頼性",
+    choices: ["reliability", "responsibility", "possibility", "availability"],
+    note: "R4-9 大問3（メディアの信頼度）のキーワード。rely on ～に頼る" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "観客、聴衆", a: "audience", ja: "観客、聴衆",
+    choices: ["audience", "audio", "auditor", "avenue"],
+    note: "R5-9 大問5（ホラー映画）で多用" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "安心、安堵", a: "relief", ja: "安心、安堵",
+    choices: ["relief", "belief", "brief", "grief"],
+    note: "動詞は relieve。a feeling of relief「安堵感」" },
+
+  { cat: "vocab", src: "R4-4", no: "", real: true,
+    q: "怠惰な、なまけた", a: "lazy", ja: "怠惰な",
+    choices: ["lazy", "crazy", "hazy", "easy"],
+    note: "R4-4 ナマケモノ（namakemono = lazy person）の本文" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "捕食動物、天敵", a: "predator", ja: "捕食動物",
+    choices: ["predator", "predict", "president", "pretender"],
+    note: "prey（獲物）とセットで覚える。R2-9・R4-4・R5-9 で登場" },
+
+  { cat: "vocab", src: "R3-4", no: "", real: true,
+    q: "帝国", a: "empire", ja: "帝国",
+    choices: ["empire", "empty", "employ", "umpire"],
+    note: "R3-4 インカ帝国の長文。emperor 皇帝" },
+
+  { cat: "vocab", src: "R3-4", no: "", real: true,
+    q: "衰退、下落", a: "decline", ja: "衰退、下落",
+    choices: ["decline", "decide", "declare", "decorate"],
+    note: "「断る」の意味もある。the decline of the empire「帝国の衰退」" },
+
+  { cat: "vocab", src: "R3-9", no: "", real: true,
+    q: "平等", a: "equality", ja: "平等",
+    choices: ["equality", "quality", "quantity", "equator"],
+    note: "gender equality「男女平等」。R3-9・R4-9 の両方で登場" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "世代", a: "generation", ja: "世代",
+    choices: ["generation", "generator", "gene", "genius"],
+    note: "pass them onto the next generations「次の世代に受け継ぐ」" },
+
+  { cat: "vocab", src: "R4-9", no: "", real: true,
+    q: "態度、考え方", a: "attitude", ja: "態度、考え方",
+    choices: ["attitude", "altitude", "gratitude", "aptitude"],
+    note: "【綴りが似た語】altitude 高度／gratitude 感謝／aptitude 適性" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "緊張した、張りつめた", a: "tense", ja: "緊張した",
+    choices: ["tense", "dense", "sense", "intense"],
+    note: "名詞 tension（緊張）。dense 密集した／intense 激しい" },
+
+  { cat: "vocab", src: "R3-9", no: "", real: true,
+    q: "妊娠している", a: "pregnant", ja: "妊娠している",
+    choices: ["pregnant", "present", "prevalent", "permanent"],
+    note: "R3-9 本文 when they get pregnant and have children" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "～を課す、押しつける", a: "impose", ja: "～を課す",
+    choices: ["impose", "expose", "oppose", "suppose"],
+    note: "【綴りが似た語】expose さらす／oppose 反対する／suppose 思う" },
+
+  { cat: "vocab", src: "R4-4", no: "", real: true,
+    q: "～を支配する、優勢である", a: "dominate", ja: "～を支配する",
+    choices: ["dominate", "donate", "decorate", "demonstrate"],
+    note: "R4-4 チェス本文 dominate the next five games" },
+
+  { cat: "vocab", src: "R5-4", no: "", real: true,
+    q: "～を求める、～に値する", a: "deserve", ja: "～に値する",
+    choices: ["deserve", "reserve", "preserve", "observe"],
+    note: "preserve / reserve / observe と区別して覚える" },
+
+  { cat: "vocab", src: "R3-4", no: "", real: true,
+    q: "免疫", a: "immunity", ja: "免疫",
+    choices: ["immunity", "community", "opportunity", "unity"],
+    note: "R3-4 インカ帝国本文 immunity against newly brought viruses" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "きっかけ、～を引き起こす", a: "trigger", ja: "引き金、～を引き起こす",
+    choices: ["trigger", "tigger", "bigger", "digger"],
+    note: "R3-4 本文 It was triggered when...。R5-9 大問5 にも登場" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "～を組織する、まとめる", a: "organize", ja: "～を組織する",
+    choices: ["organize", "recognize", "realize", "apologize"],
+    note: "R2-9 本文 for our brain to organize memories「記憶を整理する」" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "頻繁に", a: "frequently", ja: "頻繁に",
+    choices: ["frequently", "fluently", "fortunately", "frankly"],
+    note: "形容詞 frequent。fluently 流暢に／frankly 率直に" },
+
+  { cat: "vocab", src: "R4-9", no: "", real: true,
+    q: "最終的に", a: "ultimately", ja: "最終的に",
+    choices: ["ultimately", "immediately", "intimately", "eventually"],
+    note: "= eventually / finally。R3-9・R4-9 の注にも登場" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "～に値する、値打ちがある", a: "worth", ja: "～の価値がある",
+    choices: ["worth", "worse", "worst", "wealth"],
+    note: "be worth ～ing「～する価値がある」" },
+
+  { cat: "vocab", src: "R4-4", no: "", real: true,
+    q: "手ごろな価格の", a: "affordable", ja: "手ごろな価格の",
+    choices: ["affordable", "available", "adorable", "acceptable"],
+    note: "afford（余裕がある）の形容詞形。R4-4 本文 computers became affordable" },
+
+  { cat: "vocab", src: "R5-4", no: "", real: true,
+    q: "広まる、～を広める", a: "spread", ja: "広まる、～を広める",
+    choices: ["spread", "spend", "speed", "sprout"],
+    note: "spread-spread-spread（無変化）。the worldwide spread of COVID-19" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "～を回復する、取り戻す", a: "restore", ja: "～を回復する",
+    choices: ["restore", "restrict", "resist", "respond"],
+    note: "R2-9 睡眠の本文 restore energy「エネルギーを回復する」" },
+
+  { cat: "vocab", src: "R4-9", no: "", real: true,
+    q: "～を評価する、感謝する", a: "appreciate", ja: "～を評価する、感謝する",
+    choices: ["appreciate", "approach", "approve", "appropriate"],
+    note: "R3-9 本文 a point that should be appreciated" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "～を確認する、身元を証明する", a: "verify", ja: "～を確認する",
+    choices: ["verify", "clarify", "classify", "qualify"],
+    note: "R3-9 AI本文 to verify people's identities「本人確認をする」" },
+
+  { cat: "vocab", src: "R3-9", no: "", real: true,
+    q: "～を採用する、取り入れる", a: "adopt", ja: "～を採用する",
+    choices: ["adopt", "adapt", "adjust", "admire"],
+    note: "adapt（適応する）と混同しやすい最重要ペア" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "～を扱う、対処する", a: "handle", ja: "～を扱う、対処する",
+    choices: ["handle", "handy", "hurdle", "huddle"],
+    note: "= deal with。R2-9 本文 ways to handle them" },
+
+  { cat: "vocab", src: "R4-9", no: "", real: true,
+    q: "批判的に", a: "critically", ja: "批判的に",
+    choices: ["critically", "creatively", "curiously", "crucially"],
+    note: "R4-9 本文 how critically you can comprehend the information" },
+
+  { cat: "vocab", src: "R2-9", no: "", real: true,
+    q: "～を理解する", a: "comprehend", ja: "～を理解する",
+    choices: ["comprehend", "compress", "compose", "compete"],
+    note: "名詞 comprehension（理解）" },
+
+  { cat: "vocab", src: "R5-9", no: "", real: true,
+    q: "十分な", a: "sufficient", ja: "十分な",
+    choices: ["sufficient", "efficient", "deficient", "proficient"],
+    note: "efficient 効率的な／deficient 不足した。food self-sufficiency ratio（食料自給率）はR3-4のキーワード" }
+];
