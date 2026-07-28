@@ -366,7 +366,9 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   font-size: .75rem; letter-spacing: .05em; color: var(--ink-sub);
   border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; flex: none;
 }
-.wl-src.is-real { color: var(--ng); border-color: var(--ng); }
+/* 実出題は186問中150問（約8割）を占めるため、色で強調すると逆に
+   目立たなくなる（画面全体が赤くなるだけ）。全タグを同じ控えめな
+   見た目に統一し、情報はテキスト（実出題／類題など）だけで伝える。 */
 
 /* ---------- 分析 ---------- */
 .analysis {

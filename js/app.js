@@ -510,7 +510,7 @@
       var head = el('div', 'wl-head');
       head.appendChild(el('span', 'wl-a', it.flashQ));
       if (it.flashA) head.appendChild(el('span', 'wl-ja', it.flashA));
-      head.appendChild(el('span', 'wl-src' + (it.real ? ' is-real' : ''), it.tag));
+      head.appendChild(el('span', 'wl-src', it.tag));
       li.appendChild(head);
       if (it.flashNote) li.appendChild(el('div', 'wl-q', it.flashNote));
       ul.appendChild(li);
