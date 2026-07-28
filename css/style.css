@@ -62,10 +62,10 @@ body {
   border-bottom: 1px solid var(--line);
 }
 .app-header h1 {
-  margin: 0; font-size: 1rem; font-weight: 700; letter-spacing: .02em;
+  margin: 0; font-size: 1.08rem; font-weight: 700; letter-spacing: .02em;
 }
 .app-header h1 span {
-  display: block; font-size: .74rem; font-weight: 500; color: var(--ink-sub);
+  display: block; font-size: .8rem; font-weight: 500; color: var(--ink-sub);
   letter-spacing: .08em;
 }
 .icon-btn {
@@ -91,13 +91,13 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   padding: 36px 28px;
 }
 .login-eyebrow {
-  margin: 0 0 4px; font-size: .72rem; letter-spacing: .06em; color: var(--ink-sub);
+  margin: 0 0 4px; font-size: .8rem; letter-spacing: .06em; color: var(--ink-sub);
 }
-.login-title { margin: 0 0 6px; font-size: 1.3rem; }
-.login-desc { margin: 0 0 22px; font-size: .84rem; color: var(--ink-sub); }
+.login-title { margin: 0 0 6px; font-size: 1.55rem; }
+.login-desc { margin: 0 0 22px; font-size: .98rem; color: var(--ink-sub); }
 .login-input {
   width: 100%; box-sizing: border-box; text-align: center;
-  font-size: 1.6rem; letter-spacing: .6em; padding: 14px 10px 14px 16px;
+  font-size: 1.9rem; letter-spacing: .6em; padding: 14px 10px 14px 16px;
   border: 1px solid var(--line); border-radius: 11px;
   background: var(--bg); color: var(--ink); font-variant-numeric: tabular-nums;
   margin-bottom: 16px;
@@ -105,7 +105,7 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 .login-input:focus { outline: none; border-color: var(--brand); }
 .login-btn { width: 100%; }
 .login-error {
-  margin: 14px 0 0; font-size: .82rem; color: var(--ng);
+  margin: 14px 0 0; font-size: .95rem; color: var(--ng);
 }
 .login-card.shake { animation: shake .3s; }
 @keyframes shake {
@@ -120,7 +120,7 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 /* ---------- 戻るボタン ---------- */
 .back-btn {
   display: inline-flex; align-items: center; background: none; border: none; cursor: pointer;
-  color: var(--ink-sub); font: inherit; font-size: 1.05rem; font-weight: 600;
+  color: var(--ink-sub); font: inherit; font-size: 1.18rem; font-weight: 600;
   padding: 8px 6px 8px 2px; margin: 0 0 10px -2px; border-radius: 8px;
 }
 .back-btn:hover { color: var(--brand); background: var(--brand-soft); }
@@ -128,7 +128,7 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 /* ---------- オプション（折りたたみ） ---------- */
 .option-block { margin-top: 26px; }
 .option-summary {
-  cursor: pointer; font-size: .86rem; font-weight: 600; color: var(--ink-sub);
+  cursor: pointer; font-size: .98rem; font-weight: 600; color: var(--ink-sub);
   padding: 10px 2px; list-style: none;
 }
 .option-summary::-webkit-details-marker { display: none; }
@@ -136,12 +136,12 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 .option-block[open] .option-summary::before { content: "▾ "; }
 .option-summary:hover { color: var(--ink); }
 .deck-grid-level .deck-card { padding: 18px 18px; }
-.deck-grid-level .deck-ico { width: 46px; height: 46px; font-size: 1.3rem; }
-.deck-grid-level .deck-name { font-size: 1.02rem; }
+.deck-grid-level .deck-ico { width: 50px; height: 50px; font-size: 1.4rem; }
+.deck-grid-level .deck-name { font-size: 1.18rem; }
 .deck-grid-compact .deck-card { padding: 10px 13px; box-shadow: none; }
-.deck-grid-compact .deck-ico { width: 30px; height: 30px; font-size: .92rem; border-radius: 9px; }
-.deck-grid-compact .deck-name { font-size: .85rem; }
-.deck-grid-compact .deck-desc { font-size: .7rem; }
+.deck-grid-compact .deck-ico { width: 30px; height: 30px; font-size: 1rem; border-radius: 9px; }
+.deck-grid-compact .deck-name { font-size: .96rem; }
+.deck-grid-compact .deck-desc { font-size: .82rem; }
 .deck-grid-compact .deck-mini { margin-top: 5px; }
 
 /* ---------- 進捗カード ---------- */
@@ -165,11 +165,11 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center; gap: 1px;
 }
-.progress-num strong { font-size: 1.5rem; font-weight: 700; }
-.progress-num small { font-size: .78rem; color: var(--ink-sub); }
-.progress-label { margin: 0 0 6px; font-size: .8rem; color: var(--ink-sub); }
+.progress-num strong { font-size: 1.7rem; font-weight: 700; }
+.progress-num small { font-size: .88rem; color: var(--ink-sub); }
+.progress-label { margin: 0 0 6px; font-size: .92rem; color: var(--ink-sub); }
 .progress-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
-.progress-list li { font-size: .84rem; color: var(--ink-sub); display: flex; align-items: center; gap: 7px; }
+.progress-list li { font-size: .96rem; color: var(--ink-sub); display: flex; align-items: center; gap: 7px; }
 .progress-list b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
 .dot-weak { background: var(--ng); }
@@ -177,8 +177,8 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 .dot-streak { background: var(--mid); }
 
 /* ---------- セクション ---------- */
-.section-title { font-size: .95rem; margin: 28px 0 4px; }
-.section-note { margin: 0 0 14px; font-size: .8rem; color: var(--ink-sub); }
+.section-title { font-size: 1.12rem; margin: 28px 0 4px; }
+.section-note { margin: 0 0 14px; font-size: .93rem; color: var(--ink-sub); }
 .section-note a { color: var(--brand); }
 
 /* ---------- デッキ ---------- */
@@ -192,15 +192,15 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 }
 .deck-card:hover { transform: translateY(-1px); border-color: var(--brand); }
 .deck-ico {
-  width: 40px; height: 40px; flex: none; border-radius: 11px;
+  width: 44px; height: 44px; flex: none; border-radius: 11px;
   background: var(--brand-soft); color: var(--brand);
-  display: grid; place-items: center; font-size: 1.15rem;
+  display: grid; place-items: center; font-size: 1.25rem;
 }
 .deck-body { flex: 1; min-width: 0; }
-.deck-name { font-weight: 700; font-size: .94rem; }
-.deck-desc { font-size: .76rem; color: var(--ink-sub); }
-.deck-stat { flex: none; text-align: right; font-size: .74rem; color: var(--ink-sub); }
-.deck-stat b { display: block; font-size: .95rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+.deck-name { font-weight: 700; font-size: 1.06rem; }
+.deck-desc { font-size: .88rem; color: var(--ink-sub); }
+.deck-stat { flex: none; text-align: right; font-size: .85rem; color: var(--ink-sub); }
+.deck-stat b { display: block; font-size: 1.06rem; color: var(--ink); font-variant-numeric: tabular-nums; }
 .deck-mini {
   height: 4px; border-radius: 2px; background: var(--line);
   margin-top: 7px; overflow: hidden;
@@ -210,8 +210,8 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 .home-actions { margin-top: 32px; text-align: center; }
 
 /* ---------- モード選択 ---------- */
-.mode-deck-title { font-size: 1.15rem; margin: 4px 0 2px; }
-.mode-deck-desc { margin: 0 0 20px; font-size: .84rem; color: var(--ink-sub); }
+.mode-deck-title { font-size: 1.32rem; margin: 4px 0 2px; }
+.mode-deck-desc { margin: 0 0 20px; font-size: .96rem; color: var(--ink-sub); }
 .mode-list { display: grid; gap: 10px; }
 .mode-btn {
   display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
@@ -220,19 +220,19 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   padding: 15px 16px; cursor: pointer; color: inherit; font: inherit;
 }
 .mode-btn:hover { border-color: var(--brand); }
-.mode-ico { font-size: 1.35rem; }
-.mode-text b { display: block; font-size: .95rem; }
-.mode-text small { color: var(--ink-sub); font-size: .78rem; }
+.mode-ico { font-size: 1.5rem; }
+.mode-text b { display: block; font-size: 1.1rem; }
+.mode-text small { color: var(--ink-sub); font-size: .9rem; }
 .shuffle-row {
   display: flex; align-items: center; gap: 8px;
-  margin-top: 20px; font-size: .84rem; color: var(--ink-sub);
+  margin-top: 20px; font-size: .96rem; color: var(--ink-sub);
 }
 
 /* ---------- 学習バー ---------- */
 .study-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
 .study-progress { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .study-progress div { height: 100%; width: 0; background: var(--brand); border-radius: 3px; transition: width .25s ease; }
-.study-count { font-size: .78rem; color: var(--ink-sub); font-variant-numeric: tabular-nums; flex: none; }
+.study-count { font-size: .9rem; color: var(--ink-sub); font-variant-numeric: tabular-nums; flex: none; }
 
 /* ---------- カード ---------- */
 .card {
@@ -241,39 +241,40 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   padding: 24px 22px; margin-bottom: 16px;
 }
 .card-tag {
-  display: inline-block; font-size: .68rem; letter-spacing: .06em;
+  display: inline-block; font-size: .8rem; letter-spacing: .06em;
   background: var(--brand-soft); color: var(--brand);
   padding: 3px 9px; border-radius: 999px; margin-bottom: 14px;
 }
-.card-q { font-size: 1.05rem; font-weight: 600; word-break: break-word; }
-.card-q.is-en { font-size: 1rem; line-height: 1.75; }
+.card-q { font-size: 1.32rem; font-weight: 600; word-break: break-word; }
+.card-q.is-en { font-size: 1.18rem; line-height: 1.7; }
 
 .reveal-btn {
   margin-top: 22px; width: 100%; padding: 12px;
   border: 1px dashed var(--line); border-radius: 10px;
   background: transparent; color: var(--ink-sub);
-  font: inherit; font-size: .88rem; cursor: pointer;
+  font: inherit; font-size: 1.02rem; cursor: pointer;
 }
 .reveal-btn:hover { border-color: var(--brand); color: var(--brand); }
 
 .card-answer { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
 .answer-main {
-  font-size: 1.4rem; font-weight: 700; color: var(--brand);
+  font-size: 2rem; font-weight: 700; color: var(--brand);
   word-break: break-word; margin-bottom: 6px;
 }
-.answer-ja { font-size: .95rem; margin-bottom: 10px; }
+.answer-ja { font-size: 1.18rem; margin-bottom: 10px; }
 .answer-note {
-  font-size: .8rem; color: var(--ink-sub); background: var(--bg);
+  font-size: .94rem; color: var(--ink-sub); background: var(--bg);
   border-radius: 9px; padding: 10px 12px; white-space: pre-wrap;
 }
 .answer-note:empty { display: none; }
 
 /* ---------- 判定ボタン ---------- */
 .judge-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.judge-row .btn { padding: 14px 4px; font-size: .98rem; white-space: nowrap; }
 
 .btn {
   border: 1px solid var(--line); border-radius: 11px;
-  padding: 12px 14px; font: inherit; font-size: .88rem; font-weight: 600;
+  padding: 14px 16px; font: inherit; font-size: 1.04rem; font-weight: 600;
   background: var(--surface); color: var(--ink); cursor: pointer;
 }
 .btn:hover { border-color: var(--brand); }
@@ -289,14 +290,14 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 .choice {
   display: flex; align-items: flex-start; gap: 11px; width: 100%; text-align: left;
   background: var(--surface); border: 1px solid var(--line); border-radius: 11px;
-  padding: 13px 15px; font: inherit; font-size: .92rem; color: inherit; cursor: pointer;
+  padding: 15px 16px; font: inherit; font-size: 1.12rem; color: inherit; cursor: pointer;
 }
 .choice:hover:not(:disabled) { border-color: var(--brand); }
 .choice:disabled { cursor: default; }
 .choice-no {
-  flex: none; width: 22px; height: 22px; border-radius: 50%;
+  flex: none; width: 26px; height: 26px; border-radius: 50%;
   background: var(--bg); color: var(--ink-sub);
-  display: grid; place-items: center; font-size: .72rem; font-weight: 700;
+  display: grid; place-items: center; font-size: .85rem; font-weight: 700;
   margin-top: 2px;
 }
 .choice.correct { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); font-weight: 600; }
@@ -313,11 +314,11 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   border-radius: var(--radius); box-shadow: var(--shadow);
   padding: 30px 22px; text-align: center; margin-bottom: 18px;
 }
-.result-label { margin: 0; font-size: .84rem; color: var(--ink-sub); }
+.result-label { margin: 0; font-size: .96rem; color: var(--ink-sub); }
 .result-score { margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
-.result-score strong { font-size: 2.6rem; font-weight: 700; color: var(--brand); }
-.result-score small { font-size: 1rem; color: var(--ink-sub); }
-.result-msg { margin: 0; font-size: .88rem; }
+.result-score strong { font-size: 2.9rem; font-weight: 700; color: var(--brand); }
+.result-score small { font-size: 1.12rem; color: var(--ink-sub); }
+.result-msg { margin: 0; font-size: 1.02rem; }
 .result-actions { display: grid; gap: 8px; margin-bottom: 24px; }
 
 .review-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -325,15 +326,15 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   background: var(--surface); border: 1px solid var(--line);
   border-left: 3px solid var(--ng); border-radius: 10px; padding: 11px 14px;
 }
-.review-q { font-size: .82rem; color: var(--ink-sub); margin-bottom: 3px; word-break: break-word; }
-.review-a { font-size: .95rem; font-weight: 700; }
-.review-ja { font-size: .82rem; color: var(--ink-sub); }
+.review-q { font-size: .94rem; color: var(--ink-sub); margin-bottom: 3px; word-break: break-word; }
+.review-a { font-size: 1.1rem; font-weight: 700; }
+.review-ja { font-size: .94rem; color: var(--ink-sub); }
 
 /* ---------- 一覧 ---------- */
 .search-box {
   width: 100%; padding: 12px 14px; margin-bottom: 16px;
   border: 1px solid var(--line); border-radius: 11px;
-  background: var(--surface); color: var(--ink); font: inherit; font-size: .92rem;
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 1.05rem;
 }
 .word-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .word-list li {
@@ -341,11 +342,11 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   border-radius: 10px; padding: 12px 14px;
 }
 .wl-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.wl-a { font-size: 1rem; font-weight: 700; color: var(--brand); word-break: break-word; }
-.wl-ja { font-size: .88rem; }
-.wl-q { font-size: .78rem; color: var(--ink-sub); margin-top: 4px; word-break: break-word; }
+.wl-a { font-size: 1.16rem; font-weight: 700; color: var(--brand); word-break: break-word; }
+.wl-ja { font-size: 1.02rem; }
+.wl-q { font-size: .9rem; color: var(--ink-sub); margin-top: 4px; word-break: break-word; }
 .wl-src {
-  font-size: .66rem; letter-spacing: .05em; color: var(--ink-sub);
+  font-size: .75rem; letter-spacing: .05em; color: var(--ink-sub);
   border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; flex: none;
 }
 .wl-src.is-real { color: var(--ng); border-color: var(--ng); }
@@ -353,11 +354,11 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 /* ---------- 分析 ---------- */
 .analysis {
   background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius); padding: 22px 20px; font-size: .88rem;
+  border-radius: var(--radius); padding: 22px 20px; font-size: 1.02rem;
 }
-.analysis h2 { font-size: 1.05rem; margin: 26px 0 8px; }
+.analysis h2 { font-size: 1.2rem; margin: 26px 0 8px; }
 .analysis h2:first-child { margin-top: 0; }
-.analysis h3 { font-size: .93rem; margin: 20px 0 6px; color: var(--brand); }
+.analysis h3 { font-size: 1.06rem; margin: 20px 0 6px; color: var(--brand); }
 .analysis p { margin: 0 0 10px; }
 .analysis ul { margin: 0 0 12px; padding-left: 1.2em; }
 .analysis li { margin-bottom: 4px; }
@@ -366,7 +367,7 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   font-size: .86em; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 .analysis .tbl-wrap { overflow-x: auto; margin: 0 0 14px; }
-.analysis table { border-collapse: collapse; font-size: .82rem; min-width: 100%; }
+.analysis table { border-collapse: collapse; font-size: .94rem; min-width: 100%; }
 .analysis th, .analysis td {
   border: 1px solid var(--line); padding: 6px 10px; text-align: left; white-space: nowrap;
 }
@@ -374,6 +375,6 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 
 /* ---------- 空状態 ---------- */
 .empty {
-  text-align: center; color: var(--ink-sub); font-size: .88rem;
+  text-align: center; color: var(--ink-sub); font-size: 1.02rem;
   padding: 40px 20px;
 }
