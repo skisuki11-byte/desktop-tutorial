@@ -190,6 +190,8 @@
     window.scrollTo(0, 0);
   }
 
+  function goHome() { renderHome(); show('home'); }
+
   /* ---------------------------------------------------------
      4.5. ログイン（暗証番号）
      --------------------------------------------------------- */
@@ -560,10 +562,14 @@
     });
     $('#login-pin').addEventListener('input', function () { $('#login-error').hidden = true; });
 
-    $('#btn-home').addEventListener('click', function () { renderHome(); show('home'); });
+    $('#btn-home').addEventListener('click', goHome);
 
+    $('#btn-back-mode').addEventListener('click', goHome);
+    $('#btn-back-analysis').addEventListener('click', goHome);
     $('#btn-back-flash').addEventListener('click', function () { openMode(currentDeck); });
     $('#btn-back-quiz').addEventListener('click', function () { openMode(currentDeck); });
+    $('#btn-back-result').addEventListener('click', function () { openMode(currentDeck); });
+    $('#btn-back-list').addEventListener('click', function () { openMode(currentDeck); });
 
     $('#link-analysis').addEventListener('click', function (e) {
       e.preventDefault();
@@ -599,7 +605,7 @@
     $('#btn-retry-weak').addEventListener('click', function () {
       startCustomSession(session.missed, session.mode);
     });
-    $('#btn-back-home').addEventListener('click', function () { renderHome(); show('home'); });
+    $('#btn-back-home').addEventListener('click', goHome);
 
     $('#list-search').addEventListener('input', function () { renderList(this.value); });
 

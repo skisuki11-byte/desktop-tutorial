@@ -119,11 +119,11 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
 
 /* ---------- 戻るボタン ---------- */
 .back-btn {
-  display: inline-block; background: none; border: none; cursor: pointer;
-  color: var(--ink-sub); font: inherit; font-size: .84rem;
-  padding: 4px 0; margin-bottom: 12px;
+  display: inline-flex; align-items: center; background: none; border: none; cursor: pointer;
+  color: var(--ink-sub); font: inherit; font-size: 1.05rem; font-weight: 600;
+  padding: 8px 6px 8px 2px; margin: 0 0 10px -2px; border-radius: 8px;
 }
-.back-btn:hover { color: var(--brand); }
+.back-btn:hover { color: var(--brand); background: var(--brand-soft); }
 
 /* ---------- オプション（折りたたみ） ---------- */
 .option-block { margin-top: 26px; }
