@@ -256,8 +256,10 @@ main { max-width: 680px; margin: 0 auto; padding: 20px 16px 64px; }
   background: var(--brand-soft); color: var(--brand);
   padding: 3px 9px; border-radius: 999px; margin-bottom: 14px;
 }
-.card-q { font-size: 1.55rem; font-weight: 600; word-break: break-word; }
-.card-q.is-en { font-size: 1.42rem; line-height: 1.6; }
+/* 短い語句・熟語の問題文は一問一答と同じくらい大きく。
+   英文の空所補充・英英定義など長い文脈のときだけ .is-en で少し抑える。 */
+.card-q { font-size: 2.15rem; font-weight: 700; word-break: break-word; line-height: 1.3; }
+.card-q.is-en { font-size: 1.5rem; font-weight: 600; line-height: 1.55; }
 
 /* 一問一答は常に短い英語の語句のみを表示するため、思い切って大きくする */
 .card-q-flash {
