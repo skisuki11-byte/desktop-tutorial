@@ -1,0 +1,294 @@
+/* 配色は和帳（紺の表紙・朱書き）から。支出は朱、収入は藍緑。
+   色はすべてトークン化し、明暗どちらのテーマでもトークンだけを差し替える。 */
+:root{
+  --bg:#f2f4f8; --panel:#fff; --ink:#18202c; --muted:#64707f; --line:#dde3ec;
+  --brand:#1d3557; --brand-2:#2f5f9e; --accent:#0f766e;
+  --in:#136f52; --out:#b03a2c; --warn:#8a6100; --warn-bg:#fdf3dc;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 6px 16px rgba(16,24,40,.06);
+  --r:12px;
+  --serif:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"MS PMincho",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+}
+/* 端末の設定 */
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0e1218; --panel:#161b23; --ink:#e7ebf2; --muted:#96a1b2; --line:#28303c;
+    --brand:#1b2c46; --brand-2:#5a8ed6; --accent:#2dd4bf;
+    --in:#57cf99; --out:#f0837a; --warn:#dfb04a; --warn-bg:#2b2412;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+}
+/* 閲覧側の切り替えボタン。端末設定より優先させるため、両方向とも明示する。 */
+:root[data-theme="dark"]{
+  --bg:#0e1218; --panel:#161b23; --ink:#e7ebf2; --muted:#96a1b2; --line:#28303c;
+  --brand:#1b2c46; --brand-2:#5a8ed6; --accent:#2dd4bf;
+  --in:#57cf99; --out:#f0837a; --warn:#dfb04a; --warn-bg:#2b2412;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+:root[data-theme="light"]{
+  --bg:#f2f4f8; --panel:#fff; --ink:#18202c; --muted:#64707f; --line:#dde3ec;
+  --brand:#1d3557; --brand-2:#2f5f9e; --accent:#0f766e;
+  --in:#136f52; --out:#b03a2c; --warn:#8a6100; --warn-bg:#fdf3dc;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 6px 16px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box}
+/* hidden 属性を常に優先する。
+   .modal / .toast のように display を持つクラスがあると、
+   ブラウザ既定の [hidden]{display:none} が負けて覆いが残ってしまうため。 */
+[hidden]{display:none !important}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px; line-height:1.6; -webkit-text-size-adjust:100%;
+}
+/* 見出しと帳票は明朝。帳簿・報告書という主題に合わせている。 */
+h2,h3{font-family:var(--serif);font-weight:700;text-wrap:balance;margin:0}
+h2{font-size:1.12rem;letter-spacing:.02em}
+h3{font-size:1.02rem}
+:focus-visible{outline:2px solid var(--brand-2);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ---------- topbar ---------- */
+.topbar{position:sticky;top:0;z-index:30;background:var(--brand);color:#fff;box-shadow:var(--shadow)}
+.topbar-inner{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-mark{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.16);
+  display:grid;place-items:center;font-weight:700;flex:none}
+.brand-title{font-weight:700;line-height:1.2;font-family:var(--serif);letter-spacing:.04em}
+.brand-sub{font-size:.72rem;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:44vw}
+.topbar-balance{text-align:right;flex:none}
+.tb-label{font-size:.68rem;opacity:.75}
+.tb-value{font-weight:700;font-size:1.15rem;font-variant-numeric:tabular-nums}
+
+.tabs{max-width:1180px;margin:0 auto;padding:0 8px 0;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:0;color:rgba(255,255,255,.72);padding:9px 13px;font-size:.88rem;
+  font-family:inherit;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tab:hover{color:#fff}
+.tab.active{color:#fff;border-bottom-color:#fff;font-weight:600}
+
+/* ---------- layout ---------- */
+main{max-width:1180px;margin:0 auto;padding:16px}
+.view{display:none}
+.view.active{display:block}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.panel-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.panel-head h2{margin-right:auto}
+.lead{margin:0 0 14px;color:var(--muted);font-size:.9rem}
+.hint{color:var(--muted);font-size:.78rem}
+.warn{color:var(--warn);font-size:.82rem;margin:12px 0 0}
+.mt{margin-top:12px}
+.steps{margin:0 0 8px;padding-left:1.3em;display:flex;flex-direction:column;gap:10px;font-size:.9rem}
+
+/* ---------- buttons ---------- */
+.btn{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;
+  padding:7px 13px;font-size:.86rem;font-family:inherit;cursor:pointer;white-space:nowrap;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:hover{border-color:var(--brand-2)}
+.btn-primary{background:var(--brand-2);border-color:var(--brand-2);color:#fff}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-danger{color:var(--out);border-color:var(--out)}
+.btn-big{padding:14px 22px;font-size:1rem}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.actions{display:flex;gap:8px}
+.actions.wrap{flex-wrap:wrap}
+.icon-btn{background:none;border:0;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px 8px}
+
+/* ---------- filters ---------- */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;
+  padding:12px;background:var(--bg);border-radius:10px;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:.72rem;color:var(--muted)}
+input,select,textarea{font-family:inherit;font-size:.88rem;padding:6px 9px;border:1px solid var(--line);
+  border-radius:8px;background:var(--panel);color:var(--ink);max-width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--brand-2);outline-offset:-1px}
+.field input,.field select{min-width:130px}
+.field input[type=search]{min-width:190px}
+
+/* ---------- cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow)}
+.card .k{font-size:.75rem;color:var(--muted)}
+.card .v{font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.card .s{font-size:.72rem;color:var(--muted)}
+.card.in .v{color:var(--in)} .card.out .v{color:var(--out)} .card.warn .v{color:var(--warn)}
+
+/* ---------- tables ---------- */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.85rem}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+thead th{background:var(--bg);font-size:.75rem;color:var(--muted);font-weight:600;
+  position:sticky;top:0;z-index:1}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.wide{white-space:normal;min-width:220px}
+tbody tr:hover{background:rgba(47,85,151,.06)}
+tr.flagged{background:var(--warn-bg)}
+tr.total td{font-weight:700;background:var(--bg)}
+tr.sub td{font-weight:600;background:var(--bg)}
+.pos{color:var(--in)} .neg{color:var(--out)}
+.tag{display:inline-block;font-size:.68rem;padding:1px 7px;border-radius:99px;
+  background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.tag.check{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.mini-summary{display:flex;gap:16px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-bottom:8px}
+.mini-summary b{color:var(--ink);font-variant-numeric:tabular-nums}
+.empty{padding:28px;text-align:center;color:var(--muted);font-size:.9rem}
+
+/* ---------- charts (pure CSS bars) ---------- */
+.chart-wrap{overflow-x:auto}
+.bars{display:flex;flex-direction:column;gap:7px;min-width:420px}
+.bar-row{display:grid;grid-template-columns:96px 1fr 108px;gap:10px;align-items:center;font-size:.8rem}
+.bar-row .lb{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{position:relative;height:20px;background:var(--bg);border-radius:6px;overflow:hidden;display:flex}
+.bar-seg{height:100%}
+.bar-val{text-align:right;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:.75rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.clickable{cursor:pointer}
+
+/* ---------- 科目別 drilldown ---------- */
+.kam-group{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.kam-head{display:grid;grid-template-columns:1fr 90px 130px 70px;gap:8px;align-items:center;
+  padding:11px 14px;background:var(--bg);cursor:pointer;font-size:.9rem}
+.kam-head .nm{font-weight:600}
+.kam-head .num{text-align:right;font-variant-numeric:tabular-nums}
+.kam-body{display:none;padding:0 6px 6px}
+.kam-group.open .kam-body{display:block}
+.kam-group.open .caret{transform:rotate(90deg)}
+.caret{display:inline-block;transition:transform .15s;color:var(--muted);margin-right:6px}
+
+/* ---------- camera ---------- */
+.shoot{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.shots{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.shot{position:relative;width:120px;height:120px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.shot img{width:100%;height:100%;object-fit:cover}
+.shot button{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border:0;
+  border-radius:50%;width:22px;height:22px;cursor:pointer;line-height:1}
+.status{font-size:.86rem;color:var(--muted);min-height:22px}
+.status.err{color:var(--out)}
+.status.ok{color:var(--in)}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);
+  border-top-color:var(--brand-2);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.editable{width:100%;border:1px solid transparent;background:transparent;padding:3px 5px;border-radius:6px}
+.editable:hover{border-color:var(--line)}
+.editable:focus{border-color:var(--brand-2);background:var(--panel)}
+td .editable.num{text-align:right}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;background:rgba(11,16,24,.55);display:grid;place-items:center;z-index:60;padding:16px}
+.modal-box{background:var(--panel);border-radius:14px;width:min(520px,100%);max-height:88vh;
+  display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-head{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.modal-head h3{margin-right:auto}
+.modal-body{padding:16px;overflow:auto}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line)}
+.form-grid{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center}
+.form-grid label{font-size:.82rem;color:var(--muted)}
+.form-grid input,.form-grid select,.form-grid textarea{width:100%}
+
+/* ---------- report paper ---------- */
+.paper{background:#fff;color:#111;border:1px solid var(--line);border-radius:var(--r);
+  padding:34px 38px;max-width:860px;margin:0 auto;box-shadow:var(--shadow)}
+.paper h1{text-align:center;font-size:1.5rem;letter-spacing:.35em;margin:0 0 6px;
+  font-family:var(--serif);font-weight:700}
+.paper .sec td,.paper .grand td{font-family:var(--serif)}
+.paper .sub{text-align:center;color:#555;font-size:.86rem;margin:0}
+.paper .meta{display:flex;justify-content:flex-end;gap:8px 20px;flex-wrap:wrap;
+  font-size:.82rem;color:#555;margin:18px 0 10px}
+/* 列幅を割合で固定し、文字は折り返す。狭い画面でも表が紙からはみ出さない。 */
+.paper table{width:100%;font-size:.86rem;table-layout:fixed}
+.paper th,.paper td{border:1px solid #c9d0dc;padding:6px 10px;
+  white-space:normal;overflow-wrap:anywhere}
+.paper thead th{background:#eef2f8;color:#333}
+.paper td.num,.paper th.num{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.paper td.wide{white-space:normal}
+.paper-table{overflow-x:auto}
+.paper .sec td{background:#e8eef8;font-weight:700}
+.paper .sub td{background:#f4f7fc;font-weight:600}
+.paper .grand td{background:#fff3d6;font-weight:700;font-size:.95rem}
+.paper .sign{margin-top:34px;font-size:.85rem;color:#333;line-height:2.1}
+.paper .sign+.sign{margin-top:10px}
+.paper .audits{display:flex;gap:12px 48px;flex-wrap:wrap}
+.paper .note{margin-top:18px;font-size:.75rem;color:#666}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#1b2330;color:#fff;
+  padding:10px 18px;border-radius:99px;font-size:.85rem;z-index:80;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+
+@media (max-width:640px){
+  main{padding:10px}
+  .panel{padding:12px}
+  .paper{padding:18px 12px}
+  .paper h1{font-size:1.2rem;letter-spacing:.2em}
+  .paper table{font-size:.76rem}
+  .paper th,.paper td{padding:5px 6px}
+  .bar-row{grid-template-columns:76px 1fr 88px;font-size:.75rem}
+  .kam-head{grid-template-columns:1fr 60px 100px 44px;font-size:.84rem}
+  .tb-value{font-size:1rem}
+}
+
+
+/* ---------- 管理者モードの切り替えと、パスワード画面 ---------- */
+.topbar-right{display:flex;align-items:center;gap:10px;flex:none}
+.admin-btn{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer;
+  background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.28);
+  border-radius:99px;padding:6px 12px;font-family:inherit;font-size:.78rem}
+.admin-btn:hover{background:rgba(255,255,255,.2)}
+.admin-btn.on{background:#fff;color:var(--brand);border-color:#fff;font-weight:700}
+/* 管理者モードのあいだは帯を出して、いま編集できる状態だと分かるようにする */
+body.admin .topbar{box-shadow:inset 0 -3px 0 var(--accent),var(--shadow)}
+/* いまどちらのモードかを示すだけの小さな札。説明は書かず、色で見分ける。
+   閲覧＝落ち着いた灰、管理者＝琥珀（書き換えられる状態だと目に留まるように）。 */
+.mode-tag{display:inline-block;margin-bottom:12px;padding:4px 12px;border-radius:99px;
+  font-size:.78rem;font-weight:700;letter-spacing:.04em;
+  background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.mode-tag.is-admin{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+
+.lock{position:fixed;inset:0;z-index:100;display:grid;place-items:center;
+  /* ノッチやホームバーの領域を避ける。避けたうえで、残りの幅の中央に置く。 */
+  padding:calc(20px + env(safe-area-inset-top,0px)) calc(20px + env(safe-area-inset-right,0px))
+          calc(20px + env(safe-area-inset-bottom,0px)) calc(20px + env(safe-area-inset-left,0px));
+  background:var(--brand);
+  background-image:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.14),transparent 60%)}
+.lock-box{background:var(--panel);color:var(--ink);border-radius:16px;padding:28px 24px;
+  width:min(340px,100%);display:flex;flex-direction:column;align-items:stretch;gap:12px;
+  text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.lock-box>*{margin-left:auto;margin-right:auto;width:100%}
+.lock-mark{width:52px;height:52px;margin:0 auto;border-radius:14px;background:var(--brand);
+  color:#fff;display:grid;place-items:center;font-family:var(--serif);font-size:1.5rem;font-weight:700}
+.lock-box h2{font-size:1.15rem}
+.lock-lead{margin:0;font-size:.86rem;color:var(--muted);line-height:1.7}
+.lock-box input{text-align:center;font-size:1.2rem;letter-spacing:.3em;padding:11px;
+  text-indent:.3em}
+.lock-err{margin:0;font-size:.82rem;color:var(--out)}
+.lock-actions{display:flex;gap:8px;justify-content:center}
+.lock-actions .btn{flex:1 1 0;min-width:0}
+.lock-box .hint{margin:0}
+body.locked > .topbar,body.locked > main{display:none}
+
+@media (max-width:520px){
+  .admin-txt{display:none}
+  .admin-btn{padding:6px 9px}
+}
+
+/* ---------- ホーム画面から起動したとき（iPhoneのノッチ・ホームバー対策） ----------
+   後ろのメディアクエリに上書きされないよう、ファイルの最後に置いている。 */
+.topbar{padding-top:env(safe-area-inset-top,0px)}
+.topbar-inner{padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tabs{padding-left:max(8px,env(safe-area-inset-left,0px));
+  padding-right:max(8px,env(safe-area-inset-right,0px))}
+main{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.toast{bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+
+@media print{
+  .topbar,.no-print,#toast,.modal{display:none !important}
+  body{background:#fff}
+  main{padding:0;max-width:none}
+  .view{display:none}
+  .view.active{display:block}
+  .paper{border:0;box-shadow:none;max-width:none;padding:0;border-radius:0}
+  .paper table{font-size:10pt}
+  @page{size:A4 portrait;margin:16mm}
+}

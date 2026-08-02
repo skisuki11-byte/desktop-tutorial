@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f3864">
+<title>出納管理アプリ</title>
+<!-- ホーム画面に追加して、アプリのように全画面で使えるようにする -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="出納管理">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f3864'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='white' font-family='sans-serif'%3E%E5%B8%B3%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">帳</span>
+      <div>
+        <div class="brand-title">出納管理</div>
+        <div class="brand-sub" id="bookTitle">—</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-balance">
+        <div class="tb-label">現在残高</div>
+        <div class="tb-value" id="topBalance">—</div>
+      </div>
+      <button class="admin-btn" id="btnAdmin" type="button" title="編集するには管理者モードに切り替えます">
+        <span class="admin-ico">🔒</span><span class="admin-txt">閲覧</span>
+      </button>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button class="tab" data-view="dash">ホーム</button>
+    <button class="tab" data-view="ledger">出納帳</button>
+    <button class="tab" data-view="kamoku">科目別</button>
+    <button class="tab" data-view="month">月別</button>
+    <button class="tab" data-view="camera">カメラ読取</button>
+    <button class="tab" data-view="report">収支報告書</button>
+    <button class="tab" data-view="settings">設定</button>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ============ ホーム ============ -->
+  <section class="view" id="view-dash">
+    <div class="cards" id="dashCards"></div>
+    <div class="panel">
+      <div class="panel-head"><h2>月別の収支</h2></div>
+      <div id="dashMonth" class="chart-wrap"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>支出の科目別内訳</h2></div>
+      <div id="dashKamoku" class="chart-wrap"></div>
+    </div>
+    <div class="panel" id="dashCheckPanel">
+      <div class="panel-head"><h2>要確認の行</h2>
+        <span class="hint">写真から文字が一意に読み取れなかった行です。金額は残高で検算済みです。</span>
+      </div>
+      <div id="dashCheck" class="table-wrap"></div>
+    </div>
+  </section>
+
+  <!-- ============ 出納帳 ============ -->
+  <section class="view" id="view-ledger">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>出納帳</h2>
+        <div class="actions">
+          <button class="btn btn-primary" id="btnAddRow">＋ 手入力で追加</button>
+          <button class="btn" id="btnExportXlsxLedger">Excel出力</button>
+        </div>
+      </div>
+      <div class="mode-tag" data-mode-tag></div>
+      <div class="filters" id="ledgerFilters"></div>
+      <div id="ledgerSummary" class="mini-summary"></div>
+      <div class="table-wrap" id="ledgerTable"></div>
+    </div>
+  </section>
+
+  <!-- ============ 科目別 ============ -->
+  <section class="view" id="view-kamoku">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>科目別集計</h2>
+        <div class="actions"><button class="btn" id="btnExportXlsxKamoku">Excel出力</button></div>
+      </div>
+      <div class="filters" id="kamokuFilters"></div>
+      <div id="kamokuBody"></div>
+    </div>
+  </section>
+
+  <!-- ============ 月別 ============ -->
+  <section class="view" id="view-month">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>月別集計</h2>
+        <div class="actions"><button class="btn" id="btnExportXlsxMonth">Excel出力</button></div>
+      </div>
+      <div class="filters" id="monthFilters"></div>
+      <div class="table-wrap" id="monthTable"></div>
+      <div id="monthDetail"></div>
+    </div>
+  </section>
+
+  <!-- ============ カメラ読取 ============ -->
+  <section class="view" id="view-camera">
+    <div class="panel">
+      <div class="panel-head"><h2>カメラで手書き出納帳を読み取る</h2></div>
+      <p class="lead">
+        物理ノートのページを撮影すると、AIが行を読み取って一覧にします。
+        内容を確認・修正してから出納帳に追記でき、そのままExcelに書き出せます。
+      </p>
+      <div class="mode-tag" data-mode-tag></div>
+      <div class="shoot">
+        <label class="btn btn-primary btn-big">
+          📷 撮影する
+          <input type="file" id="camCapture" accept="image/*" capture="environment" hidden>
+        </label>
+        <label class="btn btn-big">
+          🖼 画像を選ぶ
+          <input type="file" id="camPick" accept="image/*" multiple hidden>
+        </label>
+      </div>
+      <div id="camStatus" class="status"></div>
+      <div id="camShots" class="shots"></div>
+      <div id="camResult"></div>
+    </div>
+  </section>
+
+  <!-- ============ 収支報告書 ============ -->
+  <section class="view" id="view-report">
+    <div class="panel no-print">
+      <div class="panel-head">
+        <h2>収支報告書の作成</h2>
+        <div class="actions">
+          <button class="btn btn-primary" id="btnPdfReport">PDFでダウンロード</button>
+          <button class="btn" id="btnPrintReport">印刷</button>
+          <button class="btn" id="btnExportXlsxReport">Excel出力</button>
+        </div>
+      </div>
+      <div class="filters" id="reportFilters"></div>
+    </div>
+    <div id="reportPaper" class="paper"></div>
+  </section>
+
+  <!-- ============ 設定 ============ -->
+  <section class="view" id="view-settings">
+    <div class="panel">
+      <div class="panel-head"><h2>AI読み取りの設定</h2></div>
+      <p class="lead">
+        カメラ読み取りには Anthropic の Claude API を使います。APIキーはこの端末のブラウザ内
+        （localStorage）にのみ保存され、どこにも送信されません（送信先は api.anthropic.com のみ）。
+      </p>
+      <div class="form-grid">
+        <label>APIキー</label>
+        <input type="password" id="setApiKey" placeholder="sk-ant-...">
+        <label>モデル</label>
+        <select id="setModel">
+          <option value="claude-opus-5">claude-opus-5（手書きに強い・推奨）</option>
+          <option value="claude-sonnet-5">claude-sonnet-5（速い・安い）</option>
+        </select>
+        <label>帳簿名</label>
+        <input type="text" id="setTitle">
+        <label>前年度繰越金</label>
+        <input type="number" id="setOpening">
+      </div>
+      <div class="actions mt">
+        <button class="btn btn-primary" id="btnSaveSettings">設定を保存</button>
+      </div>
+      <div class="mode-tag mt" data-mode-tag></div>
+      <p class="warn">
+        APIキーを持っていない場合でも、カメラで撮影した画像を見ながら手入力で追記できます。
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>データの入出力</h2></div>
+      <div class="actions wrap">
+        <button class="btn btn-primary" id="btnExportXlsxAll">Excelで書き出す（全シート）</button>
+        <button class="btn" id="btnExportCsv">CSVで書き出す</button>
+        <button class="btn" id="btnExportJson">バックアップ（JSON）</button>
+        <label class="btn">CSVを取り込む<input type="file" id="impCsv" accept=".csv,text/csv" hidden></label>
+        <label class="btn">JSONを取り込む<input type="file" id="impJson" accept=".json,application/json" hidden></label>
+      </div>
+      <p class="hint mt">
+        取り込みは「追記」です。No.が重複する行は新しい番号を振り直します。
+      </p>
+      <div class="actions wrap mt">
+        <button class="btn btn-danger" id="btnReset">読み取り直後の状態に戻す</button>
+        <button class="btn" id="btnForget">この端末の記憶を消す（次回パスワードを求める）</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>この帳簿について</h2></div>
+      <div id="aboutBody" class="about"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- 行編集モーダル -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-box">
+    <div class="modal-head"><h3 id="modalTitle">仕訳の編集</h3>
+      <button class="icon-btn" id="modalClose">✕</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="btn" id="modalCancel">キャンセル</button>
+      <button class="btn btn-primary" id="modalSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="lock" id="lockScreen" hidden>
+  <form class="lock-box" id="lockForm">
+    <div class="lock-mark">帳</div>
+    <h2 id="lockTitle">出納管理</h2>
+    <p class="lock-lead" id="lockLead">パスワードを入力してください。</p>
+    <input type="password" id="lockPw" inputmode="numeric" autocomplete="current-password"
+           placeholder="パスワード" aria-label="パスワード">
+    <p class="lock-err" id="lockErr" hidden>パスワードが違います。もう一度入力してください。</p>
+    <div class="lock-actions">
+      <button class="btn" type="button" id="lockCancel" hidden>キャンセル</button>
+      <button class="btn btn-primary" type="submit" id="lockOk">開く</button>
+    </div>
+    <p class="hint" id="lockNote"></p>
+  </form>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="data/ledger.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/xlsx.js"></script>
+<script src="js/pdf.js"></script>
+<script src="js/store.js"></script>
+<script src="js/ocr.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // オフラインでも起動できるようにする。
+  // file:// で開いた場合やHTTPSでない場合は登録できないが、その場合も普通に動く。
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* 未対応でも問題なし */ });
+    });
+  }
+</script>
+</body>
+</html>
