@@ -11,6 +11,7 @@
   var HOST = window.CASHBOOK_HOST || {};
   var canAI = HOST.ai !== false;      // カメラのAI読み取り
   var canXlsx = HOST.xlsx !== false;  // .xlsx での書き出し
+  var canSync = HOST.sync !== false;  // 置き場所からの「反映」（外部への通信が要る）
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -977,6 +978,50 @@
       });
   }
 
+  /* ---------- 置き場所からの反映 ---------- */
+  /* 最後に反映した日時を出す。押していなければ何も出さない。 */
+  function showSyncStatus(msg) {
+    var el = $('syncStatus');
+    if (!el) return;
+    if (msg) { el.textContent = msg; return; }
+    var at = S.settings().syncedAt;
+    el.textContent = at ? '最後に反映したのは ' + at + ' です。' : '';
+  }
+
+  /* 「反映」を押したときだけ通信する。取り込む前に中身を見せて確認する。 */
+  function doSync() {
+    if (!Auth.isAdmin()) { requireAdmin(function () { doSync(); }); return; }
+    if (!Sync.configured()) {
+      toast('先に取り込み元URLを保存してください');
+      return;
+    }
+    var btn = $('btnSync');
+    btn.disabled = true;
+    showSyncStatus('読みに行っています…');
+
+    Sync.pull().then(function (got) {
+      var now = S.currentBalance();
+      var msg = '取り込み元の内容\n' +
+        '　明細　' + got.count + ' 件\n' +
+        '　現在残高　¥' + yen(got.balance) + '\n' +
+        (got.mismatch ? '　⚠ 記帳残高と合わない行が ' + got.mismatch + ' 件あります\n' : '') +
+        '\nいまの帳簿（' + S.data().entries.length + ' 件・¥' + yen(now) + '）を、\n' +
+        'この内容で置き換えます。よろしいですか？';
+      if (!confirm(msg)) { showSyncStatus(); return; }
+
+      S.replaceAll(got);
+      S.saveSettings({ syncedAt: new Date().toLocaleString('ja-JP') });
+      refresh();
+      showSyncStatus();
+      toast(got.count + ' 件を反映しました');
+    }).catch(function (e) {
+      showSyncStatus('反映できませんでした：' + e.message);
+      toast('反映できませんでした');
+    }).then(function () {
+      btn.disabled = !Auth.isAdmin();
+    });
+  }
+
   /* ================= 設定 ================= */
   function renderSettings() {
     var s = S.settings();
@@ -984,6 +1029,8 @@
     $('setModel').value = s.model || 'claude-opus-5';
     $('setTitle').value = S.data().title;
     $('setOpening').value = S.data().opening.amount;
+    if ($('setSyncUrl')) $('setSyncUrl').value = s.syncUrl || '';
+    showSyncStatus();
 
     var rows = S.withBalances();
     var checks = rows.filter(function (e) { return e.check; });
@@ -1240,7 +1287,8 @@
 
     // 編集に関わるものは、閲覧モードでは隠す・押せなくする
     if ($('btnAddRow')) $('btnAddRow').hidden = !on;
-    ['setApiKey', 'setModel', 'setTitle', 'setOpening', 'btnSaveSettings'].forEach(function (id) {
+    ['setApiKey', 'setModel', 'setTitle', 'setOpening', 'btnSaveSettings',
+      'setSyncUrl', 'btnSync', 'btnSaveSyncUrl'].forEach(function (id) {
       if ($(id)) $(id).disabled = !on;
     });
     ['btnReset'].forEach(function (id) { if ($(id)) $(id).hidden = !on; });
@@ -1295,6 +1343,8 @@
         if (panel) panel.hidden = true;
       }
     }
+    // 外部への通信が塞がれている場所では、「反映」は動かないので出さない
+    if (!canSync && $('syncPanel')) $('syncPanel').hidden = true;
   }
 
   function boot() {
@@ -1377,6 +1427,16 @@
         }
         S.addMany(d.entries); refresh(); toast('取り込みました');
       }).catch(function (e) { toast('取り込みに失敗: ' + e.message); });
+    };
+
+    if ($('btnSync')) $('btnSync').onclick = doSync;
+    if ($('btnSaveSyncUrl')) $('btnSaveSyncUrl').onclick = function () {
+      if (!Auth.isAdmin()) { requireAdmin(function () { $('btnSaveSyncUrl').click(); }); return; }
+      var u = $('setSyncUrl').value.trim();
+      if (u && !Sync.okUrl(u)) { toast('https:// で始まるURLを入れてください'); return; }
+      S.saveSettings({ syncUrl: u });
+      showSyncStatus();
+      toast(u ? '取り込み元を保存しました' : '取り込み元を空にしました');
     };
 
     $('btnSaveSettings').onclick = function () {

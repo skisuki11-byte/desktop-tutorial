@@ -294,6 +294,27 @@
       if (openingDate) state.opening.date = openingDate;
       save();
     },
+    /* 帳簿をまるごと入れ替える（「反映」で取り込むときに使う）。
+       追記ではなく置き換えなので、取り込み元がそのまま今の状態になる。 */
+    replaceAll: function (d) {
+      var rows = (d.entries || []).map(function (e, i) {
+        var r = normalize(Object.assign({}, e, { no: e.no || i + 1 }));
+        if (e.bookBalance != null) r.bookBalance = Number(e.bookBalance);
+        return r;
+      });
+      state = {
+        title: d.title || state.title,
+        opening: {
+          date: (d.opening && d.opening.date) || state.opening.date,
+          label: (d.opening && d.opening.label) || state.opening.label,
+          amount: (d.opening && d.opening.amount != null)
+            ? Math.round(Number(d.opening.amount)) : state.opening.amount
+        },
+        entries: rows
+      };
+      save();
+      return state;
+    },
     add: add, addMany: addMany, update: update, remove: remove, nextNo: nextNo,
     withBalances: withBalances, currentBalance: currentBalance,
     filterRows: filterRows, totals: totals,

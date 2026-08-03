@@ -6,7 +6,7 @@
  *
  * api.anthropic.com への通信（カメラ読み取り）は別オリジンなので一切触らない。
  */
-var CACHE = 'cashbook-v3';
+var CACHE = 'cashbook-v4';
 var ASSETS = [
   './',
   './index.html',
@@ -16,6 +16,7 @@ var ASSETS = [
   './js/xlsx.js',
   './js/pdf.js',
   './js/store.js',
+  './js/sync.js',
   './js/ocr.js',
   './js/app.js',
   './data/ledger.js',

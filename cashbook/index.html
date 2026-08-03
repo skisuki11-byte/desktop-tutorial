@@ -180,6 +180,28 @@
       </p>
     </div>
 
+    <div class="panel" id="syncPanel">
+      <div class="panel-head"><h2>置き場所から反映する</h2></div>
+      <p class="lead">
+        Googleドライブなどに置いた最新の出納帳（JSON）を、<b>「反映」を押したときだけ</b>読みに行きます。
+        自動では通信しません。読み込むと、いまの帳簿は取り込んだ内容で<b>置き換わります</b>。
+      </p>
+      <div class="form-grid">
+        <label>取り込み元URL</label>
+        <input type="url" id="setSyncUrl" placeholder="https://script.google.com/macros/s/..../exec">
+      </div>
+      <div class="actions mt">
+        <button class="btn btn-primary" id="btnSync">最新を反映する</button>
+        <button class="btn" id="btnSaveSyncUrl">URLを保存</button>
+      </div>
+      <div class="mode-tag mt" data-mode-tag></div>
+      <div id="syncStatus" class="hint mt"></div>
+      <p class="warn">
+        このURLはこの端末のブラウザにだけ保存され、GitHubには書き込まれません。
+        <b>URLを知っている人は帳簿の中身を読めてしまう</b>ので、共有先にご注意ください。
+      </p>
+    </div>
+
     <div class="panel">
       <div class="panel-head"><h2>データの入出力</h2></div>
       <div class="actions wrap">
@@ -242,6 +264,7 @@
 <script src="js/xlsx.js"></script>
 <script src="js/pdf.js"></script>
 <script src="js/store.js"></script>
+<script src="js/sync.js"></script>
 <script src="js/ocr.js"></script>
 <script src="js/app.js"></script>
 <script>
