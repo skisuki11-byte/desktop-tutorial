@@ -432,6 +432,7 @@
   var ocrRows = [];    // 読み取り結果（編集可）
 
   function addShots(files) {
+    if (!Auth.isAdmin()) return;   // 閲覧モードでは撮影を受け付けない
     var list = Array.prototype.slice.call(files || []);
     if (!list.length) return;
     Promise.all(list.map(function (f) {
@@ -470,6 +471,7 @@
   }
 
   function runOcr() {
+    if (!Auth.isAdmin()) { requireAdmin(function () { runOcr(); }); return; }
     if (!canAI) {
       status('このページでは外部への通信が許可されていないため、AIの自動読み取りは使えません。' +
         '上の写真を見ながら手入力で追加してください。配布版（ZIP）ではAI読み取りが使えます。', 'err');
@@ -1296,6 +1298,20 @@
       el.disabled = !on;
       if (el.parentElement) el.parentElement.style.opacity = on ? '' : '.45';
     });
+    // カメラは閲覧モードでは使えない。ボタンを隠し、入力欄も止める。
+    // （<label> は disabled にできないので、中の input を止めたうえで枠ごと隠す）
+    if ($('camShoot')) $('camShoot').hidden = !on;
+    ['camCapture', 'camPick'].forEach(function (id) {
+      if ($(id)) $(id).disabled = !on;
+    });
+    // 閲覧モードへ戻すときは、撮りかけ・読み取りかけを画面にも残さない
+    if (!on) {
+      shots = []; ocrRows = [];
+      if ($('camShots')) $('camShots').innerHTML = '';
+      if ($('camResult')) $('camResult').innerHTML = '';
+      if ($('camStatus')) status('');
+    }
+
     // いまのモードは札で示すだけにする（操作の説明は書かない）
     Array.prototype.forEach.call(document.querySelectorAll('[data-mode-tag]'), function (el) {
       el.textContent = on ? '管理者モード' : '閲覧モード';
