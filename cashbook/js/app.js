@@ -1021,6 +1021,42 @@
     el.textContent = t.length ? t.join('／') + ' です。' : '';
   }
 
+  /* ---------- 役員が見るページ用に、最新データを渡す ---------- */
+  /* スマホなら共有メニューを開いてそのまま送れる。
+     使えない端末では、いつもどおりファイルとして書き出す。 */
+  function handoff() {
+    if (!Auth.isAdmin()) { requireAdmin(handoff); return; }
+    var d = S.data();
+    if (!d.entries.length) { toast('帳簿が空です'); return; }
+
+    var name = '出納帳_' + todayStr() + '.json';
+    var text = JSON.stringify(d, null, 1);
+    var note = $('handoffStatus');
+    var done = function () {
+      if (note) {
+        note.textContent = '送ったあと「Artifactに反映して」と伝えてください。'
+          + '（' + d.entries.length + '件・残高 ¥' + yen(S.currentBalance()) + '）';
+      }
+    };
+
+    var file = null;
+    try { file = new File([text], name, { type: 'application/json' }); } catch (e) { /* 古い端末 */ }
+
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: '出納帳' })
+        .then(done)
+        .catch(function (e) {
+          // 共有をやめただけのときは何も言わない
+          if (e && e.name === 'AbortError') return;
+          saveFile(text, name);
+          done();
+        });
+      return;
+    }
+    saveFile(text, name);
+    done();
+  }
+
   /* ---------- ドライブへの自動保存 ---------- */
   var pushTimer = null;
   var pushQuiet = false;   // 反映で取り込んだ直後は、それを送り返さない
@@ -1356,7 +1392,7 @@
     if ($('btnAddRow')) $('btnAddRow').hidden = !on;
     ['setApiKey', 'setModel', 'setTitle', 'setOpening', 'btnSaveSettings',
       'setSyncUrl', 'btnSync', 'btnSaveSyncUrl',
-      'btnPush', 'setSyncAuto'].forEach(function (id) {
+      'btnPush', 'setSyncAuto', 'btnHandoff'].forEach(function (id) {
       if ($(id)) $(id).disabled = !on;
     });
     ['btnReset'].forEach(function (id) { if ($(id)) $(id).hidden = !on; });
@@ -1522,6 +1558,7 @@
       }).catch(function (e) { toast('取り込みに失敗: ' + e.message); });
     };
 
+    if ($('btnHandoff')) $('btnHandoff').onclick = handoff;
     if ($('btnSync')) $('btnSync').onclick = doSync;
     if ($('btnPush')) $('btnPush').onclick = function () { doPush(false); };
     if ($('setSyncAuto')) $('setSyncAuto').onchange = function () {

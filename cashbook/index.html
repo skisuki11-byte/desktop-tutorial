@@ -181,6 +181,27 @@
       </p>
     </div>
 
+    <div class="panel" id="handoffPanel">
+      <div class="panel-head"><h2>役員が見るページを更新する</h2></div>
+      <p class="lead">
+        カメラや手入力で追記したら、ここから<b>最新データをClaudeに送って</b>ください。
+        受け取り次第、役員が見るページ（Artifact）を最新にします。
+      </p>
+      <div class="steps-box">
+        <div class="step-row"><span class="step-no">1</span>下のボタンを押す</div>
+        <div class="step-row"><span class="step-no">2</span>共有メニューから <b>Claude</b> を選んで送る</div>
+        <div class="step-row"><span class="step-no">3</span>「<b>Artifactに反映して</b>」と一言送る</div>
+      </div>
+      <div class="actions mt">
+        <button class="btn btn-primary btn-big" id="btnHandoff">📤 最新データを送る</button>
+      </div>
+      <div id="handoffStatus" class="hint mt"></div>
+      <p class="warn">
+        このボタンだけでは役員のページは変わりません。
+        <b>送っていただいたあと、こちらで更新して初めて反映されます。</b>
+      </p>
+    </div>
+
     <div class="panel" id="syncPanel">
       <div class="panel-head"><h2>置き場所から反映する</h2></div>
       <p class="lead">
