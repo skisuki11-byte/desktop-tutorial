@@ -114,10 +114,6 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--brand-2);outline
   cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,transform .06s ease}
 .card:hover{border-color:var(--brand-2)}
 .card:active{transform:translateY(1px)}
-/* 該当0件のカードは押せない。見た目は据え置きで、反応だけ消す。 */
-.card.is-dead{cursor:default}
-.card.is-dead:hover{border-color:var(--line)}
-.card.is-dead:active{transform:none}
 /* 押せることの合図。マウスの無い端末でも分かるよう、常に出しておく。 */
 .card-go{position:absolute;top:12px;right:12px;color:var(--muted);font-size:1.15rem;line-height:1}
 .card .k{font-size:.75rem;color:var(--muted);padding-right:16px}

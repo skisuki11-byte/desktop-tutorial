@@ -152,11 +152,12 @@
     showEmptyGuide(!rows.length);
 
     $('dashCards').innerHTML = [
-      card('現在残高', '¥' + yen(S.currentBalance()), '前年度繰越 ¥' + yen(opening), '', 'all', rows.length),
-      card('収入合計', '¥' + yen(t.income), '繰越を除く', 'in', 'in', t.inCount),
-      card('支出合計', '¥' + yen(t.expense), rows.length + ' 件の仕訳', 'out', 'out', t.outCount),
-      card('要確認', checks.length + ' 件', '原本と照合してください',
-        checks.length ? 'warn' : '', 'check', checks.length)
+      card('現在残高', '¥' + yen(S.currentBalance()), '前年度繰越 ¥' + yen(opening), '', 'all'),
+      card('収入合計', '¥' + yen(t.income), '繰越を除く', 'in', 'in'),
+      card('支出合計', '¥' + yen(t.expense), rows.length + ' 件の仕訳', 'out', 'out'),
+      card('要確認', checks.length + ' 件',
+        checks.length ? '原本と照合してください' : 'すべて確認済みです',
+        checks.length ? 'warn' : '', 'check')
     ].join('');
     $('dashCards').onclick = function (e) {
       var b = e.target.closest('[data-go]');
@@ -208,16 +209,14 @@
     if (checks.length) $('dashCheck').innerHTML = table(checks, { compact: true });
   }
 
-  /* カードは押すと明細（出納帳タブ）へ飛ぶ。該当0件のときは押せなくする。 */
-  function card(k, v, s, cls, go, n) {
-    var dead = !n;
-    return '<button type="button" class="card ' + (cls || '') + (dead ? ' is-dead' : '') + '"' +
-      ' data-go="' + esc(go) + '"' + (dead ? ' disabled' : '') +
-      ' title="' + (dead ? '該当する行はありません' : '押すと明細を表示します') + '">' +
+  /* カードは押すと明細（出納帳タブ）へ飛ぶ。0件でも押せて、その旨が出る。 */
+  function card(k, v, s, cls, go) {
+    return '<button type="button" class="card ' + (cls || '') + '"' +
+      ' data-go="' + esc(go) + '" title="押すと明細を表示します">' +
       '<div class="k">' + esc(k) + '</div>' +
       '<div class="v">' + esc(v) + '</div>' +
       '<div class="s">' + esc(s) + '</div>' +
-      (dead ? '' : '<span class="card-go" aria-hidden="true">›</span>') +
+      '<span class="card-go" aria-hidden="true">›</span>' +
       '</button>';
   }
 
@@ -237,7 +236,7 @@
 
   function table(rows, opt) {
     opt = opt || {};
-    if (!rows.length) return '<div class="empty">該当する仕訳がありません</div>';
+    if (!rows.length) return '<div class="empty">' + esc(opt.empty || '該当する仕訳がありません') + '</div>';
     var h = '<table><thead><tr>' +
       '<th>No</th><th>日付</th><th>科目</th><th>内訳</th><th class="wide">摘要</th>' +
       '<th class="num">収入</th><th class="num">支出</th>' +
@@ -270,7 +269,9 @@
       '<span>収入 <b class="pos">¥' + yen(t.income) + '</b></span>' +
       '<span>支出 <b class="neg">¥' + yen(t.expense) + '</b></span>' +
       '<span>差引 <b>¥' + yen(t.net) + '</b></span>';
-    $('ledgerTable').innerHTML = table(rows, {});
+    $('ledgerTable').innerHTML = table(rows, {
+      empty: ledgerF.checkOnly ? '要確認の行はありません。すべて確認済みです。' : ''
+    });
     $('ledgerTable').onclick = function (e) {
       var b = e.target.closest('[data-edit]');
       if (b) openEditor(Number(b.dataset.edit));
