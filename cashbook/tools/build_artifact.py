@@ -66,8 +66,10 @@ def seed_from_backup(path):
     if bad:
         raise SystemExit('残高が合いません:\n  ' + '\n  '.join(bad))
 
+    when = d.get('exportedAt')
     print('取り込み: %d件 / 現在残高 %s（残高欄 %d か所を検算）'
           % (len(rows), format(bal, ','), checked))
+    print('書き出し日時: %s' % (when if when else '（記載なし。古い版で書き出されたJSONです）'))
     if naked:
         print('※ 残高欄を持たない行が %d 件あり、その行は突き合わせていません: No.%s'
               % (len(naked), ', '.join(naked[:20]) + (' ほか' if len(naked) > 20 else '')))

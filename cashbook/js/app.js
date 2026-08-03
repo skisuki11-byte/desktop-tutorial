@@ -31,6 +31,22 @@
     var d = new Date();
     return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   }
+  /* 書き出した時刻。いつのファイルか分かるように、分まで入れる。 */
+  function nowStr() {
+    var d = new Date();
+    return todayStr() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+  /* ファイル名用（記号を使わない） */
+  function nowFileStr() {
+    var d = new Date();
+    return todayStr().replace(/-/g, '') + '-' +
+      ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2);
+  }
+  /* 書き出すJSON。いつのものか分かるよう、書き出した時刻を中に入れておく。
+     受け取った側がファイル自体から日時を確かめられる。 */
+  function exportPayload() {
+    return Object.assign({}, S.data(), { exportedAt: nowStr() });
+  }
   function toast(msg) {
     var t = $('toast');
     t.textContent = msg;
@@ -1033,6 +1049,7 @@
       '',
       '・データ：添付のJSON（' + d.entries.length + '件／現在残高 ¥' +
         yen(S.currentBalance()) + '）',
+      '・書き出し日時：' + nowStr() + '（JSON内の exportedAt と一致します）',
       '・作り方：GitHub の skisuki11-byte/desktop-tutorial にある' +
         ' cashbook/tools/README-artifact.md のとおり',
       url
@@ -1065,8 +1082,8 @@
 
     copyMessage();   // 先にコピーしておく（共有中は操作できないため）
 
-    var name = '出納帳_' + todayStr() + '.json';
-    var text = JSON.stringify(d, null, 1);
+    var name = '出納帳_' + nowFileStr() + '.json';
+    var text = JSON.stringify(exportPayload(), null, 1);
     var note = $('handoffStatus');
     var done = function () {
       if (note) {
@@ -1565,7 +1582,8 @@
       saveFile(S.toCsv(S.withBalances()), '出納帳_' + todayStr() + '.csv');
     };
     $('btnExportJson').onclick = function () {
-      saveFile(JSON.stringify(S.data(), null, 1), '出納帳バックアップ_' + todayStr() + '.json');
+      saveFile(JSON.stringify(exportPayload(), null, 1),
+        '出納帳バックアップ_' + nowFileStr() + '.json');
     };
     $('impCsv').onchange = function () {
       var f = this.files[0]; this.value = '';

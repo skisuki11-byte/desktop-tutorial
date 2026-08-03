@@ -65,12 +65,20 @@
       var d = global.Store.data();
       if (!d.entries.length) return Promise.reject(new Error('中身が空なので送りません'));
 
+      // いつのものか分かるよう、書き出した時刻を中に入れる
+      var t = new Date();
+      var p2 = function (n) { return ('0' + n).slice(-2); };
+      var body = Object.assign({}, d, {
+        exportedAt: t.getFullYear() + '-' + p2(t.getMonth() + 1) + '-' + p2(t.getDate()) +
+          ' ' + p2(t.getHours()) + ':' + p2(t.getMinutes())
+      });
+
       return fetch(u, {
         method: 'POST',
         // text/plain で送るのは、事前確認（preflight）を起こさないため。
         // Google Apps Script はそれに応えられず、JSON指定だと弾かれてしまう。
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(d),
+        body: JSON.stringify(body),
         redirect: 'follow'
       }).then(function (r) {
         if (!r.ok) throw new Error('置き場所が応答しません（' + r.status + '）');
