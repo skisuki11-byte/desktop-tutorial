@@ -9,7 +9,7 @@
      ビルド時に window.CASHBOOK_HOST で機能を切り替える。
      何も指定が無ければ（＝ローカルや自前のサーバー）すべて有効。 */
   /* アプリの版。古い画面のまま使っていないか確かめられるよう画面に出す。 */
-  var APP_VER = 'v18';
+  var APP_VER = 'v19';
 
   var HOST = window.CASHBOOK_HOST || {};
   var canAI = HOST.ai !== false;      // カメラのAI読み取り
@@ -1076,13 +1076,56 @@
     if (need) need.hidden = !!(S.settings().artifactUrl || '').trim();
   }
 
+  /* 控えに入れる。使えない端末では、選んでコピーできる欄に出して知らせる。 */
+  function toClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; },
+        function () { return fallbackCopy(text); });
+    }
+    return Promise.resolve(fallbackCopy(text));
+  }
+
+  function fallbackCopy(text) {
+    var box = $('copyFallback');
+    if (!box) return false;
+    box.hidden = false;
+    box.value = text;
+    box.focus();
+    box.select();
+    try {
+      if (document.execCommand('copy')) { box.hidden = true; return true; }
+    } catch (e) { /* 使えない端末 */ }
+    toast('自動でコピーできませんでした。下の枠を選んでコピーしてください');
+    return false;
+  }
+
   /* 文言を控えに入れておく。共有先で貼り付けられるようにするため。 */
   function copyMessage(st) {
-    var text = handoffMessage(st);
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text).catch(function () {});
-    }
-    return Promise.resolve();
+    return toClipboard(handoffMessage(st));
+  }
+
+  /* 文面と帳簿データをひとまとめにして控えに入れる。
+     これ1つ貼り付ければ、ファイルを添えなくても伝わる。
+     データは整形せずに入れる（貼り付ける量を減らすため）。 */
+  function copyAll() {
+    if (!Auth.isAdmin()) { requireAdmin(copyAll); return; }
+    var d = S.data();
+    if (!d.entries.length) { toast('帳簿が空です'); return; }
+
+    var st = stampNow();
+    var text = handoffMessage(st) + '\n\n' +
+      '```json\n' + JSON.stringify(exportPayload(st)) + '\n```\n';
+
+    toClipboard(text).then(function (ok) {
+      var note = $('handoffStatus');
+      if (note) {
+        note.textContent = (ok ? 'コピーしました。' : '下の枠から手でコピーしてください。') +
+          'Claude Code のチャットに貼り付けて送ってください。（' +
+          fileNameOf(st) + '／' + d.entries.length + '件・残高 ¥' +
+          yen(S.currentBalance()) + '／アプリ ' + APP_VER + '）';
+      }
+      if (ok) toast('文面とデータをコピーしました');
+    });
   }
 
   function handoff() {
@@ -1197,6 +1240,7 @@
     $('setOpening').value = S.data().opening.amount;
     if ($('setSyncUrl')) $('setSyncUrl').value = s.syncUrl || '';
     if ($('setSyncAuto')) $('setSyncAuto').checked = !!s.syncAuto;
+    if ($('appVer')) $('appVer').textContent = APP_VER;
     showHandoffMsg();
     showSyncStatus();
 
@@ -1460,7 +1504,7 @@
     ['setApiKey', 'setModel', 'setTitle', 'setOpening', 'btnSaveSettings',
       'setSyncUrl', 'btnSync', 'btnSaveSyncUrl',
       'btnPush', 'setSyncAuto', 'btnHandoff',
-      'btnCopyMsg', 'setArtifactUrl', 'btnSaveArtifactUrl'].forEach(function (id) {
+      'btnCopyMsg', 'setArtifactUrl', 'btnSaveArtifactUrl', 'btnCopyAll'].forEach(function (id) {
       if ($(id)) $(id).disabled = !on;
     });
     ['btnReset'].forEach(function (id) { if ($(id)) $(id).hidden = !on; });
@@ -1628,9 +1672,10 @@
       }).catch(function (e) { toast('取り込みに失敗: ' + e.message); });
     };
 
+    if ($('btnCopyAll')) $('btnCopyAll').onclick = copyAll;
     if ($('btnHandoff')) $('btnHandoff').onclick = handoff;
     if ($('btnCopyMsg')) $('btnCopyMsg').onclick = function () {
-      copyMessage().then(function () { toast('文言をコピーしました'); });
+      copyMessage().then(function (ok) { if (ok) toast('文言をコピーしました'); });
     };
     if ($('btnSaveArtifactUrl')) $('btnSaveArtifactUrl').onclick = function () {
       if (!Auth.isAdmin()) { requireAdmin(function () { $('btnSaveArtifactUrl').click(); }); return; }

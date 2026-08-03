@@ -153,6 +153,10 @@
 
   <!-- ============ 設定 ============ -->
   <section class="view" id="view-settings">
+    <div class="ver-bar">
+      アプリの版　<b id="appVer">-</b>
+      <span class="hint">古い画面のまま使っていないかは、ここで確認できます</span>
+    </div>
     <div class="panel">
       <div class="panel-head"><h2>AI読み取りの設定</h2></div>
       <p class="lead">
@@ -184,23 +188,30 @@
     <div class="panel" id="handoffPanel">
       <div class="panel-head"><h2>役員が見るページを更新する</h2></div>
       <p class="lead">
-        カメラや手入力で追記したら、ここから<b>最新データをClaudeに送って</b>ください。
+        カメラや手入力で追記したら、ここでコピーして
+        <b>Claude Code のチャットに貼り付けて</b>ください。
         受け取り次第、役員が見るページ（Artifact）を最新にします。
       </p>
       <div class="steps-box">
-        <div class="step-row"><span class="step-no">1</span><span>下のボタンを押す</span></div>
-        <div class="step-row"><span class="step-no">2</span><span>共有メニューから <b>Claude</b> を選んで送る</span></div>
-        <div class="step-row"><span class="step-no">3</span><span>チャットで<b>長押し→ペースト</b>して送信（文言はコピー済み）</span></div>
+        <div class="step-row"><span class="step-no">1</span><span>下の<b>「まとめてコピー」</b>を押す</span></div>
+        <div class="step-row"><span class="step-no">2</span><span><b>Claude Code</b>（この出納帳を作った会話）を開く</span></div>
+        <div class="step-row"><span class="step-no">3</span><span>チャット欄で<b>長押し→ペースト</b>して送信</span></div>
       </div>
       <div class="need-url" id="needUrl" hidden>
         <b>先に「役員用ページのURL」を入れてください。</b>
         未設定のまま送ると、受け取った側が<b>別の新しいページ</b>を作ってしまい、
         役員が見ているページは古いままになります。下の「送られる文言と、反映先の設定」から入れられます。
       </div>
-      <div class="actions mt">
-        <button class="btn btn-primary btn-big" id="btnHandoff">📤 最新データを送る</button>
+      <div class="actions wrap mt">
+        <button class="btn btn-primary btn-big" id="btnCopyAll">📋 まとめてコピー（文面＋データ）</button>
+        <button class="btn" id="btnHandoff">ファイルとして送る</button>
         <button class="btn" id="btnCopyMsg">文言だけコピー</button>
       </div>
+      <p class="hint mt">
+        「まとめてコピー」は文面と帳簿データを1つにしてコピーします。
+        貼り付けるだけで、ファイルを添付しなくても伝わります（2万文字ほどあります）。
+      </p>
+      <textarea id="copyFallback" class="msg-box" rows="4" readonly hidden></textarea>
       <div id="handoffStatus" class="hint mt"></div>
       <details class="mt">
         <summary class="hint">送られる文言と、反映先の設定</summary>
