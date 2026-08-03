@@ -1514,6 +1514,8 @@
     };
     $('btnAdmin').onclick = toggleAdmin;
     $('btnForget').onclick = function () {
+      // 画面を隠すだけに頼らず、ここでも管理者かどうかを見る
+      if (!Auth.isAdmin()) { requireAdmin(function () { $('btnForget').click(); }); return; }
       if (!confirm('この端末の記憶を消します。次に開いたときパスワードの入力が必要になります。よろしいですか？')) return;
       Auth.forgetDevice();
       toast('この端末の記憶を消しました');
