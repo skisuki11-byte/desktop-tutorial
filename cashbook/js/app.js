@@ -606,7 +606,7 @@
       '<div class="field"><label>対象期間（開始）</label><input type="date" data-f="from" value="' + esc(reportF.from || r.from) + '"></div>' +
       '<div class="field"><label>対象期間（終了）</label><input type="date" data-f="to" value="' + esc(reportF.to || r.to) + '"></div>' +
       '<div class="field"><label>団体名</label><input type="text" data-f="org" placeholder="○○高校バレーボール部 保護者会" value="' + esc(reportF.org) + '"></div>' +
-      '<div class="field"><label>作成者</label><input type="text" data-f="maker" placeholder="会計 山田太郎" value="' + esc(reportF.maker) + '"></div>' +
+      '<div class="field"><label>会計担当</label><input type="text" data-f="maker" placeholder="山田太郎" value="' + esc(reportF.maker) + '"></div>' +
       '<div class="field"><label>&nbsp;</label><button class="btn" data-act="all">全期間にする</button></div>';
     if (!reportF.from) reportF.from = r.from;
     if (!reportF.to) reportF.to = r.to;
@@ -686,7 +686,7 @@
     if (S.withBalances().some(function (e) { return e.check; })) {
       h += '<p class="note" style="color:#b02a37">※ 出納帳に「要確認」の行があります。原本と照合のうえ確定してください。</p>';
     }
-    h += '<div class="sign">作成者：' + esc(reportF.maker || '＿＿＿＿＿＿＿＿＿＿') + '　印</div>' +
+    h += '<div class="sign">会計担当：' + esc(reportF.maker || '＿＿＿＿＿＿＿＿＿＿') + '　印</div>' +
       '<div class="sign audits"><span>監査：＿＿＿＿＿＿＿＿＿＿　印</span>' +
       '<span>監査：＿＿＿＿＿＿＿＿＿＿　印</span></div>';
 
@@ -909,7 +909,7 @@
       yy += 6 * MM;
       x.fillStyle = PAPER.ink;
       x.font = (3.1 * MM) + 'px ' + SANS;
-      x.fillText('作成者：' + (reportF.maker || '＿＿＿＿＿＿＿＿') + '　印', PG.margin, yy);
+      x.fillText('会計担当：' + (reportF.maker || '＿＿＿＿＿＿＿＿') + '　印', PG.margin, yy);
       yy += 7 * MM;
       // 監査は2名分
       x.fillText('監査：＿＿＿＿＿＿＿＿　印', PG.margin, yy);
@@ -1161,7 +1161,7 @@
     W.n(d.opening + t.net, S2.TOTN), W.s('', S2.TOTT)]);
     out.push([]);
     out.push([W.note('※ 金額は出納帳の記録に基づいて集計しています。')]);
-    out.push([W.note('作成者：' + (reportF.maker || '＿＿＿＿＿＿＿＿'))]);
+    out.push([W.note('会計担当：' + (reportF.maker || '＿＿＿＿＿＿＿＿'))]);
     return { name: '収支報告書', rows: out, cols: [30, 18, 16, 12] };
   }
 
