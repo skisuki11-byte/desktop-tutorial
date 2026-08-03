@@ -6,7 +6,7 @@
  *
  * api.anthropic.com への通信（カメラ読み取り）は別オリジンなので一切触らない。
  */
-var CACHE = 'cashbook-v17';
+var CACHE = 'cashbook-v18';
 var ASSETS = [
   './',
   './index.html',
@@ -56,16 +56,19 @@ self.addEventListener('fetch', function (e) {
   // 別オリジン（api.anthropic.com など）はそのまま通す
   if (new URL(req.url).origin !== self.location.origin) return;
 
+  // 通信できるときは必ず最新を取る（network-first）。
+  // 以前はキャッシュを先に返していたため、更新しても次に開くまで古い画面が動き、
+  // 古い版で書き出したファイルが出回る事故につながった。
+  // つながらないときだけキャッシュを使う＝オフラインでは今までどおり起動する。
   e.respondWith(
     caches.open(CACHE).then(function (cache) {
-      return cache.match(req).then(function (cached) {
-        var network = fetch(req).then(function (res) {
-          if (res && res.ok) cache.put(req, res.clone());
-          return res;
-        }).catch(function () {
+      return fetch(req).then(function (res) {
+        if (res && res.ok) cache.put(req, res.clone());
+        return res;
+      }).catch(function () {
+        return cache.match(req).then(function (cached) {
           return cached || Response.error();
         });
-        return cached || network;
       });
     })
   );

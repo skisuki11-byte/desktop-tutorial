@@ -8,6 +8,9 @@
   /* 動作環境。claude.ai で公開したページは外部通信と .xlsx 保存ができないため、
      ビルド時に window.CASHBOOK_HOST で機能を切り替える。
      何も指定が無ければ（＝ローカルや自前のサーバー）すべて有効。 */
+  /* アプリの版。古い画面のまま使っていないか確かめられるよう画面に出す。 */
+  var APP_VER = 'v18';
+
   var HOST = window.CASHBOOK_HOST || {};
   var canAI = HOST.ai !== false;      // カメラのAI読み取り
   var canXlsx = HOST.xlsx !== false;  // .xlsx での書き出し
@@ -31,21 +34,23 @@
     var d = new Date();
     return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   }
-  /* 書き出した時刻。いつのファイルか分かるように、分まで入れる。 */
-  function nowStr() {
+  /* 書き出しの時刻。表示用とファイル名用を、同じ一瞬から作る。
+     文面とファイル名と中身で日時がずれないようにするため。 */
+  function stampNow() {
     var d = new Date();
-    return todayStr() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    var p2 = function (n) { return ('0' + n).slice(-2); };
+    var ymd = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+    return {
+      show: ymd + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()),
+      file: ymd.replace(/-/g, '') + '-' + p2(d.getHours()) + p2(d.getMinutes())
+    };
   }
-  /* ファイル名用（記号を使わない） */
-  function nowFileStr() {
-    var d = new Date();
-    return todayStr().replace(/-/g, '') + '-' +
-      ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2);
-  }
+  function fileNameOf(st) { return '出納帳_' + st.file + '.json'; }
+
   /* 書き出すJSON。いつのものか分かるよう、書き出した時刻を中に入れておく。
      受け取った側がファイル自体から日時を確かめられる。 */
-  function exportPayload() {
-    return Object.assign({}, S.data(), { exportedAt: nowStr() });
+  function exportPayload(st) {
+    return Object.assign({}, S.data(), { exportedAt: (st || stampNow()).show });
   }
   function toast(msg) {
     var t = $('toast');
@@ -1041,15 +1046,20 @@
   /* スマホなら共有メニューを開いてそのまま送れる。
      使えない端末では、いつもどおりファイルとして書き出す。 */
   /* Claudeに渡す依頼文。反映先URLは端末にだけ持つ（公開の場所には書かない）。 */
-  function handoffMessage() {
+  function handoffMessage(st) {
+    st = st || stampNow();
     var d = S.data();
     var url = (S.settings().artifactUrl || '').trim();
     return [
       '出納帳を更新しました。役員用ページ（Artifact）に反映してください。',
       '',
-      '・データ：添付のJSON（' + d.entries.length + '件／現在残高 ¥' +
-        yen(S.currentBalance()) + '）',
-      '・書き出し日時：' + nowStr() + '（JSON内の exportedAt と一致します）',
+      '※ この作業は Claude Code（GitHubのリポジトリを開いた会話）でしか終わりません。',
+      '　 通常のチャットでは既存ページを更新できないので、その場合は公開せず、',
+      '　 「ここでは完了できない」とだけ返してください。',
+      '',
+      '・ファイル：' + fileNameOf(st) + '（書き出し ' + st.show + '）',
+      '・中身：' + d.entries.length + '件／現在残高 ¥' + yen(S.currentBalance()),
+      '　（この日時はJSON内の exportedAt と一致します。ずれていたら古いファイルです）',
       '・作り方：GitHub の skisuki11-byte/desktop-tutorial にある' +
         ' cashbook/tools/README-artifact.md のとおり',
       url
@@ -1067,8 +1077,8 @@
   }
 
   /* 文言を控えに入れておく。共有先で貼り付けられるようにするため。 */
-  function copyMessage() {
-    var text = handoffMessage();
+  function copyMessage(st) {
+    var text = handoffMessage(st);
     if (navigator.clipboard && navigator.clipboard.writeText) {
       return navigator.clipboard.writeText(text).catch(function () {});
     }
@@ -1080,15 +1090,17 @@
     var d = S.data();
     if (!d.entries.length) { toast('帳簿が空です'); return; }
 
-    copyMessage();   // 先にコピーしておく（共有中は操作できないため）
+    var st = stampNow();
+    copyMessage(st);   // 先にコピーしておく（共有中は操作できないため）
 
-    var name = '出納帳_' + nowFileStr() + '.json';
-    var text = JSON.stringify(exportPayload(), null, 1);
+    var name = fileNameOf(st);
+    var text = JSON.stringify(exportPayload(st), null, 1);
     var note = $('handoffStatus');
     var done = function () {
       if (note) {
-        note.textContent = '文言はコピー済みです。Claudeのチャットで長押し→ペーストして送ってください。'
-          + '（' + d.entries.length + '件・残高 ¥' + yen(S.currentBalance()) + '）';
+        note.textContent = '文言はコピー済みです。長押し→ペーストして送ってください。'
+          + '（' + fileNameOf(st) + '／' + d.entries.length + '件・残高 ¥'
+          + yen(S.currentBalance()) + '／アプリ ' + APP_VER + '）';
       }
     };
 
@@ -1096,7 +1108,7 @@
     try { file = new File([text], name, { type: 'application/json' }); } catch (e) { /* 古い端末 */ }
 
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: '出納帳', text: handoffMessage() })
+      navigator.share({ files: [file], title: '出納帳', text: handoffMessage(st) })
         .then(done)
         .catch(function (e) {
           // 共有をやめただけのときは何も言わない
@@ -1198,6 +1210,7 @@
       '<li>仕訳件数：' + rows.length + ' 件（うち要確認 ' + checks.length + ' 件）</li>' +
       '<li>前年度繰越金：¥' + yen(S.data().opening.amount) + '</li>' +
       '<li>現在残高：¥' + yen(S.currentBalance()) + '</li>' +
+      '<li>アプリの版：' + APP_VER + '</li>' +
       '</ul>' +
       '<p class="hint">初期データは手書き出納帳の写真4枚から読み取り、差引残高で全行を検算したものです。' +
       '「要確認」は写真から文字が一意に読み取れなかった行で、金額は残高で検算済みです。</p>';
@@ -1582,8 +1595,9 @@
       saveFile(S.toCsv(S.withBalances()), '出納帳_' + todayStr() + '.csv');
     };
     $('btnExportJson').onclick = function () {
-      saveFile(JSON.stringify(exportPayload(), null, 1),
-        '出納帳バックアップ_' + nowFileStr() + '.json');
+      var st = stampNow();
+      saveFile(JSON.stringify(exportPayload(st), null, 1),
+        '出納帳バックアップ_' + st.file + '.json');
     };
     $('impCsv').onchange = function () {
       var f = this.files[0]; this.value = '';
