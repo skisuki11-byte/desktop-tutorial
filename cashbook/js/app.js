@@ -1035,13 +1035,18 @@
         yen(S.currentBalance()) + '）',
       '・作り方：GitHub の skisuki11-byte/desktop-tutorial にある' +
         ' cashbook/tools/README-artifact.md のとおり',
-      '・反映先：' + (url || '（このチャットで前に使っていたArtifactのURL）')
+      url
+        ? '・反映先（このURLを更新。新しいページを作らないでください）：\n　　' + url
+        : '・反映先：未設定です。新しいページを作らず、先に反映先URLを聞いてください。'
     ].join('\n');
   }
 
   function showHandoffMsg() {
     if ($('handoffMsg')) $('handoffMsg').textContent = handoffMessage();
     if ($('setArtifactUrl')) $('setArtifactUrl').value = S.settings().artifactUrl || '';
+    // 反映先が未設定だと、受け取った側が別のページを作ってしまう。目立たせる。
+    var need = $('needUrl');
+    if (need) need.hidden = !!(S.settings().artifactUrl || '').trim();
   }
 
   /* 文言を控えに入れておく。共有先で貼り付けられるようにするため。 */

@@ -40,18 +40,37 @@ def seed_from_backup(path):
     if not d.get('opening') or d['opening'].get('amount') is None:
         raise SystemExit('前年度繰越金が入っていません: ' + path)
 
+    # 残高の突き合わせ。行が持ちうる残高欄は2種類あり、両方を見る。
+    #   bookBalance … 手書きノートに書かれていた残高（写真から読んだ独立の値）
+    #   balance     … アプリが計算して持っている残高
+    # アプリで追加した行は bookBalance を持たないので、balance も見ないと
+    # その行だけ検算されないまま通ってしまう。
     rows = sorted(d['entries'], key=lambda e: e.get('no') or 0)
     bal = round(float(d['opening']['amount']))
     bad = []
+    checked = 0
+    naked = []
     for e in rows:
         bal += round(float(e.get('income') or 0)) - round(float(e.get('expense') or 0))
-        book = e.get('bookBalance')
-        if book is not None and round(float(book)) != bal:
-            bad.append('No.%s 記帳%s / 計算%s' % (e.get('no'), book, bal))
+        found = False
+        for field, label in (('bookBalance', '記帳'), ('balance', 'アプリ')):
+            v = e.get(field)
+            if v is None:
+                continue
+            found = True
+            checked += 1
+            if round(float(v)) != bal:
+                bad.append('No.%s %s残高%s / 計算%s' % (e.get('no'), label, v, bal))
+        if not found:
+            naked.append(str(e.get('no')))
     if bad:
         raise SystemExit('残高が合いません:\n  ' + '\n  '.join(bad))
 
-    print('取り込み: %d件 / 現在残高 %s' % (len(rows), format(bal, ',')))
+    print('取り込み: %d件 / 現在残高 %s（残高欄 %d か所を検算）'
+          % (len(rows), format(bal, ','), checked))
+    if naked:
+        print('※ 残高欄を持たない行が %d 件あり、その行は突き合わせていません: No.%s'
+              % (len(naked), ', '.join(naked[:20]) + (' ほか' if len(naked) > 20 else '')))
     return 'window.LEDGER_SEED = %s;\n' % json.dumps(
         {'title': d.get('title') or '出納帳', 'opening': d['opening'], 'entries': rows},
         ensure_ascii=False, indent=1)
