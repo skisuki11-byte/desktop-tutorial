@@ -606,7 +606,7 @@
       '<div class="field"><label>対象期間（開始）</label><input type="date" data-f="from" value="' + esc(reportF.from || r.from) + '"></div>' +
       '<div class="field"><label>対象期間（終了）</label><input type="date" data-f="to" value="' + esc(reportF.to || r.to) + '"></div>' +
       '<div class="field"><label>団体名</label><input type="text" data-f="org" placeholder="○○高校バレーボール部 保護者会" value="' + esc(reportF.org) + '"></div>' +
-      '<div class="field"><label>会計担当</label><input type="text" data-f="maker" placeholder="山田太郎" value="' + esc(reportF.maker) + '"></div>' +
+      '<div class="field"><label>会計担当</label><input type="text" data-f="maker" value="' + esc(reportF.maker) + '"></div>' +
       '<div class="field"><label>&nbsp;</label><button class="btn" data-act="all">全期間にする</button></div>';
     if (!reportF.from) reportF.from = r.from;
     if (!reportF.to) reportF.to = r.to;
