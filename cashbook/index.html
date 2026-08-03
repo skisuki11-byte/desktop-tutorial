@@ -190,12 +190,28 @@
       <div class="steps-box">
         <div class="step-row"><span class="step-no">1</span>下のボタンを押す</div>
         <div class="step-row"><span class="step-no">2</span>共有メニューから <b>Claude</b> を選んで送る</div>
-        <div class="step-row"><span class="step-no">3</span>「<b>Artifactに反映して</b>」と一言送る</div>
+        <div class="step-row"><span class="step-no">3</span>チャットで<b>長押し→ペースト</b>して送信（文言はコピー済み）</div>
       </div>
       <div class="actions mt">
         <button class="btn btn-primary btn-big" id="btnHandoff">📤 最新データを送る</button>
+        <button class="btn" id="btnCopyMsg">文言だけコピー</button>
       </div>
       <div id="handoffStatus" class="hint mt"></div>
+      <details class="mt">
+        <summary class="hint">送られる文言と、反映先の設定</summary>
+        <div class="form-grid mt">
+          <label>役員用ページのURL</label>
+          <input type="url" id="setArtifactUrl" placeholder="https://claude.ai/code/artifact/....">
+        </div>
+        <div class="actions mt">
+          <button class="btn" id="btnSaveArtifactUrl">URLを保存</button>
+        </div>
+        <p class="hint mt">
+          このURLは端末のブラウザにだけ保存され、GitHubには入りません（実データの入った
+          ページなので、公開の場所に書かないようにしています）。
+        </p>
+        <pre id="handoffMsg" class="msg-box"></pre>
+      </details>
       <p class="warn">
         このボタンだけでは役員のページは変わりません。
         <b>送っていただいたあと、こちらで更新して初めて反映されます。</b>

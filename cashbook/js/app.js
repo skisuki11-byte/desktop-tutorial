@@ -1024,17 +1024,48 @@
   /* ---------- 役員が見るページ用に、最新データを渡す ---------- */
   /* スマホなら共有メニューを開いてそのまま送れる。
      使えない端末では、いつもどおりファイルとして書き出す。 */
+  /* Claudeに渡す依頼文。反映先URLは端末にだけ持つ（公開の場所には書かない）。 */
+  function handoffMessage() {
+    var d = S.data();
+    var url = (S.settings().artifactUrl || '').trim();
+    return [
+      '出納帳を更新しました。役員用ページ（Artifact）に反映してください。',
+      '',
+      '・データ：添付のJSON（' + d.entries.length + '件／現在残高 ¥' +
+        yen(S.currentBalance()) + '）',
+      '・作り方：GitHub の skisuki11-byte/desktop-tutorial にある' +
+        ' cashbook/tools/README-artifact.md のとおり',
+      '・反映先：' + (url || '（このチャットで前に使っていたArtifactのURL）')
+    ].join('\n');
+  }
+
+  function showHandoffMsg() {
+    if ($('handoffMsg')) $('handoffMsg').textContent = handoffMessage();
+    if ($('setArtifactUrl')) $('setArtifactUrl').value = S.settings().artifactUrl || '';
+  }
+
+  /* 文言を控えに入れておく。共有先で貼り付けられるようにするため。 */
+  function copyMessage() {
+    var text = handoffMessage();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(function () {});
+    }
+    return Promise.resolve();
+  }
+
   function handoff() {
     if (!Auth.isAdmin()) { requireAdmin(handoff); return; }
     var d = S.data();
     if (!d.entries.length) { toast('帳簿が空です'); return; }
+
+    copyMessage();   // 先にコピーしておく（共有中は操作できないため）
 
     var name = '出納帳_' + todayStr() + '.json';
     var text = JSON.stringify(d, null, 1);
     var note = $('handoffStatus');
     var done = function () {
       if (note) {
-        note.textContent = '送ったあと「Artifactに反映して」と伝えてください。'
+        note.textContent = '文言はコピー済みです。Claudeのチャットで長押し→ペーストして送ってください。'
           + '（' + d.entries.length + '件・残高 ¥' + yen(S.currentBalance()) + '）';
       }
     };
@@ -1043,7 +1074,7 @@
     try { file = new File([text], name, { type: 'application/json' }); } catch (e) { /* 古い端末 */ }
 
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: '出納帳' })
+      navigator.share({ files: [file], title: '出納帳', text: handoffMessage() })
         .then(done)
         .catch(function (e) {
           // 共有をやめただけのときは何も言わない
@@ -1132,6 +1163,7 @@
     $('setOpening').value = S.data().opening.amount;
     if ($('setSyncUrl')) $('setSyncUrl').value = s.syncUrl || '';
     if ($('setSyncAuto')) $('setSyncAuto').checked = !!s.syncAuto;
+    showHandoffMsg();
     showSyncStatus();
 
     var rows = S.withBalances();
@@ -1392,7 +1424,8 @@
     if ($('btnAddRow')) $('btnAddRow').hidden = !on;
     ['setApiKey', 'setModel', 'setTitle', 'setOpening', 'btnSaveSettings',
       'setSyncUrl', 'btnSync', 'btnSaveSyncUrl',
-      'btnPush', 'setSyncAuto', 'btnHandoff'].forEach(function (id) {
+      'btnPush', 'setSyncAuto', 'btnHandoff',
+      'btnCopyMsg', 'setArtifactUrl', 'btnSaveArtifactUrl'].forEach(function (id) {
       if ($(id)) $(id).disabled = !on;
     });
     ['btnReset'].forEach(function (id) { if ($(id)) $(id).hidden = !on; });
@@ -1559,6 +1592,17 @@
     };
 
     if ($('btnHandoff')) $('btnHandoff').onclick = handoff;
+    if ($('btnCopyMsg')) $('btnCopyMsg').onclick = function () {
+      copyMessage().then(function () { toast('文言をコピーしました'); });
+    };
+    if ($('btnSaveArtifactUrl')) $('btnSaveArtifactUrl').onclick = function () {
+      if (!Auth.isAdmin()) { requireAdmin(function () { $('btnSaveArtifactUrl').click(); }); return; }
+      var u = $('setArtifactUrl').value.trim();
+      if (u && !/^https:\/\//i.test(u)) { toast('https:// で始まるURLを入れてください'); return; }
+      S.saveSettings({ artifactUrl: u });
+      showHandoffMsg();
+      toast(u ? '反映先を保存しました' : '反映先を空にしました');
+    };
     if ($('btnSync')) $('btnSync').onclick = doSync;
     if ($('btnPush')) $('btnPush').onclick = function () { doPush(false); };
     if ($('setSyncAuto')) $('setSyncAuto').onchange = function () {
