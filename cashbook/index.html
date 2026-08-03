@@ -184,22 +184,32 @@
     <div class="panel" id="syncPanel">
       <div class="panel-head"><h2>置き場所から反映する</h2></div>
       <p class="lead">
-        Googleドライブなどに置いた最新の出納帳（JSON）を、<b>「反映」を押したときだけ</b>読みに行きます。
-        自動では通信しません。読み込むと、いまの帳簿は取り込んだ内容で<b>置き換わります</b>。
+        Googleドライブに置いた出納帳（JSON）を読み書きします。<br>
+        <b>読む</b>…「反映」を押したときだけ読みに行き、いまの帳簿を取り込んだ内容で<b>置き換えます</b>。<br>
+        <b>書く</b>…編集するたび、自動でドライブへ保存します（上書きせず、日時つきで残します）。
       </p>
       <div class="form-grid">
         <label>取り込み元URL</label>
         <input type="url" id="setSyncUrl" placeholder="https://script.google.com/macros/s/..../exec">
       </div>
-      <div class="actions mt">
+      <div class="actions wrap mt">
         <button class="btn btn-primary" id="btnSync">最新を反映する</button>
+        <button class="btn" id="btnPush">いまドライブに保存する</button>
         <button class="btn" id="btnSaveSyncUrl">URLを保存</button>
+      </div>
+      <div class="actions mt">
+        <label class="btn" style="gap:6px">
+          <input type="checkbox" id="setSyncAuto" style="width:auto;min-width:0">
+          編集したら自動でドライブに保存する
+        </label>
       </div>
       <div class="mode-tag mt" data-mode-tag></div>
       <div id="syncStatus" class="hint mt"></div>
       <p class="warn">
         このURLはこの端末のブラウザにだけ保存され、GitHubには書き込まれません。
-        <b>URLを知っている人は帳簿の中身を読めてしまう</b>ので、共有先にご注意ください。
+        <b>URLを知っている人は帳簿を読むことも書き換えることもできます。</b>
+        会計担当だけが持ち、他の方には渡さないでください。
+        （保存は上書きではないので、おかしくなっても前のファイルに戻せます）
       </p>
     </div>
 

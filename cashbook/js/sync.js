@@ -55,6 +55,37 @@
     configured: function () { return !!url(); },
     inspect: inspect,
 
+    /* いまの帳簿を置き場所へ送る。向こうで日時つきの新しいファイルになる。
+       上書きしないので、送るたびに履歴が残る。 */
+    push: function () {
+      var u = url();
+      if (!u) return Promise.reject(new Error('取り込み元のURLがまだ設定されていません'));
+      if (!okUrl(u)) return Promise.reject(new Error('取り込み元は https:// で始まるURLにしてください'));
+
+      var d = global.Store.data();
+      if (!d.entries.length) return Promise.reject(new Error('中身が空なので送りません'));
+
+      return fetch(u, {
+        method: 'POST',
+        // text/plain で送るのは、事前確認（preflight）を起こさないため。
+        // Google Apps Script はそれに応えられず、JSON指定だと弾かれてしまう。
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(d),
+        redirect: 'follow'
+      }).then(function (r) {
+        if (!r.ok) throw new Error('置き場所が応答しません（' + r.status + '）');
+        return r.text();
+      }, function () {
+        throw new Error('置き場所につながりません。URLと共有設定をご確認ください');
+      }).then(function (txt) {
+        var res;
+        try { res = JSON.parse(txt); } catch (e) { throw new Error('返事が読めませんでした'); }
+        if (res && res.error) throw new Error(res.error);
+        if (!res || !res.ok) throw new Error('保存できたか確認できませんでした');
+        return res;
+      });
+    },
+
     /* 押されたときだけ呼ばれる。取り込みはせず、読んで検算した結果を返すだけ。 */
     pull: function () {
       var u = url();

@@ -1009,14 +1009,45 @@
       });
   }
 
-  /* ---------- 置き場所からの反映 ---------- */
-  /* 最後に反映した日時を出す。押していなければ何も出さない。 */
+  /* ---------- 置き場所とのやりとり ---------- */
+  /* 最後に読んだ／書いた日時を出す。まだ何もしていなければ何も出さない。 */
   function showSyncStatus(msg) {
     var el = $('syncStatus');
     if (!el) return;
     if (msg) { el.textContent = msg; return; }
-    var at = S.settings().syncedAt;
-    el.textContent = at ? '最後に反映したのは ' + at + ' です。' : '';
+    var s = S.settings(), t = [];
+    if (s.syncedAt) t.push('最後に反映したのは ' + s.syncedAt);
+    if (s.pushedAt) t.push('最後にドライブへ保存したのは ' + s.pushedAt);
+    el.textContent = t.length ? t.join('／') + ' です。' : '';
+  }
+
+  /* ---------- ドライブへの自動保存 ---------- */
+  var pushTimer = null;
+  var pushQuiet = false;   // 反映で取り込んだ直後は、それを送り返さない
+
+  /* 帳簿が変わったら少し待ってから送る。続けて直したときは最後の1回にまとめる。 */
+  function scheduleAutoPush() {
+    if (!canSync || pushQuiet) return;
+    if (!Auth.isAdmin()) return;              // 閲覧モードからは書き込まない
+    if (!Sync.configured()) return;           // 置き場所が未設定なら何もしない
+    if (!S.settings().syncAuto) return;       // 自動保存が切ってあれば何もしない
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(function () { doPush(true); }, 1500);
+  }
+
+  /* ドライブへ送る。auto=true は自動保存（押されたわけではない）。 */
+  function doPush(auto) {
+    if (!auto && !Auth.isAdmin()) { requireAdmin(function () { doPush(false); }); return; }
+    if (!Sync.configured()) { toast('先に取り込み元URLを保存してください'); return; }
+    showSyncStatus('ドライブに保存しています…');
+    Sync.push().then(function (res) {
+      S.saveSettings({ pushedAt: new Date().toLocaleString('ja-JP') });
+      showSyncStatus();
+      if (!auto) toast('ドライブに保存しました（' + res.name + '）');
+    }).catch(function (e) {
+      showSyncStatus('ドライブに保存できませんでした：' + e.message);
+      toast('ドライブに保存できませんでした');
+    });
   }
 
   /* 「反映」を押したときだけ通信する。取り込む前に中身を見せて確認する。 */
@@ -1040,7 +1071,10 @@
         'この内容で置き換えます。よろしいですか？';
       if (!confirm(msg)) { showSyncStatus(); return; }
 
+      // 取り込んだ内容をそのまま送り返さないよう、この間だけ自動保存を止める
+      pushQuiet = true;
       S.replaceAll(got);
+      pushQuiet = false;
       S.saveSettings({ syncedAt: new Date().toLocaleString('ja-JP') });
       refresh();
       showSyncStatus();
@@ -1061,6 +1095,7 @@
     $('setTitle').value = S.data().title;
     $('setOpening').value = S.data().opening.amount;
     if ($('setSyncUrl')) $('setSyncUrl').value = s.syncUrl || '';
+    if ($('setSyncAuto')) $('setSyncAuto').checked = !!s.syncAuto;
     showSyncStatus();
 
     var rows = S.withBalances();
@@ -1320,7 +1355,8 @@
     // 編集に関わるものは、閲覧モードでは隠す・押せなくする
     if ($('btnAddRow')) $('btnAddRow').hidden = !on;
     ['setApiKey', 'setModel', 'setTitle', 'setOpening', 'btnSaveSettings',
-      'setSyncUrl', 'btnSync', 'btnSaveSyncUrl'].forEach(function (id) {
+      'setSyncUrl', 'btnSync', 'btnSaveSyncUrl',
+      'btnPush', 'setSyncAuto'].forEach(function (id) {
       if ($(id)) $(id).disabled = !on;
     });
     ['btnReset'].forEach(function (id) { if ($(id)) $(id).hidden = !on; });
@@ -1404,6 +1440,8 @@
 
   function boot() {
     S.load();
+    // 帳簿が変わるたびに、ドライブへの自動保存を予約する
+    S.onChange(scheduleAutoPush);
     applyHostLimits();
     wireUp();
     if (Auth.deviceTrusted()) {
@@ -1485,6 +1523,12 @@
     };
 
     if ($('btnSync')) $('btnSync').onclick = doSync;
+    if ($('btnPush')) $('btnPush').onclick = function () { doPush(false); };
+    if ($('setSyncAuto')) $('setSyncAuto').onchange = function () {
+      if (!Auth.isAdmin()) { requireAdmin(function () { renderSettings(); }); return; }
+      S.saveSettings({ syncAuto: this.checked });
+      toast(this.checked ? '編集したら自動で保存します' : '自動保存をやめました');
+    };
     if ($('btnSaveSyncUrl')) $('btnSaveSyncUrl').onclick = function () {
       if (!Auth.isAdmin()) { requireAdmin(function () { $('btnSaveSyncUrl').click(); }); return; }
       var u = $('setSyncUrl').value.trim();

@@ -51,9 +51,13 @@
     return state;
   }
 
+  /* 中身が変わったときに呼ばれる（ドライブへの自動保存に使う） */
+  var changed = null;
+
   function save() {
     try { localStorage.setItem(DATA_KEY, JSON.stringify(state)); }
     catch (e) { console.warn('保存に失敗', e); }
+    if (changed) { try { changed(); } catch (e) { console.warn(e); } }
   }
 
   function saveSettings(patch) {
@@ -291,6 +295,8 @@
     UCHIWAKE: UCHIWAKE,
     COLORS: COLORS,
     load: load, save: save, reset: reset,
+    /* 中身が変わるたびに呼ばれる関数を1つだけ登録できる */
+    onChange: function (fn) { changed = fn; },
     settings: function () { return settings; },
     saveSettings: saveSettings,
     data: function () { return state; },
