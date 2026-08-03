@@ -9,7 +9,7 @@
      ビルド時に window.CASHBOOK_HOST で機能を切り替える。
      何も指定が無ければ（＝ローカルや自前のサーバー）すべて有効。 */
   /* アプリの版。古い画面のまま使っていないか確かめられるよう画面に出す。 */
-  var APP_VER = 'v19';
+  var APP_VER = 'v20';
 
   var HOST = window.CASHBOOK_HOST || {};
   var canAI = HOST.ai !== false;      // カメラのAI読み取り
@@ -1104,6 +1104,23 @@
     return toClipboard(handoffMessage(st));
   }
 
+  /* 帳簿データだけを控えに入れる。JSONそのものが欲しいとき用。 */
+  function copyData() {
+    if (!Auth.isAdmin()) { requireAdmin(copyData); return; }
+    var d = S.data();
+    if (!d.entries.length) { toast('帳簿が空です'); return; }
+    var st = stampNow();
+    toClipboard(JSON.stringify(exportPayload(st))).then(function (ok) {
+      var note = $('handoffStatus');
+      if (note) {
+        note.textContent = (ok ? 'データだけコピーしました。' : '下の枠から手でコピーしてください。') +
+          '（' + d.entries.length + '件・残高 ¥' + yen(S.currentBalance()) +
+          '／書き出し ' + st.show + '）';
+      }
+      if (ok) toast('データだけコピーしました');
+    });
+  }
+
   /* 文面と帳簿データをひとまとめにして控えに入れる。
      これ1つ貼り付ければ、ファイルを添えなくても伝わる。
      データは整形せずに入れる（貼り付ける量を減らすため）。 */
@@ -1504,7 +1521,7 @@
     ['setApiKey', 'setModel', 'setTitle', 'setOpening', 'btnSaveSettings',
       'setSyncUrl', 'btnSync', 'btnSaveSyncUrl',
       'btnPush', 'setSyncAuto', 'btnHandoff',
-      'btnCopyMsg', 'setArtifactUrl', 'btnSaveArtifactUrl', 'btnCopyAll'].forEach(function (id) {
+      'btnCopyMsg', 'setArtifactUrl', 'btnSaveArtifactUrl', 'btnCopyAll', 'btnCopyData'].forEach(function (id) {
       if ($(id)) $(id).disabled = !on;
     });
     ['btnReset'].forEach(function (id) { if ($(id)) $(id).hidden = !on; });
@@ -1673,6 +1690,7 @@
     };
 
     if ($('btnCopyAll')) $('btnCopyAll').onclick = copyAll;
+    if ($('btnCopyData')) $('btnCopyData').onclick = copyData;
     if ($('btnHandoff')) $('btnHandoff').onclick = handoff;
     if ($('btnCopyMsg')) $('btnCopyMsg').onclick = function () {
       copyMessage().then(function (ok) { if (ok) toast('文言をコピーしました'); });
