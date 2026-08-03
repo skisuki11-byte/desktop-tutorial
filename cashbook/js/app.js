@@ -1301,6 +1301,7 @@
     // カメラは閲覧モードでは使えない。ボタンを隠し、入力欄も止める。
     // （<label> は disabled にできないので、中の input を止めたうえで枠ごと隠す）
     if ($('camShoot')) $('camShoot').hidden = !on;
+    if ($('camLockNote')) $('camLockNote').hidden = on;
     ['camCapture', 'camPick'].forEach(function (id) {
       if ($(id)) $(id).disabled = !on;
     });
