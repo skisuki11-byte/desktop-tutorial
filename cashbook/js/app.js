@@ -42,7 +42,11 @@
 
   /* ================= 画面切り替え ================= */
   var current = 'dash';
+  /* 管理者モードでしか入れない画面。閲覧モードでは行き先ごと塞ぐ。 */
+  var ADMIN_VIEWS = { settings: true };
+
   function show(view) {
+    if (ADMIN_VIEWS[view] && !Auth.isAdmin()) view = 'dash';
     current = view;
     Array.prototype.forEach.call(document.querySelectorAll('.view'), function (v) {
       v.classList.toggle('active', v.id === 'view-' + view);
@@ -1305,6 +1309,7 @@
   /* 管理者かどうかで画面の出し分けをする */
   function applyAdminState() {
     var on = Auth.isAdmin();
+    var needHome = false;   // 管理者専用の画面を開いたまま閲覧に戻ったとき
     document.body.classList.toggle('admin', on);
     var b = $('btnAdmin');
     b.classList.toggle('on', on);
@@ -1323,6 +1328,12 @@
       el.disabled = !on;
       if (el.parentElement) el.parentElement.style.opacity = on ? '' : '.45';
     });
+    // 設定は閲覧モードでは開けない。タブごと隠し、開いていたらホームへ戻す。
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
+      if (ADMIN_VIEWS[t.dataset.view]) t.hidden = !on;
+    });
+    if (!on && ADMIN_VIEWS[current]) { current = 'dash'; needHome = true; }
+
     // カメラは閲覧モードでは使えない。ボタンを隠し、入力欄も止める。
     // （<label> は disabled にできないので、中の input を止めたうえで枠ごと隠す）
     if ($('camShoot')) $('camShoot').hidden = !on;
@@ -1343,6 +1354,8 @@
       el.textContent = on ? '管理者モード' : '閲覧モード';
       el.classList.toggle('is-admin', on);
     });
+
+    if (needHome) show('dash');
   }
 
   function toggleAdmin() {
