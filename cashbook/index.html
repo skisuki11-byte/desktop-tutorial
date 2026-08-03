@@ -26,10 +26,6 @@
       </div>
     </div>
     <div class="topbar-right">
-      <div class="topbar-balance">
-        <div class="tb-label">現在残高</div>
-        <div class="tb-value" id="topBalance">—</div>
-      </div>
       <button class="admin-btn" id="btnAdmin" type="button" title="編集するには管理者モードに切り替えます">
         <span class="admin-ico">🔒</span><span class="admin-txt">閲覧</span>
       </button>
@@ -78,7 +74,10 @@
         </div>
       </div>
       <div class="mode-tag" data-mode-tag></div>
-      <div class="filters" id="ledgerFilters"></div>
+      <details class="filter-box">
+        <summary>絞り込み</summary>
+        <div class="filters" id="ledgerFilters"></div>
+      </details>
       <div id="ledgerSummary" class="mini-summary"></div>
       <div class="table-wrap" id="ledgerTable"></div>
     </div>
@@ -91,7 +90,10 @@
         <h2>科目別集計</h2>
         <div class="actions"><button class="btn" id="btnExportXlsxKamoku">Excel出力</button></div>
       </div>
-      <div class="filters" id="kamokuFilters"></div>
+      <details class="filter-box">
+        <summary>絞り込み</summary>
+        <div class="filters" id="kamokuFilters"></div>
+      </details>
       <div id="kamokuBody"></div>
     </div>
   </section>
@@ -103,7 +105,10 @@
         <h2>月別集計</h2>
         <div class="actions"><button class="btn" id="btnExportXlsxMonth">Excel出力</button></div>
       </div>
-      <div class="filters" id="monthFilters"></div>
+      <details class="filter-box">
+        <summary>絞り込み</summary>
+        <div class="filters" id="monthFilters"></div>
+      </details>
       <div class="table-wrap" id="monthTable"></div>
       <div id="monthDetail"></div>
     </div>
@@ -146,7 +151,10 @@
           <button class="btn" id="btnExportXlsxReport">Excel出力</button>
         </div>
       </div>
-      <div class="filters" id="reportFilters"></div>
+      <details class="filter-box">
+        <summary>対象期間・宛名</summary>
+        <div class="filters" id="reportFilters"></div>
+      </details>
     </div>
     <div id="reportPaper" class="paper"></div>
   </section>

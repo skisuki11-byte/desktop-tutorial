@@ -57,9 +57,6 @@ h3{font-size:1.02rem}
   display:grid;place-items:center;font-weight:700;flex:none}
 .brand-title{font-weight:700;line-height:1.2;font-family:var(--serif);letter-spacing:.04em}
 .brand-sub{font-size:.72rem;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:44vw}
-.topbar-balance{text-align:right;flex:none}
-.tb-label{font-size:.68rem;opacity:.75}
-.tb-value{font-weight:700;font-size:1.15rem;font-variant-numeric:tabular-nums}
 
 .tabs{max-width:1180px;margin:0 auto;padding:0 8px 0;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
@@ -99,6 +96,18 @@ main{max-width:1180px;margin:0 auto;padding:16px}
 /* ---------- filters ---------- */
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;
   padding:12px;background:var(--bg);border-radius:10px;margin-bottom:12px}
+
+/* 絞り込みはふだん閉じておく。画面を数字と明細に使うため。 */
+.filter-box{margin-bottom:12px}
+.filter-box>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:7px;
+  padding:7px 13px;border:1px solid var(--line);border-radius:9px;background:var(--panel);
+  font-size:.86rem;color:var(--muted);user-select:none}
+.filter-box>summary::-webkit-details-marker{display:none}
+.filter-box>summary::before{content:'▸';font-size:.8em;transition:transform .15s ease}
+.filter-box[open]>summary{margin-bottom:10px;border-color:var(--brand-2);color:var(--ink)}
+.filter-box[open]>summary::before{transform:rotate(90deg)}
+.filter-box>summary:hover{border-color:var(--brand-2)}
+.filter-box .filters{margin-bottom:0}
 .field{display:flex;flex-direction:column;gap:3px}
 .field label{font-size:.72rem;color:var(--muted)}
 input,select,textarea{font-family:inherit;font-size:.88rem;padding:6px 9px;border:1px solid var(--line);
@@ -108,7 +117,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--brand-2);outline
 .field input[type=search]{min-width:190px}
 
 /* ---------- cards ---------- */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);
   position:relative;display:block;width:100%;text-align:left;font-family:inherit;color:inherit;
   cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,transform .06s ease}
@@ -116,9 +125,12 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--brand-2);outline
 .card:active{transform:translateY(1px)}
 /* 押せることの合図。マウスの無い端末でも分かるよう、常に出しておく。 */
 .card-go{position:absolute;top:12px;right:12px;color:var(--muted);font-size:1.15rem;line-height:1}
-.card .k{font-size:.75rem;color:var(--muted);padding-right:16px}
-.card .v{font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
-.card .s{font-size:.72rem;color:var(--muted)}
+.card .k{font-size:.86rem;color:var(--muted);padding-right:18px;font-weight:600}
+/* 画面幅に合わせて伸び縮みさせる。狭い画面でも2列を保ちつつ、
+   桁数の多い金額（7桁＋記号）が枠に収まる大きさに抑えている。 */
+.card .v{font-size:clamp(1.3rem,5.4vw,1.85rem);font-weight:700;font-variant-numeric:tabular-nums;
+  margin-top:3px;line-height:1.15;letter-spacing:-.01em}
+.card .s{font-size:.82rem;color:var(--muted);margin-top:2px}
 .card.in .v{color:var(--in)} .card.out .v{color:var(--out)} .card.warn .v{color:var(--warn)}
 
 /* ---------- 手順の箱（役員への受け渡し） ---------- */
@@ -161,8 +173,12 @@ tr.sub td{font-weight:600;background:var(--bg)}
 .tag{display:inline-block;font-size:.68rem;padding:1px 7px;border-radius:99px;
   background:var(--bg);border:1px solid var(--line);color:var(--muted)}
 .tag.check{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
-.mini-summary{display:flex;gap:16px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-bottom:8px}
-.mini-summary b{color:var(--ink);font-variant-numeric:tabular-nums}
+/* 明細の上に出る合計。数字を主役にして、見出しは控えめに。 */
+.mini-summary{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:baseline;
+  font-size:.8rem;color:var(--muted);margin:4px 0 12px}
+.mini-summary span{display:flex;align-items:baseline;gap:6px}
+.mini-summary b{color:var(--ink);font-variant-numeric:tabular-nums;
+  font-size:1.15rem;font-weight:700}
 .empty{padding:28px;text-align:center;color:var(--muted);font-size:.9rem}
 
 /* ---------- charts (pure CSS bars) ---------- */

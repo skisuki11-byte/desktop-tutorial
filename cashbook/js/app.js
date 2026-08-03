@@ -9,7 +9,7 @@
      ビルド時に window.CASHBOOK_HOST で機能を切り替える。
      何も指定が無ければ（＝ローカルや自前のサーバー）すべて有効。 */
   /* アプリの版。古い画面のまま使っていないか確かめられるよう画面に出す。 */
-  var APP_VER = 'v20';
+  var APP_VER = 'v21';
 
   var HOST = window.CASHBOOK_HOST || {};
   var canAI = HOST.ai !== false;      // カメラのAI読み取り
@@ -91,8 +91,8 @@
   function refresh() { render(current); }
 
   function renderTop() {
+    // 残高は上部バーには出さない（ホームのカードと重複するため）
     $('bookTitle').textContent = S.data().title;
-    $('topBalance').textContent = '¥' + yen(S.currentBalance());
   }
 
   /* ================= 共通の絞り込みUI ================= */
