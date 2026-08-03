@@ -109,8 +109,18 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--brand-2);outline
 
 /* ---------- cards ---------- */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:16px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow)}
-.card .k{font-size:.75rem;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);
+  position:relative;display:block;width:100%;text-align:left;font-family:inherit;color:inherit;
+  cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,transform .06s ease}
+.card:hover{border-color:var(--brand-2)}
+.card:active{transform:translateY(1px)}
+/* 該当0件のカードは押せない。見た目は据え置きで、反応だけ消す。 */
+.card.is-dead{cursor:default}
+.card.is-dead:hover{border-color:var(--line)}
+.card.is-dead:active{transform:none}
+/* 押せることの合図。マウスの無い端末でも分かるよう、常に出しておく。 */
+.card-go{position:absolute;top:12px;right:12px;color:var(--muted);font-size:1.15rem;line-height:1}
+.card .k{font-size:.75rem;color:var(--muted);padding-right:16px}
 .card .v{font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
 .card .s{font-size:.72rem;color:var(--muted)}
 .card.in .v{color:var(--in)} .card.out .v{color:var(--out)} .card.warn .v{color:var(--warn)}

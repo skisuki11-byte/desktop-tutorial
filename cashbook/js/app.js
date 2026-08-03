@@ -152,11 +152,16 @@
     showEmptyGuide(!rows.length);
 
     $('dashCards').innerHTML = [
-      card('現在残高', '¥' + yen(S.currentBalance()), '前年度繰越 ¥' + yen(opening), ''),
-      card('収入合計', '¥' + yen(t.income), '繰越を除く', 'in'),
-      card('支出合計', '¥' + yen(t.expense), rows.length + ' 件の仕訳', 'out'),
-      card('要確認', checks.length + ' 件', '原本と照合してください', checks.length ? 'warn' : '')
+      card('現在残高', '¥' + yen(S.currentBalance()), '前年度繰越 ¥' + yen(opening), '', 'all', rows.length),
+      card('収入合計', '¥' + yen(t.income), '繰越を除く', 'in', 'in', t.inCount),
+      card('支出合計', '¥' + yen(t.expense), rows.length + ' 件の仕訳', 'out', 'out', t.outCount),
+      card('要確認', checks.length + ' 件', '原本と照合してください',
+        checks.length ? 'warn' : '', 'check', checks.length)
     ].join('');
+    $('dashCards').onclick = function (e) {
+      var b = e.target.closest('[data-go]');
+      if (b && !b.disabled) showDetail(b.dataset.go);
+    };
 
     // 月別の支出（科目別の積み上げ）
     var months = S.byMonth(rows);
@@ -203,9 +208,28 @@
     if (checks.length) $('dashCheck').innerHTML = table(checks, { compact: true });
   }
 
-  function card(k, v, s, cls) {
-    return '<div class="card ' + (cls || '') + '"><div class="k">' + esc(k) + '</div>' +
-      '<div class="v">' + esc(v) + '</div><div class="s">' + esc(s) + '</div></div>';
+  /* カードは押すと明細（出納帳タブ）へ飛ぶ。該当0件のときは押せなくする。 */
+  function card(k, v, s, cls, go, n) {
+    var dead = !n;
+    return '<button type="button" class="card ' + (cls || '') + (dead ? ' is-dead' : '') + '"' +
+      ' data-go="' + esc(go) + '"' + (dead ? ' disabled' : '') +
+      ' title="' + (dead ? '該当する行はありません' : '押すと明細を表示します') + '">' +
+      '<div class="k">' + esc(k) + '</div>' +
+      '<div class="v">' + esc(v) + '</div>' +
+      '<div class="s">' + esc(s) + '</div>' +
+      (dead ? '' : '<span class="card-go" aria-hidden="true">›</span>') +
+      '</button>';
+  }
+
+  /* カードから明細へ。出納帳タブを、その条件だけで絞り込んで開く。 */
+  function showDetail(kind) {
+    ledgerF.from = ''; ledgerF.to = ''; ledgerF.kamoku = 'all';
+    ledgerF.q = ''; ledgerF.type = 'all'; ledgerF.checkOnly = false;
+    if (kind === 'in') ledgerF.type = 'in';
+    else if (kind === 'out') ledgerF.type = 'out';
+    else if (kind === 'check') ledgerF.checkOnly = true;
+    show('ledger');
+    toast({ all: 'すべての明細', in: '収入の明細', out: '支出の明細', check: '要確認の明細' }[kind]);
   }
 
   /* ================= 出納帳 ================= */

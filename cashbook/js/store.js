@@ -149,9 +149,15 @@
 
   /* ---------------- 集計 ---------------- */
   function totals(rows) {
-    var inc = 0, exp = 0;
-    rows.forEach(function (e) { inc += e.income || 0; exp += e.expense || 0; });
-    return { income: inc, expense: exp, net: inc - exp, count: rows.length };
+    var inc = 0, exp = 0, incN = 0, expN = 0;
+    rows.forEach(function (e) {
+      if (e.income) { inc += e.income; incN++; }
+      if (e.expense) { exp += e.expense; expN++; }
+    });
+    return {
+      income: inc, expense: exp, net: inc - exp, count: rows.length,
+      inCount: incN, outCount: expN   // 収入・支出それぞれの行数
+    };
   }
 
   /* 科目 -> {total, count, uchiwake:{name:{total,count}}} （支出／収入を分けて返す） */
