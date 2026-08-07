@@ -26,12 +26,16 @@ function setup() {
   // カレンダーに触れるか、ここで確かめておく
   calendar_().getName();
 
+  // 使えるモデルかどうかを先に確かめる（違っていれば選び直す）
+  var model = provider_() === 'gemini' ? ensureGeminiModel_() : 'モデル: ' + cfg_('MODEL');
+
   var msg = installTriggers();
 
   var out = [
     '準備できました。',
     '',
     '記録シート: https://docs.google.com/spreadsheets/d/' + id,
+    model,
     msg,
     '',
     'このあと「デプロイ → 新しいデプロイ → ウェブアプリ」で公開し、',

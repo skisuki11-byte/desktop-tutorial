@@ -99,11 +99,13 @@ function geminiCall_(system, contents, decls) {
   };
   if (decls && decls.length) payload.tools = [{ functionDeclarations: decls }];
 
-  var url = GEMINI_BASE + encodeURIComponent(cfg_('GEMINI_MODEL')) +
-            ':generateContent?key=' + encodeURIComponent(cfg_('GEMINI_API_KEY'));
+  var wait = 2000;    // 無料枠は1分あたりの回数が少ないので、少し長めに待つ
+  var repicked = false;
 
-  var wait = 2000;   // 無料枠は1分あたりの回数が少ないので、少し長めに待つ
   for (var attempt = 1; attempt <= 4; attempt++) {
+    var url = GEMINI_BASE + encodeURIComponent(cfg_('GEMINI_MODEL')) +
+              ':generateContent?key=' + encodeURIComponent(cfg_('GEMINI_API_KEY'));
+
     var res = UrlFetchApp.fetch(url, {
       method: 'post',
       contentType: 'application/json',
@@ -120,10 +122,17 @@ function geminiCall_(system, contents, decls) {
       continue;
     }
 
+    // モデルが無くなった／名前が違うとき。使えるものへ乗り換えて、一度だけ試し直す
+    if (code === 404 && !repicked) {
+      repicked = true;
+      log_('モデルを選び直します', ensureGeminiModel_());
+      continue;
+    }
+
     log_('gemini失敗', code + ' ' + body);
     if (code === 404) {
-      throw new Error('モデル名が違うようです（' + cfg_('GEMINI_MODEL') +
-                      '）。listGeminiModels を実行して、使える名前を確かめてください。');
+      throw new Error('使えるモデルが見つかりません。listGeminiModels を実行して、' +
+                      '出てきた名前を GEMINI_MODEL に入れてください。');
     }
     if (code === 429) {
       throw new Error('無料枠の回数上限に当たりました。少し時間をあけてください。');
@@ -166,14 +175,16 @@ function toolDeclsGemini_() {
     });
 }
 
-/* ---------------- 確認用 ---------------- */
+/* ---------------- モデルの見つけかた ---------------- */
 
-/**
- * 自分の鍵で使えるモデルの名前を並べる。
- * 「モデル名が違う」と言われたら、これを実行してログを見て
- * スクリプト プロパティの GEMINI_MODEL を直してください。
- */
-function listGeminiModels() {
+/* 使いたい順。速くて無料枠が広い flash 系を優先する */
+var GEMINI_PREFERRED = ['gemini-3-flash', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+
+/* 用途が違うので秘書には使えないもの */
+var GEMINI_SKIP = /embedding|aqa|imagen|image|tts|audio|video|live|vision/i;
+
+/** 自分の鍵で文章を書けるモデルの名前を並べて返す */
+function geminiModelNames_() {
   cfgRequire_(['GEMINI_API_KEY']);
   var res = UrlFetchApp.fetch(
     'https://generativelanguage.googleapis.com/v1beta/models?key=' +
@@ -181,15 +192,46 @@ function listGeminiModels() {
     { muteHttpExceptions: true }
   );
   if (res.getResponseCode() !== 200) {
-    console.log('★ 取得できませんでした: ' + res.getContentText());
-    return '★ 取得できませんでした';
+    log_('モデル一覧が取れません', res.getContentText());
+    return [];
   }
-  var names = (tryParse_(res.getContentText(), {}).models || [])
+  return (tryParse_(res.getContentText(), {}).models || [])
     .filter(function (m) {
       return (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0;
     })
-    .map(function (m) { return String(m.name).replace(/^models\//, ''); });
+    .map(function (m) { return String(m.name).replace(/^models\//, ''); })
+    .filter(function (name) { return !GEMINI_SKIP.test(name); });
+}
 
-  console.log('使えるモデル:\n' + names.join('\n'));
+/**
+ * いま設定しているモデルが使えるか確かめ、駄目なら自動で選び直す。
+ * setup から呼ばれるので、ふつうは自分で気にしなくて構いません。
+ */
+function ensureGeminiModel_() {
+  var names = geminiModelNames_();
+  if (!names.length) {
+    return '★ モデル一覧を取れませんでした。GEMINI_API_KEY を確かめてください。';
+  }
+
+  var current = cfg_('GEMINI_MODEL');
+  if (names.indexOf(current) >= 0) return 'モデル: ' + current;
+
+  // 使いたい順に探し、無ければ flash 系、それも無ければ先頭
+  var pick = '';
+  for (var i = 0; i < GEMINI_PREFERRED.length && !pick; i++) {
+    if (names.indexOf(GEMINI_PREFERRED[i]) >= 0) pick = GEMINI_PREFERRED[i];
+  }
+  if (!pick) {
+    pick = names.filter(function (n) { return n.indexOf('flash') >= 0; })[0] || names[0];
+  }
+
+  cfgSet_('GEMINI_MODEL', pick);
+  return 'モデル: ' + pick + '（' + current + ' は使えないので選び直しました）';
+}
+
+/** 使えるモデルをぜんぶ見たいとき。GEMINI_MODEL を自分で決めたい場合に */
+function listGeminiModels() {
+  var names = geminiModelNames_();
+  console.log(names.length ? '使えるモデル:\n' + names.join('\n') : '★ 取得できませんでした');
   return names;
 }
