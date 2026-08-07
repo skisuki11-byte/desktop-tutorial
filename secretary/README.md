@@ -45,10 +45,13 @@ LINEのトークで話しかけるだけで、予定を入れて、用事を追�
 ### 2. スクリプトを置く
 
 1. [script.google.com](https://script.google.com/) →「新しいプロジェクト」
-2. `src/` の中の `.gs` ファイルを、**1ファイルずつ同じ名前で**作って貼り付ける
-   （左の「ファイル」＋ → スクリプト。`00_config` のように拡張子なしで入力）
+2. 最初からある「コード.gs」の中身を消して、**[`dist/secretary.gs`](dist/secretary.gs) をぜんぶ貼り付ける**
+   （12ファイルを1つにまとめてあるので、貼り付けは1回で済みます）
 3. ⚙「プロジェクトの設定」→「`appsscript.json` マニフェスト ファイルをエディタで表示する」に
-   チェックを入れ、`appsscript.json` の中身を `src/appsscript.json` に差し替える
+   チェックを入れ、`appsscript.json` の中身を [`src/appsscript.json`](src/appsscript.json) に差し替える
+
+> 中身を直したいときは `src/` のほうを直して `python3 tools/build.py` を動かすと、
+> `dist/secretary.gs` が作り直されます。ファイルを分けたまま貼っても同じように動きます。
 
 ### 3. 鍵を入れる
 
@@ -58,7 +61,7 @@ LINEのトークで話しかけるだけで、予定を入れて、用事を追�
 |---|---|
 | `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/apikey) で発行したAPIキー。**無料・カード登録も不要**です |
 | `LINE_CHANNEL_ACCESS_TOKEN` | 手順1でコピーした長期アクセストークン |
-| `WEBHOOK_TOKEN` | **自分で決めた合言葉**（例: `himitsu-8823`。推測されにくい文字列にしてください） |
+| `WEBHOOK_TOKEN` | **自分で決めた合言葉**。推測されにくい文字列にしてください（例: `4bnnv-xj0ld-fguti`） |
 
 ### 4. 準備の関数を動かす
 
@@ -211,6 +214,8 @@ Claude側は前払いのクレジット式なので、自動チャージを切�
 ## ファイル構成
 
 ```
+dist/secretary.gs      src/ をつないだもの。GASにはこれを貼る
+tools/build.py         dist を作り直す
 src/appsscript.json    権限とタイムゾーンの宣言
 src/00_config.gs       設定のまとめ（鍵は入れない）
 src/10_util.gs         日付・ID・文字列の小道具
