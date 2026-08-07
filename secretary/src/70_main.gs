@@ -1,7 +1,7 @@
 /**
  * LINEからの入口。
  *
- * LINE → doPost（このウェブアプリのURL） → Claude → 道具 → LINEへ返信
+ * LINE → doPost（このウェブアプリのURL） → 頭脳（Gemini/Claude） → 道具 → LINEへ返信
  *
  * GAS のウェブアプリはリクエストのヘッダを受け取れないため、
  * LINE の署名検証（X-Line-Signature）は使えません。代わりに
@@ -89,7 +89,7 @@ function seen_(eventId) {
 }
 
 /**
- * 本体。Claudeに考えさせて、必要なら道具を使わせて、LINEに返す。
+ * 本体。頭脳に考えさせて、必要なら道具を使わせて、LINEに返す。
  *
  * @param {string} text      文字メッセージ（写真だけのときは空）
  * @param {string} imageId   写真のメッセージID。無ければ null
@@ -118,7 +118,7 @@ function respond_(userId, replyToken, text, imageId) {
     var messages = logRecent_(userId, HISTORY_TURNS);
     messages.push({ role: 'user', content: content });
 
-    var result = claudeRun_(systemPrompt_(userId), messages, toolDefs_(), userId);
+    var result = llmRun_(systemPrompt_(userId), messages, toolDefs_(), userId);
     var answer = result.text || '（返事を作れませんでした）';
 
     logAppend_(userId, 'user', text || '［写真］');
@@ -132,7 +132,7 @@ function respond_(userId, replyToken, text, imageId) {
   }
 }
 
-/** LINEの写真をClaudeに渡せる形にする */
+/** LINEの写真を頭脳に渡せる形にする */
 function imagePart_(messageId) {
   var blob = lineContent_(messageId);
   if (!blob) return { error: '写真を取り込めませんでした。' };

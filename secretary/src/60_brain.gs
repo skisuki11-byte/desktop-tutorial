@@ -67,7 +67,9 @@ function systemPrompt_(userId) {
     '- 覚えていたことが違っていたと分かったら forget で消してから覚え直す。',
     '',
     '# 調べもの',
-    '- 事実関係や最新の情報が要るときは web_search を使う。憶測で答えない。',
+    provider_() === 'claude'
+      ? '- 事実関係や最新の情報が要るときは web_search を使う。憶測で答えない。'
+      : '- 手元の道具（予定・用事・メモ）で確かめられないことは、憶測で断定せず「調べていません」と断る。',
     '',
     '# 覚えていること',
     memoryBlock_(userId)
@@ -102,7 +104,7 @@ function reflect_(userId) {
     ' "drop":["古くなった項目のid"]}'
   ].join('\n');
 
-  var raw = claudeAsk_(system, '今日の会話:\n' + truncate_(transcript, 12000));
+  var raw = llmAsk_(system, '今日の会話:\n' + truncate_(transcript, 12000));
   var parsed = extractJson_(raw);
   if (!parsed) return { added: 0, note: '読み取れる形で返ってきませんでした' };
 

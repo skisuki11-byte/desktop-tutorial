@@ -1,5 +1,5 @@
 /**
- * Claude API との通信と、道具を使わせるための往復。
+ * Claude（Anthropic）で動かすときの中身。PROVIDER = claude のときだけ使われる。
  *
  * Claude は「この道具を使いたい」と言ってくるだけで、実行はこちらの役目。
  * 実行結果を返してもう一度聞く、を答えが出るまで繰り返す。
@@ -21,7 +21,7 @@ function buildPayload_(system, messages, tools) {
 
 /** /v1/messages を叩く。混んでいるときは少し待って計3回まで試す */
 function claudeCall_(payload) {
-  cfgRequire_(['ANTHROPIC_API_KEY']);
+  requireBrainKey_();
   var wait = 1000;
   var useFallback = !!payload.fallbacks;
 
@@ -44,7 +44,7 @@ function claudeCall_(payload) {
     if (code === 200) return JSON.parse(body);
 
     // 429（混雑）と5xx（向こうの不調）だけ待って試し直す
-    if ((code === 429 || code >= 500) && attempt < 4) {
+    if (retryable_(code) && attempt < 4) {
       Utilities.sleep(wait);
       wait *= 2;
       continue;
@@ -75,7 +75,6 @@ function claudeCall_(payload) {
  */
 function claudeRun_(system, messages, tools, userId) {
   var used = [];
-  normalize_(messages);
 
   for (var turn = 0; turn < MAX_TOOL_TURNS; turn++) {
     var res = claudeCall_(buildPayload_(system, messages, tools));
@@ -120,44 +119,6 @@ function claudeRun_(system, messages, tools, userId) {
 
   // 上限まで回っても終わらなかったとき。今わかっている分だけ言わせる
   return { text: '（途中までしか進められませんでした。もう一度お願いできますか）', used: used };
-}
-
-/**
- * 会話をAPIが受け取れる形に整える（配列そのものを書き換える）。
- * ・user と assistant が交互になっていないと弾かれるので、続いた分はつなぐ
- * ・先頭は user から始める
- */
-function normalize_(messages) {
-  while (messages.length && messages[0].role !== 'user') messages.shift();
-
-  for (var i = messages.length - 1; i > 0; i--) {
-    if (messages[i].role !== messages[i - 1].role) continue;
-    var prev = messages[i - 1];
-    var cur = messages[i];
-    if (typeof prev.content === 'string' && typeof cur.content === 'string') {
-      prev.content = prev.content + '\n' + cur.content;
-    } else {
-      prev.content = asBlocks_(prev.content).concat(asBlocks_(cur.content));
-    }
-    messages.splice(i, 1);
-  }
-  return messages;
-}
-
-function asBlocks_(content) {
-  if (typeof content === 'string') return [{ type: 'text', text: content }];
-  return content || [];
-}
-
-/** 返ってきたブロックから文章だけ取り出してつなぐ */
-function textOf_(content) {
-  if (!content) return '';
-  if (typeof content === 'string') return content;
-  return content
-    .filter(function (b) { return b.type === 'text'; })
-    .map(function (b) { return b.text; })
-    .join('\n')
-    .trim();
 }
 
 /** 道具なしで一言だけ書かせたいとき（朝のお知らせ、ふりかえりなど） */

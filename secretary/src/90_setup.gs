@@ -6,7 +6,8 @@
  */
 
 function setup() {
-  cfgRequire_(['ANTHROPIC_API_KEY', 'LINE_CHANNEL_ACCESS_TOKEN', 'WEBHOOK_TOKEN']);
+  requireBrainKey_();
+  cfgRequire_(['LINE_CHANNEL_ACCESS_TOKEN', 'WEBHOOK_TOKEN']);
 
   // 記録用のスプレッドシートを作る（すでにあればそのまま使う）
   var id = cfg_('SPREADSHEET_ID');
@@ -44,15 +45,21 @@ function setup() {
 
 /** いまの状態を見る。うまく動かないときはこれを実行してログを見る */
 function status() {
-  var props = ['ANTHROPIC_API_KEY', 'LINE_CHANNEL_ACCESS_TOKEN', 'WEBHOOK_TOKEN', 'SPREADSHEET_ID', 'OWNER_USER_ID'];
+  var props = ['GEMINI_API_KEY', 'ANTHROPIC_API_KEY', 'LINE_CHANNEL_ACCESS_TOKEN',
+               'WEBHOOK_TOKEN', 'SPREADSHEET_ID', 'OWNER_USER_ID'];
   var out = { 設定: {}, 予定表: '', 用事: 0, 覚えていること: 0, 仕掛け: [] };
+
+  // いま選んでいない頭脳の鍵は、無くても構わない
+  var unused = provider_() === 'claude' ? 'GEMINI_API_KEY' : 'ANTHROPIC_API_KEY';
 
   props.forEach(function (k) {
     var v = cfg_(k);
-    out.設定[k] = v ? (k.indexOf('KEY') >= 0 || k.indexOf('TOKEN') >= 0 ? '入っています' : v) : '★未設定';
+    var hidden = k.indexOf('KEY') >= 0 || k.indexOf('TOKEN') >= 0;
+    out.設定[k] = v ? (hidden ? '入っています' : v)
+                    : (k === unused ? '—（いまは使いません）' : '★未設定');
   });
-  out.設定.MODEL = cfg_('MODEL');
-  out.設定.EFFORT = cfg_('EFFORT');
+  out.設定.PROVIDER = provider_();
+  out.設定.使うモデル = provider_() === 'claude' ? cfg_('MODEL') + ' / effort ' + cfg_('EFFORT') : cfg_('GEMINI_MODEL');
 
   try { out.予定表 = calendar_().getName(); } catch (e) { out.予定表 = '★' + e; }
   try {
@@ -74,11 +81,11 @@ function testPush() {
   return linePush_(userId, 'テスト送信です。届いていれば経路は通っています。') ? '送りました' : '★ 送れませんでした（ログを見てください）';
 }
 
-/** Claude と道具まわりだけを、LINEを通さずに試す */
+/** 頭脳と道具まわりだけを、LINEを通さずに試す */
 function testBrain() {
   var userId = cfg_('OWNER_USER_ID') || 'test-user';
   var messages = [{ role: 'user', content: '今日の予定を教えてください。' }];
-  var res = claudeRun_(systemPrompt_(userId), messages, toolDefs_(), userId);
+  var res = llmRun_(systemPrompt_(userId), messages, toolDefs_(), userId);
   console.log('使った道具: ' + res.used.join(', '));
   console.log(res.text);
   return res.text;

@@ -5,21 +5,28 @@
  * （エディタ左の ⚙ プロジェクトの設定 → スクリプト プロパティ）
  *
  * 入れるもの：
- *   ANTHROPIC_API_KEY          … Claude のAPIキー（sk-ant-... ）
+ *   GEMINI_API_KEY             … Google AI Studio のAPIキー（無料。既定はこちら）
  *   LINE_CHANNEL_ACCESS_TOKEN  … LINE Developers の「長期のアクセストークン」
  *   WEBHOOK_TOKEN              … 自分で決めた合言葉（Webhook URLの ?token= に付ける）
  *   SPREADSHEET_ID             … 記録用スプレッドシートのID（setup() が自動で入れます）
  *   OWNER_USER_ID              … 持ち主のLINE userId（初回メッセージで自動で入ります）
  *
  * 任意：
+ *   PROVIDER      … 頭脳をどれにするか。gemini（既定・無料）または claude（有料）
+ *   GEMINI_MODEL  … 既定 gemini-3-flash。違うと言われたら listGeminiModels で確かめる
  *   CALENDAR_ID   … 使うカレンダー。既定は自分のメインカレンダー
- *   MODEL         … 既定 claude-opus-5。速さを優先するなら claude-sonnet-5
- *   EFFORT        … どこまで考えさせるか low/medium/high/xhigh/max。既定 medium
  *   OWNER_NAME    … 呼びかたに使う名前。既定「あなた」
  *   MORNING_HOUR  … 朝のお知らせの時刻（0-23）。既定 7
+ *
+ * PROVIDER = claude にするときだけ：
+ *   ANTHROPIC_API_KEY … Claude のAPIキー（sk-ant-... ）
+ *   MODEL             … 既定 claude-opus-5。速さと安さなら claude-sonnet-5
+ *   EFFORT            … どこまで考えさせるか low/medium/high/xhigh/max。既定 medium
  */
 
 var CFG_DEFAULTS = {
+  PROVIDER: 'gemini',
+  GEMINI_MODEL: 'gemini-3-flash',
   CALENDAR_ID: 'primary',
   MODEL: 'claude-opus-5',
   EFFORT: 'medium',
