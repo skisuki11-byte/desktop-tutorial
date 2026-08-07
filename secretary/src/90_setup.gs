@@ -47,7 +47,7 @@ function setup() {
 function status() {
   var props = ['GEMINI_API_KEY', 'ANTHROPIC_API_KEY', 'LINE_CHANNEL_ACCESS_TOKEN',
                'WEBHOOK_TOKEN', 'SPREADSHEET_ID', 'OWNER_USER_ID'];
-  var out = { 設定: {}, 予定表: '', 用事: 0, 覚えていること: 0, 仕掛け: [] };
+  var out = { 設定: {}, 予定表: '', 用事: 0, 覚えていること: 0, 今月送った通数: '', 仕掛け: [] };
 
   // いま選んでいない頭脳の鍵は、無くても構わない
   var unused = provider_() === 'claude' ? 'GEMINI_API_KEY' : 'ANTHROPIC_API_KEY';
@@ -60,6 +60,9 @@ function status() {
   });
   out.設定.PROVIDER = provider_();
   out.設定.使うモデル = provider_() === 'claude' ? cfg_('MODEL') + ' / effort ' + cfg_('EFFORT') : cfg_('GEMINI_MODEL');
+
+  var q = pushQuota_();
+  out.今月送った通数 = q.used + ' / ' + q.limit + '（残り' + q.left + '。返信はこれに含まれません）';
 
   try { out.予定表 = calendar_().getName(); } catch (e) { out.予定表 = '★' + e; }
   try {

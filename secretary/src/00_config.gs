@@ -17,6 +17,7 @@
  *   CALENDAR_ID   … 使うカレンダー。既定は自分のメインカレンダー
  *   OWNER_NAME    … 呼びかたに使う名前。既定「あなた」
  *   MORNING_HOUR  … 朝のお知らせの時刻（0-23）。既定 7
+ *   PUSH_LIMIT    … こちらから送る通数の月あたり上限。既定 190（LINE無料枠は200）
  *
  * PROVIDER = claude にするときだけ：
  *   ANTHROPIC_API_KEY … Claude のAPIキー（sk-ant-... ）
@@ -31,7 +32,8 @@ var CFG_DEFAULTS = {
   MODEL: 'claude-opus-5',
   EFFORT: 'medium',
   OWNER_NAME: 'あなた',
-  MORNING_HOUR: '7'
+  MORNING_HOUR: '7',
+  PUSH_LIMIT: '190'
 };
 
 /* Claude API */
@@ -54,6 +56,8 @@ var HISTORY_TURNS = 20;
 var NUDGE_LEAD_MIN = 60;      // 期限の何分前に最初の声かけをするか
 var NUDGE_INTERVAL_H = 3;     // 期限を過ぎたあと、何時間おきに催促するか
 var NUDGE_MAX = 8;            // 何回まで催促するか（これを超えたら「まだ要る？」と聞く）
+var QUIET_START_HOUR = 22;    // この時刻から翌朝まで催促しない
+var QUIET_END_HOUR = 8;
 
 var TZ = 'Asia/Tokyo';
 

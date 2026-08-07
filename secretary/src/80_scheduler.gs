@@ -62,6 +62,10 @@ function onSweep() {
   if (!userId) return;
 
   var n = now_();
+
+  // 寝ている時間は起こさない。無料枠の消費も抑えられる
+  var hour = n.getHours();
+  if (hour < QUIET_END_HOUR || hour >= QUIET_START_HOUR) return;
   var messages = [];
 
   rows_('tasks').forEach(function (r) {
