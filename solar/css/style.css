@@ -1,0 +1,193 @@
+/* 配色は「陽」から。売電＝藍、利益のプラス＝緑、マイナス＝朱。
+   色はすべてトークンにして、明暗どちらのテーマでもトークンだけを差し替える。
+   文字は大きめ（本文18px）。屋外や年配の方でも読めることを優先している。 */
+:root{
+  --bg:#f3f5f9; --panel:#fff; --ink:#151c26; --muted:#5d6a7b; --line:#dbe2ec;
+  --brand:#14395f; --brand-2:#2f6fb5;
+  --up:#0f7a52; --down:#bb3b2b; --warn:#8a6100; --warn-bg:#fdf3dc; --warn-line:#e6cf9a;
+  --p1:#2f6fb5;  /* 市原 */
+  --p2:#0f766e;  /* 富津 */
+  --p3:#b7791f;  /* 竹原 */
+  --prev:#93a1b3; /* 前年 */
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 6px 18px rgba(16,24,40,.07);
+  --r:14px;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  --tnum:"Helvetica Neue",Arial,var(--sans);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0d1117; --panel:#161c25; --ink:#e8edf5; --muted:#9aa6b6; --line:#28313d;
+    --brand:#132537; --brand-2:#61a0e8;
+    --up:#4fd39a; --down:#f28b80; --warn:#e0b355; --warn-bg:#2b2412; --warn-line:#5a4a1e;
+    --p1:#61a0e8; --p2:#2dd4bf; --p3:#e0b355; --prev:#5c6a7c;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 8px 26px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1117; --panel:#161c25; --ink:#e8edf5; --muted:#9aa6b6; --line:#28313d;
+  --brand:#132537; --brand-2:#61a0e8;
+  --up:#4fd39a; --down:#f28b80; --warn:#e0b355; --warn-bg:#2b2412; --warn-line:#5a4a1e;
+  --p1:#61a0e8; --p2:#2dd4bf; --p3:#e0b355; --prev:#5c6a7c;
+  --shadow:0 1px 2px rgba(0,0,0,.45),0 8px 26px rgba(0,0,0,.4);
+}
+:root[data-theme="light"]{
+  --bg:#f3f5f9; --panel:#fff; --ink:#151c26; --muted:#5d6a7b; --line:#dbe2ec;
+  --brand:#14395f; --brand-2:#2f6fb5;
+  --up:#0f7a52; --down:#bb3b2b; --warn:#8a6100; --warn-bg:#fdf3dc; --warn-line:#e6cf9a;
+  --p1:#2f6fb5; --p2:#0f766e; --p3:#b7791f; --prev:#93a1b3;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 6px 18px rgba(16,24,40,.07);
+}
+
+*{box-sizing:border-box}
+/* hidden を常に優先する。display を持つクラス（.modal など）に負けないように。 */
+[hidden]{display:none !important}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:18px; line-height:1.65; -webkit-text-size-adjust:100%;
+}
+h2{font-size:1.28rem;margin:0;font-weight:700;letter-spacing:.02em}
+h3{font-size:1.1rem;margin:0;font-weight:700}
+:focus-visible{outline:3px solid var(--brand-2);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ---------- 上の帯 ---------- */
+.topbar{position:sticky;top:0;z-index:30;background:var(--brand);color:#fff;box-shadow:var(--shadow)}
+.topbar-inner{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;
+  gap:14px;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-mark{width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,.16);
+  display:grid;place-items:center;font-size:1.3rem;flex:none}
+.brand-title{font-weight:700;line-height:1.2;letter-spacing:.05em;font-size:1.12rem}
+.brand-sub{font-size:.78rem;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+.icon-btn{background:rgba(255,255,255,.14);border:0;color:#fff;font:inherit;font-size:1.1rem;
+  width:44px;height:44px;border-radius:11px;cursor:pointer}
+.icon-btn:hover{background:rgba(255,255,255,.24)}
+
+.tabs{max-width:1200px;margin:0 auto;padding:0 8px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:0;color:rgba(255,255,255,.74);padding:11px 16px;font-size:1rem;
+  font-family:inherit;cursor:pointer;border-bottom:4px solid transparent;white-space:nowrap}
+.tab:hover{color:#fff}
+.tab.active{color:#fff;border-bottom-color:#fff;font-weight:700}
+
+/* ---------- 土台 ---------- */
+main{max-width:1200px;margin:0 auto;padding:18px 16px 64px}
+.view{display:none}
+.view.active{display:block}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:18px;margin-bottom:18px;box-shadow:var(--shadow)}
+.panel-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.panel-head h2{margin-right:auto}
+.lead{margin:0 0 14px;color:var(--muted);font-size:.95rem}
+.hint{color:var(--muted);font-size:.86rem}
+.mt{margin-top:14px}
+
+/* ---------- 年の切り替え ---------- */
+.yearbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.yearbar .spacer{margin-left:auto}
+.chip{background:var(--panel);border:2px solid var(--line);color:var(--ink);
+  border-radius:999px;padding:8px 18px;font:inherit;font-size:1rem;cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:var(--brand-2)}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+
+/* ---------- 大きな数字のカード ---------- */
+.cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-left:7px solid var(--brand-2);
+  border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.card.p1{border-left-color:var(--p1)}
+.card.p2{border-left-color:var(--p2)}
+.card.p3{border-left-color:var(--p3)}
+.card-label{font-size:.95rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+.card-value{font-family:var(--tnum);font-size:2.5rem;font-weight:700;line-height:1.15;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:4px;overflow-wrap:anywhere}
+.card-value .unit{font-size:1.1rem;font-weight:600;margin-left:3px;color:var(--muted)}
+.card-sub{font-size:.92rem;color:var(--muted);margin-top:6px}
+.card-value.up{color:var(--up)} .card-value.down{color:var(--down)}
+
+.delta{font-family:var(--tnum);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.delta.up{color:var(--up)} .delta.down{color:var(--down)}
+
+/* ---------- 表 ---------- */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:1rem;min-width:640px}
+thead th{background:var(--brand);color:#fff;font-weight:700;font-size:.92rem;
+  padding:11px 12px;text-align:right;white-space:nowrap;position:sticky;top:0}
+thead th:first-child{text-align:left}
+tbody td{padding:11px 12px;border-top:1px solid var(--line);text-align:right;white-space:nowrap;
+  font-family:var(--tnum);font-variant-numeric:tabular-nums;font-size:1.05rem}
+tbody td:first-child{text-align:left;font-family:var(--sans);font-weight:600}
+tbody tr:nth-child(even){background:color-mix(in srgb,var(--ink) 3%,transparent)}
+tbody tr.total td{border-top:2.5px solid var(--brand);font-weight:700;background:transparent;font-size:1.1rem}
+tbody tr.future td{color:var(--muted)}
+td.up{color:var(--up)} td.down{color:var(--down)}
+td .tag{font-family:var(--sans);font-size:.72rem;background:var(--brand-2);color:#fff;
+  border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+
+/* ---------- グラフ ---------- */
+.chart-wrap{width:100%;overflow:hidden}
+.chart{display:block;max-width:100%}
+.c-grid{stroke:var(--line);stroke-width:1}
+.c-base{stroke:var(--muted);stroke-width:1.5}
+.c-axis{fill:var(--muted);font-size:14px;font-family:var(--tnum)}
+.c-legend{fill:var(--ink);font-size:15px;font-family:var(--sans);dominant-baseline:middle}
+.c-val{fill:var(--ink);font-size:13px;font-family:var(--tnum);font-weight:700}
+
+/* ---------- ボタン・入力 ---------- */
+.btn{background:var(--panel);border:2px solid var(--line);color:var(--ink);border-radius:11px;
+  padding:11px 18px;font:inherit;font-size:1rem;cursor:pointer;line-height:1.2}
+.btn:hover{border-color:var(--brand-2)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn-primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+.btn-primary:hover{background:var(--brand-2);border-color:var(--brand-2)}
+.btn-danger{color:var(--down);border-color:var(--down)}
+.btn-lg{font-size:1.15rem;padding:16px 26px;border-radius:14px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+
+label.field{display:block;margin-bottom:14px}
+label.field > span{display:block;font-size:.95rem;color:var(--muted);margin-bottom:5px}
+input[type=text],input[type=number],input[type=password],select,textarea{
+  width:100%;background:var(--panel);color:var(--ink);border:2px solid var(--line);
+  border-radius:10px;padding:12px 14px;font:inherit;font-size:1.05rem}
+input[type=number]{font-family:var(--tnum);font-variant-numeric:tabular-nums}
+input:focus,select:focus,textarea:focus{border-color:var(--brand-2);outline:none}
+.grid2{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+
+/* ---------- カメラ ---------- */
+.shoot{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-bottom:8px}
+.shoot .btn{padding:26px 18px;font-size:1.15rem;font-weight:700}
+.preview{max-width:100%;border-radius:12px;border:1px solid var(--line);margin-top:14px;display:block}
+.readout{border:2px solid var(--line);border-radius:12px;padding:16px;margin-top:16px}
+.readout h3{margin-bottom:10px}
+.note{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn);
+  border-radius:10px;padding:12px 14px;margin:12px 0;font-size:.95rem}
+.note ul{margin:6px 0 0;padding-left:1.2em}
+.status{margin-top:14px;font-size:1rem;color:var(--muted)}
+.status.err{color:var(--down);font-weight:600}
+.status.ok{color:var(--up);font-weight:600}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid var(--line);
+  border-top-color:var(--brand-2);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-4px;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- 一覧の小さな行 ---------- */
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.list li:first-child{border-top:0}
+.list .grow{flex:1;min-width:180px}
+.list .num{font-family:var(--tnum);font-variant-numeric:tabular-nums;font-weight:700}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:60;
+  background:var(--brand);color:#fff;padding:14px 22px;border-radius:12px;box-shadow:var(--shadow);
+  font-size:1rem;max-width:92vw}
+
+@media (max-width:560px){
+  body{font-size:17px}
+  .card-value{font-size:2.15rem}
+  main{padding:14px 12px 60px}
+  .panel{padding:14px}
+  /* 年の切り替えは折り返さず横に流す。9年ぶんが3行になって画面を押し下げるのを防ぐ */
+  .yearbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+    margin-left:-12px;margin-right:-12px;padding:0 12px}
+  .yearbar::-webkit-scrollbar{display:none}
+  .yearbar .spacer{display:none}
+}

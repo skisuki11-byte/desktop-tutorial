@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14395f">
+<title>売電管理｜市原・富津・竹原</title>
+<!-- ホーム画面に追加して、アプリのように全画面で使えるようにする -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="売電管理">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314395f'/%3E%3Ctext x='16' y='24' font-size='20' text-anchor='middle' fill='%23ffd166' font-family='sans-serif'%3E%E2%98%80%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">☀</span>
+      <div>
+        <div class="brand-title">売電管理</div>
+        <div class="brand-sub">市原・富津・竹原</div>
+      </div>
+    </div>
+    <button class="icon-btn" id="btnTheme" type="button" title="明るさを切り替える" aria-label="明るさを切り替える">◐</button>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button class="tab" data-view="home">ホーム</button>
+    <button class="tab" data-view="month">月別</button>
+    <button class="tab" data-view="year">年度別</button>
+    <button class="tab" data-view="chart">グラフ</button>
+    <button class="tab" data-view="camera">カメラ入力</button>
+    <button class="tab" data-view="settings">設定</button>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ============ ホーム ============ -->
+  <section class="view" id="view-home">
+    <div class="yearbar" id="homeYears"></div>
+
+    <div class="cards" id="homeTotal"></div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>発電所ごとの状況</h2>
+        <span class="hint" id="homeScope"></span>
+      </div>
+      <div class="cards" id="homePlants"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>月別の売電額（3基合計）</h2>
+        <span class="hint">薄い棒が前年、濃い棒が当年です</span>
+      </div>
+      <div class="chart-wrap" id="homeChart"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>直近の入力</h2></div>
+      <div id="homeRecent"></div>
+    </div>
+  </section>
+
+  <!-- ============ 月別 ============ -->
+  <section class="view" id="view-month">
+    <div class="yearbar" id="monthYears"></div>
+    <div class="yearbar" id="monthPlants"></div>
+    <div id="monthPanels"></div>
+  </section>
+
+  <!-- ============ 年度別 ============ -->
+  <section class="view" id="view-year">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>年度ごとの売電額</h2>
+        <span class="hint">単位：円。空欄はまだ実績のない年、「○ヶ月」は途中経過の年です</span>
+      </div>
+      <div class="table-wrap" id="yearSales"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>年度ごとの発電量</h2>
+        <span class="hint">単位：kWh</span>
+      </div>
+      <div class="table-wrap" id="yearKwh"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>年度ごとの確定利益</h2>
+        <span class="hint">返済・経費・税を引いたあとの手取り（シートの「確定利益」行）</span>
+      </div>
+      <div class="table-wrap" id="yearProfit"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>推移</h2></div>
+      <div class="chart-wrap" id="yearChart"></div>
+      <div class="chart-wrap mt" id="yearProfitChart"></div>
+    </div>
+  </section>
+
+  <!-- ============ グラフ ============ -->
+  <section class="view" id="view-chart">
+    <div class="yearbar" id="chartYears"></div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>月別の売電額（発電所の内訳）</h2>
+        <span class="hint">単位：円</span>
+      </div>
+      <div class="chart-wrap" id="chStacked"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>月別の発電量</h2>
+        <span class="hint">単位：kWh</span>
+      </div>
+      <div class="chart-wrap" id="chKwh"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>月別の利益</h2>
+        <span class="hint">売電額から返済・経費を引いた額。0を下回る月は返済や税の重なる月です</span>
+      </div>
+      <div class="chart-wrap" id="chProfit"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>前年同月との差（売電額）</h2>
+        <span class="hint">単位：円</span>
+      </div>
+      <div class="chart-wrap" id="chYoy"></div>
+    </div>
+  </section>
+
+  <!-- ============ カメラ入力 ============ -->
+  <section class="view" id="view-camera">
+    <div class="panel">
+      <div class="panel-head"><h2>明細を撮って取り込む</h2></div>
+      <p class="lead">
+        電力会社の「購入電力量のお知らせ」や振込明細を撮ると、対象年月・売電額・発電量を読み取ります。
+        読み取った値は必ず確認してから取り込みます。
+      </p>
+
+      <div class="shoot">
+        <button class="btn btn-primary" id="btnShoot" type="button">📷 撮影する</button>
+        <button class="btn" id="btnPick" type="button">🖼 画像を選ぶ</button>
+      </div>
+      <input type="file" id="fileShoot" accept="image/*" capture="environment" hidden>
+      <input type="file" id="filePick" accept="image/*" hidden>
+
+      <div id="camStatus" class="status"></div>
+      <img id="camPreview" class="preview" hidden alt="撮影した明細">
+      <div id="camResult"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>手で入力する</h2></div>
+      <p class="lead">カメラを使わないときはこちら。同じ場所に保存されます。</p>
+      <div class="grid2">
+        <label class="field"><span>発電所</span><select id="mPlant"></select></label>
+        <label class="field"><span>年</span><select id="mYear"></select></label>
+        <label class="field"><span>月</span><select id="mMonth"></select></label>
+        <label class="field"><span>売電額（円）</span><input type="number" id="mSales" inputmode="numeric" placeholder="例 152,499 → 152499"></label>
+        <label class="field"><span>発電量（kWh）</span><input type="number" id="mKwh" inputmode="numeric" placeholder="例 7690"></label>
+      </div>
+      <div id="mCheck"></div>
+      <div class="actions mt">
+        <button class="btn btn-primary btn-lg" id="btnManual" type="button">保存する</button>
+      </div>
+      <div id="mStatus" class="status"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>取り込んだぶん</h2>
+        <span class="hint">元のシートにまだ書いていない入力です</span>
+      </div>
+      <div id="pendingList"></div>
+      <div class="actions mt" id="pendingActions"></div>
+      <div id="pushStatus" class="status"></div>
+    </div>
+  </section>
+
+  <!-- ============ 設定 ============ -->
+  <section class="view" id="view-settings">
+    <div class="panel">
+      <div class="panel-head"><h2>カメラ読み取り（APIキー）</h2></div>
+      <p class="lead">
+        Anthropic の APIキーを登録すると、明細の写真から数字を読み取れます。
+        キーはこの端末のブラウザにだけ保存され、送信先は <code>api.anthropic.com</code> だけです。
+        共用のパソコンでは登録しないでください。
+      </p>
+      <label class="field">
+        <span>APIキー（sk-ant-… ）</span>
+        <input type="password" id="setApiKey" autocomplete="off" placeholder="未登録">
+      </label>
+      <div class="actions">
+        <button class="btn btn-primary" id="btnSaveKey" type="button">保存する</button>
+        <button class="btn btn-danger" id="btnClearKey" type="button">消す</button>
+      </div>
+      <div id="keyStatus" class="status"></div>
+    </div>
+
+    <div class="panel" id="syncPanel">
+      <div class="panel-head"><h2>Googleスプレッドシートとつなぐ</h2></div>
+      <p class="lead">
+        元の「売電結果」シートを読み書きする窓口のURLを登録します。
+        入れ方は <code>tools/drive-webapp.gs</code> の先頭に書いてあります。
+      </p>
+      <div class="note">
+        <strong>このURLを知っている人は、シートを読むことも書き換えることもできます。</strong>
+        ご自身だけが持ち、他の方には渡さないでください。
+      </div>
+      <label class="field">
+        <span>シートのURL（https://script.google.com/macros/s/…/exec）</span>
+        <input type="text" id="setSyncUrl" autocomplete="off" placeholder="未登録">
+      </label>
+      <div class="actions">
+        <button class="btn btn-primary" id="btnSaveUrl" type="button">保存する</button>
+        <button class="btn" id="btnPull" type="button">シートから読み込む</button>
+        <button class="btn btn-danger" id="btnClearUrl" type="button">消す</button>
+      </div>
+      <div id="urlStatus" class="status"></div>
+      <div id="pullResult"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>書き出し</h2></div>
+      <p class="lead">いま画面に出ている数字を Excel に書き出します。</p>
+      <div class="actions">
+        <button class="btn" id="btnXlsx" type="button">Excelで書き出す</button>
+        <button class="btn" id="btnJson" type="button">入力ぶんをJSONで保存</button>
+        <button class="btn" id="btnJsonIn" type="button">JSONを取り込む</button>
+      </div>
+      <input type="file" id="fileJson" accept="application/json,.json" hidden>
+      <div id="expStatus" class="status"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>このアプリについて</h2></div>
+      <ul class="list" id="aboutList"></ul>
+      <div class="actions mt">
+        <button class="btn btn-danger" id="btnReset" type="button">この端末の入力をすべて消す</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/xlsx.js"></script>
+<script src="js/ocr.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* 使えなくても本体は動く */ });
+  });
+}
+</script>
+</body>
+</html>
