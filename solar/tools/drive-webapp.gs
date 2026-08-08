@@ -18,9 +18,10 @@
  *             足したら下の YEAR_LAST を直してください）
  *
  * 【入れ方】
- *  1. 売電結果2026.xlsx をドライブで開き、
- *     ファイル →「Googleスプレッドシートとして保存」でスプレッドシートにする
- *     （xlsx のままでは Apps Script から書き込めません）
+ *  1. 「累計」シートのスプレッドシートを開く
+ *     （xlsx のままでは Apps Script から書き込めません。まだ変換していない場合は
+ *      売電結果2026.xlsx をドライブで開き、
+ *      ファイル →「Googleスプレッドシートとして保存」）
  *  2. そのスプレッドシートを開き、拡張機能 → Apps Script
  *  3. このファイルの中身をぜんぶ貼り付ける
  *  4. 右上「デプロイ」→「新しいデプロイ」→ 種類を「ウェブアプリ」
@@ -133,10 +134,17 @@ function doPost(e) {
 }
 
 /* ---------- 小道具 ---------- */
+/* 「累計」タブを使う。CSVから作ったスプレッドシートはタブ名が
+   「Untitled」などになることがあるので、その場合は最初のタブを使う。
+   （タブが1枚しかないなら、それが累計表そのもの） */
 function sheet_() {
-  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-  if (!sh) throw new Error('「' + SHEET_NAME + '」シートが見つかりません');
-  return sh;
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_NAME);
+  if (sh) return sh;
+  var all = ss.getSheets();
+  if (all.length === 1) return all[0];
+  throw new Error('「' + SHEET_NAME + '」タブが見つかりません。' +
+    'タブ名を「' + SHEET_NAME + '」に変えるか、SHEET_NAME を直してください');
 }
 
 function num_(v) {
