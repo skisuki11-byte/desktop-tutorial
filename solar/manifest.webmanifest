@@ -1,0 +1,17 @@
+{
+  "name": "売電管理（市原・富津・竹原）",
+  "short_name": "売電管理",
+  "description": "太陽光3基の売電額・発電量・利益を月別／年度別に見て、明細をカメラで撮って追記できるアプリ",
+  "lang": "ja",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f5f9",
+  "theme_color": "#14395f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
