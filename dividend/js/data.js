@@ -38,12 +38,23 @@ var DIV_PLAN = {
       why: '配当性向68%と候補中もっとも余裕がある。20年連続増配。',
       risk: '増配率は年2%前後と鈍い。'
     },
+    /* VICI（不動産REIT・20%）の差し替え枠。
+       2026年8月、PayPay証券でVICIの取扱いが無いことを確認したため2銘柄に割った。
+       米国REITは日本では外国投資信託扱いで個別の届出が要り、O や SPG でも同じ結果になる公算が高い。
+       そこでREITは諦め、税制で利回りの穴を埋めるBTIと、セクターを新しく足すOKEを10%ずつ。 */
     {
-      ticker: 'VICI', name: 'VICIプロパティーズ', weight: 20, yield: 6.73,
-      sector: '不動産（REIT）', payMonths: [1, 4, 7, 10], maxWeight: null,
-      payout: 74, cfCover: 1.35, streak: 8, isReit: true,
-      why: 'AFFO配当性向は約74%（年間配当1.80ドル ÷ 2026年AFFOガイダンス2.42〜2.45ドル）。2018年の上場以来8年連続増配。シーザーズ・パレスやMGMグランドを保有する長期三重ネットリース。',
-      risk: 'テナント集中（「じわじわ」ではなく「飛ぶかどうか」の二択）と金利感応度。総負債約171億ドル／総資産約467億ドル。'
+      ticker: 'BTI', name: 'ブリティッシュ・アメリカン・タバコ', weight: 10, yield: 5.60,
+      sector: 'タバコ（英ADR）', payMonths: [2, 5, 8, 11], maxWeight: null,
+      payout: 65, cfCover: 1.30, withholding: 0,
+      why: '英国籍のADRなので米国源泉税10%がかからない。NISAなら配当が完全に非課税で、表面5.60%がそのまま手取りになる。同じ手取りを米国株で得るには表面6.22%が必要で、VICIが抜けた穴を税制で埋められる唯一の候補。たばこ市場で世界シェア3位、営業利益率は5年間40%超を維持。',
+      risk: 'MOとタバコで重なる。合計35%なので上限内だが、規制強化と喫煙率低下という同じ理由で2銘柄が同時に傷む。BTIを増やすときはMOを減らすこと。'
+    },
+    {
+      ticker: 'OKE', name: 'ONEOK', weight: 10, yield: 4.80,
+      sector: 'エネルギー（パイプライン）', payMonths: [2, 5, 8, 11], maxWeight: null,
+      payout: 76, cfCover: 1.25,
+      why: '天然ガスのパイプライン7.8万マイルを運営するエネルギーインフラ。2023年にMagellan Midstreamを約188億ドルで買収済み。配当性向76%で余裕があり、ポートフォリオにまだ無いセクターを足せる。',
+      risk: '天然ガス価格と金利の両方に感応する。増配率は年2%程度と鈍く、利回りも4.80%と目標から遠い。'
     },
     {
       ticker: 'PFE', name: 'ファイザー', weight: 20, yield: 6.40,
@@ -62,22 +73,57 @@ var DIV_PLAN = {
   ],
 
   /* ---------- 除外・次点にした候補 ---------- */
-  /* VICIがPayPay証券で買えなかった場合は AMCR → UPS の順で差し替える */
+  /* 2026-08-12 追記：VICIはPayPay証券で買えないことが分かった（本人確認済み）。
+   * 米国REITは日本では「外国投資信託」扱いで金融庁への個別の届出が要るため、
+   * 銘柄を絞っている証券会社では扱いが無いことが多い。O や SPG に逃げても
+   * 同じ結果になる公算が高い。**REIT枠は諦めて別セクターで埋める**前提で候補を組み直した。
+   *
+   * withholding … 米国源泉税率(%)。省略時は costs.usWithholding(10%)。
+   *               BTIは英国籍のADRで米国源泉がかからないため 0。 */
   candidates: [
     {
-      ticker: 'AMCR', name: 'アムコア', yield: 6.13, sector: '包装', verdict: '次点',
-      payMonths: [3, 6, 9, 12], payout: 72, cfCover: 1.20,
-      note: '買い推奨・安定増配だがCPBと景気感応度が重なる。VICIが買えないときの第1代替。'
+      ticker: 'BTI', name: 'ブリティッシュ・アメリカン・タバコ', yield: 5.60, sector: 'タバコ（英ADR）', verdict: '本命',
+      payMonths: [2, 5, 8, 11], payout: 65, cfCover: 1.30, withholding: 0,
+      note: '英国籍ADRのため米国源泉税10%がかからない。NISAなら配当が完全非課税になり、' +
+        '手取りでは米国株の6.2%相当。利回りの穴をほぼ埋められる唯一の候補。' +
+        'ただしMOとタバコで重複するため、MO25%と合わせて45%になる点は要注意。'
     },
     {
-      ticker: 'UPS', name: 'ユナイテッド・パーセル・サービス', yield: 5.81, sector: '物流', verdict: '次点',
-      payMonths: [3, 6, 9, 12], payout: 80, cfCover: 1.05,
-      note: '16年連続増配だが物量減少局面で配当余力が論点。第2代替。'
+      ticker: 'OKE', name: 'ONEOK', yield: 4.80, sector: 'エネルギー（パイプライン）', verdict: '次点',
+      payMonths: [2, 5, 8, 11], payout: 76, cfCover: 1.25,
+      note: '天然ガスパイプライン7.8万マイル。配当性向76%で健全、セクターも完全に新規。' +
+        '利回りは目標から遠いが、運用ルールにいちばん忠実に埋められる候補。'
     },
     {
-      ticker: 'O', name: 'リアルティ・インカム', yield: 5.07, sector: '不動産（REIT）', verdict: '保留',
-      payMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], payout: 75, cfCover: 1.25, isReit: true,
-      note: '毎月分配は魅力だが利回りが目標から遠い。'
+      ticker: 'USB', name: 'USバンコープ', yield: 4.73, sector: '金融', verdict: '次点',
+      payMonths: [1, 4, 7, 10], payout: 42, cfCover: 1.60,
+      note: 'PayPay証券の配当利回りランキングに登場しており、取扱いが確認できている数少ない候補。' +
+        '配当性向42%と余裕は大きい。増配率2.1%と鈍く、利回りも低い。'
+    },
+    {
+      ticker: 'O', name: 'リアルティ・インカム', yield: 5.16, sector: '不動産（REIT）', verdict: '保留',
+      payMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], payout: 73, cfCover: 1.35, isReit: true,
+      note: '115四半期連続増配・AFFO配当性向73%・毎月分配と財務は候補中で最優秀。' +
+        'ただしREITなのでPayPay証券にある可能性が低い（VICIと同じ理由）。買えたら有力。'
+    },
+    {
+      ticker: 'VICI', name: 'VICIプロパティーズ', yield: 6.73, sector: '不動産（REIT）', verdict: '除外',
+      payMonths: [1, 4, 7, 10], payout: 74, cfCover: 1.35, isReit: true,
+      note: '2026年8月、PayPay証券で取扱いが無いことを確認。買えないため除外。'
+    },
+    {
+      ticker: 'UPS', name: 'ユナイテッド・パーセル・サービス', yield: 6.28, sector: '物流', verdict: '除外',
+      payMonths: [3, 6, 9, 12], payout: 100, cfCover: 1.02,
+      note: '当初は第2代替だったが調べ直して除外。GAAP配当性向100%、FCF約55億ドルに対し配当支払い約54億ドルで' +
+        'ほぼ余裕がない。「2026年末までに1/2〜1/3へ減配」との観測もある。' +
+        '第9章の予兆（営業CFが配当を賄えない）にそのまま当てはまる。'
+    },
+    {
+      ticker: 'AMCR', name: 'アムコア', yield: 5.28, sector: '包装', verdict: '除外',
+      payMonths: [3, 6, 9, 12], payout: 175, cfCover: 0.95,
+      note: '当初は第1代替だったが調べ直して除外。2025年4月のBerry Global合併で負債が膨らみ、' +
+        'GAAP配当性向は175%。外部評価も「高レバレッジ・低財務健全性・持続不可能な配当性向」を指摘。' +
+        '利回りもNotion作成時の6.13%から低下している。CPBと景気感応度が重なる点も当初のまま。'
     },
     {
       ticker: '2253', name: 'グローバルX スーパーディビィデンド-US ETF', yield: 5.41, sector: 'ETF（東証）', verdict: '除外',
@@ -104,6 +150,7 @@ var DIV_PLAN = {
   /* ---------- 運用ルール ---------- */
   rules: [
     '1銘柄の上限は30%。利回り7%超の銘柄は合計10%まで。',
+    '同じセクターの合計は40%まで。MO＋BTIのタバコが35%あるので、片方を増やすならもう片方を減らす。',
     '四半期ごとに「営業CF ÷ 配当支払額」を確認。1.0割れは減配の予兆。',
     'REITはEPSではなくAFFOで配当性向を見る。VICIは74%で健全だが100%に近づいたら警戒。',
     '配当は受け取ったら再投資。毎月入金があるので月1回まとめて買い増す。',
@@ -114,6 +161,7 @@ var DIV_PLAN = {
   /* 自動判定に使うしきい値（運用ルールを数字にしたもの） */
   thresholds: {
     maxWeightPerStock: 30,     // 1銘柄の上限（%）
+    maxWeightPerSector: 40,    // 同じセクターの合計上限（%）
     highYieldLine: 7.0,        // 「高利回り」とみなす線（%）
     highYieldBudget: 10,       // 高利回り銘柄の合計上限（%）
     payoutWarn: 80,            // 配当性向の警戒線（%）
@@ -193,11 +241,27 @@ var DIV_PLAN = {
     },
     {
       id: 'vici',
-      status: 'todo',
-      title: 'VICIの取扱いがあるか（アプリの銘柄検索で要確認）',
-      body: 'PayPay証券の米国株は2024年12月時点で681銘柄、S&P500の売買代金・時価総額ベースで約8割をカバーする。他4銘柄は取扱いが確認できたが、VICIだけは公開情報で確認できなかった。',
-      action: 'アプリの銘柄一覧で「VICI」を検索する。無ければ AMCR（6.13%）、次いで UPS（5.81%）へ差し替える。設定タブの「候補と差し替える」から入れ替えられる。',
+      status: 'warn',
+      title: 'VICIは買えない。米国REITは全般に扱いが無いとみておく',
+      body: '2026年8月、PayPay証券でVICIの取扱いが無いことを確認した。米国REITは日本では「外国投資信託」の扱いになり、銘柄ごとに金融庁への届出が要る。銘柄を絞っている証券会社では扱いが無いことが多く、O（リアルティ・インカム）やSPGに替えても同じ結果になる公算が高い。VICIはS&P500構成銘柄でもあるので、「S&P500に入っている＝買える」も成り立たない。',
+      action: 'REIT枠は諦め、20%を BTI 10% ＋ OKE 10% に振り替えた。REITをどうしても入れたい場合は、先にアプリの銘柄一覧でOを検索して存在を確かめること。',
       url: 'https://www.paypay-sec.co.jp/us-stock/list/'
+    },
+    {
+      id: 'bti-oke',
+      status: 'todo',
+      title: '差し替えた BTI・OKE の取扱いを確認する',
+      body: 'VICIの穴を埋めた2銘柄は、どちらも取扱いを確認できていない。BTIは英国籍のADRで、PayPay証券はS&P500中心の品揃えのためADRを扱うかが不明。OKEはS&P500構成銘柄だが、VICIも同じくS&P500で取扱いが無かったため根拠にならない。',
+      action: 'アプリの銘柄一覧で「BTI」「OKE」を検索する。BTIが無い場合、税制の利点を持つ代わりが他に無いため、OKEを20%にするかUSB（取扱い確認済み・4.73%）で埋める。OKEが無い場合はUSBで埋める。',
+      url: 'https://www.paypay-sec.co.jp/us-stock/list/'
+    },
+    {
+      id: 'bti-tax',
+      status: 'ok',
+      title: 'BTIは米国源泉税がかからない（英国籍ADR）',
+      body: 'ブリティッシュ・アメリカン・タバコは英国籍のADRで、英国は配当に源泉税を課さないため米国株の10%が引かれない。NISA口座なら配当が完全に非課税になる。表面5.60%がそのまま手取り5.60%で、同じ手取りを米国株で得るには表面6.22%が必要。',
+      action: '初回の配当入金時に取引報告書で、実際に源泉徴収が0であることを確認する。違っていたら設定タブでBTIの利回りを実態に合わせる。',
+      url: ''
     },
     {
       id: 'reit-tax',
@@ -221,10 +285,12 @@ var DIV_PLAN = {
         evidence: 'PayPay証券の自社メディアの配当利回りランキング（当社取扱銘柄が対象）に繰り返し掲載。2026年6月 6.23%、2026年3月 6.27%' },
       { ticker: 'VZ', handled: 'likely', nisa: 'unknown',
         evidence: '同ランキングに繰り返し掲載。2026年7月 6.68%' },
-      { ticker: 'VICI', handled: 'unknown', nisa: 'unknown',
-        evidence: '公開情報では確認できず。米国株681銘柄・S&P500の約8割カバーには入る可能性が高いが確証なし' },
+      { ticker: 'BTI', handled: 'unknown', nisa: 'unknown',
+        evidence: '英国籍のADR。PayPay証券はS&P500中心の品揃えでADRの扱いは確認できていない。VICIの代替として入れた銘柄なので、まずここを確かめる' },
       { ticker: 'PFE', handled: 'likely', nisa: 'unknown',
         evidence: '同ランキングの上位常連。2026年7月 7.29%、2026年6月 6.71%' },
+      { ticker: 'OKE', handled: 'unknown', nisa: 'unknown',
+        evidence: 'S&P500構成銘柄だが公開情報では確認できず。VICIもS&P500で取扱いが無かったため、S&P500入りは根拠にならない' },
       { ticker: 'CPB', handled: 'likely', nisa: 'unknown',
         evidence: '同ランキングに掲載。予想配当利回り7.10%で計画の数値と一致' }
     ]

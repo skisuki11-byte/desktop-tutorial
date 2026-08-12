@@ -10,7 +10,9 @@
 
   var KEY_SET = 'div.settings.v1';
   var KEY_POS = 'div.positions.v1';
-  var KEY_PLAN = 'div.plan.v1';
+  /* v2 … VICIが買えないと分かった時点で銘柄構成を組み替えたので、
+     端末に残っている古い計画（VICIが入ったもの）を引き継がないように鍵を変えてある。 */
+  var KEY_PLAN = 'div.plan.v2';
   var KEY_LOG = 'div.log.v1';
   var KEY_CHK = 'div.checks.v1';
 
@@ -49,6 +51,7 @@
     checks = readJSON(KEY_CHK, {});
     plan = readJSON(KEY_PLAN, null);
     if (!plan || !plan.length) plan = P.holdings.map(function (h) { return Object.assign({}, h); });
+    try { localStorage.removeItem('div.plan.v1'); } catch (e) { /* 消せなくても困らない */ }
   }
 
   function save(key, val) {
@@ -86,9 +89,14 @@
   /* ---------- 税金 ---------- */
 
   /* 手取り率。NISAでも米国源泉10%は必ず引かれる（租税条約の税率で、これは避けられない）。
-     特定口座はさらに国内20.315%。REITだけ税率を変えられるようにしてある。 */
+     特定口座はさらに国内20.315%。
+     ・銘柄が withholding を持つときはそれを使う（英ADRのBTIなど、米国源泉がかからないもの）
+     ・REITは設定で税率を変えられる（30%だった場合用） */
   function netRate(h) {
-    var us = (h && h.isReit) ? Number(settings.reitWithholding) : P.costs.usWithholding;
+    var us;
+    if (h && h.withholding !== undefined && h.withholding !== null) us = Number(h.withholding);
+    else if (h && h.isReit) us = Number(settings.reitWithholding);
+    else us = P.costs.usWithholding;
     var r = 1 - (us / 100);
     if (settings.account !== 'nisa') r *= (1 - P.costs.jpTax / 100);
     return r;
@@ -343,6 +351,25 @@
       var cap = h.maxWeight || th.maxWeightPerStock;
       if (h.weight > cap) {
         out.push({ level: 'bad', ticker: h.ticker, text: h.ticker + ' の配分 ' + h.weight + '% が上限 ' + cap + '% を超えている。' });
+      }
+    });
+
+    // 同じセクターの合計。「タバコ」と「タバコ（英ADR）」は同じ括りとして見る
+    var bySector = {};
+    plan.forEach(function (h) {
+      var key = String(h.sector || '').replace(/[（(].*$/, '');
+      bySector[key] = (bySector[key] || 0) + Number(h.weight || 0);
+    });
+    Object.keys(bySector).forEach(function (k) {
+      if (bySector[k] > th.maxWeightPerSector) {
+        var members = plan.filter(function (h) {
+          return String(h.sector || '').replace(/[（(].*$/, '') === k;
+        }).map(function (h) { return h.ticker; });
+        out.push({
+          level: 'bad',
+          text: k + 'の合計が ' + bySector[k] + '%（' + members.join('・') + '）。上限は ' +
+            th.maxWeightPerSector + '%。同じ理由で同時に傷むので、どれかを減らす。'
+        });
       }
     });
 

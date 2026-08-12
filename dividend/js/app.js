@@ -585,7 +585,7 @@
         ticker: cand.ticker, name: cand.name, weight: plan2[idx].weight, yield: cand.yield,
         sector: cand.sector, payMonths: cand.payMonths, maxWeight: null,
         payout: cand.payout, cfCover: cand.cfCover, isReit: !!cand.isReit,
-        why: cand.note, risk: ''
+        withholding: cand.withholding, why: cand.note, risk: ''
       };
       S.setPlan(plan2);
       render();

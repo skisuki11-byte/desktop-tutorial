@@ -7,12 +7,12 @@
   --up:#0f7a52; --down:#bb3b2b; --warn:#8a6100; --warn-bg:#fdf3dc; --warn-line:#e6cf9a;
   --bad-bg:#fdecea; --bad-line:#f0bcb4;
   --ok-bg:#e8f5ee; --ok-line:#a9d8c1;
-  --s1:#1f7a5f;  /* MO */
-  --s2:#2f6fb5;  /* VZ */
-  --s3:#b7791f;  /* VICI */
-  --s4:#7b5ea7;  /* PFE */
-  --s5:#c2643c;  /* CPB */
-  --s6:#0f766e;
+  --s1:#1f7a5f;  /* 1番目 MO   緑 */
+  --s2:#2f6fb5;  /* 2番目 VZ   青 */
+  --s3:#b7791f;  /* 3番目 BTI  琥珀 */
+  --s4:#7b5ea7;  /* 4番目 OKE  紫 */
+  --s5:#b03a5b;  /* 5番目 PFE  臙脂 */
+  --s6:#c2643c;  /* 6番目 CPB  橙 */
   --shadow:0 1px 2px rgba(16,24,40,.06),0 6px 18px rgba(16,24,40,.07);
   --r:14px;
   --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
@@ -25,7 +25,7 @@
     --up:#4fd39a; --down:#f28b80; --warn:#e0b355; --warn-bg:#2b2412; --warn-line:#5a4a1e;
     --bad-bg:#2e1714; --bad-line:#5e2a23;
     --ok-bg:#12291f; --ok-line:#2a5a44;
-    --s1:#4fd39a; --s2:#61a0e8; --s3:#e0b355; --s4:#b49ae0; --s5:#f0906a; --s6:#2dd4bf;
+    --s1:#4fd39a; --s2:#61a0e8; --s3:#e0b355; --s4:#b49ae0; --s5:#f08ab0; --s6:#eb9a5f;
     --shadow:0 1px 2px rgba(0,0,0,.45),0 8px 26px rgba(0,0,0,.4);
   }
 }
@@ -35,7 +35,7 @@
   --up:#4fd39a; --down:#f28b80; --warn:#e0b355; --warn-bg:#2b2412; --warn-line:#5a4a1e;
   --bad-bg:#2e1714; --bad-line:#5e2a23;
   --ok-bg:#12291f; --ok-line:#2a5a44;
-  --s1:#4fd39a; --s2:#61a0e8; --s3:#e0b355; --s4:#b49ae0; --s5:#f0906a; --s6:#2dd4bf;
+  --s1:#4fd39a; --s2:#61a0e8; --s3:#e0b355; --s4:#b49ae0; --s5:#f08ab0; --s6:#eb9a5f;
   --shadow:0 1px 2px rgba(0,0,0,.45),0 8px 26px rgba(0,0,0,.4);
 }
 :root[data-theme="light"]{
@@ -44,7 +44,7 @@
   --up:#0f7a52; --down:#bb3b2b; --warn:#8a6100; --warn-bg:#fdf3dc; --warn-line:#e6cf9a;
   --bad-bg:#fdecea; --bad-line:#f0bcb4;
   --ok-bg:#e8f5ee; --ok-line:#a9d8c1;
-  --s1:#1f7a5f; --s2:#2f6fb5; --s3:#b7791f; --s4:#7b5ea7; --s5:#c2643c; --s6:#0f766e;
+  --s1:#1f7a5f; --s2:#2f6fb5; --s3:#b7791f; --s4:#7b5ea7; --s5:#b03a5b; --s6:#c2643c;
   --shadow:0 1px 2px rgba(16,24,40,.06),0 6px 18px rgba(16,24,40,.07);
 }
 
