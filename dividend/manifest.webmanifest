@@ -1,0 +1,17 @@
+{
+  "name": "高配当ポートフォリオ（PayPay証券つみたて）",
+  "short_name": "高配当",
+  "description": "米国高配当5銘柄の積立を、配分・入金カレンダー・将来試算とあわせて管理するアプリ",
+  "lang": "ja",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f6f4",
+  "theme_color": "#123b32",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

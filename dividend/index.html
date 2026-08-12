@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123b32">
+<title>高配当ポートフォリオ｜PayPay証券つみたて</title>
+<!-- ホーム画面に追加して、アプリのように全画面で使えるようにする -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="高配当">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23123b32'/%3E%3Ctext x='16' y='24' font-size='19' text-anchor='middle' fill='%237fd4b0' font-family='sans-serif'%3E%C2%A5%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">¥</span>
+      <div>
+        <div class="brand-title">高配当ポートフォリオ</div>
+        <div class="brand-sub">PayPay証券・毎月つみたて</div>
+      </div>
+    </div>
+    <button class="icon-btn" id="btnTheme" type="button" title="明るさを切り替える" aria-label="明るさを切り替える">◐</button>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button class="tab" data-view="home">ホーム</button>
+    <button class="tab" data-view="holdings">保有</button>
+    <button class="tab" data-view="buy">今月の積立</button>
+    <button class="tab" data-view="calendar">入金カレンダー</button>
+    <button class="tab" data-view="sim">試算</button>
+    <button class="tab" data-view="check">確認事項</button>
+    <button class="tab" data-view="settings">設定</button>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ============ ホーム ============ -->
+  <section class="view" id="view-home">
+    <div class="cards" id="homeCards"></div>
+
+    <div class="panel" id="homeAlertPanel">
+      <div class="panel-head">
+        <h2>気をつけること</h2>
+        <span class="hint">運用ルールと突き合わせて自動で出しています</span>
+      </div>
+      <div id="homeAlerts"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>配分</h2>
+        <span class="hint" id="homeAllocHint"></span>
+      </div>
+      <div class="alloc">
+        <div class="alloc-chart" id="homeDonut"></div>
+        <ul class="legend" id="homeLegend"></ul>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>銘柄ごと</h2></div>
+      <div class="table-wrap">
+        <table id="homeTable"></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 保有 ============ -->
+  <section class="view" id="view-holdings">
+    <p class="lead">
+      PayPay証券アプリの評価額を見て、そのまま入れてください。取得額は積立を記録すると自動で増えます。
+      入力はこの端末の中だけに残ります。
+    </p>
+    <div id="holdingsList"></div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>採用した理由と論点</h2></div>
+      <div id="holdingsWhy"></div>
+    </div>
+  </section>
+
+  <!-- ============ 今月の積立 ============ -->
+  <section class="view" id="view-buy">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>今月いくらずつ買うか</h2>
+        <span class="hint">売らずに買い増しだけで目標配分へ寄せます</span>
+      </div>
+      <label class="field" style="max-width:260px">
+        <span>今月の買付額（円）</span>
+        <input type="number" id="buyBudget" step="1000" min="0" inputmode="numeric">
+      </label>
+      <div class="table-wrap">
+        <table id="buyTable"></table>
+      </div>
+      <div class="note" id="buyNote"></div>
+      <div class="actions mt">
+        <button class="btn btn-primary btn-lg" id="btnRecord" type="button">この内容で買ったと記録する</button>
+        <button class="btn" id="btnCopy" type="button">金額をコピー</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>買付にかかるコスト</h2>
+        <span class="hint">設定の「買い方」で変わります</span>
+      </div>
+      <div id="buyCost"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>買付の記録</h2>
+        <span class="hint" id="logHint"></span>
+      </div>
+      <div id="buyLog"></div>
+    </div>
+  </section>
+
+  <!-- ============ 入金カレンダー ============ -->
+  <section class="view" id="view-calendar">
+    <p class="lead">
+      四半期サイクルが3本に分かれているので、12か月すべてに入金が立ちます。
+      金額はいまの保有額と利回りからの概算（手取り）です。
+    </p>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>月別の入金予定</h2>
+        <span class="hint" id="calHint"></span>
+      </div>
+      <div class="chart-wrap" id="calChart"></div>
+      <ul class="legend mt" id="calLegend"></ul>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>一覧</h2></div>
+      <div class="table-wrap">
+        <table id="calTable"></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 試算 ============ -->
+  <section class="view" id="view-sim">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>積立を続けたら</h2>
+        <span class="hint" id="simHint"></span>
+      </div>
+      <div class="chart-wrap" id="simChart"></div>
+      <div class="table-wrap mt">
+        <table id="simTable"></table>
+      </div>
+      <p class="hint mt" id="simFoot"></p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>株価のシナリオ別</h2>
+      </div>
+      <div class="table-wrap">
+        <table id="scenTable"></table>
+      </div>
+      <div class="note mt">
+        積立と再投資を続けている間は、株価が上がらないほうが配当は増えます。安く買い増せるぶん、
+        同じ金額でより多くの配当を買えるためです。
+        ただし配当を使い始めた瞬間にこの関係は反転し、株価下落は純粋な痛手になります。
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>減配が起きたら</h2>
+        <span class="hint">危ない枠を小さくしてあることの確認</span>
+      </div>
+      <div id="cutInputs" class="grid2"></div>
+      <div class="table-wrap mt">
+        <table id="cutTable"></table>
+      </div>
+      <div class="note mt" id="cutNote"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>買い方でどれだけ変わるか</h2>
+        <span class="hint">つみたて0.7% と 立会時間内の手動0.5% の差</span>
+      </div>
+      <div class="table-wrap">
+        <table id="costTable"></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 確認事項 ============ -->
+  <section class="view" id="view-check">
+    <p class="lead">
+      買い始める前にPayPay証券側で確かめること。公開情報で裏が取れたものは印をつけてあります。
+      <strong>「アプリで要確認」は自分の目で見ないと分からない項目</strong>なので、済んだらチェックしてください。
+    </p>
+    <div id="checkList"></div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>運用ルール</h2></div>
+      <ul class="rules" id="ruleList"></ul>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>減配事故のパターン</h2>
+        <span class="hint">どれも減配前は5〜8%の「魅力的な利回り」に見えていた</span>
+      </div>
+      <div class="table-wrap">
+        <table id="failTable"></table>
+      </div>
+      <div class="note mt" id="failSigns"></div>
+    </div>
+  </section>
+
+  <!-- ============ 設定 ============ -->
+  <section class="view" id="view-settings">
+    <div class="panel">
+      <div class="panel-head"><h2>積立と口座</h2></div>
+      <div class="grid2">
+        <label class="field">
+          <span>毎月の積立額（円）</span>
+          <input type="number" id="setMonthly" step="1000" min="0" inputmode="numeric">
+        </label>
+        <label class="field">
+          <span>口座</span>
+          <select id="setAccount">
+            <option value="nisa">NISA成長投資枠</option>
+            <option value="tokutei">特定口座</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>買い方</span>
+          <select id="setBuyMode">
+            <option value="auto">つみたて（スプレッド0.7%）</option>
+            <option value="manual">立会時間内に手動（0.5%）</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>想定為替（円/ドル）</span>
+          <input type="number" id="setUsdJpy" step="1" min="1" inputmode="numeric">
+        </label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>試算の前提</h2>
+        <span class="hint">数字を変えると試算タブに反映されます</span>
+      </div>
+      <div class="grid2">
+        <label class="field">
+          <span>増配率（年%）</span>
+          <input type="number" id="setDivGrowth" step="0.5" inputmode="decimal">
+        </label>
+        <label class="field">
+          <span>株価（年%）</span>
+          <input type="number" id="setPriceGrowth" step="0.5" inputmode="decimal">
+        </label>
+        <label class="field">
+          <span>試算する年数</span>
+          <input type="number" id="setYears" step="1" min="1" max="30" inputmode="numeric">
+        </label>
+        <label class="field">
+          <span>REITの米国源泉税率（%）</span>
+          <input type="number" id="setReitTax" step="5" min="0" max="40" inputmode="numeric">
+        </label>
+      </div>
+      <p class="hint">
+        REITの分配金は日米租税条約上の扱いが一般の配当と異なり、30%引かれる場合があります。
+        初回の入金時に取引報告書で実際の税率を確かめて、違っていたらここを直してください。
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>銘柄と配分</h2>
+        <span class="hint">合計100%になるように</span>
+      </div>
+      <div id="planEditor"></div>
+      <div class="note mt" id="planSum"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>候補と差し替える</h2>
+        <span class="hint">PayPay証券で取扱いが無かったときに使います</span>
+      </div>
+      <div class="grid2">
+        <label class="field">
+          <span>外す銘柄</span>
+          <select id="swapFrom"></select>
+        </label>
+        <label class="field">
+          <span>入れる候補</span>
+          <select id="swapTo"></select>
+        </label>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="btnSwap" type="button">配分をそのままにして差し替える</button>
+      </div>
+      <div id="candidateList" class="mt"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>データ</h2></div>
+      <p class="hint">
+        入力内容はこの端末のブラウザにだけ保存されます。機種変更の前に書き出しておいてください。
+      </p>
+      <div class="actions">
+        <button class="btn" id="btnExport" type="button">書き出す（JSON）</button>
+        <button class="btn" id="btnImport" type="button">取り込む</button>
+        <button class="btn btn-danger" id="btnReset" type="button">最初の状態に戻す</button>
+      </div>
+      <input type="file" id="fileImport" accept="application/json,.json" hidden>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>この計画について</h2></div>
+      <p class="hint" id="aboutText"></p>
+    </div>
+  </section>
+
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
