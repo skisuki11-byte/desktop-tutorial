@@ -168,18 +168,34 @@ var DIV_PLAN = {
       url: 'https://www.paypay-sec.co.jp/nisa/growth.html'
     },
     {
+      id: 'robo-nisa',
+      status: 'warn',
+      title: 'つみたてロボ貯蓄はNISA口座で取引できない（特定口座のみ）',
+      body: 'PayPay証券は「つみたてロボ貯蓄アプリでのお取引は特定口座（源泉徴収あり）のため、NISA口座でお取引いただくことはできません」と明記している。米国株の自動積立で真っ先に挙がるのがこのアプリだが、これを使うとNISAではなく特定口座になる。手取りは 5.75% → 4.58%、残高750万円なら年間で約9万円の差。',
+      action: 'つみたてロボ貯蓄は使わない。NISAで積み立てるならPayPay証券アプリ内の「つみたて投資」でNISAが選べるかを確認し、選べなければ月1回の手動発注に切り替える（立会時間内ならスプレッドも0.5%に下がる）。',
+      url: 'https://www.paypay-sec.co.jp/support/faq/faq_tsumikabu.html'
+    },
+    {
       id: 'nisa-autobuy',
       status: 'todo',
-      title: 'つみたて設定をNISA口座で組めるか（アプリで要確認）',
-      body: 'PayPay証券には「つみたてロボ貯蓄」（専用アプリ）と、PayPay証券アプリ内の「つみたて投資」の2系統がある。NISA口座を指定したつみたてが両方で組めるかは公開情報だけでは確定できなかった。ここが特定口座扱いになると、手取りは 5.75% → 4.58% に落ちる（年間で約18%減）。',
-      action: 'アプリのつみたて設定画面で口座区分にNISAが選べるか確認する。選べない場合は、つみたてを使わず月1回の手動発注に切り替える（立会時間内なら0.5%なのでコストも下がる）。',
-      url: 'https://www.paypay-sec.co.jp/service/reserve/'
+      title: 'PayPay証券アプリのつみたて投資でNISAを選べるか（アプリで要確認）',
+      body: 'PayPay証券アプリの「つみたて投資」は米国株に対応し、毎月（月3日まで）または毎週（週5日まで）で日を指定できる。ただしこのつみたてで口座区分にNISAを指定できるかは、公開情報だけでは確定できなかった。つみたてロボ貯蓄がNISA不可と明記されている以上、ここは自分の目で確かめる必要がある。',
+      action: 'PayPay証券アプリのつみたて設定画面で、口座区分にNISA成長投資枠が選べるか確認する。選べなければ月1回の手動発注に切り替える。',
+      url: 'https://www.paypay-sec.co.jp/tool/trade/reserve/'
+    },
+    {
+      id: 'nisa-per-stock',
+      status: 'todo',
+      title: 'NISAで買えるかは銘柄ごとに違う（一覧に「NISA対象」の絞り込みがある）',
+      body: 'PayPay証券の米国株取扱銘柄一覧には「NISA対象」での絞り込みがあり、銘柄ごとにNISAマークで可否が示されている。制度上は米国の個別株も成長投資枠の対象（整理・監理銘柄を除く）だが、PayPay証券では取扱いがあってもNISAでは買えない銘柄がありうる。つまり「取扱いがある＝NISAで買える」ではない。',
+      action: '取扱銘柄一覧を「NISA対象」で絞り込み、MO・VZ・VICI・PFE・CPB の5銘柄すべてにNISAマークが付いているか確認する。下の一覧に結果を書き込むつもりで1銘柄ずつ見ること。',
+      url: 'https://www.paypay-sec.co.jp/us-stock/list/'
     },
     {
       id: 'vici',
       status: 'todo',
       title: 'VICIの取扱いがあるか（アプリの銘柄検索で要確認）',
-      body: 'PayPay証券の米国株は2024年12月時点で681銘柄、S&P500の売買代金・時価総額ベースで約8割をカバーするが、VICIが含まれるかは公開の一覧では確認できなかった。',
+      body: 'PayPay証券の米国株は2024年12月時点で681銘柄、S&P500の売買代金・時価総額ベースで約8割をカバーする。他4銘柄は取扱いが確認できたが、VICIだけは公開情報で確認できなかった。',
       action: 'アプリの銘柄一覧で「VICI」を検索する。無ければ AMCR（6.13%）、次いで UPS（5.81%）へ差し替える。設定タブの「候補と差し替える」から入れ替えられる。',
       url: 'https://www.paypay-sec.co.jp/us-stock/list/'
     },
@@ -192,6 +208,27 @@ var DIV_PLAN = {
       url: 'https://www.paypay-sec.co.jp/us-stock/rule/'
     }
   ],
+
+  /* ---------- 銘柄ごとの取扱い状況（2026-08-12 調査） ---------- */
+  /* handled … PayPay証券で買えるか  nisa … NISA口座で買えるか
+   * 'likely' 公開情報で強く示唆される／'unknown' 確認できなかった／'yes' 自分で確認済み
+   * NISA可否は銘柄一覧の「NISA対象」絞り込みで銘柄ごとに決まるため、公開情報からは誰も断定できない。
+   * アプリで確かめたら、確認事項タブのチェックで自分の目で見た結果に更新する。 */
+  availability: {
+    asOf: '2026-08-12',
+    items: [
+      { ticker: 'MO', handled: 'likely', nisa: 'unknown',
+        evidence: 'PayPay証券の自社メディアの配当利回りランキング（当社取扱銘柄が対象）に繰り返し掲載。2026年6月 6.23%、2026年3月 6.27%' },
+      { ticker: 'VZ', handled: 'likely', nisa: 'unknown',
+        evidence: '同ランキングに繰り返し掲載。2026年7月 6.68%' },
+      { ticker: 'VICI', handled: 'unknown', nisa: 'unknown',
+        evidence: '公開情報では確認できず。米国株681銘柄・S&P500の約8割カバーには入る可能性が高いが確証なし' },
+      { ticker: 'PFE', handled: 'likely', nisa: 'unknown',
+        evidence: '同ランキングの上位常連。2026年7月 7.29%、2026年6月 6.71%' },
+      { ticker: 'CPB', handled: 'likely', nisa: 'unknown',
+        evidence: '同ランキングに掲載。予想配当利回り7.10%で計画の数値と一致' }
+    ]
+  },
 
   /* ---------- 減配事故のパターン（10章） ---------- */
   failures: [

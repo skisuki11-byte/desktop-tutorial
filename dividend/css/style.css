@@ -213,6 +213,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--brand-2);outline:none
 .chk{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.95rem;font-weight:700}
 .chk input{width:22px;height:22px}
 .conf-foot a{color:var(--brand-2)}
+.pill{font-family:var(--sans);font-size:.8rem;font-weight:700;border-radius:999px;
+  padding:3px 11px;white-space:nowrap;display:inline-block}
+.p-yes{background:var(--up);color:#fff}
+.p-likely{background:var(--ok-bg);color:var(--up);border:1px solid var(--ok-line)}
+.p-unknown{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
+#availTable td .chk{font-size:.85rem;font-weight:600}
+#availTable td.left{max-width:420px}
 .rules{margin:0;padding-left:1.3em}
 .rules li{margin-bottom:8px;font-size:.98rem}
 

@@ -356,6 +356,31 @@
       '</div>';
     }).join('');
 
+    // 銘柄ごとの取扱い状況。自分で確かめたらチェックを付けて潰していく
+    var av = P.availability;
+    var mark = {
+      likely: '<span class="pill p-likely">ほぼ確実</span>',
+      unknown: '<span class="pill p-unknown">未確認</span>',
+      yes: '<span class="pill p-yes">確認済み</span>'
+    };
+    $('availTable').innerHTML =
+      '<thead><tr><th>銘柄</th><th>PayPay証券で買えるか</th><th>NISAで買えるか</th><th>根拠</th></tr></thead><tbody>' +
+      av.items.map(function (a) {
+        var h = S.getPlan().filter(function (x) { return x.ticker === a.ticker; })[0];
+        var done = !!chk['avail-' + a.ticker];
+        return '<tr><td><span class="sw" style="background:' + colorOf(a.ticker) + '"></span>' +
+          esc(a.ticker) + (h ? '<span class="sub-name">' + esc(h.name) + '</span>' : '') + '</td>' +
+          '<td>' + (done ? mark.yes : mark[a.handled]) + '</td>' +
+          '<td>' + (done ? mark.yes : mark.unknown) + '</td>' +
+          '<td class="left"><span class="hint">' + esc(a.evidence) + '</span>' +
+          '<label class="chk mt"><input type="checkbox" data-conf="avail-' + esc(a.ticker) + '"' +
+          (done ? ' checked' : '') + '> アプリで両方とも確認した</label></td></tr>';
+      }).join('') + '</tbody>';
+    $('availNote').innerHTML = '調査日 ' + esc(av.asOf) +
+      '。<strong>NISAで買えるかは公開情報からは誰も断定できません。</strong>' +
+      '取扱銘柄一覧に「NISA対象」の絞り込みがある＝銘柄ごとに可否が決まっているためです。' +
+      'アプリで1銘柄ずつ確かめて、確認できたらチェックを付けてください。';
+
     $('ruleList').innerHTML = P.rules.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('');
 
     $('failTable').innerHTML =
