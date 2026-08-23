@@ -15,6 +15,7 @@ Notion「📈 FX自動売買システム｜設計メモ（2026年8月）」を�
 | [03-検証プロトコル](docs/03-検証プロトコル.md) | WFA・選択バイアス対策・採用ライン |
 | [04-運用設計と撤退基準](docs/04-運用設計と撤退基準.md) | 業者制約・リスク管理・キルスイッチ・撤退条件 |
 | [05-検証結果](docs/05-検証結果.md) | **設計を敵対的に叩いた記録。誤り2件と欠陥1件を修正済み** |
+| [06-Phase1実行記録](docs/06-Phase1実行記録.md) | **検証基盤の構築と検算。ランダムウォークで合格** |
 
 ## 結論（先に読むところ）
 
@@ -140,6 +141,22 @@ OOS3年でシャープ1.5と測っても、95%信頼区間は [-0.15, 3.15] で�
 ```
 python fx/tools/risk_math.py           # 設計書の数値を再現（約60秒）
 python fx/tools/verify_assumptions.py  # 設計を敵対的に叩く（約80秒）
+python fx/tools/sanity_check.py        # 検証基盤が壊れていないか（約20秒）
+```
+
+## Phase 1 の使い方
+
+```bash
+pip install -r fx/requirements.txt
+
+# 1. 検証基盤が信用できるか確かめる（実データ不要）
+python fx/tools/sanity_check.py
+
+# 2. 実データを用意する（HistDataからローカルでDL → docs/06 §5）
+python fx/tools/import_histdata.py --src fx/data/raw --out fx/data/USD_JPY_M5.parquet
+
+# 3. 戦略を検証する
+python fx/fx1.py fx/data/USD_JPY_M5.parquet --strategy nakane --trials 1
 ```
 
 必要なのは `numpy` のみ。設計書の表を書き換えたくなったら、
