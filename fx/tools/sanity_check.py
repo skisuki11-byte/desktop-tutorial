@@ -12,6 +12,8 @@ docs/03 §7 のランダムウォーク検算を、毎回手で確認する代�
      -> ずれていたら損益計算そのものが誤り
   3. わざと shift を外すと勝つ
      -> 勝たないなら、このテスト自体に検出力がない(★1が無意味になる)
+  4. ウォークフォワードの合成曲線も、エッジゼロなら負ける
+     -> 勝ったら窓の切り方かエンバーゴが間違っている
 
 3番目が重要。「負けたからOK」だけだと、実は何もしていないコードでも通ってしまう。
 バグを入れたときに «ちゃんと壊れる» ことまで確認して、はじめてテストになる。
@@ -102,6 +104,33 @@ def main() -> int:
         print(f"{name:>10} {s['total_return']:>+10.2%} {'':>8} {'':>7} {'':>8} "
               f"{s['sharpe']:>8.2f} {'○ 検出可' if detected else '× 検出力なし':>8}")
     print("  ※ 価格を見ない戦略(仲値など)は shift のバグが原理的に起きないため対象外。")
+
+    # --- WF自体の検算: エッジゼロなら合成曲線も勝ってはいけない ----------------
+    print("\nウォークフォワードの検算（エッジゼロなら合成も負けるはず）")
+    print("-" * len(header))
+    from walkforward import PARAM_GRIDS
+    from walkforward import run as wf_run
+    for name in sorted(PARAM_GRIDS):
+        composite, records, grid_size = wf_run(df, name, 24, 6, 6, 5)
+        s = stats(composite)
+        ok = s["total_return"] < 0
+        if not ok:
+            failures.append(
+                f"{name}: WF合成がエッジゼロのデータで勝っている "
+                f"({s['total_return']:+.2%})。窓の切り方かエンバーゴを確認すること")
+
+        is_mean = np.mean([r["is_sharpe"] for r in records])
+        oos_mean = np.mean([r["oos_sharpe"] for r in records])
+        print(f"{name:>10} {s['total_return']:>+10.2%} {'':>8} {'':>7} "
+              f"{-s['cost_drag']:>+8.2%} {s['sharpe']:>8.2f} "
+              f"{'○' if ok else '× 失敗':>8}")
+        print(f"{'':>10}   学習窓の平均シャープ {is_mean:+.2f} / "
+              f"検証窓 {oos_mean:+.2f}  （グリッド{grid_size}点）")
+
+    if any(len(g) for g in PARAM_GRIDS.values()):
+        print("\n  ※ 学習窓のシャープが正でも意味はない。エッジゼロのデータで")
+        print("    グリッドから最良を選べば、その分だけ必ず正に出る（選択バイアス）。")
+        print("    判定に使ってよいのは検証窓の側だけ。")
 
     print()
     if failures:

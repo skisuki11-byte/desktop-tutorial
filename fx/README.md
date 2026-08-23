@@ -157,6 +157,9 @@ python fx/tools/import_histdata.py --src fx/data/raw --out fx/data/USD_JPY_M5.pa
 
 # 3. 戦略を検証する
 python fx/fx1.py fx/data/USD_JPY_M5.parquet --strategy nakane --trials 1
+
+# 4. ウォークフォワードで判定する（学習24ヶ月/検証6ヶ月/エンバーゴ5営業日）
+python fx/walkforward.py fx/data/USD_JPY_M5.parquet --strategy breakout
 ```
 
 必要なのは `numpy` のみ。設計書の表を書き換えたくなったら、
