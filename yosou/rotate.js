@@ -6,8 +6,11 @@ function rotate(exam) {
   let pi = 0;
   for (const dai of exam) {
     for (const q of dai.qs) {
-      // ア〜エを選ぶ略年表と、並べ方6通りを決まった順に並べる年代整序は動かさない
-      if (/略年表/.test(q.fmt || "") || q.nopt === 6) continue;
+      // 選択肢の並びに意味がある形式は動かさない。
+      //  ・略年表（ア〜エ）／年代整序（6通りを決まった順に）
+      //  ・正誤の組合せ（実物は必ず a正b正／a正b誤／a誤b正／a誤b誤 の順）
+      //  ・空欄補充（実物は Ａの2値 × Ｂの2値 を規則的に並べる）
+      if (/略年表|正誤の組合せ|空欄補充/.test(q.fmt || "") || q.nopt === 6) continue;
       const target = PATTERN[pi++ % PATTERN.length];
       const k = (target - q.a + 4) % 4;
       if (!k) continue;
