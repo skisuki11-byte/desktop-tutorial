@@ -1,12 +1,13 @@
 /* 正解の偏りをならす回転処理。build.js と verify.js が同じものを使う（ずれ防止）。 */
-const CIRCLE = "①②③④";
+const CIRCLE = "①②③④⑤⑥";
 const PATTERN = [1, 3, 2, 4, 2, 1, 4, 3];
 
 function rotate(exam) {
   let pi = 0;
   for (const dai of exam) {
     for (const q of dai.qs) {
-      if (q.fmt === "略年表") continue; // ア〜エは並びに意味があるので動かさない
+      // ア〜エを選ぶ略年表と、並べ方6通りを決まった順に並べる年代整序は動かさない
+      if (/略年表/.test(q.fmt || "") || q.nopt === 6) continue;
       const target = PATTERN[pi++ % PATTERN.length];
       const k = (target - q.a + 4) % 4;
       if (!k) continue;

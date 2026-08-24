@@ -22,7 +22,7 @@ const opts = (q) => q.c.map((t, i) =>
 
 const question = (q) => `
 <article class="q" id="q${q.n}">
-  <div class="q__head"><span class="q__n">問${q.n}</span>${q.fmt ? `<span class="q__tag">${q.fmt}</span>` : ""}</div>
+  <div class="q__head"><span class="q__n">問${q.n}</span>${q.ref ? `<span class="q__ref">${q.ref}</span>` : ""}${q.fmt ? `<span class="q__tag">${q.fmt}</span>` : ""}</div>
   <p class="q__body">${esc(q.q)}</p>
   ${q.figKey ? `<figure class="fig">${fig[q.figKey]}</figure>` : ""}
   <ol class="opts">${opts(q)}</ol>
@@ -40,9 +40,10 @@ const section = (d) => `
 </section>`;
 
 /* 解答用紙 */
-const sheetRow = (n) => `<tr><th>${n}</th>${[0, 1, 2, 3].map((i) =>
-  `<td><span class="bub">${CIRCLE[i]}</span></td>`).join("")}</tr>`;
-const sheetTable = (from, to) => `<table class="sheet"><thead><tr><th>問</th><th>①</th><th>②</th><th>③</th><th>④</th></tr></thead><tbody>${
+const nopt = (n) => (all[n - 1] && all[n - 1].nopt) || 4;
+const sheetRow = (n) => `<tr><th>${n}</th>${[0, 1, 2, 3, 4, 5].map((i) =>
+  `<td>${i < nopt(n) ? `<span class="bub">${CIRCLE[i]}</span>` : ""}</td>`).join("")}</tr>`;
+const sheetTable = (from, to) => `<table class="sheet"><thead><tr><th>問</th><th>①</th><th>②</th><th>③</th><th>④</th><th>⑤</th><th>⑥</th></tr></thead><tbody>${
   Array.from({ length: to - from + 1 }, (_, i) => sheetRow(from + i)).join("")}</tbody></table>`;
 
 /* 正解一覧 */
@@ -61,7 +62,7 @@ const answer = (q) => `
 </div>`;
 
 /* 予想根拠の表は verify.js が数えた bunya.json から組み立てる。手で数えた値は使わない。 */
-const YEARS = ["令和5", "令和6", "令和7"];
+const YEARS = ["令和3", "令和4", "令和5", "令和6", "令和7"];
 const JUDGE = {
   "古代ギリシア・ローマ": "3年連続の第1問。令和7で8問と突出し、今年も最大の山と見る。",
   "中世西欧・ゲルマン": "毎年3〜4問。第1問の末尾と第6問に分けて配置した。",
@@ -77,7 +78,7 @@ const JUDGE = {
   "近現代・テーマ史（選択）": "選択の第6問がこれにあたる。全時代を横断する形なので通史がそのまま効く。"
 };
 const bunyaTable = `<table class="basis__t">
-    <caption>実物の設問を分野別に数え直したもの（令和5は印刷された57問すべて、令和6・7は50問）。
+    <caption>実物の設問を分野別に数え直したもの（令和3〜5は印刷された57問すべて、令和6・7は50問）。
     集計は <code>verify.js</code> が過去問インデックスから機械的に行っている。<br>複数の分野にまたがる設問は、主題のほうに入れて数えた。</caption>
     <thead><tr><th>分野</th>${YEARS.map((y) => `<th>${y}</th>`).join("")}<th>${SET.name}</th><th>判断</th></tr></thead>
     <tbody>${bunya.cats.map((c) => `<tr><th>${c}</th>${
@@ -89,24 +90,19 @@ const bunyaTable = `<table class="basis__t">
     </tbody>
   </table>`;
 
-const FMT = ["年代整序", "略年表", "史料", "図表", "その他"];
-const FMTLABEL = {
-  "年代整序": "年代整序", "略年表": "略年表（どの時期か）", "史料": "史料",
-  "図表": "地図・写真・系図・図表", "その他": "その他（語句・内容正誤・組合せ）"
-};
 const fmtTable = `<table class="basis__t">
-    <caption>形式も過去問インデックスから機械的に数えた。
-    年代整序だけは実物より多めにしてある——前後関係の穴が一度に見つかり、練習として効率がよいため。<br>資料つきの年代整序は「図表」に数えている。</caption>
-    <thead><tr><th>形式</th>${YEARS.map((y) => `<th>${y}</th>`).join("")}<th>${SET.name}</th></tr></thead>
-    <tbody>${FMT.map((k) => `<tr><th>${FMTLABEL[k]}</th>${
-      YEARS.map((y) => `<td>${bunya.bunya[y]["_形式"][k]}</td>`).join("")
+    <caption>設問形式は令和3・4年度の実物114問を1問ずつ数えたもの。令和5〜7は形式の記録がないため載せていない。<br>
+    複数にまたがる設問は、史料→略年表→年代整序→空欄補充→正誤の組合せ→図版→組合せ→語句の順で先に当たったものに数えた。</caption>
+    <thead><tr><th>形式</th><th>令和3</th><th>令和4</th><th>${SET.name}</th></tr></thead>
+    <tbody>${bunya.FMTS.map((k) => `<tr><th>${k}</th>${
+      bunya.pastFmt.map((p) => `<td>${p.c[k]}</td>`).join("")
     }<td>${bunya.myFmtAll[SET.id - 1][k]}</td></tr>`).join("")}
-    <tr class="cover__plan-total"><th>計</th>${
-      YEARS.map((y) => `<td>${bunya.bunya[y]["_計"]}</td>`).join("")
-    }<td>50</td></tr></tbody>
+    <tr><th>うち6択の設問</th>${bunya.pastFmt.map((p) => `<td>${p.c._6択}</td>`).join("")}<td>${bunya.myFmtAll[SET.id - 1]._6択}</td></tr>
+    <tr class="cover__plan-total"><th>計</th>${bunya.pastFmt.map((p) => `<td>${p.c._計}</td>`).join("")}<td>50</td></tr>
+    </tbody>
   </table>`;
 
-const dist = [0, 0, 0, 0];
+const dist = [0, 0, 0, 0, 0, 0];
 all.forEach((q) => dist[q.a - 1]++);
 
 const body = `
@@ -127,7 +123,7 @@ const body = `
 
   <div class="cover__box cover__box--plain">
     <h2>この予想問題について</h2>
-    <p>令和5・6・7年度の実物157問（歴史総合の10問を除く）を1問ずつ分析し、<b>大問構成・出題分野・設問形式・難易度の実測値</b>にそろえて作成しました。正解の分布（①${dist[0]}／②${dist[1]}／③${dist[2]}／④${dist[3]}）も実物に近づけてあります。</p>
+    <p>令和5・6・7年度の実物157問（歴史総合の10問を除く）を1問ずつ分析し、<b>大問構成・出題分野・設問形式・難易度の実測値</b>にそろえて作成しました。正解の分布（①${dist[0]}／②${dist[1]}／③${dist[2]}／④${dist[3]}）も実物に近づけてあります。3項目の年代整序など${all.filter((q) => q.nopt === 6).length}問は、実物と同じく<b>6択</b>にしてあります。</p>
       <p>各設問の解説には「なぜこの問題を予想したか」を明記しています。<b>的中を保証するものではありません</b>が、過去3年で1度でも出た分野・形式に絞ってあるため、当日の設問と重なる部分は大きいはずです。</p>
       <p><b>${SET.name}のねらい</b>——${SET.note}</p>
       <p>予想問題は第1回・第2回・第3回の3つで一組です。当日どの方向に振れても対応できるよう、
@@ -208,5 +204,5 @@ ${body}
 `;
 
 fs.writeFileSync(path.join(__dirname, SET.out), out);
-console.log(SET.name + " 問数:", all.length, "／正解分布 ①②③④ =", dist.join(" "));
+console.log(SET.name + " 問数:", all.length, "／正解分布 =", dist.slice(0, 4).join(" "), "／6択", all.filter((q) => q.nopt === 6).length, "問");
 console.log("  " + SET.out, Math.round(Buffer.byteLength(out) / 1024) + "KB");

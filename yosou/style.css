@@ -102,6 +102,13 @@ b{font-weight:700;}
   margin:0 0 18px;padding:9px 13px;background:var(--tint);
   border-left:3px solid var(--rule-strong);font-size:10pt;
 }
+/* リード文の下線部と空欄。実物にならって、下線のうしろに小さく記号を置く */
+.dai__lead u{text-decoration:none;border-bottom:1px solid currentColor;}
+.dai__lead u sub{font-size:.7em;vertical-align:baseline;position:relative;top:.35em;margin-left:.1em;font-family:var(--sans);}
+.dai__lead .bk{
+  display:inline-block;border:1px solid var(--rule-strong);background:var(--paper);
+  padding:0 .55em;margin:0 .2em;font-family:var(--sans);font-size:.92em;line-height:1.5;
+}
 .dai__lead .note{
   display:block;font-family:var(--sans);font-size:8.5pt;color:var(--sub);margin-top:5px;
 }
@@ -111,6 +118,10 @@ b{font-weight:700;}
 .q__head{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;}
 .q__n{
   font-family:var(--sans);font-weight:700;font-size:10.5pt;letter-spacing:.05em;
+}
+.q__ref{
+  font-family:var(--sans);font-size:7.5pt;letter-spacing:.06em;
+  background:var(--tint);border:1px solid var(--rule);padding:0 5px;white-space:nowrap;
 }
 .q__tag{
   font-family:var(--sans);font-size:7.5pt;letter-spacing:.08em;color:var(--sub);
