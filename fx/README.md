@@ -160,7 +160,16 @@ python fx/fx1.py fx/data/USD_JPY_M5.parquet --strategy nakane --trials 1
 
 # 4. ウォークフォワードで判定する（学習24ヶ月/検証6ヶ月/エンバーゴ5営業日）
 python fx/walkforward.py fx/data/USD_JPY_M5.parquet --strategy breakout
+
+# 5. 採用ライン7項目をすべて判定し、レジストリに記録する
+python fx/evaluate.py fx/data/USD_JPY_M5.parquet --strategy breakout --record
+
+# 試した本数と現在の足切りラインを確認する
+python fx/registry.py
 ```
+
+Phase 1 のツールはすべて揃っています。残るは**実データの取得だけ**です
+（[docs/06 §5](docs/06-Phase1実行記録.md)）。
 
 必要なのは `numpy` のみ。設計書の表を書き換えたくなったら、
 スクリプトの定数（目標リターン・達成確率・原資産ボラ・税率）を変えて回し直すこと。

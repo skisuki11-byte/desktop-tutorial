@@ -14,6 +14,8 @@ docs/03 §7 のランダムウォーク検算を、毎回手で確認する代�
      -> 勝たないなら、このテスト自体に検出力がない(★1が無意味になる)
   4. ウォークフォワードの合成曲線も、エッジゼロなら負ける
      -> 勝ったら窓の切り方かエンバーゴが間違っている
+  5. 逆に、本物のエッジを仕込んだデータでは採用ラインを «通せる»
+     -> 通せないなら «常に不合格を出すだけ» のテストで、価値がない
 
 3番目が重要。「負けたからOK」だけだと、実は何もしていないコードでも通ってしまう。
 バグを入れたときに «ちゃんと壊れる» ことまで確認して、はじめてテストになる。
@@ -33,6 +35,8 @@ from fx1 import PRICE_DEPENDENT, STRATEGIES, backtest, load, stats
 from make_synthetic import make
 
 DATA = Path(__file__).resolve().parent.parent / "data" / "SYNTH_M5.parquet"
+EDGE_DATA = Path(__file__).resolve().parent.parent / "data" / "SYNTH_EDGE_M5.parquet"
+EDGE_TREND = 0.02        # 控えめだが確実に捕捉できる強さ（docs/06 §8）
 
 # エッジゼロでもグロスはゼロぴったりにはならない。乱数なので散らばる。
 # 累積グロスの標準偏差は σ×√(稼働率×年数) なので、許容幅もそれに比例させる。
@@ -43,12 +47,15 @@ LOOKAHEAD_MIN_SHARPE = 1.0  # バグを入れたらこれ以上のシャープ�
 
 
 def ensure_data() -> None:
-    if DATA.exists():
-        return
-    print(f"合成データがないので作成します -> {DATA}")
     DATA.parent.mkdir(parents=True, exist_ok=True)
-    make(years=10.0, start_price=110.0, annual_vol=0.09, seed=42, pip=0.01) \
-        .to_parquet(DATA, index=False)
+    if not DATA.exists():
+        print(f"合成データがないので作成します -> {DATA.name}")
+        make(years=10.0, start_price=110.0, annual_vol=0.09, seed=42,
+             pip=0.01).to_parquet(DATA, index=False)
+    if not EDGE_DATA.exists():
+        print(f"検出力テスト用データを作成します -> {EDGE_DATA.name}")
+        make(years=10.0, start_price=110.0, annual_vol=0.09, seed=7, pip=0.01,
+             trend=EDGE_TREND, regime_days=20).to_parquet(EDGE_DATA, index=False)
 
 
 def main() -> int:
@@ -132,6 +139,30 @@ def main() -> int:
         print("    グリッドから最良を選べば、その分だけ必ず正に出る（選択バイアス）。")
         print("    判定に使ってよいのは検証窓の側だけ。")
 
+    # --- 検出力の本丸: 本物のエッジを «通せる» か -----------------------------
+    # ここが通らないと、これまでの検算は «常に不合格を出すだけ» のテストになる。
+    print("\n本物のエッジを通せるか（レジーム型トレンドを仕込んだデータ）")
+    print("-" * len(header))
+    import registry
+    edge_df = load(str(EDGE_DATA))
+    for name in sorted(PARAM_GRIDS):
+        composite, _, grid_size = wf_run(edge_df, name, 24, 6, 6, 5)
+        s = stats(composite)
+        floor = registry.dsr_floor(grid_size, s["years"])
+        detected = s["sharpe_lower"] > floor and s["pf"] >= 1.2
+        if name in PRICE_DEPENDENT and not detected:
+            failures.append(
+                f"{name}: 本物のエッジを検出できない（下限 {s['sharpe_lower']:.2f} "
+                f"vs 足切り {floor:.2f}、PF {s['pf']:.2f}）。"
+                f"採用ラインが厳しすぎるか、判定に誤りがある")
+        mark = ("○ 通せる" if detected else
+                "× 通せない" if name in PRICE_DEPENDENT else "― 対象外")
+        print(f"{name:>10} {s['total_return']:>+10.2%} {'':>8} {'':>7} "
+              f"{-s['cost_drag']:>+8.2%} {s['sharpe']:>8.2f} {mark:>8}")
+        print(f"{'':>10}   下限 {s['sharpe_lower']:.2f} / 足切り {floor:.2f} / "
+              f"PF {s['pf']:.2f} / 取引 {s['trades']:,}")
+    print("  ※ 仲値は時刻だけで建玉を決めるため、トレンドがあっても捕捉できない（対象外）。")
+
     print()
     if failures:
         print("=" * 66)
@@ -144,8 +175,8 @@ def main() -> int:
     print("=" * 66)
     print("すべて合格。検証基盤は信頼してよい。")
     print("=" * 66)
-    print("\n※ このテストが保証するのは «損益計算が正しいこと» だけ。")
-    print("  戦略にエッジがあるかどうかは実データで別途検証すること。")
+    print("\n※ ここで保証されたのは «損益計算が正しく、信号と雑音を区別できること» まで。")
+    print("  実際の戦略にエッジがあるかどうかは、実データで別途検証すること。")
     return 0
 
 

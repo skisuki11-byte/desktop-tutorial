@@ -84,6 +84,19 @@ def backtest(df: pd.DataFrame, pos: pd.Series) -> pd.DataFrame:
     return pd.DataFrame({"pos": pos, "gross": gross, "cost": cost, "net": gross - cost})
 
 
+def trade_pnls(bt: pd.DataFrame) -> pd.Series:
+    """建玉が変わるたびに区切って、トレード単位の損益にまとめる。
+
+    PFはトレード単位で数えるのが標準。バー単位で数えると、常時建玉の戦略では
+    5分ごとの細かい勝ち負けが大量に相殺されてPFが1.0に張り付き、
+    本物のエッジでも «PF 1.12» のような値になって採用ラインで落ちてしまう。
+    """
+    pos = bt["pos"]
+    group = (pos != pos.shift()).cumsum()
+    g = bt.groupby(group)
+    return g["net"].sum()[g["pos"].first() != 0]
+
+
 def stats(bt: pd.DataFrame) -> dict:
     net = bt["net"]
     equity = (1 + net).cumprod()
@@ -96,9 +109,10 @@ def stats(bt: pd.DataFrame) -> dict:
     # docs/05 検証4: 点推定だけでは判断できない。標準誤差を必ず添える(Lo 2002)
     se = sqrt((1 + sharpe**2 / 2) / years) if years > 0 else float("inf")
 
-    wins = net[net > 0].sum()
-    losses = -net[net < 0].sum()
-    trades = int((bt["pos"].diff().abs() > 0).sum() / 2)
+    tp = trade_pnls(bt)                       # ★PFはトレード単位で数える
+    wins = tp[tp > 0].sum()
+    losses = -tp[tp < 0].sum()
+    trades = int(len(tp))
 
     return {
         "trades": trades,
