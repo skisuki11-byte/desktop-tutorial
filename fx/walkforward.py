@@ -30,9 +30,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "tools"))
 from fx1 import backtest, dsr_floor, load, stats
 
 # パラメータ探索の範囲。ここの点数がそのまま試行回数になる(docs/03 §3)
+# 窓は «日数» で持つ。本数で持つとM5とM15で別の戦略になってしまう（fx1.breakout参照）
 PARAM_GRIDS: dict[str, dict[str, list]] = {
-    "nakane": {},                                   # パラメータなし = 1通り
-    "breakout": {"n": [72, 144, 288, 576, 1152]},   # 6h/12h/1d/2d/4d 相当
+    "nakane": {},                                        # パラメータなし = 1通り
+    "breakout": {"days": [0.25, 0.5, 1.0, 2.0, 4.0]},    # 6時間〜4日
 }
 
 

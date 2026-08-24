@@ -46,8 +46,19 @@ def nakane(df: pd.DataFrame) -> pd.Series:
     )
 
 
-def breakout(df: pd.DataFrame, n: int = 288) -> pd.Series:
-    """n本高値/安値のブレイクアウト(ドンチャン)。"""
+def bars_per_day(df: pd.DataFrame) -> int:
+    """足の長さから1日あたりの本数を割り出す。
+
+    パラメータを «本数» で持つと、M5とM15でまったく別の戦略になってしまう。
+    実際 n=288 はM5なら1日だがM15なら3日。時間軸で持てばデータを差し替えても
+    同じ戦略でいられる。
+    """
+    return int(round(86400 / df.attrs.get("bar_seconds", 300)))
+
+
+def breakout(df: pd.DataFrame, days: float = 1.0) -> pd.Series:
+    """直近 days 日の高値/安値のブレイクアウト(ドンチャン)。"""
+    n = max(2, int(round(days * bars_per_day(df))))
     mid = df["mid"]
     high, low = mid.rolling(n).max(), mid.rolling(n).min()
     pos = pd.Series(np.nan, index=df.index)
@@ -209,6 +220,10 @@ def load(path: str) -> pd.DataFrame:
             "bid_c / ask_c が必要です。mid だけのデータはスプレッドが検証から消え、\n"
             "成績が過大評価されます。tools/import_histdata.py で bid/ask を合成してください。"
         )
+
+    # 足の長さを検出して持ち回る。戦略はこれを見て窓を «日数» から本数に直す。
+    step = df.index.to_series().diff().median()
+    df.attrs["bar_seconds"] = int(step.total_seconds())
     return df
 
 
