@@ -128,10 +128,10 @@ b{font-weight:700;}
   background:var(--tint);font-size:9.5pt;
 }
 
-.opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;}
-.opt{display:flex;gap:6px;align-items:baseline;}
-.opt__n{font-family:var(--sans);font-size:10pt;flex:0 0 auto;}
-.opt__t{flex:1 1 auto;}
+.opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+/* 折り返しても本文の頭がそろうよう、ぶら下げインデントにする */
+.opt{padding-left:1.7em;text-indent:-1.7em;}
+.opt__n{font-family:var(--sans);font-size:10pt;margin-right:.35em;}
 
 .fig{
   margin:10px 0;padding:8px 6px;border:1px solid var(--rule);
@@ -438,10 +438,30 @@ b{font-weight:700;}
   <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">イ→ウ→ア</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">イ→ア→ウ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ウ→イ→ア</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">ア→イ→ウ</span></li></ol>
 </article>
 <article class="q" id="q18">
-  <div class="q__head"><span class="q__n">問18</span><span class="q__tag">組合せ</span></div>
-  <p class="q__body">古代エジプトとその周辺に関する語句の説明として<b>誤っているもの</b>を、次の①〜④のうちから一つ選べ。</p>
-  
-  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">テーベ—中王国・新王国の都で、アメン神の信仰の中心となった</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">クシュ王国—ナイル川上流に興り、製鉄とメロエ文字で知られる</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ジッグラト—エジプトの王が築いた日干し煉瓦の墓である</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">メンフィス—古王国の都で、近くにクフ王のピラミッドが築かれた</span></li></ol>
+  <div class="q__head"><span class="q__n">問18</span><span class="q__tag">資料・組合せ</span></div>
+  <p class="q__body">次の略地図中のＡ〜Ｃにあてはまる語の組合せとして正しいものを、下の①〜④のうちから一つ選べ。</p>
+  <figure class="fig">
+<svg viewBox="0 0 640 230" role="img" aria-label="ナイル川流域の略地図">
+  <rect x="8" y="8" width="624" height="214" fill="none" stroke="currentColor"/>
+  <path d="M300 24 L286 70 L300 116 L286 162 L300 200" fill="none" stroke="currentColor" stroke-width="1.6"/>
+  <path d="M300 24 L250 12 M300 24 L352 12" fill="none" stroke="currentColor" stroke-width="1.2"/>
+  <text x="180" y="30" font-size="11" fill="currentColor">地中海</text>
+  <line x1="90" y1="40" x2="560" y2="40" stroke="currentColor" stroke-width="1.1"/>
+  <g fill="currentColor">
+    <circle cx="296" cy="62" r="5"/><circle cx="292" cy="128" r="5"/><circle cx="296" cy="188" r="5"/>
+  </g>
+  <g font-size="12" font-weight="700" fill="currentColor">
+    <text x="308" y="58">Ａ</text><text x="304" y="124">Ｂ</text><text x="308" y="184">Ｃ</text>
+  </g>
+  <g font-size="10" fill="currentColor">
+    <text x="360" y="62">古王国の都が置かれた</text>
+    <text x="360" y="128">中王国・新王国の都が置かれた</text>
+    <text x="360" y="188">のちメロエに都を移した王国</text>
+    <text x="330" y="112">ナイル川</text>
+  </g>
+  <text x="60" y="214" font-size="10" fill="currentColor">←　上流はこちら（南）</text>
+</svg></figure>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ａ—メンフィス　Ｂ—クシュ王国　Ｃ—テーベ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ａ—クシュ王国　Ｂ—テーベ　Ｃ—メンフィス</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ａ—メンフィス　Ｂ—テーベ　Ｃ—クシュ王国</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ａ—テーベ　Ｂ—メンフィス　Ｃ—クシュ王国</span></li></ol>
 </article>
 <article class="q" id="q19">
   <div class="q__head"><span class="q__n">問19</span></div>
@@ -504,7 +524,7 @@ b{font-weight:700;}
   <div class="q__head"><span class="q__n">問27</span></div>
   <p class="q__body">モンゴル帝国のしくみについて述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
   
-  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">駅伝制は元の成立まで整備されなかった。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">クリルタイとよばれる集会でハンを選び、千戸制で軍事と行政を編成した。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ハンの位は父から長子へ自動的に受け継がれた。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">征服地の宗教は認められず、すべてイスラーム教に改めさせられた。</span></li></ol>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">駅伝制は陸路にだけ置かれ、大都と江南は結ばれなかった。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">クリルタイとよばれる集会でハンを選び、千戸制で軍事と行政を編成した。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ハンの位は父から長子へ自動的に受け継がれた。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">征服地では現地の有力者を退け、モンゴル人が直接に統治した。</span></li></ol>
 </article>
 <article class="q" id="q28">
   <div class="q__head"><span class="q__n">問28</span><span class="q__tag">組合せ</span></div>
@@ -531,10 +551,10 @@ b{font-weight:700;}
   <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">マカオはオランダが明から居住を認められた拠点である。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">マニラはポルトガルがアジア貿易の中心とした都市である。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">アンボイナ事件によって、イギリスがオランダをモルッカ諸島から追放した。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">清は1757年、ヨーロッパ船の来航を広州1港に限り、公行に貿易を扱わせた。</span></li></ol>
 </article>
 <article class="q" id="q32">
-  <div class="q__head"><span class="q__n">問32</span><span class="q__tag">組合せ</span></div>
-  <p class="q__body">清の文化事業に関する組合せとして<b>誤っているもの</b>を、次の①〜④のうちから一つ選べ。</p>
+  <div class="q__head"><span class="q__n">問32</span></div>
+  <p class="q__body">清の学問・文化について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
   
-  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">『康熙字典』—康熙帝の命により編纂された字書</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">カスティリオーネ—円明園の設計に加わったイエズス会宣教師</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">アダム＝シャール—イギリス人で、『崇禎暦書』の編纂に加わった</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">『四庫全書』—乾隆帝の命により編纂された一大叢書</span></li></ol>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">カスティリオーネはイギリス人宣教師で、遠近法を用いた絵画を伝えた。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">考証学は文献の実証を退け、心の修養を重んじる学問である。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">『四庫全書』は乾隆帝の命で編纂され、あわせて反清的な書物が処分された。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">『康熙字典』は、明の万暦帝の命によって編纂された字書である。</span></li></ol>
 </article>
 </section>
 <section class="dai">
@@ -605,9 +625,23 @@ b{font-weight:700;}
   <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">イタリア戦争を通じて、勢力均衡を意識する主権国家体制が形づくられた。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">イタリア戦争をきっかけに、イタリアでルネサンスが始まった。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">メディチ家はヴェネツィアの銀行家で、教皇を輩出した。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">ロンバルディア同盟は、神聖ローマ皇帝を助けて北イタリアを統一した。</span></li></ol>
 </article>
 <article class="q" id="q39">
-  <div class="q__head"><span class="q__n">問39</span><span class="q__tag">年代整序</span></div>
-  <p class="q__body">近世ヨーロッパの戦争に関する次のア〜ウを、年代の古いものから順に正しく並べたものを、下の①〜④のうちから一つ選べ。<br>ア　スペイン継承戦争　　イ　三十年戦争　　ウ　七年戦争</p>
-  
+  <div class="q__head"><span class="q__n">問39</span><span class="q__tag">資料・年代整序</span></div>
+  <p class="q__body">次の表は近世ヨーロッパの戦争と、その講和条約をまとめたものである。表中のア〜ウの戦争を、年代の古いものから順に正しく並べたものを、下の①〜④のうちから一つ選べ。</p>
+  <figure class="fig">
+<svg viewBox="0 0 640 170" role="img" aria-label="近世ヨーロッパの戦争と講和条約の表">
+  <g stroke="currentColor" stroke-width="1" fill="none">
+    <rect x="20" y="20" width="600" height="130"/>
+    <line x1="20" y1="52" x2="620" y2="52"/><line x1="20" y1="85" x2="620" y2="85"/>
+    <line x1="20" y1="118" x2="620" y2="118"/><line x1="150" y1="20" x2="150" y2="150"/>
+    <line x1="360" y1="20" x2="360" y2="150"/>
+  </g>
+  <g font-size="12" fill="currentColor">
+    <text x="60" y="41">戦争</text><text x="215" y="41">講和条約</text><text x="420" y="41">おもな結果</text>
+    <text x="72" y="73" font-weight="700">ア</text><text x="162" y="73">ユトレヒト条約</text><text x="372" y="73">イギリスがジブラルタルを得た</text>
+    <text x="72" y="106" font-weight="700">イ</text><text x="162" y="106">ウェストファリア条約</text><text x="372" y="106">スイス・オランダの独立が承認された</text>
+    <text x="72" y="139" font-weight="700">ウ</text><text x="162" y="139">パリ条約</text><text x="372" y="139">イギリスがカナダを得た</text>
+  </g>
+</svg></figure>
   <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ア→イ→ウ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">イ→ウ→ア</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ウ→ア→イ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">イ→ア→ウ</span></li></ol>
 </article>
 <article class="q" id="q40">
@@ -828,8 +862,8 @@ b{font-weight:700;}
 </div>
 <div class="ans">
   <div class="ans__head"><span class="ans__n">問18</span><span class="ans__a">正解 ③</span></div>
-  <p class="ans__ex">ジッグラトは<b>メソポタミア</b>の都市に築かれた聖塔（神殿）で、エジプトのものではない。エジプトの王墓はピラミッド。クシュ王国は一時エジプトを支配したのち、アッシリアに追われてメロエに移った。</p>
-  <p class="ans__src"><span>予想の根拠</span>令和6 問5・問6 でメンフィス・テーベ・クシュ王国・ジッグラト、令和7 問48 でクフ王が出題。</p>
+  <p class="ans__ex">下流（地中海側）から順に<b>メンフィス（古王国）→テーベ（中王国・新王国）→クシュ王国（ナイル上流）</b>。クシュ王国は一時エジプトを支配したのち、アッシリアに追われてメロエに都を移し、製鉄と独自の文字で知られた。なお<b>ジッグラト</b>はメソポタミアの聖塔で、エジプトの王墓であるピラミッドとは別のもの。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問5・問6 でメンフィス・テーベ・クシュ王国・ジッグラト、令和7 問48 でクフ王が出題。地図問題は令和5で9問と多い。</p>
 </div>
 <div class="ans">
   <div class="ans__head"><span class="ans__n">問19</span><span class="ans__a">正解 ②</span></div>
@@ -898,7 +932,7 @@ b{font-weight:700;}
 </div>
 <div class="ans">
   <div class="ans__head"><span class="ans__n">問32</span><span class="ans__a">正解 ③</span></div>
-  <p class="ans__ex">アダム＝シャールは<b>ドイツ人</b>のイエズス会宣教師。カスティリオーネはイタリア人で、中国名を郎世寧といい、西洋画法を伝えバロック式庭園をもつ円明園の設計に関わった。大規模な編纂事業は、学者を動員して思想を統制する意味もあった（文字の獄と表裏）。</p>
+  <p class="ans__ex">④『康熙字典』は書名のとおり<b>清の康熙帝</b>の命による。①カスティリオーネは<b>イタリア人</b>のイエズス会宣教師で、中国名を郎世寧といい、円明園の設計にも加わった。②心の修養を重んじるのは<b>陽明学</b>。考証学は文献を実証的に調べる学問。大規模な編纂事業は、学者を動員しつつ思想を統制する意味ももった（文字の獄と表裏）。</p>
   <p class="ans__src"><span>予想の根拠</span>令和5 問28・問29 でカスティリオーネ・円明園・四庫全書が実際に出題。</p>
 </div><h3 class="ansdai">第5問　大航海時代と近世ヨーロッパの形成</h3>
 <div class="ans">
@@ -933,7 +967,7 @@ b{font-weight:700;}
 </div>
 <div class="ans">
   <div class="ans__head"><span class="ans__n">問39</span><span class="ans__a">正解 ④</span></div>
-  <p class="ans__ex">イ（1618〜48年）→ア（1701〜13年）→ウ（1756〜63年）。スペイン継承戦争は<b>ユトレヒト条約</b>で終わり、イギリスがジブラルタルなどを得た。七年戦争の前にはオーストリアがフランスと結ぶ<b>外交革命</b>があり、同時期に北米ではフレンチ＝インディアン戦争が戦われた。</p>
+  <p class="ans__ex">イ三十年戦争（1618〜48年）→ア<b>スペイン継承戦争</b>（1701〜13年）→ウ七年戦争（1756〜63年）。七年戦争はヨーロッパでの戦いと、北米でのフレンチ＝インディアン戦争・インドでのプラッシーの戦いが並行し、パリ条約でイギリスがカナダとミシシッピ以東を得た。七年戦争の前には、オーストリアがフランスと結ぶ<b>外交革命</b>があった。</p>
   <p class="ans__src"><span>予想の根拠</span>令和6 問38 でスペイン継承戦争・ユトレヒト条約、令和5 問35 で外交革命が実際に出題。</p>
 </div>
 <div class="ans">
@@ -1008,9 +1042,9 @@ b{font-weight:700;}
   <h3 class="basis__h">設問形式の実測と、この予想問題での再現</h3>
   <table class="basis__t">
     <caption>形式も過去問インデックスから機械的に数えた。
-    年代整序だけは実物より多めにしてある——前後関係の穴が一度に見つかり、練習として効率がよいため。</caption>
+    年代整序だけは実物より多めにしてある——前後関係の穴が一度に見つかり、練習として効率がよいため。<br>資料つきの年代整序は「図表」に数えている。</caption>
     <thead><tr><th>形式</th><th>令和5</th><th>令和6</th><th>令和7</th><th>第2回</th></tr></thead>
-    <tbody><tr><th>年代整序</th><td>5</td><td>1</td><td>0</td><td>5</td></tr><tr><th>略年表（どの時期か）</th><td>1</td><td>0</td><td>2</td><td>1</td></tr><tr><th>史料</th><td>2</td><td>1</td><td>1</td><td>1</td></tr><tr><th>地図・写真・系図・図表</th><td>9</td><td>5</td><td>2</td><td>3</td></tr><tr><th>その他（語句・内容正誤・組合せ）</th><td>40</td><td>43</td><td>45</td><td>40</td></tr>
+    <tbody><tr><th>年代整序</th><td>5</td><td>1</td><td>0</td><td>4</td></tr><tr><th>略年表（どの時期か）</th><td>1</td><td>0</td><td>2</td><td>1</td></tr><tr><th>史料</th><td>2</td><td>1</td><td>1</td><td>1</td></tr><tr><th>地図・写真・系図・図表</th><td>9</td><td>5</td><td>2</td><td>5</td></tr><tr><th>その他（語句・内容正誤・組合せ）</th><td>40</td><td>43</td><td>45</td><td>39</td></tr>
     <tr class="cover__plan-total"><th>計</th><td>57</td><td>50</td><td>50</td><td>50</td></tr></tbody>
   </table>
 
@@ -1019,7 +1053,8 @@ b{font-weight:700;}
     <li><b>アメリカ独立宣言から250年（1776→2026）。</b>記念年は資料集や模試で扱われやすく、独立に至る流れを略年表で問う形は令和5でも出ている。問39に配置した。</li>
     <li><b>ムガル帝国の成立から500年（1526→2026）。</b>パーニーパットの戦いとアクバル／アウラングゼーブの対比は、令和6でアウラングゼーブが既出。問24に配置した。</li>
     <li><b>令和7年度から第7問に歴史総合が加わった。</b>世界史探究を選ぶ場合は第6問のテーマ史を解く。第6問は近現代に偏らず全時代を横断する形なので、通史の総復習がそのまま得点になる。</li>
-    <li><b>難易度は教科書レベル〜共通テスト相当、奇問は出ない</b>というのが対策塾各社の一致した見方。したがって新奇な題材ではなく、<b>教科書の太字を別角度から問い直す</b>方向で作成した。</li>
+    <li><b>難易度は教科書レベル〜共通テスト相当、奇問は出ない</b>というのが対策塾各社の一致した見方。したがって新奇な題材ではなく、<b>教科書の太字を別角度から問い直す</b>方向で作成した。用語集にしか出ない語が正解の決め手になっていないかは、問題バンクと過去問インデックスに照合して機械的に点検している。</li>
+    <li><b>2026年の共通テスト（歴史総合・世界史探究）では、資料を用いた設問が前年の19から35へ大幅に増えた。</b>探究科目は資料読解を求める方向にある。基礎学の図表問題は令和5の9問から令和7の2問へ減っているが、新課程の流れをふまえて、各回とも実物の3年平均（50問あたり5.3問）以上になるよう資料つきの設問を置いた。</li>
   </ul>
 
   <h3 class="basis__h">直前1か月の使い方</h3>

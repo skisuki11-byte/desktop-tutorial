@@ -147,8 +147,13 @@ const mineSum = 50;
 
 const myFmtAll = SETS.map((S) => { const myFmt = {};
 S.all.forEach((q) => {
-  const k = q.fmt === "地図" || q.fmt === "図表" || q.fmt === "系図" ? "図表"
-    : (q.fmt === "年代整序" || q.fmt === "略年表" || q.fmt === "史料") ? q.fmt : "その他";
+  // 実物の分類にそろえる。略年表と史料は本文中の資料なので図表には数えない
+  const f = q.fmt || "";
+  const k = f.includes("略年表") ? "略年表"
+    : f.includes("史料") ? "史料"
+    : q.figKey ? "図表"
+    : f.includes("年代整序") ? "年代整序"
+    : "その他";
   myFmt[k] = (myFmt[k] || 0) + 1;
 });
 ["年代整序", "略年表", "史料", "図表", "その他"].forEach((k) => { myFmt[k] = myFmt[k] || 0; });

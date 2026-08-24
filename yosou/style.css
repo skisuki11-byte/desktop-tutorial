@@ -123,10 +123,10 @@ b{font-weight:700;}
   background:var(--tint);font-size:9.5pt;
 }
 
-.opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;}
-.opt{display:flex;gap:6px;align-items:baseline;}
-.opt__n{font-family:var(--sans);font-size:10pt;flex:0 0 auto;}
-.opt__t{flex:1 1 auto;}
+.opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+/* 折り返しても本文の頭がそろうよう、ぶら下げインデントにする */
+.opt{padding-left:1.7em;text-indent:-1.7em;}
+.opt__n{font-family:var(--sans);font-size:10pt;margin-right:.35em;}
 
 .fig{
   margin:10px 0;padding:8px 6px;border:1px solid var(--rule);
