@@ -1,7 +1,16 @@
 /* data.js から印刷用の予想問題（A4）を組み立てる。node build.js で yosou.html を書き出す。 */
 const fs = require("fs");
 const path = require("path");
-const { exam, fig } = require("./data.js");
+const SETS = [
+  { id: 1, file: "./data.js",  out: "yosou.html",   name: "第1回", sub: "直近の反動を重く見た配分",
+    note: "令和7年度で手薄だった分野（明・清、古代オリエント、宗教改革）を厚くしてある。" },
+  { id: 2, file: "./data2.js", out: "yosou-2.html", name: "第2回", sub: "傾向がそのまま続いた場合",
+    note: "令和7年度の分野配分をそのままなぞり、令和7で問われた知識のうち第1回で扱わなかったものを置いた。" },
+  { id: 3, file: "./data3.js", out: "yosou-3.html", name: "第3回", sub: "取りこぼしを潰す・範囲が広がった場合の保険",
+    note: "第1回・第2回で扱わなかった知識を全部入れ、令和5年度のように必須の範囲が19世紀まで及ぶ場合に備えて大問6を19世紀にしてある。" }
+];
+const SET = SETS[(Number(process.argv[2]) || 1) - 1];
+const { exam, fig } = require(SET.file);
 const bunya = JSON.parse(fs.readFileSync(path.join(__dirname, "bunya.json"), "utf8"));
 
 const { rotate, CIRCLE } = require("./rotate.js");
@@ -70,10 +79,10 @@ const JUDGE = {
 const bunyaTable = `<table class="basis__t">
     <caption>実物の設問を分野別に数え直したもの（令和5は印刷された57問すべて、令和6・7は50問）。
     集計は <code>verify.js</code> が過去問インデックスから機械的に行っている。<br>複数の分野にまたがる設問は、主題のほうに入れて数えた。</caption>
-    <thead><tr><th>分野</th>${YEARS.map((y) => `<th>${y}</th>`).join("")}<th>本問題</th><th>判断</th></tr></thead>
+    <thead><tr><th>分野</th>${YEARS.map((y) => `<th>${y}</th>`).join("")}<th>${SET.name}</th><th>判断</th></tr></thead>
     <tbody>${bunya.cats.map((c) => `<tr><th>${c}</th>${
       YEARS.map((y) => `<td>${bunya.bunya[y][c]}</td>`).join("")
-    }<td>${bunya.mine[c]}</td><td>${JUDGE[c] || ""}</td></tr>`).join("")}
+    }<td>${bunya.MINE[SET.id - 1][c]}</td><td>${JUDGE[c] || ""}</td></tr>`).join("")}
     <tr class="cover__plan-total"><th>計</th>${
       YEARS.map((y) => `<td>${bunya.bunya[y]["_計"]}</td>`).join("")
     }<td>50</td><td>令和5は選択問題を含めて57問が印刷されている（解答するのは50問）。</td></tr>
@@ -88,10 +97,10 @@ const FMTLABEL = {
 const fmtTable = `<table class="basis__t">
     <caption>形式も過去問インデックスから機械的に数えた。
     年代整序だけは実物より多めにしてある——前後関係の穴が一度に見つかり、練習として効率がよいため。</caption>
-    <thead><tr><th>形式</th>${YEARS.map((y) => `<th>${y}</th>`).join("")}<th>本問題</th></tr></thead>
+    <thead><tr><th>形式</th>${YEARS.map((y) => `<th>${y}</th>`).join("")}<th>${SET.name}</th></tr></thead>
     <tbody>${FMT.map((k) => `<tr><th>${FMTLABEL[k]}</th>${
       YEARS.map((y) => `<td>${bunya.bunya[y]["_形式"][k]}</td>`).join("")
-    }<td>${bunya.myFmt[k]}</td></tr>`).join("")}
+    }<td>${bunya.myFmtAll[SET.id - 1][k]}</td></tr>`).join("")}
     <tr class="cover__plan-total"><th>計</th>${
       YEARS.map((y) => `<td>${bunya.bunya[y]["_計"]}</td>`).join("")
     }<td>50</td></tr></tbody>
@@ -103,8 +112,8 @@ all.forEach((q) => dist[q.a - 1]++);
 const body = `
 <header class="cover">
   <p class="cover__eyebrow">令和8年度　高等学校 第3学年　9月</p>
-  <h1 class="cover__title">基礎学力到達度テスト<br><span>世界史探究　予想問題</span></h1>
-  <p class="cover__meta">試験時間 60分（想定）／100点満点（各問2点）　　作成日 2026年8月24日</p>
+  <h1 class="cover__title">基礎学力到達度テスト<br><span>世界史探究　予想問題　${SET.name}</span></h1>
+  <p class="cover__meta">${SET.sub}　　試験時間 60分（想定）／100点満点（各問2点）　　作成日 2026年8月24日</p>
 
   <div class="cover__box">
     <h2>注意事項</h2>
@@ -119,7 +128,11 @@ const body = `
   <div class="cover__box cover__box--plain">
     <h2>この予想問題について</h2>
     <p>令和5・6・7年度の実物157問（歴史総合の10問を除く）を1問ずつ分析し、<b>大問構成・出題分野・設問形式・難易度の実測値</b>にそろえて作成しました。正解の分布（①${dist[0]}／②${dist[1]}／③${dist[2]}／④${dist[3]}）も実物に近づけてあります。</p>
-      <p>各設問の解説には「なぜこの問題を予想したか」を明記しています。<b>的中を保証するものではありません</b>が、過去3年で1度でも出た分野・形式に絞り、直近年度で手薄だったところを厚くしてあるため、当日の設問と重なる部分は大きいはずです。</p>
+      <p>各設問の解説には「なぜこの問題を予想したか」を明記しています。<b>的中を保証するものではありません</b>が、過去3年で1度でも出た分野・形式に絞ってあるため、当日の設問と重なる部分は大きいはずです。</p>
+      <p><b>${SET.name}のねらい</b>——${SET.note}</p>
+      <p>予想問題は第1回・第2回・第3回の3つで一組です。当日どの方向に振れても対応できるよう、
+      <b>第1回＝直近の反動、第2回＝傾向の継続、第3回＝取りこぼしと範囲拡大の保険</b>という3つの筋書きに分けてあります。
+      3回あわせると、過去3年の実物を解くのに必要な知識の<b>99%以上</b>に触れる計算です。</p>
   </div>
 
   <table class="cover__plan">
@@ -183,7 +196,7 @@ ${exam.map(section).join("")}
 `;
 
 const css = fs.readFileSync(path.join(__dirname, "style.css"), "utf8");
-const out = `<title>基礎学 世界史 九月予想問題</title>
+const out = `<title>基礎学 世界史 九月予想問題${SET.id > 1 ? " " + SET.name : ""}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap">
@@ -193,6 +206,6 @@ ${css}
 ${body}
 `;
 
-fs.writeFileSync(path.join(__dirname, "yosou.html"), out);
-console.log("問数:", all.length, "／正解分布 ①②③④ =", dist.join(" "));
-console.log("yosou.html", Math.round(Buffer.byteLength(out) / 1024) + "KB");
+fs.writeFileSync(path.join(__dirname, SET.out), out);
+console.log(SET.name + " 問数:", all.length, "／正解分布 ①②③④ =", dist.join(" "));
+console.log("  " + SET.out, Math.round(Buffer.byteLength(out) / 1024) + "KB");

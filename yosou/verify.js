@@ -5,16 +5,27 @@
    異常があれば終了コード1。 */
 const fs = require("fs");
 const path = require("path");
-const { exam, fig } = require("./data.js");
 const { rotate, CIRCLE } = require("./rotate.js");
 
-rotate(exam);
-const all = exam.flatMap((d) => d.qs);
+const SETS = [
+  { id: 1, file: "./data.js",  name: "第1回" },
+  { id: 2, file: "./data2.js", name: "第2回" },
+  { id: 3, file: "./data3.js", name: "第3回" }
+];
+SETS.forEach((s) => {
+  const m = require(s.file);
+  rotate(m.exam);
+  s.exam = m.exam; s.fig = m.fig; s.all = m.exam.flatMap((d) => d.qs);
+});
+const { exam, fig, all } = SETS[0];
 const bad = [];
 const ng = (n, msg) => bad.push(`問${n}: ${msg}`);
 
 /* ---- 1) 構造 ---- */
-if (all.length !== 50) bad.push(`問数が ${all.length}（50でない）`);
+SETS.forEach((S) => {
+const all = S.all, fig = S.fig;
+const ng = (n, msg) => bad.push(`${S.name} 問${n}: ${msg}`);
+if (all.length !== 50) bad.push(`${S.name} 問数が ${all.length}（50でない）`);
 all.forEach((q, i) => {
   if (q.n !== i + 1) ng(q.n, `番号が連番でない（${i + 1}番目）`);
   if (!Array.isArray(q.c) || q.c.length !== 4) ng(q.n, "選択肢が4つでない");
@@ -27,14 +38,11 @@ all.forEach((q, i) => {
   if (q.figKey && !fig[q.figKey]) ng(q.n, `図版 ${q.figKey} が見つからない`);
   // 選択肢の「①〜④のうちから一つ選べ」は問題文にあるはず
   if (!/①〜④/.test(q.q)) ng(q.n, "問題文に「①〜④のうちから一つ選べ」がない");
-});
-
-/* ---- 2) 解説の丸数字が正解を指していないか ---- */
-all.forEach((q) => {
-  const refs = [...new Set((q.ex.match(/[①②③④]/g) || []))];
-  refs.forEach((ch) => {
+  // 解説の丸数字が正解の番号を指していないか（回転処理のバグ検出）
+  [...new Set((q.ex.match(/[①②③④]/g) || []))].forEach((ch) => {
     if (CIRCLE.indexOf(ch) + 1 === q.a) ng(q.n, `解説が正解の ${ch} を誤りとして挙げている`);
   });
+});
 });
 
 /* ---- 3) 過去問インデックスの集計 ---- */
@@ -118,49 +126,101 @@ years.forEach((y) => {
 });
 
 /* 本予想問題の側の集計 */
-const mine = {};
-cats.forEach((c) => { mine[c] = 0; });
-const MINE_RANGE = {
-  "古代ギリシア・ローマ": [1, 7], "中世西欧・ゲルマン": [8, 8],
-  "古代インド・東南アジア": [9, 11], "古代〜隋唐の中国": [12, 16],
-  "古代オリエント・イラン": [17, 20], "イスラーム世界": [21, 24],
-  "宋・元・モンゴル": [25, 28], "明・清": [29, 32],
-  "大航海・植民地": [33, 33], "宗教改革・主権国家": [34, 36],
-  "絶対王政・市民革命": [37, 40], "近現代・テーマ史（選択）": [41, 50]
-};
-Object.entries(MINE_RANGE).forEach(([c, [a, b]]) => { mine[c] = b - a + 1; });
-const mineSum = Object.values(mine).reduce((s, v) => s + v, 0);
-if (mineSum !== 50) bad.push(`本問題の分野合計が ${mineSum}（50でない）`);
+const MINE = [
+  { "古代ギリシア・ローマ":7, "中世西欧・ゲルマン":1, "古代インド・東南アジア":3, "古代〜隋唐の中国":5,
+    "古代オリエント・イラン":4, "イスラーム世界":4, "宋・元・モンゴル":4, "明・清":4,
+    "大航海・植民地":1, "宗教改革・主権国家":3, "絶対王政・市民革命":4, "近現代・テーマ史（選択）":10 },
+  { "古代ギリシア・ローマ":8, "中世西欧・ゲルマン":0, "古代インド・東南アジア":3, "古代〜隋唐の中国":5,
+    "古代オリエント・イラン":4, "イスラーム世界":4, "宋・元・モンゴル":5, "明・清":3,
+    "大航海・植民地":4, "宗教改革・主権国家":2, "絶対王政・市民革命":2, "近現代・テーマ史（選択）":10 },
+  { "古代ギリシア・ローマ":3, "中世西欧・ゲルマン":5, "古代インド・東南アジア":0, "古代〜隋唐の中国":4,
+    "古代オリエント・イラン":2, "イスラーム世界":6, "宋・元・モンゴル":4, "明・清":8,
+    "大航海・植民地":0, "宗教改革・主権国家":1, "絶対王政・市民革命":7, "近現代・テーマ史（選択）":10 }
+];
+MINE.forEach((m, i) => {
+  const sum = Object.values(m).reduce((s, v) => s + v, 0);
+  if (sum !== 50) bad.push(`${SETS[i].name} の分野合計が ${sum}（50でない）`);
+  cats.forEach((c) => { if (m[c] === undefined) bad.push(`${SETS[i].name} に分野 ${c} がない`); });
+});
+const mine = MINE[0];
+const mineSum = 50;
 
-const myFmt = {};
-all.forEach((q) => {
+const myFmtAll = SETS.map((S) => { const myFmt = {};
+S.all.forEach((q) => {
   const k = q.fmt === "地図" || q.fmt === "図表" || q.fmt === "系図" ? "図表"
     : (q.fmt === "年代整序" || q.fmt === "略年表" || q.fmt === "史料") ? q.fmt : "その他";
   myFmt[k] = (myFmt[k] || 0) + 1;
 });
 ["年代整序", "略年表", "史料", "図表", "その他"].forEach((k) => { myFmt[k] = myFmt[k] || 0; });
+return myFmt; });
+const myFmt = myFmtAll[0];
 
-const dist = [0, 0, 0, 0];
-all.forEach((q) => dist[q.a - 1]++);
+const distAll = SETS.map((S) => { const d = [0, 0, 0, 0]; S.all.forEach((q) => d[q.a - 1]++); return d; });
+const dist = distAll[0];
+
+/* 正解の選択肢だけが長いと「長いものを選べば当たる」ようになる。
+   見分けがつくのは字数差なので、順位ではなく差で見る。 */
+const lenGap = SETS.map((S) => S.all.map((q) => {
+  const len = q.c.map((c) => c.replace(/<[^>]+>/g, "").length);
+  return len[q.a - 1] - Math.max(...len.filter((_, j) => j !== q.a - 1));
+}));
+const lenStat = lenGap.map((g) => ({
+  longest: g.filter((m) => m > 0).length,
+  big: g.filter((m) => m >= 5).length,
+  avg: g.reduce((a, b) => a + b, 0) / g.length
+}));
+lenStat.forEach((st, i) => {
+  if (st.avg > 2.5) bad.push(`${SETS[i].name} は正解が平均 ${st.avg.toFixed(1)} 字長い（長さで当てられる）`);
+  if (st.big > 3) bad.push(`${SETS[i].name} は正解が5字以上長い設問が ${st.big}問`);
+});
+const longest = lenStat.map((s) => s.longest);
+
+/* 過去問の必要知識をどれだけ覆えているか */
+const norm = (s) => s.replace(/[=＝]/g, "=");
+const setText = SETS.map((S) => norm(S.exam.flatMap((d) => d.qs)
+  .map((q) => q.q + " " + q.c.join(" ") + " " + q.ex + " " + (q.figKey ? S.fig[q.figKey] : ""))
+  .join(" ").replace(/<[^>]+>/g, "")));
+const allText = setText.join(" ");
+const need = new Map();
+years.forEach((y) => {
+  idx.find((x) => x.year === y).questions.forEach((q) => {
+    if (/歴史総合/.test(q.topic || "")) return;
+    if (y === "令和5" && q.n > 43) return; // 令和5の選択Ⅶ・Ⅷは令和7型では範囲外
+    (q.need || []).forEach((t) => {
+      if (!need.has(t)) need.set(t, []);
+      need.get(t).push(y.slice(2) + "-" + q.n);
+    });
+  });
+});
+const missTerms = [...need.keys()].filter((t) => !allText.includes(norm(t)));
+const perSet = setText.map((t) => [...need.keys()].filter((k) => t.includes(norm(k))).length);
+const coverage = { total: need.size, covered: need.size - missTerms.length, perSet, miss: missTerms };
 
 fs.writeFileSync(path.join(__dirname, "bunya.json"),
-  JSON.stringify({ cats, bunya, mine, myFmt, dist }, null, 2));
+  JSON.stringify({ cats, bunya, mine: MINE[0], MINE, myFmt, myFmtAll, dist, distAll, coverage, lenStat }, null, 2));
 
 /* ---- 報告 ---- */
 console.log("■ 設問データ");
-console.log(`  問数 ${all.length} ／ 正解分布 ①${dist[0]} ②${dist[1]} ③${dist[2]} ④${dist[3]}`);
-const fmtCount = {};
-all.forEach((q) => { const k = q.fmt || "語句・内容正誤"; fmtCount[k] = (fmtCount[k] || 0) + 1; });
-console.log("  形式 " + Object.entries(fmtCount).map(([k, v]) => `${k}${v}`).join(" / "));
+SETS.forEach((S, i) => {
+  console.log(`  ${S.name}  ${S.all.length}問 ／ 正解分布 ①${distAll[i][0]} ②${distAll[i][1]} ③${distAll[i][2]} ④${distAll[i][3]}`
+    + ` ／ 正解が最長 ${longest[i]}問・5字以上長い ${lenStat[i].big}問・平均差 ${lenStat[i].avg.toFixed(1)}字`);
+});
+console.log("\n■ 過去問の必要知識のカバー（令和7型の出題範囲、" + coverage.total + "語）");
+SETS.forEach((S, i) => console.log(`  ${S.name}のみ  ${coverage.perSet[i]}語（${Math.round(coverage.perSet[i] / coverage.total * 100)}%）`));
+console.log(`  3回あわせて  ${coverage.covered}語（${Math.round(coverage.covered / coverage.total * 100)}%）`);
+if (coverage.miss.length) console.log("  未カバー: " + coverage.miss.join(" / "));
 console.log("\n■ 過去問の分野別（実測）と本問題の配分");
 console.log("  " + "分野".padEnd(24) + years.map((y) => y.padStart(6)).join("") + "  本問題");
 cats.forEach((c) => {
-  console.log("  " + c.padEnd(24) + years.map((y) => String(bunya[y][c]).padStart(6)).join("") + String(mine[c]).padStart(7));
+  console.log("  " + c.padEnd(24) + years.map((y) => String(bunya[y][c]).padStart(6)).join("")
+    + MINE.map((m) => String(m[c]).padStart(4)).join(""));
 });
-console.log("  " + "計".padEnd(24) + years.map((y) => String(bunya[y]["_計"]).padStart(6)).join("") + String(mineSum).padStart(7));
+console.log("  " + "計".padEnd(24) + years.map((y) => String(bunya[y]["_計"]).padStart(6)).join("") + "  50  50  50");
 console.log("\n■ 形式（実測）");
+console.log("  " + "形式".padEnd(24) + years.map((y) => y.padStart(6)).join("") + "  1回  2回  3回");
 ["年代整序", "略年表", "史料", "図表", "その他"].forEach((k) => {
-  console.log("  " + k.padEnd(24) + years.map((y) => String(bunya[y]["_形式"][k]).padStart(6)).join("") + String(myFmt[k]).padStart(7));
+  console.log("  " + k.padEnd(24) + years.map((y) => String(bunya[y]["_形式"][k]).padStart(6)).join("")
+    + myFmtAll.map((m) => String(m[k]).padStart(4)).join(""));
 });
 
 console.log("\n■ 点検結果");
