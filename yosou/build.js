@@ -2,28 +2,10 @@
 const fs = require("fs");
 const path = require("path");
 const { exam, fig } = require("./data.js");
+const bunya = JSON.parse(fs.readFileSync(path.join(__dirname, "bunya.json"), "utf8"));
 
-/* --- 正解の偏りをならす -------------------------------------------------
-   手で作ると正解が①に寄る。選択肢を回転させて①〜④に均等に散らす。
-   解説の中の丸数字も同じだけずらす。ア〜エを選ぶ略年表の問題は並びに
-   意味があるので回転させない。 */
-const CIRCLE = "①②③④";
-const pattern = [1, 3, 2, 4, 2, 1, 4, 3];
-let pi = 0;
-for (const dai of exam) {
-  for (const q of dai.qs) {
-    if (q.fmt === "略年表") continue;
-    const target = pattern[pi++ % pattern.length];
-    const k = (target - q.a + 4) % 4;
-    if (k) {
-      const rotated = new Array(4);
-      q.c.forEach((v, i) => { rotated[(i + k) % 4] = v; });
-      q.c = rotated;
-      q.a = target;
-      q.ex = q.ex.replace(/[①②③④]/g, (ch) => CIRCLE[(CIRCLE.indexOf(ch) + k) % 4]);
-    }
-  }
-}
+const { rotate, CIRCLE } = require("./rotate.js");
+rotate(exam);
 
 const esc = (s) => s;
 const opts = (q) => q.c.map((t, i) =>
@@ -68,6 +50,52 @@ const answer = (q) => `
   <p class="ans__ex">${q.ex}</p>
   ${q.src ? `<p class="ans__src"><span>予想の根拠</span>${q.src}</p>` : ""}
 </div>`;
+
+/* 予想根拠の表は verify.js が数えた bunya.json から組み立てる。手で数えた値は使わない。 */
+const YEARS = ["令和5", "令和6", "令和7"];
+const JUDGE = {
+  "古代ギリシア・ローマ": "3年連続の第1問。令和7で8問と突出し、今年も最大の山と見る。",
+  "中世西欧・ゲルマン": "毎年3〜4問。第1問の末尾と第6問に分けて配置した。",
+  "古代インド・東南アジア": "ヴァルナ制と王朝の都が軸。東南アジアは令和5以来なく、復活を見込む。",
+  "古代〜隋唐の中国": "令和6で10問。秦漢・魏晋南北朝・隋唐の制度は毎年出る。",
+  "古代オリエント・イラン": "<b>令和7で1問と激減</b>。令和6の水準に戻る反動を見込み厚く配置した。",
+  "イスラーム世界": "3年とも5問以上で安定。成立期（ヒジュラ・ウマイヤ・アッバース）が核。",
+  "宋・元・モンゴル": "令和6・7で各7〜8問。今年も必出。年代整序で問われやすい。",
+  "明・清": "<b>令和6・7で計3問と極端に手薄</b>。最も反動が大きいと見て厚く配置した。",
+  "大航海・植民地": "令和7で7問と突出。今年は縮小と見て第5問は1問にし、第6問に2問回した。",
+  "宗教改革・主権国家": "<b>令和7は1問だけ</b>。ルター・カルヴァン・ウェストファリアで復活を見込む。",
+  "絶対王政・市民革命": "毎年3〜7問。ナントの王令とイギリス革命の順序は繰り返し出る。",
+  "近現代・テーマ史（選択）": "選択の第6問がこれにあたる。全時代を横断する形なので通史がそのまま効く。"
+};
+const bunyaTable = `<table class="basis__t">
+    <caption>実物の設問を分野別に数え直したもの（令和5は印刷された57問すべて、令和6・7は50問）。
+    集計は <code>verify.js</code> が過去問インデックスから機械的に行っている。<br>複数の分野にまたがる設問は、主題のほうに入れて数えた。</caption>
+    <thead><tr><th>分野</th>${YEARS.map((y) => `<th>${y}</th>`).join("")}<th>本問題</th><th>判断</th></tr></thead>
+    <tbody>${bunya.cats.map((c) => `<tr><th>${c}</th>${
+      YEARS.map((y) => `<td>${bunya.bunya[y][c]}</td>`).join("")
+    }<td>${bunya.mine[c]}</td><td>${JUDGE[c] || ""}</td></tr>`).join("")}
+    <tr class="cover__plan-total"><th>計</th>${
+      YEARS.map((y) => `<td>${bunya.bunya[y]["_計"]}</td>`).join("")
+    }<td>50</td><td>令和5は選択問題を含めて57問が印刷されている（解答するのは50問）。</td></tr>
+    </tbody>
+  </table>`;
+
+const FMT = ["年代整序", "略年表", "史料", "図表", "その他"];
+const FMTLABEL = {
+  "年代整序": "年代整序", "略年表": "略年表（どの時期か）", "史料": "史料",
+  "図表": "地図・写真・系図・図表", "その他": "その他（語句・内容正誤・組合せ）"
+};
+const fmtTable = `<table class="basis__t">
+    <caption>形式も過去問インデックスから機械的に数えた。
+    年代整序だけは実物より多めにしてある——前後関係の穴が一度に見つかり、練習として効率がよいため。</caption>
+    <thead><tr><th>形式</th>${YEARS.map((y) => `<th>${y}</th>`).join("")}<th>本問題</th></tr></thead>
+    <tbody>${FMT.map((k) => `<tr><th>${FMTLABEL[k]}</th>${
+      YEARS.map((y) => `<td>${bunya.bunya[y]["_形式"][k]}</td>`).join("")
+    }<td>${bunya.myFmt[k]}</td></tr>`).join("")}
+    <tr class="cover__plan-total"><th>計</th>${
+      YEARS.map((y) => `<td>${bunya.bunya[y]["_計"]}</td>`).join("")
+    }<td>50</td></tr></tbody>
+  </table>`;
 
 const dist = [0, 0, 0, 0];
 all.forEach((q) => dist[q.a - 1]++);
@@ -124,38 +152,10 @@ ${exam.map(section).join("")}
 <section class="basis">
   <h2 class="pagetitle">なぜこの範囲を予想したのか</h2>
   <p class="lead">令和5・6・7年度の実物を分野ごとに数え直したもの。<b>3年連続で出ている分野は今年も出る</b>。そのうえで<b>直近の令和7年度で手薄だった分野</b>は、反動で厚くなりやすい。この2つを掛け合わせて配分を決めた。</p>
-  <table class="basis__t">
-    <caption>実物の設問を分野別に数え直したもの（令和5は印刷された57問すべて、令和6・7は50問）</caption>
-    <thead><tr><th>分野</th><th>令和5</th><th>令和6</th><th>令和7</th><th>本問題<br>第1〜5問</th><th>判断</th></tr></thead>
-    <tbody>
-      <tr><th>古代ギリシア・ローマ</th><td>4</td><td>4</td><td>8</td><td>7</td><td>令和7で8問と突出し、第1問の中心。今年も最大の山と見る。</td></tr>
-      <tr><th>中世西欧・ゲルマン</th><td>4</td><td>4</td><td>3</td><td>1</td><td>毎年3〜4問。第1問の末尾と第6問に分けて配置した。</td></tr>
-      <tr><th>古代インド・東南アジア</th><td>3</td><td>1</td><td>4</td><td>3</td><td>ヴァルナ制と王朝の都が軸。東南アジアは令和5以来なく、復活を見込む。</td></tr>
-      <tr><th>古代〜隋唐の中国</th><td>4</td><td>9</td><td>4</td><td>5</td><td>秦漢・魏晋南北朝・隋唐は毎年。土地制度と官吏登用が繰り返し出る。</td></tr>
-      <tr><th>古代オリエント・イラン</th><td>2</td><td>6</td><td>1</td><td>4</td><td><b>令和7で1問と激減</b>。令和6の水準に戻る反動を見込み厚く配置した。</td></tr>
-      <tr><th>イスラーム世界</th><td>5</td><td>8</td><td>7</td><td>4</td><td>3年とも5問以上で安定。成立期（ヒジュラ・ウマイヤ・アッバース）が核。</td></tr>
-      <tr><th>宋・元・モンゴル</th><td>3</td><td>8</td><td>7</td><td>4</td><td>令和6・7で各7〜8問。今年も必出。年代整序で問われやすい。</td></tr>
-      <tr><th>明・清</th><td>4</td><td>1</td><td>2</td><td>4</td><td><b>令和6・7で計3問と極端に手薄</b>。最も反動が大きいと見て厚く配置した。</td></tr>
-      <tr><th>大航海・ラテンアメリカ</th><td>1</td><td>1</td><td>7</td><td>1</td><td>令和7で7問と突出。今年は縮小と見て、第5問は1問、第6問に2問回した。</td></tr>
-      <tr><th>宗教改革・主権国家</th><td>1</td><td>4</td><td>2</td><td>3</td><td>令和7でほぼ空白。ルター・カルヴァン・ウェストファリアで復活を見込む。</td></tr>
-      <tr><th>絶対王政・市民革命</th><td>8</td><td>3</td><td>2</td><td>4</td><td>2年続けて縮小。ナントの王令とイギリス革命の順序は繰り返し出る。</td></tr>
-      <tr class="cover__plan-total"><th>近現代・テーマ史（選択）</th><td>18</td><td>1</td><td>3</td><td>10</td><td>選択の第6問がこれにあたる。全時代を横断する形なので通史がそのまま効く。</td></tr>
-    </tbody>
-  </table>
+  ${bunyaTable}
 
   <h3 class="basis__h">設問形式の実測と、この予想問題での再現</h3>
-  <table class="basis__t">
-    <caption>形式は過去問インデックスから機械的に数えた。「その他」は語句・内容正誤・組合せの4択。<br>年代整序だけは実物より多めにしてある——前後関係の穴が一度に見つかり、練習として効率がよいため。</caption>
-    <thead><tr><th>形式</th><th>令和5</th><th>令和6</th><th>令和7</th><th>本問題</th></tr></thead>
-    <tbody>
-      <tr><th>年代整序</th><td>5</td><td>1</td><td>0</td><td>7</td></tr>
-      <tr><th>略年表（どの時期か）</th><td>1</td><td>0</td><td>2</td><td>2</td></tr>
-      <tr><th>史料</th><td>2</td><td>1</td><td>1</td><td>1</td></tr>
-      <tr><th>地図・写真・系図・図表</th><td>9</td><td>5</td><td>2</td><td>4</td></tr>
-      <tr><th>その他（語句・内容正誤・組合せ）</th><td>40</td><td>43</td><td>45</td><td>36</td></tr>
-      <tr class="cover__plan-total"><th>計</th><td>57</td><td>50</td><td>50</td><td>50</td></tr>
-    </tbody>
-  </table>
+  ${fmtTable}
 
   <h3 class="basis__h">今年ならではの材料</h3>
   <ul class="basis__l">

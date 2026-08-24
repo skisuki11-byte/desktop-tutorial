@@ -191,6 +191,7 @@ b{font-weight:700;}
   font-variant-numeric:tabular-nums;
 }
 .basis__t thead th{background:var(--tint);font-weight:700;text-align:center;}
+.basis__t code{font-family:var(--sans);font-size:8pt;background:var(--tint);padding:0 3px;}
 .basis__t caption{text-align:left;font-size:8.5pt;color:var(--sub);padding-bottom:5px;}
 .basis__t tbody th{white-space:nowrap;font-weight:500;}
 .basis__t tbody td:nth-child(2),
