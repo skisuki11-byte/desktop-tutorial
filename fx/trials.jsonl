@@ -1,2 +1,3 @@
 {"trial_id": 1, "date": "2026-08-24", "strategy": "nakane", "params": {}, "grid_size": 1, "data_range": "2014-11-21〜2021-11-19", "stage": "WF", "sharpe": -1.1874, "note": "不合格"}
 {"trial_id": 2, "date": "2026-08-24", "strategy": "breakout", "params": {"days": 2.0}, "grid_size": 5, "data_range": "2014-11-21〜2021-11-19", "stage": "WF", "sharpe": 0.4241, "note": "不合格"}
+{"trial_id": 3, "date": "2026-08-24", "strategy": "breakout_slow", "params": {"days": 40}, "grid_size": 5, "data_range": "2002-01-10〜2026-07-08", "stage": "WF", "sharpe": 0.0745, "note": "不合格"}

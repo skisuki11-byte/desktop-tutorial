@@ -67,7 +67,10 @@ def breakout(df: pd.DataFrame, days: float = 1.0) -> pd.Series:
     return pos.ffill().fillna(0.0)
 
 
-STRATEGIES = {"nakane": nakane, "breakout": breakout}
+# breakout は同じ関数だが、窓の長さで別の仮説になる。
+# 日中(0.25〜4日)と数週間(10〜80日)では狙っている現象が違うので、
+# 別の戦略として登録し、試行回数も別に数える（docs/03 §3）。
+STRATEGIES = {"nakane": nakane, "breakout": breakout, "breakout_slow": breakout}
 
 # 価格を見て建玉を決める戦略。ここに入るものだけが未来参照バグを起こしうる。
 #
@@ -75,7 +78,7 @@ STRATEGIES = {"nakane": nakane, "breakout": breakout}
 # 価格を見ない戦略は、shift を忘れても «未来の価格を知る» ことが原理的にできない
 # (窓が5分ずれるだけ)。安全である一方、shift のバグを検出する力もない。
 # したがって検証基盤の検算には breakout のような価格依存の戦略が必要になる。
-PRICE_DEPENDENT = {"breakout"}
+PRICE_DEPENDENT = {"breakout", "breakout_slow"}
 
 
 # --- 検証 --------------------------------------------------------------------

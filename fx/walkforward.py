@@ -33,7 +33,8 @@ from fx1 import backtest, dsr_floor, load, stats
 # 窓は «日数» で持つ。本数で持つとM5とM15で別の戦略になってしまう（fx1.breakout参照）
 PARAM_GRIDS: dict[str, dict[str, list]] = {
     "nakane": {},                                        # パラメータなし = 1通り
-    "breakout": {"days": [0.25, 0.5, 1.0, 2.0, 4.0]},    # 6時間〜4日
+    "breakout": {"days": [0.25, 0.5, 1.0, 2.0, 4.0]},    # 6時間〜4日（日中）
+    "breakout_slow": {"days": [10, 20, 40, 55, 80]},     # 2週間〜4ヶ月（ドンチャン古典）
 }
 
 
