@@ -1516,3 +1516,6 @@ label.quickbtn { display: block; cursor: pointer; }
   opacity: .7;
   font-variant-numeric: tabular-nums;
 }
+
+/* 予想問題アプリへの入口。ボタンと同じ見た目のリンク */
+.bigbtn--link{text-decoration:none;color:inherit;}

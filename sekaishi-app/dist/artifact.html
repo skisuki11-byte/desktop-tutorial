@@ -1520,6 +1520,9 @@ label.quickbtn { display: block; cursor: pointer; }
   font-variant-numeric: tabular-nums;
 }
 
+/* 予想問題アプリへの入口。ボタンと同じ見た目のリンク */
+.bigbtn--link{text-decoration:none;color:inherit;}
+
 </style>
 
 <div class="app">
@@ -1620,6 +1623,14 @@ label.quickbtn { display: block; cursor: pointer; }
         </span>
         <span class="bigbtn__chev">›</span>
       </button>
+      <a class="bigbtn bigbtn--link" href="yosou/">
+        <span class="bigbtn__icon">試</span>
+        <span>
+          <span class="bigbtn__label">予想問題（3回分）</span>
+          <span class="bigbtn__desc">本番と同じ50問・60分。採点と弱点分析つき</span>
+        </span>
+        <span class="bigbtn__chev">›</span>
+      </a>
     </div>
 
     <div class="section" id="badge-section">
@@ -2473,7 +2484,7 @@ window.SEKAISHI.ch9 = [
 
   // 版。build.js が書き出すときに更新日時を差し込む。
   // 置き換わっていなければ、束ねる前のファイルを直接開いている＝開発中。
-  var VERSION = "2026.07.27 09:18";
+  var VERSION = "2026.08.27 07:38";
 
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,

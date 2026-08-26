@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>基礎学 世界史 予想問題</title><link rel="stylesheet" href="app.css"></head>
+<body>
+
+<!-- ホーム -->
+<section class="view is-active" id="view-home">
+  <header class="home__head">
+    <p class="home__eyebrow">令和8年度　高校3年　9月</p>
+    <h1 class="home__title">基礎学力到達度テスト<br><span>世界史探究　予想問題</span></h1>
+    <p class="home__lead">令和3〜7年度の実物271問を分析して作った3回分。<b>3回とも解く前提</b>です。1回だけだと必要知識の3〜5割にしか触れられません。</p>
+  </header>
+
+  <div class="cards" id="home-cards"></div>
+
+  <div class="total" id="home-total"></div>
+
+  <details class="more">
+    <summary>この予想問題について</summary>
+    <div class="more__body">
+      <h2>3回で一組にしている理由</h2>
+      <p>当日どちらに振れても対応できるよう、<b>第1回＝直近の反動、第2回＝傾向の継続、第3回＝取りこぼしと範囲拡大の保険</b>という3つの筋書きに分けてあります。3回あわせて、過去5年の実物を解くのに必要な知識668語のすべてに触れる設計です。</p>
+      <h2>本番と同じ形式</h2>
+      <p>すべての大問にリード文と下線部・空欄があります。設問の<span class="ex-ref">下線部a</span>を押すと、リード文の該当箇所が開いて光ります。3項目の年代整序などは本番と同じ<b>6択</b>です。</p>
+      <h2>解き方</h2>
+      <p>60分を計って通しで解いてください。答えを写して丸つけをするのではなく、<b>通しで解く</b>ことに意味があります。目標は80点。落とした大問がそのまま弱点です。</p>
+      <h2>紙で解きたいとき</h2>
+      <p class="more__links">
+        <a href="https://claude.ai/code/artifact/91be59f4-c43c-4af9-904f-4ff0cc7579ab" target="_blank" rel="noopener">第1回の印刷用ページ</a>
+        <a href="https://claude.ai/code/artifact/f1695c02-e751-4ec5-960b-39644917e8c8" target="_blank" rel="noopener">第2回</a>
+        <a href="https://claude.ai/code/artifact/d0e7a679-7fcc-41a7-ade5-66ec1a9ffd88" target="_blank" rel="noopener">第3回</a>
+      </p>
+      <h2>一問一答アプリ</h2>
+      <p class="more__links"><a href="../" target="_blank" rel="noopener">434問の一問一答はこちら</a></p>
+      <p class="ver" id="ver"></p>
+    </div>
+  </details>
+</section>
+
+<!-- 解答中 -->
+<section class="view" id="view-exam">
+  <header class="bar">
+    <button class="bar__btn" id="exam-quit" type="button">中断</button>
+    <span class="bar__mid" id="exam-dai"></span>
+    <span class="bar__time" id="exam-time">60:00</span>
+  </header>
+  <div class="prog"><div class="prog__fill" id="exam-prog"></div></div>
+
+  <details class="lead" id="exam-lead">
+    <summary class="lead__sum">大問のリード文を読む</summary>
+    <div class="lead__body" id="exam-leadbody"></div>
+  </details>
+
+  <main class="qwrap" id="exam-main">
+    <div class="qhead">
+      <span class="qnum" id="exam-qnum">問1</span>
+      <button class="qref" id="exam-qref" type="button" hidden></button>
+      <span class="qtag" id="exam-qtag"></span>
+    </div>
+    <p class="qbody" id="exam-qbody"></p>
+    <figure class="fig" id="exam-fig" hidden></figure>
+    <ol class="opts" id="exam-opts"></ol>
+  </main>
+
+  <nav class="foot">
+    <button class="foot__btn" id="exam-prev" type="button">← 前</button>
+    <button class="foot__btn foot__btn--mid" id="exam-sheet" type="button">解答一覧</button>
+    <button class="foot__btn" id="exam-next" type="button">次 →</button>
+  </nav>
+</section>
+
+<!-- 解答一覧 -->
+<section class="view" id="view-sheet">
+  <header class="bar">
+    <button class="bar__btn" id="sheet-back" type="button">← 戻る</button>
+    <span class="bar__mid">解答一覧</span>
+    <span class="bar__time" id="sheet-time"></span>
+  </header>
+  <p class="sheet__lead" id="sheet-lead"></p>
+  <div class="grid" id="sheet-grid"></div>
+  <div class="sheet__act">
+    <button class="btn btn--primary" id="sheet-submit" type="button">採点する</button>
+    <p class="sheet__note">未解答のまま採点すると、その問題は不正解になります。</p>
+  </div>
+</section>
+
+<!-- 採点結果 -->
+<section class="view" id="view-result">
+  <header class="bar">
+    <button class="bar__btn" id="result-home" type="button">← ホーム</button>
+    <span class="bar__mid" id="result-name"></span>
+    <span class="bar__time"></span>
+  </header>
+  <div class="score" id="result-score"></div>
+  <div class="breakdown" id="result-dai"></div>
+  <div class="breakdown" id="result-fmt"></div>
+  <div class="result__act">
+    <button class="btn btn--primary" id="result-wrong" type="button">間違えた問題を見直す</button>
+    <button class="btn" id="result-all" type="button">全問の解説を見る</button>
+    <button class="btn btn--ghost" id="result-retry" type="button">もう一度解く</button>
+  </div>
+</section>
+
+<!-- 復習 -->
+<section class="view" id="view-review">
+  <header class="bar">
+    <button class="bar__btn" id="review-back" type="button">← 結果へ</button>
+    <span class="bar__mid" id="review-pos"></span>
+    <span class="bar__time"></span>
+  </header>
+  <details class="lead" id="review-lead">
+    <summary class="lead__sum">大問のリード文を読む</summary>
+    <div class="lead__body" id="review-leadbody"></div>
+  </details>
+  <main class="qwrap">
+    <div class="qhead">
+      <span class="qnum" id="review-qnum"></span>
+      <button class="qref" id="review-qref" type="button" hidden></button>
+      <span class="qtag" id="review-qtag"></span>
+    </div>
+    <p class="qbody" id="review-qbody"></p>
+    <figure class="fig" id="review-fig" hidden></figure>
+    <ol class="opts opts--locked" id="review-opts"></ol>
+    <div class="ex" id="review-ex"></div>
+  </main>
+  <nav class="foot">
+    <button class="foot__btn" id="review-prev" type="button">← 前</button>
+    <button class="foot__btn foot__btn--mid" id="review-jump" type="button">結果へ</button>
+    <button class="foot__btn" id="review-next" type="button">次 →</button>
+  </nav>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
