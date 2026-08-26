@@ -11,6 +11,18 @@
     <p class="home__lead">令和3〜7年度の実物271問を分析して作った3回分。<b>3回とも解く前提</b>です。1回だけだと必要知識の3〜5割にしか触れられません。</p>
   </header>
 
+  <div class="modes" id="modes">
+    <button class="mode" type="button" data-mode="learn">
+      <span class="mode__name">学習モード</span>
+      <span class="mode__desc">1問ずつ、答えと解説をその場で確認</span>
+    </button>
+    <button class="mode" type="button" data-mode="real">
+      <span class="mode__name">本番モード</span>
+      <span class="mode__desc">50問・60分を通しで解いて、あとで採点</span>
+    </button>
+  </div>
+  <p class="modes__hint" id="modes-hint"></p>
+
   <div class="cards" id="home-cards"></div>
 
   <div class="total" id="home-total"></div>
@@ -18,12 +30,15 @@
   <details class="more">
     <summary>この予想問題について</summary>
     <div class="more__body">
+      <h2>2つのモードの使い分け</h2>
+      <p><b>学習モード</b>は1問ずつ答え合わせをします。選んだ瞬間に正誤と解説が出て、次へ進みます。時間は計りません。終わったあと<b>間違えた問題だけをやり直せる</b>ので、まずはこちらで3回分を通してください。</p>
+      <p><b>本番モード</b>は当日と同じです。60分を計って50問を通しで解き、最後にまとめて採点します。途中で答えは見られません。学習モードをひと通り終えてから、力だめしに使ってください。記録は2つのモードで別々に残ります。</p>
       <h2>3回で一組にしている理由</h2>
       <p>当日どちらに振れても対応できるよう、<b>第1回＝直近の反動、第2回＝傾向の継続、第3回＝取りこぼしと範囲拡大の保険</b>という3つの筋書きに分けてあります。3回あわせて、過去5年の実物を解くのに必要な知識668語のすべてに触れる設計です。</p>
       <h2>本番と同じ形式</h2>
       <p>すべての大問にリード文と下線部・空欄があります。設問の<span class="ex-ref">下線部a</span>を押すと、リード文の該当箇所が開いて光ります。3項目の年代整序などは本番と同じ<b>6択</b>です。</p>
-      <h2>解き方</h2>
-      <p>60分を計って通しで解いてください。答えを写して丸つけをするのではなく、<b>通しで解く</b>ことに意味があります。目標は80点。落とした大問がそのまま弱点です。</p>
+      <h2>目標</h2>
+      <p>本番モードで80点。落とした大問と、正答率の低い設問形式が、そのまま弱点です。</p>
       <h2>紙で解きたいとき</h2>
       <p class="more__links">
         <a href="https://claude.ai/code/artifact/91be59f4-c43c-4af9-904f-4ff0cc7579ab" target="_blank" rel="noopener">第1回の印刷用ページ</a>
@@ -37,7 +52,57 @@
   </details>
 </section>
 
-<!-- 解答中 -->
+<!-- 学習モード -->
+<section class="view" id="view-learn">
+  <header class="bar">
+    <button class="bar__btn" id="learn-quit" type="button">中断</button>
+    <span class="bar__mid" id="learn-dai"></span>
+    <span class="bar__count" id="learn-count"></span>
+  </header>
+  <div class="prog"><div class="prog__fill" id="learn-prog"></div></div>
+
+  <details class="lead" id="learn-lead">
+    <summary class="lead__sum">大問のリード文を読む</summary>
+    <div class="lead__body" id="learn-leadbody"></div>
+  </details>
+
+  <main class="qwrap">
+    <div class="qhead">
+      <span class="qnum" id="learn-qnum"></span>
+      <button class="qref" id="learn-qref" type="button" hidden></button>
+      <span class="qtag" id="learn-qtag"></span>
+    </div>
+    <p class="qbody" id="learn-qbody"></p>
+    <figure class="fig" id="learn-fig" hidden></figure>
+    <ol class="opts" id="learn-opts"></ol>
+    <div class="ex" id="learn-ex" hidden></div>
+  </main>
+
+  <nav class="foot">
+    <button class="foot__btn" id="learn-prev" type="button">← 前</button>
+    <button class="foot__btn foot__btn--go" id="learn-next" type="button">次 →</button>
+  </nav>
+</section>
+
+<!-- 学習モードの結果 -->
+<section class="view" id="view-lresult">
+  <header class="bar">
+    <button class="bar__btn" id="lresult-home" type="button">← ホーム</button>
+    <span class="bar__mid" id="lresult-name"></span>
+    <span class="bar__count"></span>
+  </header>
+  <div class="score" id="lresult-score"></div>
+  <div class="breakdown" id="lresult-dai"></div>
+  <div class="breakdown" id="lresult-fmt"></div>
+  <div class="result__act">
+    <button class="btn btn--primary" id="lresult-again" type="button">間違えた問題をやり直す</button>
+    <button class="btn" id="lresult-all" type="button">全問の解説を見る</button>
+    <button class="btn" id="lresult-real" type="button">本番モードで解いてみる</button>
+    <button class="btn btn--ghost" id="lresult-reset" type="button">記録を消して最初から</button>
+  </div>
+</section>
+
+<!-- 本番モード：解答中 -->
 <section class="view" id="view-exam">
   <header class="bar">
     <button class="bar__btn" id="exam-quit" type="button">中断</button>
@@ -101,7 +166,7 @@
   </div>
 </section>
 
-<!-- 復習 -->
+<!-- 見直し -->
 <section class="view" id="view-review">
   <header class="bar">
     <button class="bar__btn" id="review-back" type="button">← 結果へ</button>

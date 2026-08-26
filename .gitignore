@@ -1,2 +1,4 @@
 yosou/s-*.png
 yosou/verify-report.txt
+yosou-app/s*.png
+node_modules/
