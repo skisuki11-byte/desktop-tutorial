@@ -21,7 +21,7 @@
   --font-sans:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",
     "Yu Gothic",YuGothic,Meiryo,sans-serif;
   --radius:14px; --radius-sm:10px;
-  --bar:52px; --footh:60px;
+  --bar:52px; --footh:74px;
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -194,7 +194,8 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 
 /* ───────── 設問 ───────── */
 .qwrap{
-  max-width:640px;margin:0 auto;padding:16px 16px calc(var(--footh) + 28px);
+  max-width:640px;margin:0 auto;
+  padding:16px 16px calc(var(--footh) + env(safe-area-inset-bottom) + 28px);
 }
 .qhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
 .qnum{font-size:17px;font-weight:700;}
@@ -268,25 +269,30 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
   border:1px solid var(--ch2);color:var(--ch2);white-space:nowrap;
 }
 
-/* ───────── 下部ナビ ───────── */
+/* ───────── 下部ナビ ─────────
+   ホームバーの帯（safe-area）はナビではなくボタン側に持たせる。
+   ナビに持たせると帯の分だけボタンが手前で切れ、画面の下端まで押せない。 */
 .foot{
-  position:fixed;left:0;right:0;bottom:0;z-index:20;height:var(--footh);
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
   display:flex;background:var(--surface);border-top:1px solid var(--border);
-  padding-bottom:env(safe-area-inset-bottom);
 }
 .foot__btn{
-  flex:1;background:none;border:none;cursor:pointer;font-size:14px;font-weight:700;
-  color:var(--ink-2);
+  flex:1;background:none;border:none;cursor:pointer;
+  font-size:17px;font-weight:700;color:var(--ink-2);
+  /* box-sizing: border-box なので、帯のぶんを高さにも足さないと
+     ホームバーのある端末でボタンの見た目だけ薄くなる。 */
+  min-height:calc(var(--footh) + env(safe-area-inset-bottom));
+  padding:0 4px env(safe-area-inset-bottom);
 }
 .foot__btn:disabled{color:var(--border-strong);}
 .foot__btn:active:not(:disabled){background:var(--surface-2);}
 .foot__btn--go{
-  flex:0 0 62%;border-left:1px solid var(--border);
+  flex:0 0 66%;border-left:1px solid var(--border);font-size:18px;
 }
 .foot__btn--go.is-hot{background:var(--ink);color:#fff;}
 .foot__btn--go.is-hot:active{background:var(--ink-2);}
 .foot__btn--mid{
-  flex:0 0 40%;border-left:1px solid var(--border);border-right:1px solid var(--border);
+  flex:0 0 38%;border-left:1px solid var(--border);border-right:1px solid var(--border);
   color:var(--c,var(--ch2));
 }
 
@@ -563,7 +569,7 @@ const SETS = [{"id":1,"name":"第1回","sub":"直近の反動を重く見た配�
    ・記録は localStorage に置き、書けない環境では sessionStorage に落とす。 */
 "use strict";
 
-var VERSION = "2026.08.27 08:45";
+var VERSION = "2026.08.27 08:56";
 var CIRCLE = "①②③④⑤⑥";
 var LIMIT = 60 * 60;           // 本番モードの制限時間（秒）
 var KEY = "yosou-v1";
