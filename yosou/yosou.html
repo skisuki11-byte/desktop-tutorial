@@ -1,0 +1,1140 @@
+<title>基礎学 世界史 九月予想問題</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap">
+<style>
+/* 印刷を前提にした版面。A4・縦・1段組み。画面で見るときも同じ体裁になる。 */
+:root{
+  --paper:#ffffff;
+  --ink:#14171c;          /* 墨 */
+  --sub:#5c6270;          /* 副次的な文字 */
+  --rule:#b9bec9;         /* 罫 */
+  --rule-strong:#3a4050;
+  --tint:#f3f4f7;         /* 淡い面 */
+  --seal:#9b2530;         /* 朱。解答と根拠にだけ使う */
+  --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:10.5pt;
+  line-height:1.85;
+  margin:0;
+  padding:0 0 32px;
+  -webkit-font-feature-settings:"palt";
+  font-feature-settings:"palt";
+}
+
+/* 画面では紙のように中央に置く */
+.cover,.dai,.sheetpage,.keypage,.answers,.basis,.foot{
+  max-width:186mm;
+  margin:0 auto;
+  padding:0 6mm;
+}
+
+b{font-weight:700;}
+
+/* ---------- 表紙 ---------- */
+.cover{padding-top:26px;}
+.cover__eyebrow{
+  font-family:var(--sans);font-size:9.5pt;letter-spacing:.18em;
+  color:var(--sub);margin:0 0 6px;
+}
+.cover__title{
+  font-family:var(--serif);font-weight:700;font-size:23pt;line-height:1.35;
+  margin:0 0 10px;text-wrap:balance;letter-spacing:.02em;
+}
+.cover__title span{font-size:16pt;letter-spacing:.06em;}
+.cover__meta{
+  font-family:var(--sans);font-size:9.5pt;color:var(--sub);
+  margin:0 0 22px;padding-bottom:14px;border-bottom:2.5px solid var(--rule-strong);
+}
+.cover__box{
+  border:1px solid var(--rule);background:var(--tint);
+  padding:14px 18px;margin:0 0 16px;
+}
+.cover__box--plain{background:var(--paper);}
+.cover__box h2{
+  font-family:var(--sans);font-size:10pt;font-weight:700;letter-spacing:.12em;
+  margin:0 0 8px;
+}
+.cover__box ol{margin:0;padding-left:1.4em;}
+.cover__box li{margin-bottom:5px;}
+.cover__box p{margin:0 0 8px;}
+.cover__box p:last-child{margin-bottom:0;}
+
+.cover__plan{
+  width:100%;border-collapse:collapse;margin-top:20px;
+  font-family:var(--sans);font-size:9.5pt;
+}
+.cover__plan caption{
+  text-align:left;font-weight:700;letter-spacing:.08em;padding-bottom:6px;
+}
+.cover__plan th,.cover__plan td{
+  border:1px solid var(--rule);padding:5px 9px;text-align:left;
+  font-variant-numeric:tabular-nums;
+}
+.cover__plan thead th{background:var(--tint);font-weight:700;}
+.cover__plan tbody th{white-space:nowrap;font-weight:500;}
+.cover__plan td:last-child,.cover__plan th:last-child{text-align:right;width:4.5em;}
+.cover__plan-total th,.cover__plan-total td{background:var(--tint);font-weight:700;}
+
+/* ---------- 大問 ---------- */
+.dai{padding-top:22px;}
+.dai__head{
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  border-bottom:2.5px solid var(--rule-strong);padding-bottom:7px;margin-bottom:12px;
+}
+.dai__badge{
+  font-family:var(--sans);font-size:8pt;font-weight:700;letter-spacing:.1em;
+  border:1px solid var(--rule-strong);padding:1px 7px;white-space:nowrap;
+}
+.dai__title{
+  font-family:var(--serif);font-size:14pt;font-weight:700;margin:0;
+  display:flex;align-items:baseline;gap:12px;flex:1 1 auto;letter-spacing:.02em;
+}
+.dai__no{font-size:12pt;letter-spacing:.08em;}
+.dai__score{
+  font-family:var(--sans);font-size:9pt;color:var(--sub);white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.dai__lead{
+  margin:0 0 18px;padding:9px 13px;background:var(--tint);
+  border-left:3px solid var(--rule-strong);font-size:10pt;
+}
+/* リード文の下線部と空欄。実物にならって、下線のうしろに小さく記号を置く */
+.dai__lead u{text-decoration:none;border-bottom:1px solid currentColor;}
+.dai__lead u sub{font-size:.7em;vertical-align:baseline;position:relative;top:.35em;margin-left:.1em;font-family:var(--sans);}
+.dai__lead .bk{
+  display:inline-block;border:1px solid var(--rule-strong);background:var(--paper);
+  padding:0 .55em;margin:0 .2em;font-family:var(--sans);font-size:.92em;line-height:1.5;
+}
+.dai__lead .note{
+  display:block;font-family:var(--sans);font-size:8.5pt;color:var(--sub);margin-top:5px;
+}
+
+/* ---------- 設問 ---------- */
+.q{margin:0 0 15px;break-inside:avoid;}
+.q__head{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;}
+.q__n{
+  font-family:var(--sans);font-weight:700;font-size:10.5pt;letter-spacing:.05em;
+}
+.q__ref{
+  font-family:var(--sans);font-size:7.5pt;letter-spacing:.06em;
+  background:var(--tint);border:1px solid var(--rule);padding:0 5px;white-space:nowrap;
+}
+.q__tag{
+  font-family:var(--sans);font-size:7.5pt;letter-spacing:.08em;color:var(--sub);
+  border:1px solid var(--rule);padding:0 5px;
+}
+.q__body{margin:0 0 6px;}
+.q__body .src{
+  display:block;margin:8px 0 4px;padding:9px 14px;
+  border:1px solid var(--rule);border-left:4px solid var(--rule-strong);
+  background:var(--tint);font-size:9.5pt;
+}
+
+.opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+/* 折り返しても本文の頭がそろうよう、ぶら下げインデントにする */
+.opt{padding-left:1.7em;text-indent:-1.7em;}
+.opt__n{font-family:var(--sans);font-size:10pt;margin-right:.35em;}
+
+.fig{
+  margin:10px 0;padding:8px 6px;border:1px solid var(--rule);
+  overflow-x:auto;color:var(--ink);
+}
+.fig svg{display:block;width:100%;height:auto;max-width:640px;margin:0 auto;}
+
+/* ---------- 解答用紙 ---------- */
+.pagetitle{
+  font-family:var(--serif);font-size:15pt;font-weight:700;margin:24px 0 10px;
+  border-bottom:2.5px solid var(--rule-strong);padding-bottom:6px;letter-spacing:.04em;
+}
+.lead{margin:0 0 16px;font-size:10pt;}
+
+.sheets,.keys{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;}
+.sheet,.key{
+  border-collapse:collapse;font-family:var(--sans);font-size:9pt;
+  font-variant-numeric:tabular-nums;flex:1 1 160px;
+}
+.sheet th,.sheet td,.key th,.key td{
+  border:1px solid var(--rule);padding:2px 6px;text-align:center;
+}
+.sheet thead th,.key thead th{background:var(--tint);}
+.sheet tbody th,.key tbody th{background:var(--tint);width:2.6em;}
+.bub{color:var(--rule);}
+.sheetpage__score{
+  font-family:var(--sans);font-size:11pt;margin-top:20px;font-weight:700;
+}
+.blank{
+  display:inline-block;width:4em;border-bottom:1.5px solid var(--ink);
+}
+
+/* ---------- 解説 ---------- */
+.ansdai{
+  font-family:var(--sans);font-size:10.5pt;font-weight:700;letter-spacing:.08em;
+  margin:20px 0 8px;padding:3px 10px;background:var(--tint);
+  border-left:4px solid var(--rule-strong);
+}
+.ans{margin:0 0 11px;break-inside:avoid;}
+.ans__head{display:flex;align-items:baseline;gap:10px;}
+.ans__n{font-family:var(--sans);font-weight:700;font-size:10pt;}
+.ans__a{
+  font-family:var(--sans);font-weight:700;font-size:10pt;color:var(--seal);
+  letter-spacing:.04em;
+}
+.ans__ex{margin:1px 0 0;font-size:9.5pt;line-height:1.8;}
+.ans__src{
+  margin:4px 0 0;font-family:var(--sans);font-size:8.5pt;color:var(--sub);
+  line-height:1.7;
+}
+.ans__src span{
+  color:var(--seal);font-weight:700;letter-spacing:.06em;margin-right:.6em;
+}
+
+/* ---------- 根拠 ---------- */
+.basis__t{
+  width:100%;border-collapse:collapse;font-family:var(--sans);font-size:9pt;
+  margin:0 0 22px;
+}
+.basis__t th,.basis__t td{
+  border:1px solid var(--rule);padding:4px 8px;text-align:left;
+  font-variant-numeric:tabular-nums;
+}
+.basis__t thead th{background:var(--tint);font-weight:700;text-align:center;}
+.basis__t code{font-family:var(--sans);font-size:8pt;background:var(--tint);padding:0 3px;}
+.basis__t caption{text-align:left;font-size:8.5pt;color:var(--sub);padding-bottom:5px;}
+.basis__t tbody th{white-space:nowrap;font-weight:500;}
+.basis__t tbody td:nth-child(2),
+.basis__t tbody td:nth-child(3),
+.basis__t tbody td:nth-child(4),
+.basis__t tbody td:nth-child(5){text-align:center;width:3.6em;}
+.basis__h{
+  font-family:var(--sans);font-size:10.5pt;font-weight:700;letter-spacing:.06em;
+  margin:0 0 10px;
+}
+.basis__l{margin:0 0 22px;padding-left:1.3em;font-size:10pt;}
+.basis__l li{margin-bottom:6px;}
+
+.foot{
+  margin-top:24px;padding-top:10px;border-top:1px solid var(--rule);
+  font-family:var(--sans);font-size:8.5pt;color:var(--sub);
+}
+.foot p{margin:0 0 3px;}
+
+.printbtn{
+  position:fixed;right:16px;bottom:16px;z-index:9;
+  font-family:var(--sans);font-size:10pt;font-weight:700;letter-spacing:.08em;
+  background:var(--ink);color:var(--paper);border:none;
+  padding:11px 20px;border-radius:2px;cursor:pointer;
+}
+.printbtn:hover{background:var(--seal);}
+.printbtn:focus-visible{outline:3px solid var(--seal);outline-offset:2px;}
+
+/* ---------- 印刷 ---------- */
+@page{size:A4 portrait;margin:15mm 12mm;}
+@media print{
+  body{font-size:9.5pt;line-height:1.75;padding:0;}
+  .cover,.dai,.sheetpage,.keypage,.answers,.basis,.foot{max-width:none;padding:0;}
+  .cover,.dai,.sheetpage,.keypage{break-after:page;}
+  .dai:last-of-type{break-after:page;}
+  .answers{break-after:page;}
+  .printbtn{display:none;}
+  .dai__lead,.cover__box,.ansdai,.sheet thead th,.key thead th,
+  .sheet tbody th,.key tbody th,.cover__plan thead th,.basis__t thead th,
+  .cover__plan-total th,.cover__plan-total td,.q__body .src{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .pagetitle{margin-top:0;}
+  .dai{padding-top:0;}
+  .cover{padding-top:0;}
+  a{text-decoration:none;color:inherit;}
+}
+
+@media (max-width:640px){
+  body{font-size:11pt;}
+  .cover__title{font-size:19pt;}
+  .sheets,.keys{gap:10px;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important;}
+}
+
+</style>
+
+<header class="cover">
+  <p class="cover__eyebrow">令和8年度　高等学校 第3学年　9月</p>
+  <h1 class="cover__title">基礎学力到達度テスト<br><span>世界史探究　予想問題　第1回</span></h1>
+  <p class="cover__meta">直近の反動を重く見た配分　　試験時間 60分（想定）／100点満点（各問2点）　　作成日 2026年8月24日</p>
+
+  <div class="cover__box">
+    <h2>注意事項</h2>
+    <ol>
+      <li>問題は第1問から第6問まであり、<b>第1問〜第5問は必須問題</b>です。全員が解答してください。</li>
+      <li><b>第6問（世界史探究）と第7問（歴史総合）のうち、いずれか1題を選択</b>して解答します。本予想問題には第6問のみを収録しています。</li>
+      <li>解答は各問1つだけ選び、解答用紙の該当する番号を塗りつぶしてください。</li>
+      <li>解答時間の目安は1問あたり約70秒です。時間を計って解いてください。</li>
+    </ol>
+  </div>
+
+  <div class="cover__box cover__box--plain">
+    <h2>この予想問題について</h2>
+    <p>令和3・4・5・6・7年度の実物271問を1問ずつ分析し、<b>大問構成・出題分野・設問形式・難易度の実測値</b>にそろえて作成しました。とくに令和3・4年度は問題冊子から全114問の設問形式を数え直し、リード文と下線部・空欄の作り、選択肢の数（6択が11%）まで実物に合わせています。正解の分布（①11／②13／③14／④10）も実物に近づけてあります。3項目の年代整序など7問は、実物と同じく<b>6択</b>にしてあります。</p>
+      <p>各設問の解説には「なぜこの問題を予想したか」を明記しています。<b>的中を保証するものではありません</b>が、過去5年で1度でも出た分野・形式に絞ってあるため、当日の設問と重なる部分は大きいはずです。</p>
+      <p><b>第1回のねらい</b>——令和7年度で手薄だった分野（明・清、古代オリエント、宗教改革）を厚くしてある。</p>
+      <p>予想問題は第1回・第2回・第3回の3つで一組です。当日どの方向に振れても対応できるよう、
+      <b>第1回＝直近の反動、第2回＝傾向の継続、第3回＝取りこぼしと範囲拡大の保険</b>という3つの筋書きに分けてあります。
+      3回あわせると、過去5年の実物を解くのに必要な知識<b>668語のすべて</b>に触れる計算です（1回だけでは31〜53%にしかなりません）。</p>
+  </div>
+
+  <table class="cover__plan">
+    <caption>大問構成（新課程になった令和7年度の実物にそろえた）</caption>
+    <thead><tr><th>大問</th><th>区分</th><th>分野</th><th>問数</th></tr></thead>
+    <tbody><tr><th>第1問</th><td>必須</td><td>古代地中海世界とその後継</td><td>8</td></tr><tr><th>第2問</th><td>必須</td><td>古代インド・東南アジアと古代中国</td><td>8</td></tr><tr><th>第3問</th><td>必須</td><td>古代オリエントとイスラーム世界</td><td>8</td></tr><tr><th>第4問</th><td>必須</td><td>モンゴル帝国と宋・元・明・清</td><td>8</td></tr><tr><th>第5問</th><td>必須</td><td>近世ヨーロッパと大西洋世界</td><td>8</td></tr><tr><th>第6問</th><td>選択（世界史探究）</td><td>テーマ史　ヒトとモノの移動</td><td>10</td></tr>
+    <tr class="cover__plan-total"><th>計</th><td>—</td><td>—</td><td>50</td></tr></tbody>
+  </table>
+</header>
+
+
+<section class="dai">
+  <header class="dai__head">
+    <span class="dai__badge">必須</span>
+    <h2 class="dai__title"><span class="dai__no">第1問</span>古代地中海世界とその後継</h2>
+    <span class="dai__score">配点 16点</span>
+  </header>
+  <p class="dai__lead">古代の地中海世界ではポリスとよばれる都市国家が生まれ、アテネでは<u>民主政<sub>a</sub></u>が段階を追って整えられた。軍事に特化した<u>スパルタ<sub>b</sub></u>はこれと対照的な道を歩んだ。ギリシアの諸ポリスは<u>東方の大国や隣国との戦い<sub>c</sub></u>をへて力を失い、やがてマケドニアに従って<u>ヘレニズムの時代<sub>d</sub></u>を迎える。一方、イタリア半島の一都市国家として出発したローマでは平民が貴族と争って権利を広げ、前287年には<span class="bk">Ａ</span>が定められて<span class="bk">Ｂ</span>。地中海を統一したローマは<u>共和政末期の内乱<sub>e</sub></u>をへて<u>帝政<sub>f</sub></u>に移り、その秩序が崩れたのち西ヨーロッパには<u>ゲルマン人の国家<sub>g</sub></u>が生まれた。以上について、下の問い（問1〜問8）に答えよ。</p>
+  
+<article class="q" id="q1">
+  <div class="q__head"><span class="q__n">問1</span><span class="q__ref">下線部a</span><span class="q__tag">年代整序</span></div>
+  <p class="q__body">アテネの民主政の発展に関する次のア〜ウを、年代の古いものから順に正しく並べたものを、下の①〜⑥のうちから一つ選べ。<br>ア　僭主の出現を防ぐため、陶片追放（オストラキスモス）の制度が定められた。<br>イ　財産額に応じて市民の参政権と兵役の義務を定める改革が行われた。<br>ウ　三段櫂船の漕ぎ手として戦った無産市民の発言力が高まった。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ア→イ→ウ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ア→ウ→イ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">イ→ア→ウ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">イ→ウ→ア</span></li><li class="opt"><span class="opt__n">⑤</span><span class="opt__t">ウ→ア→イ</span></li><li class="opt"><span class="opt__n">⑥</span><span class="opt__t">ウ→イ→ア</span></li></ol>
+</article>
+<article class="q" id="q2">
+  <div class="q__head"><span class="q__n">問2</span><span class="q__ref">下線部b</span></div>
+  <p class="q__body">スパルタについて述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ヘイロータイ（ヘロット）とよばれる隷属農民に農業を行わせた。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ペリオイコイは参政権をもつ完全市民であった。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">デロス同盟の盟主として、加盟ポリスの資金を管理した。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">市民は商工業を積極的に営み、貨幣経済を発達させた。</span></li></ol>
+</article>
+<article class="q" id="q3">
+  <div class="q__head"><span class="q__n">問3</span><span class="q__ref">下線部c</span><span class="q__tag">正誤の組合せ</span></div>
+  <p class="q__body">次の文a・bの正誤の組合せとして正しいものを、下の①〜④のうちから一つ選べ。<br>a　マラトンの戦いでは、アテネの重装歩兵軍がペルシア軍を撃退した。<br>b　ペロポネソス戦争ではアテネがスパルタを破り、ギリシアの覇権を握った。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">a—正　b—正</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">a—正　b—誤</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">a—誤　b—正</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">a—誤　b—誤</span></li></ol>
+</article>
+<article class="q" id="q4">
+  <div class="q__head"><span class="q__n">問4</span><span class="q__ref">下線部d</span></div>
+  <p class="q__body">アレクサンドロス大王とヘレニズム世界について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">プトレマイオス朝はシリアを支配し、アンティオキアを都とした。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ヘレニズム時代には、ポリス中心の世界観が復活した。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">イッソスの戦いでアケメネス朝のダレイオス3世を破った。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">大王の死後、その帝国はただちにローマに併合された。</span></li></ol>
+</article>
+<article class="q" id="q5">
+  <div class="q__head"><span class="q__n">問5</span><span class="q__ref">空欄 Ａ ・ Ｂ</span><span class="q__tag">空欄補充</span></div>
+  <p class="q__body">空欄　Ａ　・　Ｂ　に該当する語句と文の組合せとして最も適切なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ａ—ホルテンシウス法　Ｂ—平民会の決議が元老院の承認を経ずに国法とされた</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ａ—ホルテンシウス法　Ｂ—コンスル2名のうち1名が平民から選ばれることになった</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ａ—リキニウス＝セクスティウス法　Ｂ—平民会の決議が元老院の承認を経ずに国法とされた</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ａ—リキニウス＝セクスティウス法　Ｂ—コンスル2名のうち1名が平民から選ばれることになった</span></li></ol>
+</article>
+<article class="q" id="q6">
+  <div class="q__head"><span class="q__n">問6</span><span class="q__ref">下線部e</span><span class="q__tag">年代整序</span></div>
+  <p class="q__body">共和政末期のローマに関する次のア〜ウを、年代の古いものから順に正しく並べたものを、下の①〜⑥のうちから一つ選べ。<br>ア　アクティウムの海戦が行われた。<br>イ　剣闘士（剣奴）スパルタクスが反乱を起こした。<br>ウ　グラックス兄弟が自作農の再建をめざす改革を行った。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ア→イ→ウ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ア→ウ→イ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">イ→ア→ウ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">イ→ウ→ア</span></li><li class="opt"><span class="opt__n">⑤</span><span class="opt__t">ウ→ア→イ</span></li><li class="opt"><span class="opt__n">⑥</span><span class="opt__t">ウ→イ→ア</span></li></ol>
+</article>
+<article class="q" id="q7">
+  <div class="q__head"><span class="q__n">問7</span><span class="q__ref">下線部f</span><span class="q__tag">略年表</span></div>
+  <p class="q__body">次の略年表を見て、「アントニヌス勅令によって帝国内の全自由人にローマ市民権が与えられた」時期として正しいものを、下の①〜④のうちから一つ選べ。</p>
+  <figure class="fig">
+<svg viewBox="0 0 640 132" role="img" aria-label="ローマ帝政の略年表">
+  <line x1="40" y1="66" x2="600" y2="66" stroke="currentColor" stroke-width="1.4"/>
+  <g stroke="currentColor" stroke-width="1.4">
+    <line x1="40" y1="58" x2="40" y2="74"/><line x1="180" y1="58" x2="180" y2="74"/>
+    <line x1="320" y1="58" x2="320" y2="74"/><line x1="460" y1="58" x2="460" y2="74"/>
+    <line x1="600" y1="58" x2="600" y2="74"/>
+  </g>
+  <g font-size="11" text-anchor="middle" fill="currentColor">
+    <text x="40" y="46">前27</text><text x="180" y="46">96</text><text x="320" y="46">235</text>
+    <text x="460" y="46">284</text><text x="600" y="46">395</text>
+    <text x="40" y="30">元首政の開始</text><text x="180" y="30">五賢帝時代の開始</text>
+    <text x="320" y="30">軍人皇帝時代の開始</text><text x="460" y="30">ディオクレティアヌス帝即位</text>
+    <text x="600" y="30">帝国の東西分裂</text>
+  </g>
+  <g font-size="13" text-anchor="middle" fill="currentColor" font-weight="700">
+    <text x="110" y="98">ア</text><text x="250" y="98">イ</text>
+    <text x="390" y="98">ウ</text><text x="530" y="98">エ</text>
+  </g>
+  <g stroke="currentColor" stroke-width="0.8" stroke-dasharray="3 3">
+    <line x1="60" y1="88" x2="160" y2="88"/><line x1="200" y1="88" x2="300" y2="88"/>
+    <line x1="340" y1="88" x2="440" y2="88"/><line x1="480" y1="88" x2="580" y2="88"/>
+  </g>
+</svg></figure>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ア</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">イ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ウ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">エ</span></li></ol>
+</article>
+<article class="q" id="q8">
+  <div class="q__head"><span class="q__n">問8</span><span class="q__ref">下線部g</span></div>
+  <p class="q__body">フランク王国について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">クローヴィスはアリウス派に改宗し、ローマ人貴族の支持を得た。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">カール＝マルテルはトゥール・ポワティエ間の戦いでウマイヤ朝の軍を破った。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ピピンは教皇からカリフの称号を与えられ、イスラーム世界の保護者となった。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">カール大帝はヴェルダン条約を結び、帝国を三人の子に分け与えた。</span></li></ol>
+</article>
+</section>
+<section class="dai">
+  <header class="dai__head">
+    <span class="dai__badge">必須</span>
+    <h2 class="dai__title"><span class="dai__no">第2問</span>古代インド・東南アジアと古代中国</h2>
+    <span class="dai__score">配点 16点</span>
+  </header>
+  <p class="dai__lead">インドでは早くから<u>身分秩序と宗教<sub>a</sub></u>が結びつき、<u>北インドに興った諸王朝<sub>b</sub></u>のもとで文化が育ち、それは<u>東南アジア<sub>c</sub></u>にも広がった。一方、中国では前3世紀に秦が統一を果たし、<span class="bk">Ａ</span>を全国に施行して<span class="bk">Ｂ</span>。漢は<u>北方の匈奴<sub>d</sub></u>と長く対峙し、その滅亡後の<u>分裂の時代<sub>e</sub></u>をへて隋唐が再び統一を実現し、<u>土地・税・兵をめぐる制度<sub>f</sub></u>を整えた。唐は<u>反乱によって衰えていく<sub>g</sub></u>。以上について、下の問い（問9〜問16）に答えよ。</p>
+  
+<article class="q" id="q9">
+  <div class="q__head"><span class="q__n">問9</span><span class="q__ref">下線部a</span></div>
+  <p class="q__body">古代インドの社会と宗教について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">仏教は、バラモン教の祭祀とヴァルナ制を全面的に支持した。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ジャイナ教はガウタマ＝シッダールタが創始した。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ヴァイシャは司祭階級であり、祭祀を独占した。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">ウパニシャッド哲学では、輪廻からの解脱が説かれた。</span></li></ol>
+</article>
+<article class="q" id="q10">
+  <div class="q__head"><span class="q__n">問10</span><span class="q__ref">下線部b</span><span class="q__tag">組合せ</span></div>
+  <p class="q__body">インドの王朝と都・人物の組合せとして正しいものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">クシャーナ朝—パータリプトラ—カニシカ王</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">グプタ朝—パータリプトラ—チャンドラグプタ2世</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ヴァルダナ朝—サマルカンド—ハルシャ王</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">マウリヤ朝—プルシャプラ—アショーカ王</span></li></ol>
+</article>
+<article class="q" id="q11">
+  <div class="q__head"><span class="q__n">問11</span><span class="q__ref">下線部c</span><span class="q__tag">正誤の組合せ</span></div>
+  <p class="q__body">次の文a・bの正誤の組合せとして最も適切なものを、下の①〜④のうちから一つ選べ。<br>a　シャイレンドラ朝は、ジャワ島中部に大乗仏教の石造遺跡ボロブドゥールを造営した。<br>b　シュリーヴィジャヤ王国は、スマトラ島のパレンバンを中心とする海上国家である。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">a—正　b—正</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">a—正　b—誤</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">a—誤　b—正</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">a—誤　b—誤</span></li></ol>
+</article>
+<article class="q" id="q12">
+  <div class="q__head"><span class="q__n">問12</span><span class="q__ref">空欄 Ａ ・ Ｂ</span><span class="q__tag">空欄補充</span></div>
+  <p class="q__body">空欄　Ａ　・　Ｂ　に該当する語句と文の組合せとして最も適切なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ａ—郡国制　Ｂ—儒学を官学とし、五経博士を置いた</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ａ—郡国制　Ｂ—度量衡・貨幣・文字を統一し、半両銭を用いさせた</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ａ—郡県制　Ｂ—儒学を官学とし、五経博士を置いた</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ａ—郡県制　Ｂ—度量衡・貨幣・文字を統一し、半両銭を用いさせた</span></li></ol>
+</article>
+<article class="q" id="q13">
+  <div class="q__head"><span class="q__n">問13</span><span class="q__ref">下線部e</span><span class="q__tag">正誤の組合せ</span></div>
+  <p class="q__body">次の文a・bの正誤の組合せとして最も適切なものを、下の①〜④のうちから一つ選べ。<br>a　九品中正は隋の文帝が創始した、家柄によらない官吏登用法である。<br>b　北魏の孝文帝は漢化政策を進め、都を平城から洛陽に移した。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">a—正　b—正</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">a—正　b—誤</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">a—誤　b—正</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">a—誤　b—誤</span></li></ol>
+</article>
+<article class="q" id="q14">
+  <div class="q__head"><span class="q__n">問14</span><span class="q__ref">下線部f</span></div>
+  <p class="q__body">唐の制度について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">均田制で農民に土地を与え、租・調・庸を課し、府兵制で兵を徴発した。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">両税法は玄宗の時代に施行され、資産に応じて夏と秋に課税した。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">節度使は安史の乱の直後に廃止され、中央集権が回復した。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">募兵制にかわって府兵制が採用され、農民の負担は軽くなった。</span></li></ol>
+</article>
+<article class="q" id="q15">
+  <div class="q__head"><span class="q__n">問15</span><span class="q__ref">下線部g</span><span class="q__tag">年代整序</span></div>
+  <p class="q__body">唐の歴史に関する次のア〜ウを、年代の古いものから順に正しく並べたものを、下の①〜⑥のうちから一つ選べ。<br>ア　安史の乱が起こった。<br>イ　黄巣の乱が起こった。<br>ウ　則天武后が国号を周と改めた。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ア→イ→ウ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ア→ウ→イ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">イ→ア→ウ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">イ→ウ→ア</span></li><li class="opt"><span class="opt__n">⑤</span><span class="opt__t">ウ→ア→イ</span></li><li class="opt"><span class="opt__n">⑥</span><span class="opt__t">ウ→イ→ア</span></li></ol>
+</article>
+<article class="q" id="q16">
+  <div class="q__head"><span class="q__n">問16</span><span class="q__ref">下線部d</span></div>
+  <p class="q__body">前漢と匈奴の関係について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">張騫は大月氏との同盟に成功し、匈奴を挟撃した。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">衛氏朝鮮は後漢の光武帝によって滅ぼされた。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">武帝は匈奴に敗れ、西域との交通路を失った。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">冒頓単于は白登山の戦いで高祖（劉邦）の軍を包囲した。</span></li></ol>
+</article>
+</section>
+<section class="dai">
+  <header class="dai__head">
+    <span class="dai__badge">必須</span>
+    <h2 class="dai__title"><span class="dai__no">第3問</span>古代オリエントとイスラーム世界</h2>
+    <span class="dai__score">配点 16点</span>
+  </header>
+  <p class="dai__lead">オリエントは前7世紀に<span class="bk">Ａ</span>によって初めて統一されたが、まもなく崩れて4王国に分立し、前6世紀に<span class="bk">Ｂ</span>が再び統一した。それ以前の<u>エジプト<sub>a</sub></u>や<u>地中海東岸の諸民族<sub>b</sub></u>は、それぞれ独自の文明を築いている。<u>イラン高原<sub>c</sub></u>では諸王朝が交替した。7世紀、ムハンマドは迫害を避けて<span class="bk">Ｃ</span>へ移り、これを<span class="bk">Ｄ</span>という。その死後、<u>カリフのもとで大征服が進み<sub>d</sub></u>、やがて<u>オスマン帝国<sub>e</sub></u>や<u>ムガル帝国<sub>f</sub></u>が広大な領域を治めた。以上について、下の問い（問17〜問24）に答えよ。</p>
+  
+<article class="q" id="q17">
+  <div class="q__head"><span class="q__n">問17</span><span class="q__ref">空欄 Ａ ・ Ｂ</span><span class="q__tag">空欄補充</span></div>
+  <p class="q__body">空欄　Ａ　・　Ｂ　に該当する語句の組合せとして最も適切なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ａ—アッシリア　Ｂ—新バビロニア</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ａ—アッシリア　Ｂ—アケメネス朝</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ａ—ヒッタイト　Ｂ—新バビロニア</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ａ—ヒッタイト　Ｂ—アケメネス朝</span></li></ol>
+</article>
+<article class="q" id="q18">
+  <div class="q__head"><span class="q__n">問18</span><span class="q__ref">下線部a</span></div>
+  <p class="q__body">古代エジプトについて述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ロゼッタ＝ストーンは、ローリンソンによるくさび形文字解読の鍵となった。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ピラミッドは新王国時代に最も盛んに造られ、王の権力の大きさを示した。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">アメンヘテプ4世はアテンの一神教を強制し、都をテル＝エル＝アマルナに移した。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">「死者の書」はメソポタミアで粘土板に記され、来世の裁きを説いた。</span></li></ol>
+</article>
+<article class="q" id="q19">
+  <div class="q__head"><span class="q__n">問19</span><span class="q__ref">下線部b</span><span class="q__tag">組合せ</span></div>
+  <p class="q__body">ヘブライ人の歴史について、次の文中の空欄　Ａ　・　Ｂ　に入る語の組合せとして正しいものを、下の①〜④のうちから一つ選べ。<br>「ユダ王国は　Ａ　に滅ぼされ、住民は都に連行された（バビロン捕囚）。のち　Ｂ　の王キュロス2世によって解放された。」</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ａ—新バビロニア　Ｂ—アケメネス朝</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ａ—新バビロニア　Ｂ—パルティア</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ａ—ヒッタイト　Ｂ—アケメネス朝</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ａ—アッシリア　Ｂ—ササン朝</span></li></ol>
+</article>
+<article class="q" id="q20">
+  <div class="q__head"><span class="q__n">問20</span><span class="q__ref">下線部c</span><span class="q__tag">年代整序</span></div>
+  <p class="q__body">イラン地域の歴史に関する次のア〜ウを、年代の古いものから順に正しく並べたものを、下の①〜⑥のうちから一つ選べ。<br>ア　アケメネス朝がアレクサンドロス大王に滅ぼされた。<br>イ　ササン朝がニハーヴァンドの戦いでイスラーム軍に敗れた。<br>ウ　パルティアがイラン高原に自立した。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ア→イ→ウ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ア→ウ→イ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">イ→ア→ウ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">イ→ウ→ア</span></li><li class="opt"><span class="opt__n">⑤</span><span class="opt__t">ウ→ア→イ</span></li><li class="opt"><span class="opt__n">⑥</span><span class="opt__t">ウ→イ→ア</span></li></ol>
+</article>
+<article class="q" id="q21">
+  <div class="q__head"><span class="q__n">問21</span><span class="q__ref">空欄 Ｃ ・ Ｄ</span><span class="q__tag">空欄補充</span></div>
+  <p class="q__body">空欄　Ｃ　・　Ｄ　に該当する語句の組合せとして最も適切なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ｃ—メッカ　Ｄ—ヒジュラ（聖遷）</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ｃ—メッカ　Ｄ—ジハード</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ｃ—メディナ　Ｄ—ヒジュラ（聖遷）</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ｃ—メディナ　Ｄ—ジハード</span></li></ol>
+</article>
+<article class="q" id="q22">
+  <div class="q__head"><span class="q__n">問22</span><span class="q__ref">下線部d</span><span class="q__tag">正誤の組合せ</span></div>
+  <p class="q__body">次の文a・bの正誤の組合せとして最も適切なものを、下の①〜④のうちから一つ選べ。<br>a　アッバース朝は新都バグダードを建設し、非アラブ人のムスリムのジズヤを免除した。<br>b　アッバース朝はダマスクスを都とし、アラブ人を優遇して非アラブ人に人頭税を課した。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">a—正　b—正</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">a—正　b—誤</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">a—誤　b—正</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">a—誤　b—誤</span></li></ol>
+</article>
+<article class="q" id="q23">
+  <div class="q__head"><span class="q__n">問23</span><span class="q__ref">下線部e</span><span class="q__tag">地図</span></div>
+  <p class="q__body">1453年にビザンツ帝国を滅ぼし、その都を自国の首都としたスルタンの名と、その都市の位置（略地図中のＡ〜Ｄ）の組合せとして正しいものを、次の①〜④のうちから一つ選べ。</p>
+  <figure class="fig">
+<svg viewBox="0 0 640 250" role="img" aria-label="地中海と西アジアの略地図">
+  <rect x="8" y="8" width="624" height="234" fill="none" stroke="currentColor" stroke-width="1"/>
+  <path d="M40 96 L150 88 L210 104 L268 92 L330 100 L392 86 L452 98"
+        fill="none" stroke="currentColor" stroke-width="1.2"/>
+  <path d="M452 98 L462 130 L452 162" fill="none" stroke="currentColor" stroke-width="1.2"/>
+  <path d="M40 176 L140 168 L240 182 L360 172 L452 162"
+        fill="none" stroke="currentColor" stroke-width="1.2"/>
+  <text x="250" y="136" font-size="13" text-anchor="middle" fill="currentColor">地　中　海</text>
+  <g fill="currentColor">
+    <circle cx="76" cy="150" r="5"/><circle cx="330" cy="64" r="5"/>
+    <circle cx="352" cy="206" r="5"/><circle cx="546" cy="118" r="5"/>
+  </g>
+  <g font-size="13" font-weight="700" fill="currentColor">
+    <text x="86" y="146">D</text><text x="340" y="60">A</text>
+    <text x="362" y="202">B</text><text x="556" y="114">C</text>
+  </g>
+  <g font-size="10" fill="currentColor">
+    <text x="30" y="40">ヨーロッパ</text><text x="30" y="216">アフリカ</text>
+    <text x="500" y="52">西アジア</text><text x="536" y="216">アラビア半島</text>
+  </g>
+</svg></figure>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">セリム1世—Ａ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">スレイマン1世—Ｄ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">メフメト2世—Ａ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">メフメト2世—Ｃ</span></li></ol>
+</article>
+<article class="q" id="q24">
+  <div class="q__head"><span class="q__n">問24</span><span class="q__ref">下線部f</span></div>
+  <p class="q__body">ムガル帝国について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">タージ＝マハルは、アクバルが亡き妃のために建てた墓廟である。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">バーブルは1526年のパーニーパットの戦いでロディー朝を破り、帝国を建てた。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">アクバルはジズヤを復活させてヒンドゥー教徒を弾圧し、反乱を招いた。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">アウラングゼーブはシク教徒を保護し、ヒンドゥー教徒にも寛容な政策をとった。</span></li></ol>
+</article>
+</section>
+<section class="dai">
+  <header class="dai__head">
+    <span class="dai__badge">必須</span>
+    <h2 class="dai__title"><span class="dai__no">第4問</span>モンゴル帝国と宋・元・明・清</h2>
+    <span class="dai__score">配点 16点</span>
+  </header>
+  <p class="dai__lead">中国では<u>宋<sub>a</sub></u>以降、文人官僚による統治が定着した。一方、北方では<span class="bk">Ａ</span>が契丹（遼）を建て、完顔阿骨打が女真の金を建てて宋を圧迫し、西北では<span class="bk">Ｂ</span>が西夏を建てた。13世紀には<u>モンゴル<sub>b</sub></u>がユーラシアを結び、<u>元<sub>c</sub></u>が中国全土を支配する。これにかわった<u>明<sub>d</sub></u>は<u>海禁と朝貢<sub>e</sub></u>によって対外関係を管理し、明を継いだ清は、直轄領のほかに<span class="bk">Ｃ</span>を置いて<span class="bk">Ｄ</span>。<u>税制<sub>f</sub></u>は時代とともに姿を変えた。以上について、下の問い（問25〜問32）に答えよ。</p>
+  
+<article class="q" id="q25">
+  <div class="q__head"><span class="q__n">問25</span><span class="q__ref">下線部a</span><span class="q__tag">正誤の組合せ</span></div>
+  <p class="q__body">次の文a・bの正誤の組合せとして正しいものを、下の①〜④のうちから一つ選べ。<br>a　趙匡胤は節度使の権限を奪って文治主義をとり、皇帝みずから最終試験を行う殿試を始めた。<br>b　王安石の新法は、司馬光らの旧法党の反対を受けた。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">a—正　b—正</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">a—正　b—誤</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">a—誤　b—正</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">a—誤　b—誤</span></li></ol>
+</article>
+<article class="q" id="q26">
+  <div class="q__head"><span class="q__n">問26</span><span class="q__ref">空欄 Ａ ・ Ｂ</span><span class="q__tag">空欄補充</span></div>
+  <p class="q__body">空欄　Ａ　・　Ｂ　に該当する人物名の組合せとして最も適切なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ａ—完顔阿骨打　Ｂ—李元昊</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ａ—完顔阿骨打　Ｂ—趙匡胤</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ａ—耶律阿保機　Ｂ—李元昊</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ａ—耶律阿保機　Ｂ—趙匡胤</span></li></ol>
+</article>
+<article class="q" id="q27">
+  <div class="q__head"><span class="q__n">問27</span><span class="q__ref">下線部b</span><span class="q__tag">年代整序</span></div>
+  <p class="q__body">モンゴル帝国に関する次のア〜ウを、年代の古いものから順に正しく並べたものを、下の①〜⑥のうちから一つ選べ。<br>ア　チンギス＝ハンがホラズム＝シャー朝を攻撃した。<br>イ　南宋が滅ぼされた。<br>ウ　ワールシュタットの戦いでドイツ・ポーランド連合軍が破られた。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ア→イ→ウ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ア→ウ→イ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">イ→ア→ウ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">イ→ウ→ア</span></li><li class="opt"><span class="opt__n">⑤</span><span class="opt__t">ウ→ア→イ</span></li><li class="opt"><span class="opt__n">⑥</span><span class="opt__t">ウ→イ→ア</span></li></ol>
+</article>
+<article class="q" id="q28">
+  <div class="q__head"><span class="q__n">問28</span><span class="q__ref">下線部c</span></div>
+  <p class="q__body">元の統治について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">南人を最上位、モンゴル人を最下位とする身分序列を定めた。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">科挙を重視し、漢人官僚を中心に統治した。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">紅巾の乱を鎮圧して支配を立て直した。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">交鈔とよばれる紙幣を発行し、ジャムチ（駅伝制）で広域を結んだ。</span></li></ol>
+</article>
+<article class="q" id="q29">
+  <div class="q__head"><span class="q__n">問29</span><span class="q__ref">下線部d</span></div>
+  <p class="q__body">明の洪武帝（朱元璋）の政策として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">軍機処を設けて、皇帝直属の最高機関として政務を統括させた。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">中書省を廃して六部を皇帝直属とし、里甲制や六諭を定めた。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">都を南京から北京に移し、鄭和を南海に派遣した。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">一条鞭法を全国に施行し、諸税と徭役を銀でまとめて納めさせた。</span></li></ol>
+</article>
+<article class="q" id="q30">
+  <div class="q__head"><span class="q__n">問30</span><span class="q__ref">下線部e</span><span class="q__tag">正誤の組合せ</span></div>
+  <p class="q__body">次の文a・bの正誤の組合せとして最も適切なものを、下の①〜④のうちから一つ選べ。<br>a　北虜南倭とは、南のモンゴルと北の倭寇による圧迫をいう。<br>b　明は民間人の海上貿易を禁じる海禁をとり、対外貿易を朝貢に限った。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">a—正　b—正</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">a—正　b—誤</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">a—誤　b—正</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">a—誤　b—誤</span></li></ol>
+</article>
+<article class="q" id="q31">
+  <div class="q__head"><span class="q__n">問31</span><span class="q__ref">空欄 Ｃ ・ Ｄ</span><span class="q__tag">空欄補充</span></div>
+  <p class="q__body">空欄　Ｃ　・　Ｄ　に該当する語句と文の組合せとして最も適切なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ｃ—朝貢国　Ｄ—礼部にこれを統轄させた</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ｃ—朝貢国　Ｄ—理藩院にこれを統轄させた</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ｃ—藩部　Ｄ—礼部にこれを統轄させた</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ｃ—藩部　Ｄ—理藩院にこれを統轄させた</span></li></ol>
+</article>
+<article class="q" id="q32">
+  <div class="q__head"><span class="q__n">問32</span><span class="q__ref">下線部f</span><span class="q__tag">資料・年代整序</span></div>
+  <p class="q__body">次の表は中国の税制の移り変わりをまとめたものである。表中のア〜ウの制度を、施行された年代の古いものから順に正しく並べたものを、下の①〜⑥のうちから一つ選べ。</p>
+  <figure class="fig">
+<svg viewBox="0 0 640 190" role="img" aria-label="中国の税制をまとめた表">
+  <g stroke="currentColor" stroke-width="1" fill="none">
+    <rect x="20" y="20" width="600" height="150"/>
+    <line x1="20" y1="52" x2="620" y2="52"/><line x1="20" y1="91" x2="620" y2="91"/>
+    <line x1="20" y1="130" x2="620" y2="130"/>
+    <line x1="120" y1="20" x2="120" y2="170"/><line x1="330" y1="20" x2="330" y2="170"/>
+  </g>
+  <g font-size="12" fill="currentColor">
+    <text x="45" y="41">制度</text><text x="185" y="41">課税の基準</text><text x="390" y="41">おもに納めるもの</text>
+    <text x="58" y="77" font-weight="700">ア</text><text x="132" y="77">土地と資産</text><text x="342" y="77">銭（夏と秋の2回）</text>
+    <text x="58" y="116" font-weight="700">イ</text><text x="132" y="116">土地・人・徭役をまとめる</text><text x="342" y="116">銀</text>
+    <text x="58" y="155" font-weight="700">ウ</text><text x="132" y="155">土地（人頭税を繰り込む）</text><text x="342" y="155">銀</text>
+  </g>
+</svg></figure>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ア→イ→ウ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ア→ウ→イ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">イ→ア→ウ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">イ→ウ→ア</span></li><li class="opt"><span class="opt__n">⑤</span><span class="opt__t">ウ→ア→イ</span></li><li class="opt"><span class="opt__n">⑥</span><span class="opt__t">ウ→イ→ア</span></li></ol>
+</article>
+</section>
+<section class="dai">
+  <header class="dai__head">
+    <span class="dai__badge">必須</span>
+    <h2 class="dai__title"><span class="dai__no">第5問</span>近世ヨーロッパと大西洋世界</h2>
+    <span class="dai__score">配点 16点</span>
+  </header>
+  <p class="dai__lead"><u>大航海時代<sub>a</sub></u>以降、ヨーロッパは世界各地と結びついた。同じころドイツでは、ルターが<span class="bk">Ａ</span>を発表して<span class="bk">Ｂ</span>、この動きは<u>各地の改革者<sub>b</sub></u>に受け継がれる。宗教対立は<u>三十年戦争<sub>c</sub></u>に発展し、その講和が主権国家の体制を確かなものにした。イギリスでは<u>二つの革命<sub>d</sub></u>をへて議会が力を持ち、大陸では<u>絶対王政<sub>e</sub></u>が栄えた。やがて大西洋の両岸で<u>市民革命<sub>f</sub></u>が起こり、<u>ナポレオン<sub>g</sub></u>がその成果をヨーロッパに広げた。以上について、下の問い（問33〜問40）に答えよ。</p>
+  
+<article class="q" id="q33">
+  <div class="q__head"><span class="q__n">問33</span><span class="q__ref">下線部a</span></div>
+  <p class="q__body">大航海時代がヨーロッパにもたらした変化について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">アメリカ大陸産の銀が大量に流入し、物価が高騰した（価格革命）。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">貿易の中心が地中海から大西洋岸に移ったことを価格革命という。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">エンコミエンダ制はアジアの植民地で行われた土地制度である。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">ポトシ銀山はブラジルにあり、ポルトガルが開発した。</span></li></ol>
+</article>
+<article class="q" id="q34">
+  <div class="q__head"><span class="q__n">問34</span><span class="q__ref">空欄 Ａ ・ Ｂ</span><span class="q__tag">空欄補充</span></div>
+  <p class="q__body">空欄　Ａ　・　Ｂ　に該当する語句と文の組合せとして最も適切なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ａ—『キリスト教綱要』　Ｂ—贖宥状を批判し、信仰のよりどころを聖書に求め</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ａ—『キリスト教綱要』　Ｂ—予定説を唱え、勤労と蓄財を肯定し</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ａ—「九十五カ条の論題」　Ｂ—贖宥状を批判し、信仰のよりどころを聖書に求め</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ａ—「九十五カ条の論題」　Ｂ—予定説を唱え、勤労と蓄財を肯定し</span></li></ol>
+</article>
+<article class="q" id="q35">
+  <div class="q__head"><span class="q__n">問35</span><span class="q__ref">下線部b</span></div>
+  <p class="q__body">カルヴァンの改革について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">聖書のドイツ語訳を完成させ、ドイツ語の統一に貢献した。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">国王を教会の首長とする首長法を定め、イギリス国教会を成立させた。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">カルヴァン派は、スコットランドではゴイセンとよばれた。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">ジュネーヴで神権政治を行い、予定説を説いて職業労働に励むことを肯定した。</span></li></ol>
+</article>
+<article class="q" id="q36">
+  <div class="q__head"><span class="q__n">問36</span><span class="q__ref">下線部c</span></div>
+  <p class="q__body">三十年戦争とウェストファリア条約について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">この戦争によって神聖ローマ皇帝の権威は大きく強化された。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">カルヴァン派は、この条約でも公認されなかった。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">条約によってオランダとスイスの独立が国際的に承認された。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">フランスは旧教国として、ハプスブルク家の側に立って参戦した。</span></li></ol>
+</article>
+<article class="q" id="q37">
+  <div class="q__head"><span class="q__n">問37</span><span class="q__ref">下線部d</span><span class="q__tag">年代整序</span></div>
+  <p class="q__body">イギリス革命に関する次のア〜ウを、年代の古いものから順に正しく並べたものを、下の①〜⑥のうちから一つ選べ。<br>ア　権利の章典が制定された。<br>イ　権利の請願が議会から提出された。<br>ウ　チャールズ1世が処刑された。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ア→イ→ウ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ア→ウ→イ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">イ→ア→ウ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">イ→ウ→ア</span></li><li class="opt"><span class="opt__n">⑤</span><span class="opt__t">ウ→ア→イ</span></li><li class="opt"><span class="opt__n">⑥</span><span class="opt__t">ウ→イ→ア</span></li></ol>
+</article>
+<article class="q" id="q38">
+  <div class="q__head"><span class="q__n">問38</span><span class="q__ref">下線部e</span><span class="q__tag">組合せ</span></div>
+  <p class="q__body">絶対王政期の君主とその事績の組合せとして<b>誤っているもの</b>を、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ルイ14世—ナントの王令を発して新教徒に信仰の自由を認めた</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">エリザベス1世—統一法を定めてイギリス国教会を確立した</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">フリードリヒ2世—「君主は国家第一の僕」と称し、啓蒙専制政治を行った</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">フェリペ2世—レパントの海戦でオスマン帝国を破った</span></li></ol>
+</article>
+<article class="q" id="q39">
+  <div class="q__head"><span class="q__n">問39</span><span class="q__ref">下線部f</span><span class="q__tag">略年表</span></div>
+  <p class="q__body">次の略年表を見て、「独立宣言が発表された」時期として正しいものを、下の①〜④のうちから一つ選べ。</p>
+  <figure class="fig">
+<svg viewBox="0 0 640 132" role="img" aria-label="アメリカ独立をめぐる略年表">
+  <line x1="40" y1="66" x2="600" y2="66" stroke="currentColor" stroke-width="1.4"/>
+  <g stroke="currentColor" stroke-width="1.4">
+    <line x1="40" y1="58" x2="40" y2="74"/><line x1="180" y1="58" x2="180" y2="74"/>
+    <line x1="320" y1="58" x2="320" y2="74"/><line x1="460" y1="58" x2="460" y2="74"/>
+    <line x1="600" y1="58" x2="600" y2="74"/>
+  </g>
+  <g font-size="11" text-anchor="middle" fill="currentColor">
+    <text x="40" y="46">1765</text><text x="180" y="46">1773</text><text x="320" y="46">1775</text>
+    <text x="460" y="46">1781</text><text x="600" y="46">1783</text>
+    <text x="40" y="30">印紙法</text><text x="180" y="30">ボストン茶会事件</text>
+    <text x="320" y="30">レキシントンの戦い</text><text x="460" y="30">ヨークタウンの戦い</text>
+    <text x="600" y="30">パリ条約</text>
+  </g>
+  <g font-size="13" text-anchor="middle" fill="currentColor" font-weight="700">
+    <text x="110" y="98">ア</text><text x="250" y="98">イ</text>
+    <text x="390" y="98">ウ</text><text x="530" y="98">エ</text>
+  </g>
+  <g stroke="currentColor" stroke-width="0.8" stroke-dasharray="3 3">
+    <line x1="60" y1="88" x2="160" y2="88"/><line x1="200" y1="88" x2="300" y2="88"/>
+    <line x1="340" y1="88" x2="440" y2="88"/><line x1="480" y1="88" x2="580" y2="88"/>
+  </g>
+</svg></figure>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">ア</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">イ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ウ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">エ</span></li></ol>
+</article>
+<article class="q" id="q40">
+  <div class="q__head"><span class="q__n">問40</span><span class="q__ref">下線部g</span><span class="q__tag">正誤の組合せ</span></div>
+  <p class="q__body">次の文a・bの正誤の組合せとして最も適切なものを、下の①〜④のうちから一つ選べ。<br>a　ナポレオンはテルミドールの反動によって権力を握り、皇帝の位についた。<br>b　トラファルガーの海戦では、フランス艦隊がイギリス海軍を破った。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">a—正　b—正</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">a—正　b—誤</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">a—誤　b—正</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">a—誤　b—誤</span></li></ol>
+</article>
+</section>
+<section class="dai">
+  <header class="dai__head">
+    <span class="dai__badge">選択（世界史探究）</span>
+    <h2 class="dai__title"><span class="dai__no">第6問</span>テーマ史　ヒトとモノの移動</h2>
+    <span class="dai__score">配点 20点</span>
+  </header>
+  <p class="dai__lead">人と物資の移動は、文明の接触と変容をうながしてきた。<u>思想や宗教<sub>a</sub></u>は交易路をたどって伝わり、<u>作物<sub>b</sub></u>は大陸をまたいで広まった。<u>征服や布教のための使節<sub>c</sub></u>が遠く旅をする一方、<u>民族の移動<sub>d</sub></u>は国家の地図を書き換えた。近世には<u>大西洋を結ぶ三角貿易<sub>e</sub></u>が生まれ、その廃止後には<u>新たな労働力の移動<sub>f</sub></u>が続く。また、人は信仰のためにも旅をした。イスラーム教徒にとっての<span class="bk">Ｅ</span>、ヒンドゥー教徒にとっての<span class="bk">Ｆ</span>がその例である。そして<u>銀<sub>g</sub></u>の移動は、遠く離れた地域の税のしくみまで変えた。以上について、下の問い（問41〜問50）に答えよ。<br><span class="note">※大問6と大問7（歴史総合）のうち、いずれか1題を選択して解答すること。</span></p>
+  
+<article class="q" id="q41">
+  <div class="q__head"><span class="q__n">問41</span><span class="q__tag">史料</span></div>
+  <p class="q__body">次の史料に関して、これが発表された年と、発表した議会の組合せとして正しいものを、下の①〜④のうちから一つ選べ。<br><span class="src">第1条　人は、自由かつ権利において平等なものとして生まれ、生存する。<br>第3条　あらゆる主権の原理は、本質的に国民に存する。</span></p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">1793年—国民公会</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">1776年—大陸会議</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">1789年—国民議会</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">1791年—立法議会</span></li></ol>
+</article>
+<article class="q" id="q42">
+  <div class="q__head"><span class="q__n">問42</span><span class="q__ref">下線部a</span></div>
+  <p class="q__body">唐代に西方から中国に伝わり、「大秦景教流行中国碑」が建てられた宗教として正しいものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">回教（イスラーム教）</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">景教（ネストリウス派キリスト教）</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">祆教（ゾロアスター教）</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">摩尼教（マニ教）</span></li></ol>
+</article>
+<article class="q" id="q43">
+  <div class="q__head"><span class="q__n">問43</span><span class="q__ref">下線部e</span><span class="q__tag">図表</span></div>
+  <p class="q__body">次の図は18世紀の大西洋三角貿易を示している。Ａ〜Ｃに入る主な積荷の組合せとして正しいものを、下の①〜④のうちから一つ選べ。</p>
+  <figure class="fig">
+<svg viewBox="0 0 640 230" role="img" aria-label="大西洋三角貿易の模式図">
+  <g font-size="12" fill="currentColor" text-anchor="middle">
+    <rect x="248" y="14" width="144" height="34" fill="none" stroke="currentColor"/>
+    <text x="320" y="36">ヨーロッパ</text>
+    <rect x="14" y="176" width="190" height="34" fill="none" stroke="currentColor"/>
+    <text x="109" y="198">南北アメリカ・西インド諸島</text>
+    <rect x="466" y="176" width="150" height="34" fill="none" stroke="currentColor"/>
+    <text x="541" y="198">アフリカ西岸</text>
+  </g>
+  <g stroke="currentColor" stroke-width="1.3" fill="none" marker-end="url(#ar)">
+    <path d="M392 40 L520 176"/>
+    <path d="M466 200 L210 200"/>
+    <path d="M120 172 L262 48"/>
+  </g>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <g font-size="13" font-weight="700" fill="currentColor" text-anchor="middle">
+    <text x="486" y="96">Ａ</text><text x="320" y="222">Ｂ</text><text x="162" y="100">Ｃ</text>
+  </g>
+</svg></figure>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ａ—黒人奴隷　Ｂ—砂糖・綿花　Ｃ—武器・雑貨</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ａ—砂糖・綿花　Ｂ—武器・雑貨　Ｃ—黒人奴隷</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ａ—武器・雑貨　Ｂ—砂糖・綿花　Ｃ—黒人奴隷</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ａ—武器・雑貨　Ｂ—黒人奴隷　Ｃ—砂糖・綿花</span></li></ol>
+</article>
+<article class="q" id="q44">
+  <div class="q__head"><span class="q__n">問44</span><span class="q__ref">下線部b</span></div>
+  <p class="q__body">いわゆる「コロンブスの交換」で、アメリカ大陸から旧大陸にもたらされた作物として<b>誤っているもの</b>を、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">トマト</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">サトウキビ</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ジャガイモ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">トウモロコシ</span></li></ol>
+</article>
+<article class="q" id="q45">
+  <div class="q__head"><span class="q__n">問45</span><span class="q__ref">下線部c</span><span class="q__tag">組合せ</span></div>
+  <p class="q__body">モンゴル帝国を訪れた人物と、その説明の組合せとして<b>誤っているもの</b>を、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">マルコ＝ポーロ—『三大陸周遊記（大旅行記）』を口述した</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">プラノ＝カルピニ—ローマ教皇の使節としてカラコルムに至った</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">ルブルック—フランス王ルイ9世の使節として派遣された</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">モンテ＝コルヴィノ—大都でカトリックを布教し、大司教となった</span></li></ol>
+</article>
+<article class="q" id="q46">
+  <div class="q__head"><span class="q__n">問46</span><span class="q__ref">下線部d</span></div>
+  <p class="q__body">ゲルマン人の移動について述べた文として最も適当なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">東ゴート人はブリタニアに渡り、先住のケルト人を征服して王国を建てた。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">ランゴバルド王国はカール＝マルテルによって滅ぼされた。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">アングロ＝サクソン人はガリアに渡り、七王国（ヘプターキー）を建てた。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">フン人の圧迫を受けた西ゴート人がドナウ川を渡り、大移動が始まった。</span></li></ol>
+</article>
+<article class="q" id="q47">
+  <div class="q__head"><span class="q__n">問47</span><span class="q__ref">下線部f</span><span class="q__tag">資料・組合せ</span></div>
+  <p class="q__body">次の図は、大西洋をわたった人の数のおおよその推移を示している。Ａ・Ｂにあてはまる語と、19世紀の労働力の移動について述べた文の組合せとして最も適当なものを、下の①〜④のうちから一つ選べ。</p>
+  <figure class="fig">
+<svg viewBox="0 0 640 230" role="img" aria-label="大西洋をわたった奴隷と年季契約労働者の推移">
+  <g stroke="currentColor" stroke-width="1">
+    <line x1="70" y1="180" x2="600" y2="180"/><line x1="70" y1="30" x2="70" y2="180"/>
+  </g>
+  <g font-size="10" fill="currentColor" text-anchor="middle">
+    <text x="130" y="196">1750年代</text><text x="250" y="196">1790年代</text>
+    <text x="370" y="196">1830年代</text><text x="490" y="196">1870年代</text>
+  </g>
+  <g font-size="10" fill="currentColor" text-anchor="end">
+    <text x="62" y="184">0</text><text x="62" y="106">中</text><text x="62" y="34">多</text>
+  </g>
+  <polyline points="130,72 250,44 370,116 490,172" fill="none" stroke="currentColor" stroke-width="2"/>
+  <polyline points="130,178 250,176 370,150 490,110" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 4"/>
+  <g font-size="11" fill="currentColor">
+    <text x="286" y="36">── Ａ</text><text x="500" y="100">--- Ｂ</text>
+  </g>
+  <text x="335" y="218" font-size="10" text-anchor="middle" fill="currentColor">※おおよその傾向を示した模式図</text>
+</svg></figure>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ａ—年季契約労働者　Ｂ—奴隷貿易　　廃止後、かわって年季契約労働者が送られるようになった。</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ａ—年季契約労働者　Ｂ—奴隷貿易　　アメリカでは南北戦争の前に奴隷制が廃止されていた。</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ａ—奴隷貿易　Ｂ—年季契約労働者　　廃止後、中国系やインド系の年季契約労働者が各地へ送られた。</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ａ—奴隷貿易　Ｂ—年季契約労働者　　イギリスは1807年に奴隷制度そのものを廃止した。</span></li></ol>
+</article>
+<article class="q" id="q48">
+  <div class="q__head"><span class="q__n">問48</span><span class="q__ref">空欄 Ｅ ・ Ｆ</span><span class="q__tag">空欄補充</span></div>
+  <p class="q__body">空欄　Ｅ　・　Ｆ　に該当する都市名の組合せとして最も適切なものを、次の①〜④のうちから一つ選べ。</p>
+  
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">Ｅ—メッカ　Ｆ—ラサ</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">Ｅ—メッカ　Ｆ—ヴァラナシ（ベナレス）</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">Ｅ—エルサレム　Ｆ—ラサ</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">Ｅ—エルサレム　Ｆ—ヴァラナシ（ベナレス）</span></li></ol>
+</article>
+<article class="q" id="q49">
+  <div class="q__head"><span class="q__n">問49</span><span class="q__ref">下線部g</span><span class="q__tag">図表</span></div>
+  <p class="q__body">次の図は16世紀から17世紀にかけての銀の流れを示している。大量の銀の流入を背景に中国で広まった、各種の税と徭役を銀で一括して納める制度として正しいものを、下の①〜④のうちから一つ選べ。</p>
+  <figure class="fig">
+<svg viewBox="0 0 640 200" role="img" aria-label="16世紀から17世紀の銀の流れ">
+  <g font-size="12" fill="currentColor" text-anchor="middle">
+    <rect x="20" y="82" width="132" height="36" fill="none" stroke="currentColor"/>
+    <text x="86" y="105">ポトシ銀山</text>
+    <rect x="254" y="20" width="132" height="36" fill="none" stroke="currentColor"/>
+    <text x="320" y="43">アカプルコ・マニラ</text>
+    <rect x="254" y="144" width="132" height="36" fill="none" stroke="currentColor"/>
+    <text x="320" y="167">日本（石見など）</text>
+    <rect x="488" y="82" width="132" height="36" fill="none" stroke="currentColor"/>
+    <text x="554" y="105">明・清</text>
+  </g>
+  <g stroke="currentColor" stroke-width="1.3" fill="none" marker-end="url(#ar2)">
+    <path d="M152 96 L254 44"/>
+    <path d="M386 44 L488 94"/>
+    <path d="M386 162 L488 112"/>
+  </g>
+  <defs>
+    <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <text x="554" y="146" font-size="11" text-anchor="middle" fill="currentColor">→　銀で税を納める制度が広まる</text>
+</svg></figure>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">一条鞭法</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">地丁銀</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">両税法</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">均輸法</span></li></ol>
+</article>
+<article class="q" id="q50">
+  <div class="q__head"><span class="q__n">問50</span><span class="q__tag">系図</span></div>
+  <p class="q__body">次の略系図は、ハプスブルク家の一部を示している。Ｘにあてはまる人物と、その人物の事績の組合せとして正しいものを、下の①〜④のうちから一つ選べ。</p>
+  <figure class="fig">
+<svg viewBox="0 0 640 210" role="img" aria-label="ハプスブルク家の略系図">
+  <g font-size="12" fill="currentColor" text-anchor="middle">
+    <rect x="238" y="10" width="164" height="32" fill="none" stroke="currentColor"/>
+    <text x="320" y="31">マクシミリアン1世</text>
+    <rect x="238" y="70" width="164" height="32" fill="none" stroke="currentColor"/>
+    <text x="320" y="91">カール5世（カルロス1世）</text>
+    <rect x="60" y="150" width="164" height="32" fill="none" stroke="currentColor"/>
+    <text x="142" y="171" font-weight="700">Ｘ</text>
+    <rect x="416" y="150" width="180" height="32" fill="none" stroke="currentColor"/>
+    <text x="506" y="171">フェルディナント1世（弟）</text>
+  </g>
+  <g stroke="currentColor" stroke-width="1.2">
+    <line x1="320" y1="42" x2="320" y2="70"/>
+    <line x1="320" y1="102" x2="320" y2="126"/>
+    <line x1="142" y1="126" x2="506" y2="126"/>
+    <line x1="142" y1="126" x2="142" y2="150"/>
+    <line x1="506" y1="126" x2="506" y2="150"/>
+  </g>
+  <text x="320" y="200" font-size="10" text-anchor="middle" fill="currentColor">※系図は一部を省略してある。</text>
+</svg></figure>
+  <ol class="opts"><li class="opt"><span class="opt__n">①</span><span class="opt__t">アンリ4世—無敵艦隊（アルマダ）を編成し、イギリスに派遣して敗れた</span></li><li class="opt"><span class="opt__n">②</span><span class="opt__t">マリア＝テレジア—オーストリア継承戦争でシュレジエンを獲得した</span></li><li class="opt"><span class="opt__n">③</span><span class="opt__t">フェリペ2世—レパントの海戦でオスマン帝国海軍を破り、ポルトガルを併合した</span></li><li class="opt"><span class="opt__n">④</span><span class="opt__t">フェリペ2世—ナントの王令を発し、ユグノー戦争を終わらせて国内を安定させた</span></li></ol>
+</article>
+</section>
+
+<section class="sheetpage">
+  <h2 class="pagetitle">解答用紙</h2>
+  <p class="lead">正解と思う番号を塗りつぶす。答えを写して丸つけをするのではなく、<b>時間を計って通しで解く</b>ことに意味がある。</p>
+  <div class="sheets"><table class="sheet"><thead><tr><th>問</th><th>①</th><th>②</th><th>③</th><th>④</th><th>⑤</th><th>⑥</th></tr></thead><tbody><tr><th>1</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td><span class="bub">⑤</span></td><td><span class="bub">⑥</span></td></tr><tr><th>2</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>3</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>4</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>5</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>6</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td><span class="bub">⑤</span></td><td><span class="bub">⑥</span></td></tr><tr><th>7</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>8</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>9</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>10</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>11</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>12</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>13</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>14</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>15</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td><span class="bub">⑤</span></td><td><span class="bub">⑥</span></td></tr><tr><th>16</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>17</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr></tbody></table><table class="sheet"><thead><tr><th>問</th><th>①</th><th>②</th><th>③</th><th>④</th><th>⑤</th><th>⑥</th></tr></thead><tbody><tr><th>18</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>19</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>20</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td><span class="bub">⑤</span></td><td><span class="bub">⑥</span></td></tr><tr><th>21</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>22</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>23</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>24</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>25</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>26</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>27</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td><span class="bub">⑤</span></td><td><span class="bub">⑥</span></td></tr><tr><th>28</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>29</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>30</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>31</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>32</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td><span class="bub">⑤</span></td><td><span class="bub">⑥</span></td></tr><tr><th>33</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>34</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr></tbody></table><table class="sheet"><thead><tr><th>問</th><th>①</th><th>②</th><th>③</th><th>④</th><th>⑤</th><th>⑥</th></tr></thead><tbody><tr><th>35</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>36</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>37</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td><span class="bub">⑤</span></td><td><span class="bub">⑥</span></td></tr><tr><th>38</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>39</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>40</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>41</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>42</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>43</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>44</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>45</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>46</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>47</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>48</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>49</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr><tr><th>50</th><td><span class="bub">①</span></td><td><span class="bub">②</span></td><td><span class="bub">③</span></td><td><span class="bub">④</span></td><td></td><td></td></tr></tbody></table></div>
+  <p class="sheetpage__score">得点　<span class="blank"></span>　／ 100点　　　　目標 80点</p>
+</section>
+
+<section class="keypage">
+  <h2 class="pagetitle">正解一覧</h2>
+  <div class="keys"><table class="key"><thead><tr><th>問</th><th>正解</th><th>問</th><th>正解</th></tr></thead><tbody><tr><th>1</th><td>③</td><th>14</th><td>①</td></tr><tr><th>2</th><td>①</td><th>15</th><td>⑤</td></tr><tr><th>3</th><td>②</td><th>16</th><td>④</td></tr><tr><th>4</th><td>③</td><th>17</th><td>②</td></tr><tr><th>5</th><td>①</td><th>18</th><td>③</td></tr><tr><th>6</th><td>⑥</td><th>19</th><td>①</td></tr><tr><th>7</th><td>②</td><th>20</th><td>②</td></tr><tr><th>8</th><td>②</td><th>21</th><td>③</td></tr><tr><th>9</th><td>④</td><th>22</th><td>②</td></tr><tr><th>10</th><td>②</td><th>23</th><td>③</td></tr><tr><th>11</th><td>①</td><th>24</th><td>②</td></tr><tr><th>12</th><td>④</td><th>25</th><td>①</td></tr><tr><th>13</th><td>③</td><th>26</th><td>③</td></tr></tbody></table><table class="key"><thead><tr><th>問</th><th>正解</th><th>問</th><th>正解</th></tr></thead><tbody><tr><th>27</th><td>②</td><th>39</th><td>③</td></tr><tr><th>28</th><td>④</td><th>40</th><td>④</td></tr><tr><th>29</th><td>②</td><th>41</th><td>③</td></tr><tr><th>30</th><td>③</td><th>42</th><td>②</td></tr><tr><th>31</th><td>④</td><th>43</th><td>④</td></tr><tr><th>32</th><td>①</td><th>44</th><td>②</td></tr><tr><th>33</th><td>①</td><th>45</th><td>①</td></tr><tr><th>34</th><td>③</td><th>46</th><td>④</td></tr><tr><th>35</th><td>④</td><th>47</th><td>③</td></tr><tr><th>36</th><td>③</td><th>48</th><td>②</td></tr><tr><th>37</th><td>④</td><th>49</th><td>①</td></tr><tr><th>38</th><td>①</td><th>50</th><td>③</td></tr></tbody></table></div>
+</section>
+
+<section class="answers">
+  <h2 class="pagetitle">解説と、予想の根拠</h2>
+  <h3 class="ansdai">第1問　古代地中海世界とその後継</h3>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問1</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">イはソロンの財産政治（前594年）、アはクレイステネスの改革（前508年）、ウはペルシア戦争のサラミスの海戦（前480年）以降のこと。<b>ソロン→クレイステネス→ペリクレス</b>という民主政の三段階は基礎学で最頻出の流れ。ソロンより前に最初の成文法を定めたのが<b>ドラコン</b>。クレイステネスは血縁による四部族制を廃して地縁の<b>十部族制</b>とし、各部族から50人を出す<b>五百人評議会</b>を置いた。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問1・令和6 問46 でアテネ民主政。年代整序は令和3〜5では毎年4〜5問あったが、令和6・7で計1問に減った。ただし6択で差がつく形式なので多めに置いてある。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問2</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">②ペリオイコイ（周辺民）は商工業に従事する半自由民で、従軍の義務はあるが参政権はない。③デロス同盟の盟主はアテネ。スパルタはペロポネソス同盟の盟主。④スパルタはリュクルゴスの制のもとで市民を軍務に専念させ、貨幣経済を抑えた。ギリシア人は自らを英雄ヘレンの子孫として<b>ヘレネス</b>と呼び、言葉の通じない異民族を<b>バルバロイ</b>と呼んだ。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問1 でスパルタの人口構成が図表問題として出題。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問3</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">aは正しい（前490年）。bは誤り。ペロポネソス戦争（前431〜前404年）はスパルタが勝利し、アテネは降伏した。<b>「勝ったのはどちらか」を入れ替える</b>のは基礎学の定番のすり替え。ペルシア戦争はマラトン・サラミスに続く<b>プラタイアの戦い</b>でギリシア側の勝利が決まった。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問4 でペルシア戦争・ペロポネソス戦争。正誤の組合せは毎年出題。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問4</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">④大王の死後、帝国はアンティゴノス朝マケドニア・セレウコス朝シリア・プトレマイオス朝エジプトに分裂した。①アンティオキアを都としシリアを支配したのはセレウコス朝。プトレマイオス朝はエジプトでアレクサンドリアが都。②ヘレニズム時代は逆にポリスの枠を越えた世界市民主義（コスモポリタニズム）が広まった。東方遠征によってギリシアとオリエントの文化が溶けあった<b>ヘレニズム文化</b>が生まれた。遠征の足場となったのは、父フィリッポス2世が結成させた<b>コリントス同盟</b>である。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問2 でヘレニズムの3王朝。3王朝の「都と地域」の入れ替えが頻出。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問5</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">前287年の<b>ホルテンシウス法</b>で、平民会の決議が元老院の承認なしにローマ全体の国法となった。コンスルの1名を平民から選ぶと定めたのは前367年の<b>リキニウス＝セクスティウス法</b>で、年も内容も別。ローマ最初の成文法である十二表法（前450年頃）から、この二つの法をへて平民の地位が上がっていく流れで押さえる。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問3 でホルテンシウス法が実際に出題。語句と文を組み合わせて空欄に入れる形式は、令和3・4年度の実物114問中20問（18%）を占める最頻出形式。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問6</span><span class="ans__a">正解 ⑥</span></div>
+  <p class="ans__ex">ウ（前133〜前121年）→イ（前73〜前71年）→ア（前31年）。<b>グラックス兄弟からアクティウムまでが「内乱の1世紀」</b>。この期間にマリウスとスラの抗争、第1回・第2回三頭政治が入る。この時期、征服戦争で得た奴隷を使う大土地所有制の<b>ラティフンディア</b>が広がって中小農民が没落し、重装歩兵の基盤が崩れた。帝政後期には小作人（コロヌス）を使う<b>コロナトゥス</b>に移り、中世の農奴制へとつながる。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問47 でマリウス・スラ→三頭政治の年代整序、令和7 問3 でオクタウィアヌス。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問7</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">アントニヌス勅令はカラカラ帝による212年の勅令なので、五賢帝時代の開始（96年）と軍人皇帝時代の開始（235年）の間、すなわち<b>イ</b>。略年表で「どの時期か」を問う形式は令和5・令和7で出題されている。ディオクレティアヌス帝以降の皇帝独裁を<b>ドミナトゥス</b>（専制君主政）という。のちの<b>ユリアヌス</b>帝は一時キリスト教を抑えて「背教者」と呼ばれた。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問4 でカラカラ・四帝分治・ミラノ勅令の年代整序。令和7 問11・問39 が略年表形式。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問8</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">①クローヴィスが改宗したのは<b>アタナシウス派（正統派）</b>。ここが最もよく入れ替えられる。③ピピンはラヴェンナ地方を教皇に寄進し、その支持で王位についた。カリフはイスラーム世界の称号。④ヴェルダン条約（843年）はカール大帝の孫の代の分割。<b>ランゴバルド人</b>の王国を滅ぼしたのはカール大帝。封建的主従関係はゲルマンの<b>従士制</b>とローマの恩貸地制から生まれ、主君も家臣も義務を負う<b>双務的契約</b>であった点が、日本の封建制との違いとして問われる。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問5 でクローヴィス・カール＝マルテル。令和6 問48 でゲルマン人の大移動。</p>
+</div><h3 class="ansdai">第2問　古代インド・東南アジアと古代中国</h3>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問9</span><span class="ans__a">正解 ④</span></div>
+  <p class="ans__ex">③司祭階級は<b>バラモン</b>。ヴァイシャは農民・牧畜民・商人からなる庶民。①仏教はヴァルナ制にとらわれない立場をとった。②ジャイナ教の創始者はヴァルダマーナ（マハーヴィーラ）。4つのヴァルナはバラモン・<b>クシャトリヤ</b>・ヴァイシャ・シュードラ。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問9 でヴァルナ制、令和7 問9 でジャーティ。身分秩序は5年で3回。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問10</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">マウリヤ朝とグプタ朝の都はともに<b>パータリプトラ</b>、クシャーナ朝の都は<b>プルシャプラ</b>。④と①は都が入れ替えられている。③ヴァルダナ朝の都はカナウジ。南インドでは<b>チョーラ朝</b>が10〜11世紀に最盛期を迎え、スリランカや東南アジアへ遠征した。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問10・令和7 問10 でインド諸王朝。都と王の組合せは定番。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問11</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">どちらも正しい。東南アジアにはインドの宗教と文化が海路で伝わり、<b>シャイレンドラ朝</b>は大乗仏教、<b>アンコール朝（クメール王国）</b>はヒンドゥー教のアンコール＝ワットを造営した。マジャパヒト王国は14世紀のジャワのヒンドゥー国家。ベトナム北部では銅鼓を特徴とするドンソン文化が栄えた。ビルマの<b>パガン朝</b>は上座部仏教を受け入れ、ベトナム中部の<b>チャンパー</b>は海上交易で栄えた。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問11 で写真によりボロブドゥール、令和3 問11 で東南アジア（ドンソン文化・パガン朝・シャイレンドラ朝・チャンパー）。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問12</span><span class="ans__a">正解 ④</span></div>
+  <p class="ans__ex">始皇帝は全国を郡・県に分けて中央から官吏を派遣する<b>郡県制</b>を施行した。<b>郡国制</b>は前漢の劉邦が郡県制と封建制を併用した折衷策で、呉楚七国の乱の鎮圧後に実質的な郡県制となる。五経博士を置いて儒学を官学としたのは前漢の武帝で、董仲舒の献策による。春秋・戦国期には周辺の人びとを劣ったものとみなす<b>華夷思想</b>が形づくられた。秦の圧政に対しては<b>陳勝・呉広</b>が「<b>王侯将相いずくんぞ種あらんや</b>」と唱えて反乱を起こしている。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問13 で略年表による郡県制、令和6 問11 で封建制と郡県制。秦漢の制度は5年とも出ている。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問13</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">aは誤り。<b>九品中正</b>は<b>魏</b>の創始で、しかも結果として有力豪族が高官を独占する<b>門閥貴族</b>を生み、「上品に寒門なく、下品に勢族なし」といわれた。家柄によらない登用をめざして九品中正を廃したのが隋の文帝で、そこから科挙が始まる。bは正しく、孝文帝の漢化政策には洛陽遷都のほか胡服・胡語の禁止、漢人との通婚奨励がある。西晋末の<b>八王の乱</b>ののち<b>五胡十六国</b>の時代となり、<b>鮮卑</b>の北魏が華北を統一して均田制と<b>三長制</b>を敷いた。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問44 で九品中正と門閥、令和7 問15 で均田制と科挙。魏晋南北朝は5年とも出ている。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問14</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">②両税法は安史の乱後の780年、<b>徳宗</b>の時代に宰相楊炎の献策で施行された。③節度使はむしろ内地にも置かれ、藩鎮として自立していった。④府兵制が崩れて募兵制に移行した。順序が逆。官吏を監察したのが<b>御史台</b>で、唐の後半には<b>宦官</b>が政治を左右するようになった。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問14・令和7 問15 で均田制。唐の土地・税・兵制はセットで問われる。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問15</span><span class="ans__a">正解 ⑤</span></div>
+  <p class="ans__ex">ウ（690年）→ア（755年）→イ（875年）。<b>則天武后→玄宗の開元の治→安史の乱→両税法→黄巣の乱→朱全忠が唐を滅ぼす（907年）</b>という一本の流れで押さえる。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問15・令和7 問16 で隋唐の皇帝と反乱。年代整序は毎年1〜2問。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問16</span><span class="ans__a">正解 ④</span></div>
+  <p class="ans__ex">①張騫は大月氏に至ったが<b>同盟には失敗</b>した。ただしその報告が西域経営の端緒となった。②衛氏朝鮮を滅ぼし楽浪郡などを置いたのは前漢の武帝（前108年）。③武帝は衛青・霍去病を派遣して匈奴を討ち、西域への道を開いた。後漢の光武帝は倭の使者に「<b>漢委奴国王</b>」の金印を与えた。のちモンゴル高原では突厥が<b>柔然</b>を倒して自立する。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問16・問17 で冒頓単于と前漢の政策。前漢は5年で4回。</p>
+</div><h3 class="ansdai">第3問　古代オリエントとイスラーム世界</h3>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問17</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">ニネヴェを都とする<b>アッシリア</b>が前7世紀前半にエジプトを征服してオリエントを統一したが、まもなく崩れてエジプト・リディア・<b>新バビロニア</b>・メディアの4王国に分かれた。これを前6世紀に再統一したのが<b>アケメネス朝</b>（キュロス2世・ダレイオス1世）。新バビロニアは4王国の一つで、統一者ではない点がねらい目。ヒッタイトは鉄器を用いた小アジアの王国。メソポタミアでは<b>楔形文字</b>が粘土板に刻まれ、ヒッタイトは<b>鉄製の武器</b>を用いた。バビロン第1王朝ののちには<b>カッシート人</b>の国家やミタンニ王国が栄えている。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問16・令和6 問1〜問3 で古代オリエント。オリエントの統一と分立は5年を通じての定番。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問18</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">④「死者の書」はエジプトでパピルスに記された。①ロゼッタ＝ストーンはシャンポリオンによる<b>神聖文字（ヒエログリフ）</b>解読の鍵。くさび形文字をベヒストゥーン碑文から解読したのがローリンソンで、この二人は入れ替えられやすい。②ピラミッドは古王国時代が中心。<b>クフ王</b>のピラミッドは古王国の代表。中王国の末には<b>ヒクソス</b>が馬と戦車をもって侵入し、これを追い出して新王国が成立した。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問5・問6 でエジプトの都とアメンヘテプ4世の改革が続けて出題。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問19</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">バビロン捕囚は新バビロニアのネブカドネザル2世による（前586年）。解放したのはアケメネス朝のキュロス2世（前538年）。なお<b>イスラエル王国を滅ぼしたのはアッシリア</b>で、こちらとよく取り違えさせられる。ヘブライ人は<b>ダヴィデ王</b>・<b>ソロモン王</b>のもとで栄えた。この地方では<b>カナーン人</b>ののち、<b>海の民</b>の進出を機にセム語系の民族が活動し、フェニキア人は<b>シドン</b>・<b>ティルス</b>を拠点として<b>アルファベット</b>の起源となる文字をギリシアに伝えた。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問16 で新バビロニア。空欄補充の組合せ形式は令和6で多用。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問20</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">ア（前330年）→ウ（前248年頃）→イ（642年）。パルティアはセレウコス朝から自立した国なので、<b>アケメネス朝の滅亡より後</b>である点に注意。ここを逆にする誤答が多い。パルティアは遊牧イラン人の族長<b>アルサケス</b>が建て、中国では<b>安息</b>と呼ばれた。ササン朝の<b>シャープール1世</b>はローマ皇帝<b>ウァレリアヌス</b>を捕らえている。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問17 でアケメネス→パルティア→ササンの年代整序が実際に出題。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問21</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">622年、ムハンマドは迫害を受けた<b>メッカ</b>から<b>メディナ</b>へ移り、これを<b>ヒジュラ（聖遷）</b>という。この年がイスラーム暦（ヒジュラ暦）元年。ジハードは信仰のための努力・戦いで、六信五行のうちの巡礼はハッジ。カーバ神殿があり礼拝の方角の基準となるのはメッカで、移住先ではない。ムスリムの共同体を<b>ウンマ</b>という。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問18・令和7 問19〜問21 でムハンマドとメッカ。令和3 問20 では略地図でメッカとダマスクスを問うている。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問22</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">aは正しい。bはウマイヤ朝の説明で、都も政策も異なる。アラブ人が支配者として優位に立つ「アラブ帝国」から、ムスリムであれば民族を問わない「イスラーム帝国」への転換が、ウマイヤ朝からアッバース朝への変化の要点。トゥール・ポワティエ間の戦いでフランク王国軍に<b>敗れた</b>のもウマイヤ朝である。アラブ人は北アフリカを西進して<b>西ゴート王国</b>を滅ぼし、イベリア半島に入った。被征服民には人頭税のジズヤと地租の<b>ハラージュ</b>が課された。のち北アフリカには、シーア派の<b>ファーティマ朝</b>がカリフを称して自立する。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和7 問22 で知恵の館とアッバース朝。ウマイヤ朝との対比は5年を通じてのねらい目。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問23</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">メフメト2世がコンスタンティノープル（イスタンブル）を征服した。Ａがその位置。Ｂはカイロ、Ｃはバグダード、Ｄはグラナダ。<b>セリム1世＝マムルーク朝征服、スレイマン1世＝ウィーン包囲・プレヴェザ</b>と区別する。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問25 でオスマン帝国のスルタン、令和5 問19・令和6 問23 が地図・写真問題。図表問題は毎年5〜8問。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問24</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">③ジズヤを<b>廃止</b>してヒンドゥー教徒との融和を図ったのがアクバル、<b>復活</b>させて反発を招いたのがアウラングゼーブ。この二人は必ず対で問われる。①タージ＝マハルはシャー＝ジャハーンが妃のために建てた。</p>
+  <p class="ans__src"><span>予想の根拠</span>2026年はパーニーパットの戦いとムガル帝国成立から500年。令和6 問50 でアウラングゼーブが既出。</p>
+</div><h3 class="ansdai">第4問　モンゴル帝国と宋・元・明・清</h3>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問25</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">どちらも正しい。宋は文治主義によって内政を安定させたが、軍事力が弱まり北方民族に苦しんだ。王安石の新法（青苗法・募役法・保甲法など）と旧法党の対立は宋の政治史の中心。北宋の都<b>開封</b>は、黄河と大運河の接点にあたる商業の要地であった。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問27 で趙匡胤と文治主義、令和7 問50 で写真により趙匡胤。宋の統治は5年とも出ている。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問26</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">契丹（遼）を建てたのが<b>耶律阿保機</b>、女真の金を建てたのが<b>完顔阿骨打</b>、西夏（大夏）を建てたのが<b>李元昊</b>。<b>趙匡胤</b>は宋（北宋）の建国者で、北方民族ではない。遼は燕雲十六州を得て北面官・南面官による二重統治体制をとり、金は猛安・謀克で軍事と社会を組織した。建国者の入れ替えは実物で繰り返し出ている。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和3 問23 で耶律阿保機と猛安・謀克を空欄補充で出題。令和5 問23・令和6 問28 でも遼・金・西夏。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問27</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">ア（1220年頃）→ウ（1241年）→イ（1279年）。<b>チンギス→オゴタイ（バトゥの西征・金の滅亡）→モンケ（フラグの西アジア遠征）→クビライ（大都遷都・南宋滅亡）</b>という代替わりで整理する。南宋を滅ぼして中国全土を支配したのが<b>フビライ</b>（クビライ）である。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和7 問27〜問31 がモンゴル一色。令和5 問25 で駅伝制。モンゴルは5年とも出ており、令和7では5問と最多。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問28</span><span class="ans__a">正解 ④</span></div>
+  <p class="ans__ex">①序列は<b>モンゴル人→色目人→漢人→南人</b>で、南人（旧南宋領の人々）が最下位。②元では科挙は一時停止され、のちに復活しても採用数はごく少なかった。③紅巾の乱をおさえられず、元はモンゴル高原に退いた。モンゴルが陸と海の道を結んだことで<b>東西交流</b>が活発になり、イスラームの<b>細密画</b>（ミニアチュール）が中国の<b>院体画</b>に影響を与えた。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問25・令和6 問32・問33 で交鈔と紅巾の乱。元の紙幣と駅伝制はほぼ毎年。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問29</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">③は永楽帝。④一条鞭法は明の後期に広まり、張居正が全国に施行した。①軍機処は清の雍正帝の設置。<b>洪武帝＝制度づくり（中書省廃止・里甲制・魚鱗図冊・賦役黄冊・六諭）、永楽帝＝対外進出（北京遷都・鄭和）</b>と対で覚える。永楽帝の遣わした鄭和の艦隊を受け入れた<b>マラッカ王国</b>は、明の朝貢国となった。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問50 で永楽帝、令和7 問32・問50 で朱元璋と六諭。明初は「洪武帝と永楽帝の区別」が焦点。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問30</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">aは方角が入れ替えられており誤り。<b>北虜＝北のモンゴル、南倭＝南の倭寇</b>である。bは正しい。海禁のもとで貿易は朝貢に限られ、朝貢には貢ぎ物を上回る返礼を与えるのが原則だったため財政の負担となった。鄭和の遠征はインド洋を経てアフリカ東岸までで、ヨーロッパには達していない。<b>豊臣秀吉</b>が朝鮮に侵攻すると明は援軍を送り、その負担が財政を苦しめた。イエズス会のマテオ＝リッチはこの時期に来て「<b>坤輿万国全図</b>」を作っている。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問26 で鄭和・張居正・李自成。海禁と北虜南倭は近年手薄で狙われやすい。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問31</span><span class="ans__a">正解 ④</span></div>
+  <p class="ans__ex">モンゴル・チベット・新疆（東トルキスタン）は<b>藩部</b>とされ、<b>理藩院</b>が在来の支配層や宗教を通じて間接的に統治した。朝鮮・琉球・ベトナムなどの<b>朝貢国</b>は礼部の管轄で、内政には介入しない。清はこのほか満漢併用制で漢人を登用する一方、辮髪を強制し文字の獄で思想を統制した。軍機処を設けたのは雍正帝。清の中国支配に抵抗した<b>鄭成功</b>は<b>台湾</b>を拠点とした。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和3 問28 で藩部と理藩院、令和5 問27〜問29 で清の税制・広州・四庫全書。清の統治機構は令和6・7で手薄で反動が見込まれる。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問32</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">ア両税法（唐・780年）→イ一条鞭法（明・16世紀）→ウ地丁銀（清・18世紀初め）。表の「課税の基準」から、人ではなく<b>土地と資産</b>に課すようになった流れが読み取れる。<b>租調庸→両税法→一条鞭法→地丁銀</b>の4段階は基礎学の頻出項目。地丁銀では丁税（人頭税）が土地税に繰り込まれた。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問27 で清の税制（地丁銀・一条鞭法・租調庸・両税法）が実際に出題。</p>
+</div><h3 class="ansdai">第5問　近世ヨーロッパと大西洋世界</h3>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問33</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">②は<b>商業革命</b>の説明。価格革命と商業革命の入れ替えは頻出。③エンコミエンダ制はスペインが新大陸で行った、先住民の統治を委託するかわりにキリスト教化を義務づけた制度。④ポトシ銀山は現在のボリビアにあり、スペイン領。新大陸では<b>コルテス</b>がアステカ王国を、<b>ピサロ</b>が<b>インカ帝国</b>を滅ぼし、宣教師<b>ラス＝カサス</b>が先住民の惨状をスペイン国王に訴えた。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問30 で商業革命・エンコミエンダ、令和7 問33〜問37・問47 が大航海。用語の対の入れ替えが常套。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問34</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">1517年、ルターは<b>「九十五カ条の論題」</b>で贖宥状を批判し、聖書のみを信仰の根拠とする立場（万人司祭主義）を示した。<b>『キリスト教綱要』</b>はカルヴァンの主著で、予定説を説く。アウクスブルクの和議（1555年）で信仰を選べたのは諸侯であって個人ではなく、カルヴァン派も認められなかった。ルターはドイツ農民戦争では諸侯による鎮圧を支持した。<b>グーテンベルク</b>が改良した<b>活版印刷</b>がこの思想の普及を助け、ルターは<b>新約聖書のドイツ語訳</b>を完成させてドイツ語の統一にも寄与した。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和3 問32 で史料により95カ条と予定説を人物と結ばせている。令和6 問34・問35 でもルターとカルヴァン。令和7では宗教改革がほぼ空白で復活を見込む。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問35</span><span class="ans__a">正解 ④</span></div>
+  <p class="ans__ex">①はルター、②はヘンリ8世。③スコットランドでの呼称は<b>プレスビテリアン（長老派）</b>で、ゴイセンはネーデルラントでの呼称。ほかにフランスでユグノー、イングランドでピューリタン。呼称と地域の入れ替えは頻出。ルネサンスの画家には『春』の<b>ボッティチェリ</b>や、農民の生活を描いた<b>ブリューゲル</b>がいる。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問35 でカルヴァンとツヴィングリ。呼称の地域別の対応は基礎学で繰り返し問われている。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問36</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">④フランスは旧教国でありながら、宰相リシュリューのもとでハプスブルク家に対抗して<b>新教側</b>で参戦した。ここが最大のねらい目。①諸侯にほぼ完全な主権が認められ、神聖ローマ帝国は有名無実化した。②この条約でカルヴァン派も公認された。この講和でフランスは<b>アルザス</b>を、スウェーデンは<b>西ポンメルン</b>を得ている。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問37・問39 でイタリア戦争と絶対王政の統治体制。主権国家体制の成立は5年で2回（令和4・6）。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問37</span><span class="ans__a">正解 ④</span></div>
+  <p class="ans__ex">イ（1628年）→ウ（1649年）→ア（1689年）。<b>権利の請願→ピューリタン革命→クロムウェルの共和政→王政復古→名誉革命→権利の章典→ウォルポールの責任内閣制</b>という一本道で覚える。「請願」と「章典」の順序を逆にする誤答が定番。名誉革命で招かれたのがオランダの<b>オラニエ公ウィレム3世</b>（ウィリアム3世）。のちアン女王の治世にスコットランドと合同して<b>大ブリテン王国</b>が生まれた。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問34 で航海法→名誉革命→ウォルポールの年代整序、令和6 問49 でピューリタン革命。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問38</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">ナントの王令を<b>発した</b>のはアンリ4世（1598年）で、ルイ14世は1685年にこれを<b>廃止</b>し、多くのユグノーが国外に亡命して産業が打撃を受けた。発布と廃止の入れ替えは最頻出。フランスではルイ13世の宰相リシュリューと、ルイ14世の初期を支えた<b>マザラン</b>が王権を固めた。ロシアでは<b>ピョートル1世</b>が<b>北方戦争</b>に勝って<b>ペテルブルク</b>を建設し、エカチェリーナ2世が<b>プガチョフ</b>の農民反乱を鎮めている。シベリア進出は<b>イェルマーク</b>に始まる。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問32・令和7 問38 でナントの王令は5年で3回（令和3・5・7）と、一年おきに問われている最重要項目。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問39</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">独立宣言は1776年7月4日なので、レキシントンの戦い（1775年）とヨークタウンの戦い（1781年）の間、すなわち<b>ウ</b>。起草者はジェファソンで、ロックの抵抗権（革命権）の思想を受けている。<b>トマス＝ペイン</b>の『<b>コモン＝センス</b>』が独立の世論を後押しし、ロシアのエカチェリーナ2世は<b>武装中立同盟</b>を提唱して植民地側を助けた。インドでは<b>クライヴ</b>がプラッシーの戦いでフランスの<b>デュプレクス</b>を破っている。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問38 で独立宣言の起草者と思想。2026年は独立宣言から250年にあたる記念の年で、時事的にも扱われやすい。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問40</span><span class="ans__a">正解 ④</span></div>
+  <p class="ans__ex">どちらも誤り。<b>テルミドールの反動</b>（1794年）はロベスピエールが倒されたできごとで、ナポレオンの権力掌握は<b>ブリュメール18日のクーデタ</b>（1799年）。<b>トラファルガーの海戦</b>（1805年）はネルソン率いる<b>イギリスの勝利</b>である。ナポレオンは大陸封鎖令でイギリスとの通商を禁じたが、これを破ったロシアへ遠征して失敗した。ナポレオンは<b>ライン同盟</b>を結成し、これによって神聖ローマ帝国は消滅した。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和7 問40 でナポレオンの政策（ライン同盟・トラファルガー・大陸封鎖令）が実際に出題。</p>
+</div><h3 class="ansdai">第6問　テーマ史　ヒトとモノの移動</h3>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問41</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">史料はフランス人権宣言（1789年8月）で、憲法制定国民議会が採択した。<b>アメリカ独立宣言（1776年・大陸会議）との取り違えを誘う</b>のが常套。人権宣言は「主権は国民に存する」＝国民主権、独立宣言は「生命・自由・幸福追求の権利」が要点。1793年からの恐怖政治では<b>公安委員会</b>が実権を握り、<b>最高価格令</b>が出された。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問41 で史料により人権宣言と独立宣言の区別、令和7 問44 で史料マグナ＝カルタ。史料問題は毎年1〜2問。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問42</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">景教はエフェソス公会議（431年）で異端とされたネストリウス派が東方に広まったもの。唐の長安には祆教・摩尼教・景教の寺院もあり、これらは<b>三夷教</b>と総称される。名称と内容の対応を確実にしておく。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問43 で五経と道教・景教。宗教の伝播はテーマ史で扱われやすい。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問43</span><span class="ans__a">正解 ④</span></div>
+  <p class="ans__ex">ヨーロッパ→アフリカが武器・雑貨、アフリカ→アメリカが黒人奴隷（中間航路）、アメリカ→ヨーロッパが砂糖・綿花・タバコ。この三辺の向きと積荷は必ずセットで覚える。イギリスではリヴァプールやブリストルが奴隷貿易で栄えた。東南アジアでは<b>アンボイナ事件</b>（1623年）でオランダがイギリスを排除し、イギリスはインド経営に転じた。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和7 問49 で大西洋三角貿易、問47 で奴隷制と強制労働。図表つきの出題形式に最も合う題材。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問44</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">サトウキビは旧大陸原産で、ヨーロッパ人が新大陸のプランテーションに<b>持ち込んだ</b>側。逆にジャガイモ・トウモロコシ・トマト・タバコ・カカオ・トウガラシは新大陸原産。ジャガイモがヨーロッパの人口増加を支えた点まで押さえたい。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和7 問37 でコロンブスの交換（ジャガイモ・新大陸）が実際に出題。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問45</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">『三大陸周遊記』はモロッコ生まれの<b>イブン＝バットゥータ</b>の旅行記。マルコ＝ポーロの記録は『世界の記述（東方見聞録）』。この二人の書名の入れ替えは頻出。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和7 問26 でプラノ＝カルピニ・ルブルック・モンテ＝コルヴィノが実際に出題。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問46</span><span class="ans__a">正解 ④</span></div>
+  <p class="ans__ex">375年の西ゴート人の移動が大移動の起点。①東ゴート人はテオドリック大王のもとで<b>イタリア</b>に王国を建てた。②ランゴバルド王国を滅ぼしたのは<b>カール大帝</b>（774年）。③アングロ＝サクソン人が七王国を建てたのはブリタニア。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和6 問48 でゲルマン人の大移動（西ゴート・ドナウ川・東ゴート・ヴァンダル）。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問47</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">実線Ａは18世紀末に頂点となり19世紀に減っているので<b>奴隷貿易</b>、破線Ｂは19世紀後半に増えているので<b>年季契約労働者</b>。中国系の労働者は苦力（クーリー）とよばれた。イギリスが1807年に廃止したのは<b>奴隷貿易</b>で、奴隷制度そのものの廃止は1833年。奴隷解放宣言は南北戦争中の1863年。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和7 問47 で奴隷制と強制労働、問49 で大西洋三角貿易。2026年の共通テストでは資料を用いた設問が前年の19から35へ大幅に増えており、探究科目は資料読解を求める方向にある。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問48</span><span class="ans__a">正解 ②</span></div>
+  <p class="ans__ex">イスラーム教徒が六信五行の一つとして巡礼するのは<b>メッカ</b>。ヒンドゥー教徒がガンジス川で沐浴する聖地は<b>ヴァラナシ（ベナレス）</b>。<b>ラサ</b>はチベットにありポタラ宮を中心とするチベット仏教の聖地で、清は理藩院を通じてこの地を藩部として統治した。<b>エルサレム</b>はユダヤ教・キリスト教・イスラーム教三宗教の聖地。キリスト教の巡礼地としてはサンチャゴ＝デ＝コンポステラも名高い。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和7 問19 でメッカ・カーバ。宗教都市はテーマ史でまとめて問われやすい。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問49</span><span class="ans__a">正解 ①</span></div>
+  <p class="ans__ex">新大陸の銀と日本銀が中国に流入し、明後期に一条鞭法が広まった。②地丁銀は清代に、丁税（人頭税）を土地税に繰り込んだ制度。③両税法は唐。④均輸法は漢の武帝や宋の王安石の物価・流通政策で、税制ではない。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問27 で清の税制、令和6 問32 で交鈔。銀の流入と税制の結びつきは共通テストでも定番。</p>
+</div>
+<div class="ans">
+  <div class="ans__head"><span class="ans__n">問50</span><span class="ans__a">正解 ③</span></div>
+  <p class="ans__ex">カール5世は退位に際し、スペインと新大陸・ネーデルラントを子のフェリペ2世に、オーストリアとハプスブルク家の家領を弟のフェルディナント1世に譲った。したがってＸはフェリペ2世。無敵艦隊（アルマダ）を編成したのもフェリペ2世だが、ナントの王令を発したのはアンリ4世。マリア＝テレジアはオーストリア継承戦争でシュレジエンを<b>失った</b>側で、そもそもこの系図には入らない。</p>
+  <p class="ans__src"><span>予想の根拠</span>令和5 問33 でハプスブルク家の系図問題が実際に出題。系図の設問は5年で1回（令和5）。</p>
+</div>
+</section>
+
+<section class="basis">
+  <h2 class="pagetitle">なぜこの範囲を予想したのか</h2>
+  <p class="lead">令和3〜7年度の実物を分野ごとに数え直したもの。<b>5年続けて出ている分野は今年も出る</b>。そのうえで<b>直近の令和6・7年度で手薄だった分野</b>は、反動で厚くなりやすい。この2つを掛け合わせて配分を決めた。5年に広げたことで、令和6・7の数字だけでは分からなかった「ふだんの水準」が見えるようになった。</p>
+  <table class="basis__t">
+    <caption>実物の設問を分野別に数え直したもの（令和3〜5は印刷された57問すべて、令和6・7は50問）。
+    集計は <code>verify.js</code> が過去問インデックスから機械的に行っている。<br>複数の分野にまたがる設問は、主題のほうに入れて数えた。</caption>
+    <thead><tr><th>分野</th><th>令和3</th><th>令和4</th><th>令和5</th><th>令和6</th><th>令和7</th><th>第1回</th><th>判断</th></tr></thead>
+    <tbody><tr><th>古代ギリシア・ローマ</th><td>4</td><td>3</td><td>4</td><td>4</td><td>8</td><td>7</td><td>5年中4年は3〜4問で、令和7の8問だけが突出している。第1問には必ず置かれる。</td></tr><tr><th>中世西欧・ゲルマン</th><td>4</td><td>5</td><td>4</td><td>4</td><td>3</td><td>1</td><td>毎年3〜5問と、5年でもっとも安定している分野。第1問の末尾と第6問に分けて配置した。</td></tr><tr><th>古代インド・東南アジア</th><td>3</td><td>3</td><td>3</td><td>1</td><td>4</td><td>3</td><td>毎年3問前後。ヴァルナ制と王朝の都が軸。東南アジアは令和3以来出ておらず、復活を見込む。</td></tr><tr><th>古代〜隋唐の中国</th><td>4</td><td>4</td><td>4</td><td>10</td><td>4</td><td>5</td><td>令和6の10問を除けば毎年4問。土地・税・兵と官吏登用の制度が軸。</td></tr><tr><th>古代オリエント・イラン</th><td>4</td><td>4</td><td>2</td><td>6</td><td>1</td><td>4</td><td><b>令和7で1問と激減</b>。5年の平均は3.4問で、その水準に戻る反動を見込み厚く配置した。</td></tr><tr><th>イスラーム世界</th><td>3</td><td>3</td><td>5</td><td>8</td><td>7</td><td>4</td><td>令和5から3年続けて増加中（5→8→7）。成立期（ヒジュラ・ウマイヤ・アッバース）が核。</td></tr><tr><th>宋・元・モンゴル</th><td>3</td><td>3</td><td>3</td><td>8</td><td>7</td><td>4</td><td>令和3〜5は3問だったが、令和6・7で7〜8問に急増した。年代整序で問われやすい。</td></tr><tr><th>明・清</th><td>4</td><td>4</td><td>4</td><td>1</td><td>2</td><td>4</td><td><b>令和3〜5は毎年4問だったのに、令和6・7で計3問</b>。5年に広げたことで反動の根拠が強まった。最も厚く配置している。</td></tr><tr><th>大航海・植民地</th><td>1</td><td>2</td><td>2</td><td>0</td><td>7</td><td>1</td><td>令和7の7問が突出しているだけで、ふだんは0〜2問。今年は縮小と見た。</td></tr><tr><th>宗教改革・主権国家</th><td>2</td><td>2</td><td>1</td><td>3</td><td>1</td><td>3</td><td>毎年1〜3問。<b>令和7は1問だけ</b>。ルター・カルヴァン・ウェストファリアでの復活を見込む。</td></tr><tr><th>絶対王政・市民革命</th><td>4</td><td>3</td><td>7</td><td>4</td><td>3</td><td>4</td><td>毎年3〜7問。ナントの王令とイギリス革命の順序は繰り返し出る。</td></tr><tr><th>近現代・テーマ史（選択）</th><td>21</td><td>21</td><td>18</td><td>1</td><td>3</td><td>10</td><td>令和3〜5は選択のⅦ・Ⅷを含めて18〜21問が印刷されていた。令和7型では選択の大問6だけで10問になる。</td></tr>
+    <tr class="cover__plan-total"><th>計</th><td>57</td><td>57</td><td>57</td><td>50</td><td>50</td><td>50</td><td>令和3〜5は選択問題を含めて57問が印刷されていた（解答するのは50問）。</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="basis__h">設問形式の実測と、この予想問題での再現</h3>
+  <table class="basis__t">
+    <caption>設問形式は令和3・4年度の実物114問を1問ずつ数えたもの。令和5〜7は形式の記録がないため載せていない。<br>
+    複数にまたがる設問は、史料→略年表→年代整序→空欄補充→正誤の組合せ→図版→組合せ→語句の順で先に当たったものに数えた。</caption>
+    <thead><tr><th>形式</th><th>令和3</th><th>令和4</th><th>第1回</th></tr></thead>
+    <tbody><tr><th>史料</th><td>2</td><td>3</td><td>1</td></tr><tr><th>略年表</th><td>0</td><td>1</td><td>2</td></tr><tr><th>年代整序</th><td>5</td><td>4</td><td>7</td></tr><tr><th>空欄補充</th><td>8</td><td>11</td><td>8</td></tr><tr><th>正誤の組合せ</th><td>8</td><td>8</td><td>7</td></tr><tr><th>図版・略地図</th><td>3</td><td>6</td><td>5</td></tr><tr><th>組合せ</th><td>8</td><td>3</td><td>4</td></tr><tr><th>適切でないもの</th><td>1</td><td>1</td><td>0</td></tr><tr><th>語句</th><td>22</td><td>20</td><td>16</td></tr>
+    <tr><th>うち6択の設問</th><td>7</td><td>5</td><td>7</td></tr>
+    <tr class="cover__plan-total"><th>計</th><td>57</td><td>57</td><td>50</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="basis__h">今年ならではの材料</h3>
+  <ul class="basis__l">
+    <li><b>アメリカ独立宣言から250年（1776→2026）。</b>記念年は資料集や模試で扱われやすく、独立に至る流れを略年表で問う形は令和5でも出ている。問39に配置した。</li>
+    <li><b>ムガル帝国の成立から500年（1526→2026）。</b>パーニーパットの戦いとアクバル／アウラングゼーブの対比は、令和6でアウラングゼーブが既出。問24に配置した。</li>
+    <li><b>令和7年度から大問構成が変わった。</b>令和3〜5年度は「Ⅰ〜Ⅵが必須、Ⅶ・Ⅷから1題を選択して計7題」で57問が印刷され50問を解答した。令和7年度は「大問1〜5が必須（各8問）、大問6（世界史探究）と大問7（歴史総合）から1題を選択（10問）」で60問が印刷され50問を解答する。<b>解答数が50問であることは5年とも変わらない。</b>本問題は令和7年度の構成にそろえてある。</li>
+    <li><b>選択問題は5年ともテーマ史と現代史の二択だった。</b>令和3はテーマ史「感染症」、令和4は「10世紀の世界」、令和7は「差別と迫害／知の伝達」。抽象度の高いテーマで全時代を横断させるのが出題者の狙いで、通史の総復習がそのまま得点になる。</li>
+    <li><b>難易度は教科書レベル〜共通テスト相当、奇問は出ない</b>というのが対策塾各社の一致した見方。したがって新奇な題材ではなく、<b>教科書の太字を別角度から問い直す</b>方向で作成した。用語集にしか出ない語が正解の決め手になっていないかは、問題バンクと過去問インデックスに照合して機械的に点検している。<b>令和3・4年度の実物を読むかぎり、難しさは語の細かさではなく形式でつくられていた</b>——空欄補充は語と文を同時に判断させ、3項目の年代整序は6択で当てずっぽうを効かなくする。したがって「レベルを過去問に合わせる」とは、語を難しくすることではなくこの形式に合わせることを意味する。</li>
+    <li><b>2026年の共通テスト（歴史総合・世界史探究）では、資料を用いた設問が前年の19から35へ大幅に増えた。</b>探究科目は資料読解を求める方向にある。基礎学の図表を伴う設問は令和4の6問をピークに減っているが、新課程の流れをふまえて、各回とも実物の3年平均（50問あたり5.3問）以上になるよう資料つきの設問を置いた。</li>
+  </ul>
+
+  <h3 class="basis__h">直前1か月の使い方</h3>
+  <ol class="basis__l basis__l--num">
+    <li>まず時間を計って通しで解き、得点を出す。80点に届かなければ、落とした大問がそのまま弱点。</li>
+    <li>解説の「予想の根拠」に挙がっている過去問の設問番号を、一問一答アプリの同じ分野でつぶす。</li>
+    <li>年代整序で落とした場合は、年号ではなく<b>できごとの前後関係</b>を線で覚え直す。ここが最も配点効率がよい。</li>
+    <li>地図・写真・系図は知識ではなく<b>資料集を開く習慣</b>で埋まる。1日5分でよいので図版を眺める。</li>
+  </ol>
+</section>
+
+<footer class="foot">
+  <p>令和5・6・7年度の実物157問の分析にもとづく予想問題。的中を保証するものではない。</p>
+  <p class="foot__ver">作成 2026年8月24日／全50問</p>
+</footer>
+
+<button class="printbtn" type="button" onclick="window.print()">印刷する</button>
+

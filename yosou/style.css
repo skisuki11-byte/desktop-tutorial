@@ -1,0 +1,262 @@
+/* 印刷を前提にした版面。A4・縦・1段組み。画面で見るときも同じ体裁になる。 */
+:root{
+  --paper:#ffffff;
+  --ink:#14171c;          /* 墨 */
+  --sub:#5c6270;          /* 副次的な文字 */
+  --rule:#b9bec9;         /* 罫 */
+  --rule-strong:#3a4050;
+  --tint:#f3f4f7;         /* 淡い面 */
+  --seal:#9b2530;         /* 朱。解答と根拠にだけ使う */
+  --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:10.5pt;
+  line-height:1.85;
+  margin:0;
+  padding:0 0 32px;
+  -webkit-font-feature-settings:"palt";
+  font-feature-settings:"palt";
+}
+
+/* 画面では紙のように中央に置く */
+.cover,.dai,.sheetpage,.keypage,.answers,.basis,.foot{
+  max-width:186mm;
+  margin:0 auto;
+  padding:0 6mm;
+}
+
+b{font-weight:700;}
+
+/* ---------- 表紙 ---------- */
+.cover{padding-top:26px;}
+.cover__eyebrow{
+  font-family:var(--sans);font-size:9.5pt;letter-spacing:.18em;
+  color:var(--sub);margin:0 0 6px;
+}
+.cover__title{
+  font-family:var(--serif);font-weight:700;font-size:23pt;line-height:1.35;
+  margin:0 0 10px;text-wrap:balance;letter-spacing:.02em;
+}
+.cover__title span{font-size:16pt;letter-spacing:.06em;}
+.cover__meta{
+  font-family:var(--sans);font-size:9.5pt;color:var(--sub);
+  margin:0 0 22px;padding-bottom:14px;border-bottom:2.5px solid var(--rule-strong);
+}
+.cover__box{
+  border:1px solid var(--rule);background:var(--tint);
+  padding:14px 18px;margin:0 0 16px;
+}
+.cover__box--plain{background:var(--paper);}
+.cover__box h2{
+  font-family:var(--sans);font-size:10pt;font-weight:700;letter-spacing:.12em;
+  margin:0 0 8px;
+}
+.cover__box ol{margin:0;padding-left:1.4em;}
+.cover__box li{margin-bottom:5px;}
+.cover__box p{margin:0 0 8px;}
+.cover__box p:last-child{margin-bottom:0;}
+
+.cover__plan{
+  width:100%;border-collapse:collapse;margin-top:20px;
+  font-family:var(--sans);font-size:9.5pt;
+}
+.cover__plan caption{
+  text-align:left;font-weight:700;letter-spacing:.08em;padding-bottom:6px;
+}
+.cover__plan th,.cover__plan td{
+  border:1px solid var(--rule);padding:5px 9px;text-align:left;
+  font-variant-numeric:tabular-nums;
+}
+.cover__plan thead th{background:var(--tint);font-weight:700;}
+.cover__plan tbody th{white-space:nowrap;font-weight:500;}
+.cover__plan td:last-child,.cover__plan th:last-child{text-align:right;width:4.5em;}
+.cover__plan-total th,.cover__plan-total td{background:var(--tint);font-weight:700;}
+
+/* ---------- 大問 ---------- */
+.dai{padding-top:22px;}
+.dai__head{
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  border-bottom:2.5px solid var(--rule-strong);padding-bottom:7px;margin-bottom:12px;
+}
+.dai__badge{
+  font-family:var(--sans);font-size:8pt;font-weight:700;letter-spacing:.1em;
+  border:1px solid var(--rule-strong);padding:1px 7px;white-space:nowrap;
+}
+.dai__title{
+  font-family:var(--serif);font-size:14pt;font-weight:700;margin:0;
+  display:flex;align-items:baseline;gap:12px;flex:1 1 auto;letter-spacing:.02em;
+}
+.dai__no{font-size:12pt;letter-spacing:.08em;}
+.dai__score{
+  font-family:var(--sans);font-size:9pt;color:var(--sub);white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.dai__lead{
+  margin:0 0 18px;padding:9px 13px;background:var(--tint);
+  border-left:3px solid var(--rule-strong);font-size:10pt;
+}
+/* リード文の下線部と空欄。実物にならって、下線のうしろに小さく記号を置く */
+.dai__lead u{text-decoration:none;border-bottom:1px solid currentColor;}
+.dai__lead u sub{font-size:.7em;vertical-align:baseline;position:relative;top:.35em;margin-left:.1em;font-family:var(--sans);}
+.dai__lead .bk{
+  display:inline-block;border:1px solid var(--rule-strong);background:var(--paper);
+  padding:0 .55em;margin:0 .2em;font-family:var(--sans);font-size:.92em;line-height:1.5;
+}
+.dai__lead .note{
+  display:block;font-family:var(--sans);font-size:8.5pt;color:var(--sub);margin-top:5px;
+}
+
+/* ---------- 設問 ---------- */
+.q{margin:0 0 15px;break-inside:avoid;}
+.q__head{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;}
+.q__n{
+  font-family:var(--sans);font-weight:700;font-size:10.5pt;letter-spacing:.05em;
+}
+.q__ref{
+  font-family:var(--sans);font-size:7.5pt;letter-spacing:.06em;
+  background:var(--tint);border:1px solid var(--rule);padding:0 5px;white-space:nowrap;
+}
+.q__tag{
+  font-family:var(--sans);font-size:7.5pt;letter-spacing:.08em;color:var(--sub);
+  border:1px solid var(--rule);padding:0 5px;
+}
+.q__body{margin:0 0 6px;}
+.q__body .src{
+  display:block;margin:8px 0 4px;padding:9px 14px;
+  border:1px solid var(--rule);border-left:4px solid var(--rule-strong);
+  background:var(--tint);font-size:9.5pt;
+}
+
+.opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+/* 折り返しても本文の頭がそろうよう、ぶら下げインデントにする */
+.opt{padding-left:1.7em;text-indent:-1.7em;}
+.opt__n{font-family:var(--sans);font-size:10pt;margin-right:.35em;}
+
+.fig{
+  margin:10px 0;padding:8px 6px;border:1px solid var(--rule);
+  overflow-x:auto;color:var(--ink);
+}
+.fig svg{display:block;width:100%;height:auto;max-width:640px;margin:0 auto;}
+
+/* ---------- 解答用紙 ---------- */
+.pagetitle{
+  font-family:var(--serif);font-size:15pt;font-weight:700;margin:24px 0 10px;
+  border-bottom:2.5px solid var(--rule-strong);padding-bottom:6px;letter-spacing:.04em;
+}
+.lead{margin:0 0 16px;font-size:10pt;}
+
+.sheets,.keys{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;}
+.sheet,.key{
+  border-collapse:collapse;font-family:var(--sans);font-size:9pt;
+  font-variant-numeric:tabular-nums;flex:1 1 160px;
+}
+.sheet th,.sheet td,.key th,.key td{
+  border:1px solid var(--rule);padding:2px 6px;text-align:center;
+}
+.sheet thead th,.key thead th{background:var(--tint);}
+.sheet tbody th,.key tbody th{background:var(--tint);width:2.6em;}
+.bub{color:var(--rule);}
+.sheetpage__score{
+  font-family:var(--sans);font-size:11pt;margin-top:20px;font-weight:700;
+}
+.blank{
+  display:inline-block;width:4em;border-bottom:1.5px solid var(--ink);
+}
+
+/* ---------- 解説 ---------- */
+.ansdai{
+  font-family:var(--sans);font-size:10.5pt;font-weight:700;letter-spacing:.08em;
+  margin:20px 0 8px;padding:3px 10px;background:var(--tint);
+  border-left:4px solid var(--rule-strong);
+}
+.ans{margin:0 0 11px;break-inside:avoid;}
+.ans__head{display:flex;align-items:baseline;gap:10px;}
+.ans__n{font-family:var(--sans);font-weight:700;font-size:10pt;}
+.ans__a{
+  font-family:var(--sans);font-weight:700;font-size:10pt;color:var(--seal);
+  letter-spacing:.04em;
+}
+.ans__ex{margin:1px 0 0;font-size:9.5pt;line-height:1.8;}
+.ans__src{
+  margin:4px 0 0;font-family:var(--sans);font-size:8.5pt;color:var(--sub);
+  line-height:1.7;
+}
+.ans__src span{
+  color:var(--seal);font-weight:700;letter-spacing:.06em;margin-right:.6em;
+}
+
+/* ---------- 根拠 ---------- */
+.basis__t{
+  width:100%;border-collapse:collapse;font-family:var(--sans);font-size:9pt;
+  margin:0 0 22px;
+}
+.basis__t th,.basis__t td{
+  border:1px solid var(--rule);padding:4px 8px;text-align:left;
+  font-variant-numeric:tabular-nums;
+}
+.basis__t thead th{background:var(--tint);font-weight:700;text-align:center;}
+.basis__t code{font-family:var(--sans);font-size:8pt;background:var(--tint);padding:0 3px;}
+.basis__t caption{text-align:left;font-size:8.5pt;color:var(--sub);padding-bottom:5px;}
+.basis__t tbody th{white-space:nowrap;font-weight:500;}
+.basis__t tbody td:nth-child(2),
+.basis__t tbody td:nth-child(3),
+.basis__t tbody td:nth-child(4),
+.basis__t tbody td:nth-child(5){text-align:center;width:3.6em;}
+.basis__h{
+  font-family:var(--sans);font-size:10.5pt;font-weight:700;letter-spacing:.06em;
+  margin:0 0 10px;
+}
+.basis__l{margin:0 0 22px;padding-left:1.3em;font-size:10pt;}
+.basis__l li{margin-bottom:6px;}
+
+.foot{
+  margin-top:24px;padding-top:10px;border-top:1px solid var(--rule);
+  font-family:var(--sans);font-size:8.5pt;color:var(--sub);
+}
+.foot p{margin:0 0 3px;}
+
+.printbtn{
+  position:fixed;right:16px;bottom:16px;z-index:9;
+  font-family:var(--sans);font-size:10pt;font-weight:700;letter-spacing:.08em;
+  background:var(--ink);color:var(--paper);border:none;
+  padding:11px 20px;border-radius:2px;cursor:pointer;
+}
+.printbtn:hover{background:var(--seal);}
+.printbtn:focus-visible{outline:3px solid var(--seal);outline-offset:2px;}
+
+/* ---------- 印刷 ---------- */
+@page{size:A4 portrait;margin:15mm 12mm;}
+@media print{
+  body{font-size:9.5pt;line-height:1.75;padding:0;}
+  .cover,.dai,.sheetpage,.keypage,.answers,.basis,.foot{max-width:none;padding:0;}
+  .cover,.dai,.sheetpage,.keypage{break-after:page;}
+  .dai:last-of-type{break-after:page;}
+  .answers{break-after:page;}
+  .printbtn{display:none;}
+  .dai__lead,.cover__box,.ansdai,.sheet thead th,.key thead th,
+  .sheet tbody th,.key tbody th,.cover__plan thead th,.basis__t thead th,
+  .cover__plan-total th,.cover__plan-total td,.q__body .src{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .pagetitle{margin-top:0;}
+  .dai{padding-top:0;}
+  .cover{padding-top:0;}
+  a{text-decoration:none;color:inherit;}
+}
+
+@media (max-width:640px){
+  body{font-size:11pt;}
+  .cover__title{font-size:19pt;}
+  .sheets,.keys{gap:10px;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important;}
+}
