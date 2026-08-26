@@ -70,16 +70,28 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 
 .cards{display:flex;flex-direction:column;gap:12px;padding:0 18px;max-width:640px;margin:0 auto;}
 .card{
-  display:block;width:100%;text-align:left;background:var(--surface);
+  background:var(--surface);
   border:1px solid var(--border);border-left:5px solid var(--c);
-  border-radius:var(--radius);padding:16px 16px 14px;cursor:pointer;
+  border-radius:var(--radius);overflow:hidden;
 }
-.card:active{background:var(--surface-2);}
+.card__main{
+  display:block;width:100%;text-align:left;background:none;border:none;
+  padding:16px 16px 14px;cursor:pointer;
+}
+.card__main:active{background:var(--surface-2);}
+/* 「はじめから解き直す」。主な行き先（つづきから）より控えめに置く */
+.card__again{
+  display:block;width:100%;background:none;border:none;
+  border-top:1px solid var(--border);
+  padding:12px 16px;cursor:pointer;text-align:center;
+  font-size:13px;color:var(--ink-3);
+}
+.card__again:active{background:var(--surface-2);}
 .card__top{display:flex;align-items:baseline;gap:10px;}
 .card__name{font-family:var(--font-serif);font-size:20px;font-weight:700;}
 .card__sub{font-size:12px;color:var(--ink-3);}
 .card__note{font-size:13px;color:var(--ink-2);margin:6px 0 10px;}
-.card__foot{display:flex;align-items:center;gap:10px;}
+.card__foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .card__state{
   font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;
   background:var(--surface-2);color:var(--ink-3);

@@ -93,46 +93,78 @@ function renderHome() {
     var list = flat(s.id), n = list.length;
     var r = rec(mode, s.id);
     var picked = Object.keys(r.answers).length;
-    var state, cls, right = "";
+    /* 学習モードは、全問答えたなら結果を見ずに閉じていても「終わった」扱いにする。
+       50問すべて答えたのに「途中（50／50問）」と出るのはおかしいため。 */
+    var finished = mode === "real" ? !!r.done : (r.done || picked === n);
+    var state, cls = "", right, go;
+
     if (mode === "real") {
-      if (r.done) {
+      if (finished) {
         state = "採点ずみ"; cls = "card__state--done";
-        right = '<span class="card__score">' + r.score + '<small> 点</small></span>';
+        right = '<span class="card__go">結果を見る ›</span>' +
+                '<span class="card__score">' + r.score + '<small> 点</small></span>';
+        go = function () { renderResult(s.id); };
       } else if (picked > 0) {
         state = "途中（" + picked + "／" + n + "問）"; cls = "card__state--mid";
         right = '<span class="card__go">つづきから ›</span>';
+        go = function () { startExam(s.id); };
       } else {
-        state = "未着手"; cls = "";
+        state = "未着手";
         right = '<span class="card__go">はじめる ›</span>';
+        go = function () { startExam(s.id); };
       }
     } else {
       var ok = countRight("learn", s.id, list);
       var ng = wrongOf("learn", s.id, list).length;
-      /* 全問答えたなら、結果を見ずに閉じていても「終わった」扱いにする。
-         50問すべて答えたのに「途中（50／50問）」と出るのはおかしいため。 */
-      if (r.done || picked === n) {
+      if (finished) {
         state = ng ? "間違い " + ng + " 問" : "全問正解";
         cls = ng ? "card__state--mid" : "card__state--done";
-        right = '<span class="card__score">' + ok + '<small> ／' + n + '問</small></span>';
+        right = '<span class="card__go">結果を見る ›</span>' +
+                '<span class="card__score">' + ok + '<small> ／' + n + '問</small></span>';
+        go = function () { renderLResult(s.id, list, false); };
       } else if (picked > 0) {
         state = "途中（" + picked + "／" + n + "問）"; cls = "card__state--mid";
         right = '<span class="card__go">つづきから ›</span>';
+        go = function () { startLearn(s.id, list, false); };
       } else {
-        state = "未着手"; cls = "";
+        state = "未着手";
         right = '<span class="card__go">はじめる ›</span>';
+        go = function () { startLearn(s.id, list, false); };
       }
     }
-    var b = document.createElement("button");
-    b.type = "button";
-    b.className = "card";
-    b.style.setProperty("--c", color(s.id * 2));
-    b.innerHTML =
+
+    var card = document.createElement("div");
+    card.className = "card";
+    card.style.setProperty("--c", color(s.id * 2));
+
+    var main = document.createElement("button");
+    main.type = "button";
+    main.className = "card__main";
+    main.innerHTML =
       '<span class="card__top"><span class="card__name">' + s.name + '</span>' +
       '<span class="card__sub">' + s.sub + '</span></span>' +
       '<span class="card__note">' + s.note + '</span>' +
       '<span class="card__foot"><span class="card__state ' + cls + '">' + state + '</span>' + right + '</span>';
-    b.addEventListener("click", function () { openSet(s.id); });
-    wrap.appendChild(b);
+    main.addEventListener("click", go);
+    card.appendChild(main);
+
+    /* 学習モードで解きかけ・解き終わりのときは、問1から解き直す道も出す。
+       答えを残したまま1問目に戻っても答え合わせが見えるだけなので、記録は消す。
+       押し間違えると解いた分が消えるため、必ず確かめてから。 */
+    if (mode === "learn" && picked > 0) {
+      var again = document.createElement("button");
+      again.type = "button";
+      again.className = "card__again";
+      again.textContent = "はじめから解き直す";
+      again.addEventListener("click", function () {
+        if (!confirm(s.name + "（学習モード）のこれまでの答えを消して、問1から解き直しますか。")) return;
+        clearRec("learn", s.id);
+        startLearn(s.id, flat(s.id), false);
+      });
+      card.appendChild(again);
+    }
+
+    wrap.appendChild(card);
   });
   renderTotal();
   $("ver").textContent = "版 " + VERSION;
@@ -165,17 +197,6 @@ function renderTotal() {
   }
 }
 
-function openSet(id) {
-  var r = rec(mode, id);
-  if (mode === "real") {
-    if (r.done) { renderResult(id); return; }
-    startExam(id);
-  } else {
-    var list = flat(id);
-    if (r.done || Object.keys(r.answers).length === list.length) { renderLResult(id, list, false); return; }
-    startLearn(id, list, false);
-  }
-}
 
 /* ───────── 設問の描画（学習・本番・見直しで共通） ───────── */
 function fillLead(dai, bodyEl, sumEl) {

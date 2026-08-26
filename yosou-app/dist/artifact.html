@@ -73,16 +73,28 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 
 .cards{display:flex;flex-direction:column;gap:12px;padding:0 18px;max-width:640px;margin:0 auto;}
 .card{
-  display:block;width:100%;text-align:left;background:var(--surface);
+  background:var(--surface);
   border:1px solid var(--border);border-left:5px solid var(--c);
-  border-radius:var(--radius);padding:16px 16px 14px;cursor:pointer;
+  border-radius:var(--radius);overflow:hidden;
 }
-.card:active{background:var(--surface-2);}
+.card__main{
+  display:block;width:100%;text-align:left;background:none;border:none;
+  padding:16px 16px 14px;cursor:pointer;
+}
+.card__main:active{background:var(--surface-2);}
+/* 「はじめから解き直す」。主な行き先（つづきから）より控えめに置く */
+.card__again{
+  display:block;width:100%;background:none;border:none;
+  border-top:1px solid var(--border);
+  padding:12px 16px;cursor:pointer;text-align:center;
+  font-size:13px;color:var(--ink-3);
+}
+.card__again:active{background:var(--surface-2);}
 .card__top{display:flex;align-items:baseline;gap:10px;}
 .card__name{font-family:var(--font-serif);font-size:20px;font-weight:700;}
 .card__sub{font-size:12px;color:var(--ink-3);}
 .card__note{font-size:13px;color:var(--ink-2);margin:6px 0 10px;}
-.card__foot{display:flex;align-items:center;gap:10px;}
+.card__foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .card__state{
   font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;
   background:var(--surface-2);color:var(--ink-3);
@@ -373,7 +385,7 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
     <summary>この予想問題について</summary>
     <div class="more__body">
       <h2>2つのモードの使い分け</h2>
-      <p><b>学習モード</b>は1問ずつ答え合わせをします。選んだ瞬間に正誤と解説が出て、次へ進みます。時間は計りません。終わったあと<b>間違えた問題だけをやり直せる</b>ので、まずはこちらで3回分を通してください。</p>
+      <p><b>学習モード</b>は1問ずつ答え合わせをします。選んだ瞬間に正誤と解説が出て、次へ進みます。時間は計りません。終わったあと<b>間違えた問題だけをやり直せる</b>ので、まずはこちらで3回分を通してください。途中でやめても、次に開いたときに「つづきから」と「はじめから解き直す」のどちらかを選べます。</p>
       <p><b>本番モード</b>は当日と同じです。60分を計って50問を通しで解き、最後にまとめて採点します。途中で答えは見られません。学習モードをひと通り終えてから、力だめしに使ってください。記録は2つのモードで別々に残ります。</p>
       <h2>3回で一組にしている理由</h2>
       <p>当日どちらに振れても対応できるよう、<b>第1回＝直近の反動、第2回＝傾向の継続、第3回＝取りこぼしと範囲拡大の保険</b>という3つの筋書きに分けてあります。3回あわせて、過去5年の実物を解くのに必要な知識668語のすべてに触れる設計です。</p>
@@ -551,7 +563,7 @@ const SETS = [{"id":1,"name":"第1回","sub":"直近の反動を重く見た配�
    ・記録は localStorage に置き、書けない環境では sessionStorage に落とす。 */
 "use strict";
 
-var VERSION = "2026.08.27 08:28";
+var VERSION = "2026.08.27 08:45";
 var CIRCLE = "①②③④⑤⑥";
 var LIMIT = 60 * 60;           // 本番モードの制限時間（秒）
 var KEY = "yosou-v1";
@@ -637,46 +649,78 @@ function renderHome() {
     var list = flat(s.id), n = list.length;
     var r = rec(mode, s.id);
     var picked = Object.keys(r.answers).length;
-    var state, cls, right = "";
+    /* 学習モードは、全問答えたなら結果を見ずに閉じていても「終わった」扱いにする。
+       50問すべて答えたのに「途中（50／50問）」と出るのはおかしいため。 */
+    var finished = mode === "real" ? !!r.done : (r.done || picked === n);
+    var state, cls = "", right, go;
+
     if (mode === "real") {
-      if (r.done) {
+      if (finished) {
         state = "採点ずみ"; cls = "card__state--done";
-        right = '<span class="card__score">' + r.score + '<small> 点</small></span>';
+        right = '<span class="card__go">結果を見る ›</span>' +
+                '<span class="card__score">' + r.score + '<small> 点</small></span>';
+        go = function () { renderResult(s.id); };
       } else if (picked > 0) {
         state = "途中（" + picked + "／" + n + "問）"; cls = "card__state--mid";
         right = '<span class="card__go">つづきから ›</span>';
+        go = function () { startExam(s.id); };
       } else {
-        state = "未着手"; cls = "";
+        state = "未着手";
         right = '<span class="card__go">はじめる ›</span>';
+        go = function () { startExam(s.id); };
       }
     } else {
       var ok = countRight("learn", s.id, list);
       var ng = wrongOf("learn", s.id, list).length;
-      /* 全問答えたなら、結果を見ずに閉じていても「終わった」扱いにする。
-         50問すべて答えたのに「途中（50／50問）」と出るのはおかしいため。 */
-      if (r.done || picked === n) {
+      if (finished) {
         state = ng ? "間違い " + ng + " 問" : "全問正解";
         cls = ng ? "card__state--mid" : "card__state--done";
-        right = '<span class="card__score">' + ok + '<small> ／' + n + '問</small></span>';
+        right = '<span class="card__go">結果を見る ›</span>' +
+                '<span class="card__score">' + ok + '<small> ／' + n + '問</small></span>';
+        go = function () { renderLResult(s.id, list, false); };
       } else if (picked > 0) {
         state = "途中（" + picked + "／" + n + "問）"; cls = "card__state--mid";
         right = '<span class="card__go">つづきから ›</span>';
+        go = function () { startLearn(s.id, list, false); };
       } else {
-        state = "未着手"; cls = "";
+        state = "未着手";
         right = '<span class="card__go">はじめる ›</span>';
+        go = function () { startLearn(s.id, list, false); };
       }
     }
-    var b = document.createElement("button");
-    b.type = "button";
-    b.className = "card";
-    b.style.setProperty("--c", color(s.id * 2));
-    b.innerHTML =
+
+    var card = document.createElement("div");
+    card.className = "card";
+    card.style.setProperty("--c", color(s.id * 2));
+
+    var main = document.createElement("button");
+    main.type = "button";
+    main.className = "card__main";
+    main.innerHTML =
       '<span class="card__top"><span class="card__name">' + s.name + '</span>' +
       '<span class="card__sub">' + s.sub + '</span></span>' +
       '<span class="card__note">' + s.note + '</span>' +
       '<span class="card__foot"><span class="card__state ' + cls + '">' + state + '</span>' + right + '</span>';
-    b.addEventListener("click", function () { openSet(s.id); });
-    wrap.appendChild(b);
+    main.addEventListener("click", go);
+    card.appendChild(main);
+
+    /* 学習モードで解きかけ・解き終わりのときは、問1から解き直す道も出す。
+       答えを残したまま1問目に戻っても答え合わせが見えるだけなので、記録は消す。
+       押し間違えると解いた分が消えるため、必ず確かめてから。 */
+    if (mode === "learn" && picked > 0) {
+      var again = document.createElement("button");
+      again.type = "button";
+      again.className = "card__again";
+      again.textContent = "はじめから解き直す";
+      again.addEventListener("click", function () {
+        if (!confirm(s.name + "（学習モード）のこれまでの答えを消して、問1から解き直しますか。")) return;
+        clearRec("learn", s.id);
+        startLearn(s.id, flat(s.id), false);
+      });
+      card.appendChild(again);
+    }
+
+    wrap.appendChild(card);
   });
   renderTotal();
   $("ver").textContent = "版 " + VERSION;
@@ -709,17 +753,6 @@ function renderTotal() {
   }
 }
 
-function openSet(id) {
-  var r = rec(mode, id);
-  if (mode === "real") {
-    if (r.done) { renderResult(id); return; }
-    startExam(id);
-  } else {
-    var list = flat(id);
-    if (r.done || Object.keys(r.answers).length === list.length) { renderLResult(id, list, false); return; }
-    startLearn(id, list, false);
-  }
-}
 
 /* ───────── 設問の描画（学習・本番・見直しで共通） ───────── */
 function fillLead(dai, bodyEl, sumEl) {

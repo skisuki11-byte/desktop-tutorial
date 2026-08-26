@@ -27,10 +27,11 @@ const t = (c, m) => { if (!c) bad++; ok(c, m); };
   t((await p.locator(".card").first().textContent()).includes("第1回"), "第1回のカードがある");
   t(await p.locator(".mode").count() === 2, "モードが2つ並ぶ");
   t((await p.locator(".mode.is-on").textContent()).includes("学習モード"), "最初は学習モードが選ばれている");
+  t(await p.locator(".card__again").count() === 0, "未着手のうちは「はじめから」を出さない");
   t((await p.locator("#home-total").textContent()).includes("まずは第1回から"), "学習モードの案内が出る");
 
   console.log("\n■ 学習モード：出だし");
-  await p.locator(".card").first().click();
+  await p.locator(".card__main").first().click();
   await p.waitForTimeout(300);
   t(await p.locator("#view-learn.is-active").count() === 1, "学習画面に入る");
   t(await p.locator("#learn-lead[open]").count() === 1, "最初からリード文が開いている");
@@ -130,9 +131,36 @@ const t = (c, m) => { if (!c) bad++; ok(c, m); };
   await p.evaluate(() => { store["L2"].answers = {}; flat(2).forEach((x) => { store["L2"].answers[x.q.n] = x.q.a; }); store["L2"].done = false; writeStore(); goHome(); });
   await p.waitForTimeout(200);
   t((await p.locator(".card").nth(1).textContent()).includes("全問正解"), "結果を見ずに閉じても「途中」にならない");
-  await p.locator(".card").nth(1).click(); await p.waitForTimeout(300);
+  await p.locator(".card__main").nth(1).click(); await p.waitForTimeout(300);
   t(await p.locator("#view-lresult.is-active").count() === 1, "押すと結果が開く");
   await p.locator("#lresult-home").click(); await p.waitForTimeout(200);
+  await p.evaluate(() => { store["L2"] = { answers: {}, pos: 0, elapsed: 0, done: false }; writeStore(); renderLResult(1, flat(1), false); });
+  await p.waitForTimeout(200);
+
+  console.log("\n■ 学習モード：つづきからと、はじめから");
+  await p.evaluate(() => { goHome(); });
+  await p.waitForTimeout(200);
+  t(await p.locator(".card").first().locator(".card__again").count() === 1, "解きかけの回に「はじめから解き直す」が出る");
+  t((await p.locator(".card").first().locator(".card__main").textContent()).includes("間違い"), "主なボタンは結果へ（解き終わり）");
+  // 第2回を途中まで解いた状態にして、つづきからを見る
+  await p.evaluate(() => {
+    store["L2"] = { answers: {}, pos: 11, elapsed: 0, done: false };
+    flat(2).slice(0, 12).forEach((x) => { store["L2"].answers[x.q.n] = x.q.a; });
+    writeStore(); goHome();
+  });
+  await p.waitForTimeout(200);
+  const c2 = p.locator(".card").nth(1);
+  t((await c2.locator(".card__main").textContent()).includes("つづきから"), "途中の回は「つづきから」");
+  t(await c2.locator(".card__again").count() === 1, "途中の回にも「はじめから解き直す」が出る");
+  await c2.locator(".card__main").click(); await p.waitForTimeout(300);
+  t((await p.locator("#learn-qnum").textContent()) === "問12", "つづきからは中断したところから（12問目）");
+  await p.locator("#learn-quit").click(); await p.waitForTimeout(200);
+  p.once("dialog", (d) => d.accept());
+  await p.locator(".card").nth(1).locator(".card__again").click(); await p.waitForTimeout(300);
+  t((await p.locator("#learn-qnum").textContent()) === "問1", "はじめからは問1に戻る");
+  t(await p.locator("#learn-ex").isHidden(), "答えが消えて未解答に戻っている");
+  t((await p.locator("#learn-count").textContent()).includes("1／50"), "1問目からになっている");
+  await p.locator("#learn-quit").click(); await p.waitForTimeout(200);
   await p.evaluate(() => { store["L2"] = { answers: {}, pos: 0, elapsed: 0, done: false }; writeStore(); renderLResult(1, flat(1), false); });
   await p.waitForTimeout(200);
 
@@ -152,7 +180,7 @@ const t = (c, m) => { if (!c) bad++; ok(c, m); };
   t((await p.locator("#home-total").textContent()).includes("まだ採点した回はありません"), "本番モードの案内に変わる");
 
   console.log("\n■ 本番モード：解答中");
-  await p.locator(".card").first().click(); await p.waitForTimeout(300);
+  await p.locator(".card__main").first().click(); await p.waitForTimeout(300);
   t(await p.locator("#view-exam.is-active").count() === 1, "解答画面に入る");
   t((await p.locator("#exam-qnum").textContent()) === "問1", "問1から始まる");
   t(await p.locator("#exam-lead[open]").count() === 0, "本番ではリード文はたたまれている");
