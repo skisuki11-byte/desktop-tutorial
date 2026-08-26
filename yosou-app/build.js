@@ -84,10 +84,10 @@ ${js}
 fs.mkdirSync(path.join(root, "dist"), { recursive: true });
 fs.writeFileSync(path.join(root, "dist/index.html"), standalone);
 fs.writeFileSync(path.join(root, "dist/artifact.html"), fragment + "\n");
-const docs = path.join(root, "..", "docs", "yosou");
-fs.mkdirSync(docs, { recursive: true });
-fs.writeFileSync(path.join(docs, "index.html"), standalone);
+const out = path.join(root, "..", "sekaishi", "yosou");
+fs.mkdirSync(out, { recursive: true });
+fs.writeFileSync(path.join(out, "index.html"), standalone);
 
 const kb = (s) => Math.round(Buffer.byteLength(s) / 1024) + "KB";
 console.log("版:", stamp, "／", total, "問");
-console.log("docs/yosou/index.html", kb(standalone));
+console.log("sekaishi/yosou/index.html", kb(standalone));
