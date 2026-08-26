@@ -57,6 +57,9 @@ const t = (c, m) => { if (!c) bad++; ok(c, m); };
   t(await p.locator("#learn-opts button").count() === 0, "答えたあとは選択肢を押せない");
   t((await p.locator("#learn-next").textContent()).includes("次の問題"), "「次の問題」に変わる");
   t(await p.locator("#learn-next.is-hot").count() === 1, "次へのボタンが目立つ");
+  const fb = await p.locator("#learn-next").boundingBox();
+  t(fb.height >= 70 && fb.width >= 220,
+    "次へのボタンが押しやすい大きさ: " + Math.round(fb.width) + "×" + Math.round(fb.height) + "px");
   t((await p.locator("#learn-count").textContent()).includes("正解 0"), "外したので正解数は0のまま");
   await p.evaluate(() => { document.getElementById("learn-lead").open = false; });
   await p.locator("#learn-next").click(); await p.waitForTimeout(150);
