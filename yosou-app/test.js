@@ -81,6 +81,11 @@ const t = (c, m) => { if (!c) bad++; ok(c, m); };
   t((await p.locator("#learn-count").textContent()).includes("正解 1"), "正解数が1に増える");
 
   console.log("\n■ 学習モード：下線部と大問の切り替わり");
+  const sub = await p.evaluate(() => {
+    const s = getComputedStyle(document.querySelector("#learn-leadbody u sub"));
+    return { size: parseFloat(s.fontSize), weight: s.fontWeight };
+  });
+  t(sub.size >= 12 && sub.weight === "700", "下線部の記号が太く十分な大きさ: " + sub.size + "px / " + sub.weight);
   await p.locator("#learn-qref").click(); await p.waitForTimeout(400);
   t(await p.locator("#learn-leadbody u.is-lit, #learn-leadbody .bk.is-lit").count() >= 1, "リード文の該当箇所が光る");
   await p.evaluate(() => { cur.idx = 8; renderLearn(false); });   // 第2問の1問目

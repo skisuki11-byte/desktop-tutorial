@@ -147,24 +147,32 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 .lead{
   background:var(--surface);border-bottom:1px solid var(--border);
 }
+/* 画面が広いとき、リード文だけが端から端まで伸びて設問と段が揃わないので、
+   設問（.qwrap）と同じ 640px の列に収める。 */
 .lead__sum{
   cursor:pointer;list-style:none;padding:11px 16px;font-size:12.5px;color:var(--ink-3);
+  max-width:640px;margin:0 auto;
 }
 .lead__sum::-webkit-details-marker{display:none;}
 .lead__sum::before{content:"▸ ";}
 .lead[open] .lead__sum::before{content:"▾ ";}
 .lead__body{
-  font-family:var(--font-serif);font-size:14.5px;line-height:1.95;
+  font-family:var(--font-serif);font-size:15.5px;line-height:2.05;
   padding:2px 16px 16px;color:var(--ink);
   border-top:1px solid var(--border);
+  max-width:640px;margin:0 auto;
 }
 .lead__body u{text-decoration:none;border-bottom:1.5px solid var(--ink-3);}
+/* 下線部の記号（a〜h）。細く薄いと下線に埋もれて読めないので、
+   太く濃くしたうえで、記号の背景で下線を切って地の色に抜いている。 */
 .lead__body u sub{
-  font-family:var(--font-sans);font-size:.65em;vertical-align:baseline;
-  position:relative;top:.4em;margin-left:.1em;color:var(--ink-3);
+  font-family:var(--font-sans);font-size:.8em;font-weight:700;
+  vertical-align:baseline;position:relative;top:.3em;
+  margin:0 0 0 .1em;padding:0 .3em 0 .2em;   /* 右は余白でなく内側に取る。外に出すと下線が覗く */
+  color:var(--ink-2);background:var(--surface);border-radius:3px;
 }
 .lead__body u.is-lit{background:var(--mark);border-bottom-color:var(--ink);}
-.lead__body u.is-lit sub{color:var(--ink);font-weight:700;}
+.lead__body u.is-lit sub{color:var(--ink);background:var(--mark);}
 .lead__body .bk{
   display:inline-block;border:1px solid var(--border-strong);background:var(--surface-2);
   padding:0 .6em;margin:0 .2em;font-family:var(--font-sans);font-size:.9em;border-radius:3px;
@@ -543,7 +551,7 @@ const SETS = [{"id":1,"name":"第1回","sub":"直近の反動を重く見た配�
    ・記録は localStorage に置き、書けない環境では sessionStorage に落とす。 */
 "use strict";
 
-var VERSION = "2026.08.27 08:09";
+var VERSION = "2026.08.27 08:28";
 var CIRCLE = "①②③④⑤⑥";
 var LIMIT = 60 * 60;           // 本番モードの制限時間（秒）
 var KEY = "yosou-v1";
