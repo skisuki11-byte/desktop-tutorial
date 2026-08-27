@@ -30,6 +30,28 @@ const t = (c, m) => { if (!c) bad++; ok(c, m); };
   t(await p.locator(".card__again").count() === 0, "未着手のうちは「はじめから」を出さない");
   t((await p.locator("#home-total").textContent()).includes("まずは第1回から"), "学習モードの案内が出る");
 
+  console.log("\n■ 明るさ");
+  const bgOf = () => p.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  t(await p.locator('html[data-theme="dark"]').count() === 1, "既定はダーク");
+  t(await bgOf() === "rgb(16, 17, 25)", "地の色が暗い: " + (await bgOf()));
+  t(await p.evaluate(() => document.querySelector('meta[name="theme-color"]').content) === "#101119",
+    "ブラウザの色も暗い");
+  await p.locator("#theme-toggle").click(); await p.waitForTimeout(200);
+  t(await p.locator('html[data-theme="light"]').count() === 1, "押すと明るくなる");
+  t(await bgOf() === "rgb(241, 241, 244)", "地の色が明るい: " + (await bgOf()));
+  await p.reload(); await p.waitForTimeout(400);
+  t(await p.locator('html[data-theme="light"]').count() === 1, "選んだ明るさは開き直しても残る");
+  await p.locator("#theme-toggle").click(); await p.waitForTimeout(200);
+  t(await p.locator('html[data-theme="dark"]').count() === 1, "もう一度押すと暗く戻る");
+  // 地の色に var(--ink) を使うボタンの文字が、暗いときに読めるか
+  const btn = await p.evaluate(() => {
+    const el = document.querySelector("#sheet-submit");
+    const s = getComputedStyle(el);
+    return { bg: s.backgroundColor, fg: s.color };
+  });
+  t(btn.bg !== btn.fg && btn.bg === "rgb(233, 233, 240)" && btn.fg === "rgb(16, 17, 25)",
+    "採点ボタンの字が地に溶けない: 地" + btn.bg + " 字" + btn.fg);
+
   console.log("\n■ 学習モード：出だし");
   await p.locator(".card__main").first().click();
   await p.waitForTimeout(300);

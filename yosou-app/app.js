@@ -11,6 +11,25 @@ var VERSION = "__BUILD__";
 var CIRCLE = "①②③④⑤⑥";
 var LIMIT = 60 * 60;           // 本番モードの制限時間（秒）
 var KEY = "yosou-v1";
+var THEME_KEY = "sekaishi.theme";   // 一問一答アプリと同じ鍵。同じ置き場所なので片方で切り替えると両方に効く
+
+/* ───────── 明るさ ─────────
+   既定はダーク。端末の設定は見ない（暗いほうを既定にしてほしいという指定のため）。
+   CSS の素の :root が暗い値なので、選ばれていないうちは何も足さなくてよい。 */
+function readTheme() {
+  try {
+    var v = localStorage.getItem(THEME_KEY);
+    if (v === "light" || v === "dark") return v;
+  } catch (e) {}
+  return "dark";
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  var m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute("content", t === "dark" ? "#101119" : "#f1f1f4");
+}
+var theme = readTheme();
+applyTheme(theme);
 
 /* ───────── 保存 ───────── */
 function readStore() {
@@ -565,6 +584,11 @@ function backFromReview() {
 }
 
 /* ───────── 配線 ───────── */
+$("theme-toggle").addEventListener("click", function () {
+  theme = theme === "dark" ? "light" : "dark";
+  applyTheme(theme);
+  try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+});
 $("modes").addEventListener("click", function (e) {
   var b = e.target.closest ? e.target.closest(".mode") : null;
   if (!b) return;

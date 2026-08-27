@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="令和3〜7年度の実物271問の分析にもとづく、基礎学力到達度テスト（世界史探究）の予想問題3回分。">
-<meta name="theme-color" content="#f1f1f4">
+<meta name="theme-color" content="#101119">
 <title>基礎学 世界史 予想問題</title>
 <style>
 /* 予想問題アプリ — 土浦日大 基礎学力到達度テスト対策
@@ -13,6 +13,27 @@
    画面上の色は「いま解いている大問の色」と「正誤」だけに絞る。 */
 
 :root{
+  /* 既定はダーク。素の :root を暗い値にしてあるので、開いた瞬間に
+     白い画面が一瞬見えることがない（明るくしている人だけ逆になる）。
+     色は一問一答アプリと同じ値。保存先も同じなので、片方で切り替えると両方が変わる。 */
+  --bg:#101119; --surface:#1a1b24; --surface-2:#212330;
+  --border:#2e3040; --border-strong:#3d3f52;
+  --ink:#e9e9f0; --ink-2:#b3b5c2; --ink-3:#9092a1;
+  --good:#4fbe96; --good-bg:#16302a;
+  --bad:#f0736b; --bad-bg:#33201f;
+  --warn:#d99a4e; --warn-bg:#33281a;
+  --ch1:#d9607f; --ch2:#4e8fcc; --ch3:#17a882;
+  --ch4:#ce6a2e; --ch5:#9268cc; --ch6:#869623;
+  --mark:#5b4a12;
+  --font-serif:"Hiragino Mincho ProN","HiraMinProN-W3","Yu Mincho",YuMincho,
+    "Noto Serif JP","Source Han Serif JP",serif;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",
+    "Yu Gothic",YuGothic,Meiryo,sans-serif;
+  --radius:14px; --radius-sm:10px;
+  --bar:52px; --footh:74px;
+}
+
+:root[data-theme="light"]{
   --bg:#f1f1f4; --surface:#ffffff; --surface-2:#f7f7fa;
   --border:#e3e3e9; --border-strong:#cfd0d9;
   --ink:#1a1b22; --ink-2:#4a4c57; --ink-3:#6f7180;
@@ -22,12 +43,6 @@
   --ch1:#ae3b63; --ch2:#2c6fa8; --ch3:#0e9070;
   --ch4:#b5561f; --ch5:#7a4fb5; --ch6:#6b7a22;
   --mark:#fff3b0;
-  --font-serif:"Hiragino Mincho ProN","HiraMinProN-W3","Yu Mincho",YuMincho,
-    "Noto Serif JP","Source Han Serif JP",serif;
-  --font-sans:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",
-    "Yu Gothic",YuGothic,Meiryo,sans-serif;
-  --radius:14px; --radius-sm:10px;
-  --bar:52px; --footh:74px;
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -47,7 +62,14 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 
 /* ───────── ホーム ───────── */
 .home__head{padding:26px 18px 6px;max-width:640px;margin:0 auto;}
-.home__eyebrow{font-size:12px;letter-spacing:.16em;color:var(--ink-3);margin:0 0 6px;}
+.home__top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;}
+.home__eyebrow{font-size:12px;letter-spacing:.16em;color:var(--ink-3);margin:0;}
+.iconbtn{
+  flex:none;width:44px;height:44px;display:grid;place-items:center;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface);color:var(--ink-2);
+  border-radius:50%;font-size:19px;line-height:1;
+}
+.iconbtn:active{background:var(--surface-2);}
 .home__title{font-family:var(--font-serif);font-size:26px;line-height:1.35;margin:0 0 12px;font-weight:700;}
 .home__title span{font-size:18px;letter-spacing:.04em;}
 .home__lead{font-size:14px;color:var(--ink-2);margin:0 0 18px;}
@@ -295,7 +317,7 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 .foot__btn--go{
   flex:0 0 66%;border-left:1px solid var(--border);font-size:18px;
 }
-.foot__btn--go.is-hot{background:var(--ink);color:#fff;}
+.foot__btn--go.is-hot{background:var(--ink);color:var(--bg);}
 .foot__btn--go.is-hot:active{background:var(--ink-2);}
 .foot__btn--mid{
   flex:0 0 38%;border-left:1px solid var(--border);border-right:1px solid var(--border);
@@ -327,7 +349,7 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
   font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;
 }
 .btn:active{background:var(--surface-2);}
-.btn--primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+.btn--primary{background:var(--ink);color:var(--bg);border-color:var(--ink);}
 .btn--ghost{border-style:dashed;color:var(--ink-3);font-weight:400;font-size:14px;}
 .btn[hidden]{display:none;}
 
@@ -373,7 +395,10 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 <!-- ホーム -->
 <section class="view is-active" id="view-home">
   <header class="home__head">
-    <p class="home__eyebrow">令和8年度　高校3年　9月</p>
+    <div class="home__top">
+      <p class="home__eyebrow">令和8年度　高校3年　9月</p>
+      <button class="iconbtn" id="theme-toggle" type="button" aria-label="明るさを切り替える">◐</button>
+    </div>
     <h1 class="home__title">基礎学力到達度テスト<br><span>世界史探究　予想問題</span></h1>
     <p class="home__lead">令和3〜7年度の実物271問を分析して作った3回分。<b>3回とも解く前提</b>です。1回だけだと必要知識の3〜5割にしか触れられません。</p>
   </header>
@@ -576,10 +601,29 @@ const SETS = [{"id":1,"name":"第1回","sub":"直近の反動を重く見た配�
    ・記録は localStorage に置き、書けない環境では sessionStorage に落とす。 */
 "use strict";
 
-var VERSION = "2026.08.27 08:56";
+var VERSION = "2026.08.27 12:07";
 var CIRCLE = "①②③④⑤⑥";
 var LIMIT = 60 * 60;           // 本番モードの制限時間（秒）
 var KEY = "yosou-v1";
+var THEME_KEY = "sekaishi.theme";   // 一問一答アプリと同じ鍵。同じ置き場所なので片方で切り替えると両方に効く
+
+/* ───────── 明るさ ─────────
+   既定はダーク。端末の設定は見ない（暗いほうを既定にしてほしいという指定のため）。
+   CSS の素の :root が暗い値なので、選ばれていないうちは何も足さなくてよい。 */
+function readTheme() {
+  try {
+    var v = localStorage.getItem(THEME_KEY);
+    if (v === "light" || v === "dark") return v;
+  } catch (e) {}
+  return "dark";
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  var m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute("content", t === "dark" ? "#101119" : "#f1f1f4");
+}
+var theme = readTheme();
+applyTheme(theme);
 
 /* ───────── 保存 ───────── */
 function readStore() {
@@ -1134,6 +1178,11 @@ function backFromReview() {
 }
 
 /* ───────── 配線 ───────── */
+$("theme-toggle").addEventListener("click", function () {
+  theme = theme === "dark" ? "light" : "dark";
+  applyTheme(theme);
+  try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+});
 $("modes").addEventListener("click", function (e) {
   var b = e.target.closest ? e.target.closest(".mode") : null;
   if (!b) return;
