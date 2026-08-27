@@ -61,7 +61,7 @@ const standalone = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="令和3〜7年度の実物271問の分析にもとづく、基礎学力到達度テスト（世界史探究）の予想問題3回分。">
-<meta name="theme-color" content="#f1f1f4">
+<meta name="theme-color" content="#101119">
 <title>${title}</title>
 <style>
 ${css}

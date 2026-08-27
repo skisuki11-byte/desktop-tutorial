@@ -1614,22 +1614,26 @@
 
   /* ---------- テーマ ---------- */
 
+  /* 既定はダーク。端末の設定は見ない（暗いほうを既定にしてほしいという指定のため）。
+     鍵は予想問題アプリと共通で、置き場所も同じなので、片方で切り替えると両方に効く。 */
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute("content", t === "dark" ? "#101119" : "#f1f1f4");
+  }
+
   function initTheme() {
-    var btn = $("#theme-toggle");
-    btn.addEventListener("click", function () {
-      var root = document.documentElement;
-      var current = root.getAttribute("data-theme");
-      if (!current) {
-        current = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      }
-      var nextTheme = current === "dark" ? "light" : "dark";
-      root.setAttribute("data-theme", nextTheme);
-      try { localStorage.setItem("sekaishi.theme", nextTheme); } catch (e) {}
-    });
+    var theme = "dark";
     try {
       var saved = localStorage.getItem("sekaishi.theme");
-      if (saved) document.documentElement.setAttribute("data-theme", saved);
+      if (saved === "light" || saved === "dark") theme = saved;
     } catch (e) {}
+    applyTheme(theme);
+    $("#theme-toggle").addEventListener("click", function () {
+      theme = theme === "dark" ? "light" : "dark";
+      applyTheme(theme);
+      try { localStorage.setItem("sekaishi.theme", theme); } catch (e) {}
+    });
   }
 
   /* ---------- 起動 ---------- */

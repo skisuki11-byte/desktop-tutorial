@@ -13,31 +13,33 @@
 
 :root {
   /* 面と文字 */
-  --bg: #f1f1f4;
-  --surface: #ffffff;
-  --surface-2: #f7f7fa;
-  --border: #e3e3e9;
-  --border-strong: #cfd0d9;
-  --ink: #1a1b22;
-  --ink-2: #4a4c57;
-  --ink-3: #6f7180;
+  /* 既定はダーク。素の :root を暗い値にしてあるので、開いた瞬間に
+     白い画面が一瞬見えることがない。明るくしたい人は data-theme="light" で上書きする。 */
+  --bg: #101119;
+  --surface: #1a1b24;
+  --surface-2: #212330;
+  --border: #2e3040;
+  --border-strong: #3d3f52;
+  --ink: #e9e9f0;
+  --ink-2: #b3b5c2;
+  --ink-3: #9092a1;
 
   /* 判定（章の色とは別系統。正誤の意味だけに使う） */
-  --good: #1f7a5a;
-  --good-bg: #e4f2ec;
-  --bad: #b3352f;
-  --bad-bg: #fbe9e7;
+  --good: #4fbe96;
+  --good-bg: #16302a;
+  --bad: #f0736b;
+  --bad-bg: #33201f;
 
   /* 大問の色（CVD検証済み・adjacent ΔE 9.7以上） */
-  --ch1: #ae3b63;
-  --ch2: #2c6fa8;
-  --ch3: #0e9070;
-  --ch4: #b5561f;
-  --ch5: #7a4fb5;
-  --ch6: #6b7a22;
-  --ch7: #6b6e7e;
-  --ch8: #5b6b80;
-  --ch9: #7a6660;
+  --ch1: #d9607f;
+  --ch2: #4e8fcc;
+  --ch3: #17a882;
+  --ch4: #ce6a2e;
+  --ch5: #9268cc;
+  --ch6: #869623;
+  --ch7: #8a8d9c;
+  --ch8: #8298b3;
+  --ch9: #a89189;
 
   /* 書体：問題文は明朝（試験問題の声）、操作系はゴシック */
   --font-serif: "Hiragino Mincho ProN", "HiraMinProN-W3", "Yu Mincho", YuMincho,
@@ -49,33 +51,6 @@
   --radius-sm: 10px;
   --shadow: 0 1px 2px rgba(20, 21, 30, .05), 0 8px 24px rgba(20, 21, 30, .06);
   --tap: 56px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #101119;
-    --surface: #1a1b24;
-    --surface-2: #212330;
-    --border: #2e3040;
-    --border-strong: #3d3f52;
-    --ink: #e9e9f0;
-    --ink-2: #b3b5c2;
-    --ink-3: #9092a1;
-    --good: #4fbe96;
-    --good-bg: #16302a;
-    --bad: #f0736b;
-    --bad-bg: #33201f;
-    --ch1: #d9607f;
-    --ch2: #4e8fcc;
-    --ch3: #17a882;
-    --ch4: #ce6a2e;
-    --ch5: #9268cc;
-    --ch6: #869623;
-    --ch7: #8a8d9c;
-    --ch8: #8298b3;
-    --ch9: #a89189;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .28);
-  }
 }
 
 /* 閲覧側のテーマ切替はメディアクエリより優先させる */
@@ -126,7 +101,7 @@
   --ch7: #6b6e7e;
   --ch8: #5b6b80;
   --ch9: #7a6660;
-  --shadow: 0 1px 2px rgba(20, 21, 30, .05), 0 8px 24px rgba(20, 21, 30, .06);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .28);
 }
 
 * { box-sizing: border-box; }
@@ -2491,7 +2466,7 @@ window.SEKAISHI.ch9 = [
 
   // 版。build.js が書き出すときに更新日時を差し込む。
   // 置き換わっていなければ、束ねる前のファイルを直接開いている＝開発中。
-  var VERSION = "2026.08.27 08:09";
+  var VERSION = "2026.08.27 12:08";
 
   var store = {
     stats: {}, last: null, elective: 7, examDate: DEFAULT_EXAM_DATE,
@@ -4043,22 +4018,26 @@ window.SEKAISHI.ch9 = [
 
   /* ---------- テーマ ---------- */
 
+  /* 既定はダーク。端末の設定は見ない（暗いほうを既定にしてほしいという指定のため）。
+     鍵は予想問題アプリと共通で、置き場所も同じなので、片方で切り替えると両方に効く。 */
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute("content", t === "dark" ? "#101119" : "#f1f1f4");
+  }
+
   function initTheme() {
-    var btn = $("#theme-toggle");
-    btn.addEventListener("click", function () {
-      var root = document.documentElement;
-      var current = root.getAttribute("data-theme");
-      if (!current) {
-        current = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      }
-      var nextTheme = current === "dark" ? "light" : "dark";
-      root.setAttribute("data-theme", nextTheme);
-      try { localStorage.setItem("sekaishi.theme", nextTheme); } catch (e) {}
-    });
+    var theme = "dark";
     try {
       var saved = localStorage.getItem("sekaishi.theme");
-      if (saved) document.documentElement.setAttribute("data-theme", saved);
+      if (saved === "light" || saved === "dark") theme = saved;
     } catch (e) {}
+    applyTheme(theme);
+    $("#theme-toggle").addEventListener("click", function () {
+      theme = theme === "dark" ? "light" : "dark";
+      applyTheme(theme);
+      try { localStorage.setItem("sekaishi.theme", theme); } catch (e) {}
+    });
   }
 
   /* ---------- 起動 ---------- */
