@@ -64,7 +64,7 @@ function score(ret, shikaku, only) {
   });
   return { pt: s / cnt * 100, det };
 }
-console.log("■ 予想点（予想問題150問＋一問一答アプリ434問。1問2点／100点満点）");
+console.log("■ 予想点（予想問題150問＋一問一答アプリ449問。1問2点／100点満点）");
 console.log("  " + "定着率".padEnd(12) + "資料集もやる    資料集をやらない");
 [[1.0, "100%（完璧）"], [0.9, "90%"], [0.85, "85%"], [0.8, "80%"], [0.7, "70%"], [0.6, "60%"]].forEach(([r, l]) => {
   console.log("  " + l.padEnd(14) + (score(r, true).pt.toFixed(0) + "点").padStart(6) + (score(r, false).pt.toFixed(0) + "点").padStart(16));
