@@ -272,6 +272,30 @@ const t = (c, m) => { if (!c) bad++; ok(c, m); };
   await p.locator('.mode[data-mode="real"]').click(); await p.waitForTimeout(200);
   t((await p.locator(".card").first().textContent()).includes("採点ずみ"), "本番モードの記録も残っている");
 
+  console.log("\n■ 苦手分野（学習・本番の両方、3回ぶんをまとめて見る）");
+  // ここまでで L1=50問中17正解（学習）、real1=50問中16正解（本番）、他は未着手。
+  const wst = await p.evaluate(() => weakStats());
+  t(wst.total === 100, "解答した延べ問数が2モード分を合わせている: " + wst.total);
+  t(wst.ok === 33, "正解数が2モード分を合わせている: " + wst.ok);
+  t((await p.locator("#weak-open-sub").textContent()).includes("延べ100問"), "ホームの案内に延べ数が出る");
+  await p.locator("#weak-open").click(); await p.waitForTimeout(200);
+  t(await p.locator("#view-weak.is-active").count() === 1, "苦手分野の画面が開く");
+  t(await p.locator("#weak-dai .row").count() === 6, "大問ごとが6行（3回とも同じ番号でまとまる）");
+  t(await p.locator("#weak-fmt .row").count() >= 5, "形式ごとの内訳が出る");
+  const wlead = await p.locator("#weak-lead").textContent();
+  t(wlead.includes("100問") && wlead.includes("33%"), "解答数と正答率が本文に出る: " + wlead);
+  t(wlead.includes("いちばん弱いのは"), "いちばん弱い分野を名指しする");
+  await p.locator("#weak-home").click(); await p.waitForTimeout(200);
+  t(await p.locator("#view-home.is-active").count() === 1, "ホームに戻れる");
+
+  console.log("\n■ 苦手分野：まだ何も解いていないとき");
+  await p.evaluate(() => {
+    ["L1", "L2", "L3", "1", "2", "3"].forEach((k) => { store[k] = { answers: {}, pos: 0, elapsed: 0, done: false }; });
+    writeStore(); goHome();
+  });
+  await p.waitForTimeout(200);
+  t(await p.locator("#weak-open").isHidden(), "解答が1問もないときは「苦手分野を見る」を出さない");
+
   console.log("\n  実行時エラー: " + (errs.length ? errs.join(" | ") : "なし"));
   if (errs.length) bad++;
   await b.close(); server.close();

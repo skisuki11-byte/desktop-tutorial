@@ -186,6 +186,12 @@ function renderHome() {
     wrap.appendChild(card);
   });
   renderTotal();
+  var wst = weakStats();
+  var wbtn = $("weak-open");
+  wbtn.hidden = !wst.total;
+  if (wst.total) {
+    $("weak-open-sub").textContent = "延べ" + wst.total + "問から集計・正答率" + Math.round(wst.ok / wst.total * 100) + "%";
+  }
   $("ver").textContent = "版 " + VERSION;
 }
 
@@ -543,6 +549,62 @@ function renderResult(id) {
   breakdown(list, r, $("result-dai"), $("result-fmt"));
   show("view-result");
 }
+/* ───────── 苦手分野（3回・2モードをまとめて見る） ─────────
+   大問の具体的なタイトルは回によって違うが、大問番号ごとの範囲は3回とも同じ
+   （例：第1問はどの回も古代地中海〜西欧）なので、番号でまとめて集計できる。 */
+var DAI_ERA = ["古代地中海・西欧", "古代インド・中国", "オリエント世界", "東アジア（宋〜清）", "近世ヨーロッパ", "テーマ史（選択）"];
+
+function weakStats() {
+  var byDai = {}, byFmt = {}, total = 0, ok = 0;
+  SETS.forEach(function (s) {
+    ["learn", "real"].forEach(function (m) {
+      var r = rec(m, s.id);
+      flat(s.id).forEach(function (x) {
+        var your = r.answers[x.q.n];
+        if (!your) return;
+        var hit = your === x.q.a;
+        total++; if (hit) ok++;
+
+        var dk = "第" + x.dai.no + "問　" + DAI_ERA[x.dai.no - 1];
+        (byDai[dk] = byDai[dk] || [0, 0]); byDai[dk][0] += hit ? 1 : 0; byDai[dk][1]++;
+
+        var fk = x.q.fmt.replace(/^資料・/, "");
+        if (/地図|図表|系図|図版/.test(fk)) fk = "図版・略地図";
+        (byFmt[fk] = byFmt[fk] || [0, 0]); byFmt[fk][0] += hit ? 1 : 0; byFmt[fk][1]++;
+      });
+    });
+  });
+  return { byDai: byDai, byFmt: byFmt, total: total, ok: ok };
+}
+
+/* 3問未満は誤差が大きいので、いちばん弱い1件を選ぶときだけ除く。表には出す。 */
+function worstOf(obj) {
+  var keys = Object.keys(obj).filter(function (k) { return obj[k][1] >= 3; });
+  if (!keys.length) return null;
+  keys.sort(function (a, b) { return obj[a][0] / obj[a][1] - obj[b][0] / obj[b][1]; });
+  var k = keys[0], v = obj[k];
+  return k.replace(/^第\d問　/, "") + "（正答率" + Math.round(v[0] / v[1] * 100) + "%）";
+}
+
+function renderWeak() {
+  var st = weakStats();
+  if (!st.total) {
+    $("weak-lead").textContent = "まだ解答がありません。学習モードで解き進めると、ここに弱点が出てきます。";
+    $("weak-dai").innerHTML = "";
+    $("weak-fmt").innerHTML = "";
+    show("view-weak");
+    return;
+  }
+  var pct = Math.round(st.ok / st.total * 100);
+  var worst = [worstOf(st.byDai), worstOf(st.byFmt)].filter(Boolean);
+  $("weak-lead").innerHTML =
+    "学習モード・本番モードの解答をあわせて<b>" + st.total + "問</b>ぶん、正答率<b>" + pct + "%</b>。" +
+    (worst.length ? "いちばん弱いのは" + worst.join("と") + "です。" : "");
+  $("weak-dai").innerHTML = "<h2>大問ごと（3回まとめて）</h2>" + rows(st.byDai, true);
+  $("weak-fmt").innerHTML = "<h2>設問の形式ごと　—　弱い形式がそのまま伸びしろです</h2>" + rows(st.byFmt, true);
+  show("view-weak");
+}
+
 function rows(obj, sort) {
   var keys = Object.keys(obj);
   if (sort) keys.sort(function (a, b) { return obj[a][0] / obj[a][1] - obj[b][0] / obj[b][1]; });
@@ -601,6 +663,8 @@ function goHome() {
   if (cur.tick) { clearInterval(cur.tick); cur.tick = null; }
   renderHome(); show("view-home");
 }
+$("weak-open").addEventListener("click", renderWeak);
+$("weak-home").addEventListener("click", goHome);
 
 /* 学習モード */
 $("learn-prev").addEventListener("click", function () { moveLearn(-1); });
