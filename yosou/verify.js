@@ -188,7 +188,7 @@ const mineSum = 50;
 
 /* 設問形式は令和3・4年度の実測（r3r4.json）と同じ物差しで数える。
    ひとつの設問が複数にまたがるときは、上から順に先に当たったものに数える。 */
-const FMTS = ["史料", "略年表", "年代整序", "空欄補充", "正誤の組合せ", "図版・略地図", "組合せ", "適切でないもの", "語句"];
+const FMTS = ["史料", "略年表", "年代整序", "空欄補充", "正誤の組合せ", "メモ・会話", "図版・略地図", "組合せ", "適切でないもの", "語句"];
 function classify(f, hasFig) {
   f = f || "";
   if (/史料/.test(f)) return "史料";
@@ -196,6 +196,7 @@ function classify(f, hasFig) {
   if (/年代整序/.test(f)) return "年代整序";
   if (/空欄補充/.test(f)) return "空欄補充";
   if (/正誤の組合せ/.test(f)) return "正誤の組合せ";
+  if (/メモ|会話/.test(f)) return "メモ・会話";
   if (/略地図|図版|図表|地図|系図|資料/.test(f) || hasFig) return "図版・略地図";
   if (/組合せ/.test(f)) return "組合せ";
   if (/適切でない/.test(f)) return "適切でないもの";
