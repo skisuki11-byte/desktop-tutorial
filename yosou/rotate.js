@@ -10,7 +10,8 @@ function rotate(exam) {
       //  ・略年表（ア〜エ）／年代整序（6通りを決まった順に）
       //  ・正誤の組合せ（実物は必ず a正b正／a正b誤／a誤b正／a誤b誤 の順）
       //  ・空欄補充（実物は Ａの2値 × Ｂの2値 を規則的に並べる）
-      if (/略年表|正誤の組合せ|空欄補充/.test(q.fmt || "") || q.nopt === 6) continue;
+      //  ・メモ／会話（実物は「Ａのみ正しい／Ｂのみ正しい／二人とも正しい／二人とも誤っている」の順）
+      if (/略年表|正誤の組合せ|空欄補充|メモ/.test(q.fmt || "") || q.nopt === 6) continue;
       const target = PATTERN[pi++ % PATTERN.length];
       const k = (target - q.a + 4) % 4;
       if (!k) continue;
