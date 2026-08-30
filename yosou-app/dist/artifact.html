@@ -134,7 +134,7 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 
 .weakcard{
   display:flex;align-items:center;gap:12px;
-  max-width:640px;width:100%;box-sizing:border-box;margin:6px auto 0;padding:14px 18px;
+  max-width:640px;width:100%;box-sizing:border-box;margin:0 auto 14px;padding:14px 18px;
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   cursor:pointer;text-align:left;font:inherit;color:inherit;
 }
@@ -429,15 +429,15 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
   </div>
   <p class="modes__hint" id="modes-hint"></p>
 
-  <div class="cards" id="home-cards"></div>
-
-  <div class="total" id="home-total"></div>
-
   <button class="weakcard" type="button" id="weak-open" hidden>
     <span class="weakcard__name">苦手分野を見る</span>
     <span class="weakcard__sub" id="weak-open-sub"></span>
     <span class="weakcard__go">›</span>
   </button>
+
+  <div class="cards" id="home-cards"></div>
+
+  <div class="total" id="home-total"></div>
 
   <details class="more">
     <summary>この予想問題について</summary>
@@ -637,7 +637,7 @@ const SETS = [{"id":1,"name":"第1回","sub":"直近の反動を重く見た配�
    ・記録は localStorage に置き、書けない環境では sessionStorage に落とす。 */
 "use strict";
 
-var VERSION = "2026.08.31 07:51";
+var VERSION = "2026.08.31 07:56";
 var CIRCLE = "①②③④⑤⑥";
 var LIMIT = 60 * 60;           // 本番モードの制限時間（秒）
 var KEY = "yosou-v1";
