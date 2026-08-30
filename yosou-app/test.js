@@ -272,6 +272,70 @@ const t = (c, m) => { if (!c) bad++; ok(c, m); };
   await p.locator('.mode[data-mode="real"]').click(); await p.waitForTimeout(200);
   t((await p.locator(".card").first().textContent()).includes("採点ずみ"), "本番モードの記録も残っている");
 
+  console.log("\n■ 苦手分野（学習・本番の両方、3回ぶんをまとめて見る）");
+  // ここから先は苦手分野だけを見る専用のシナリオ。過去の記録を全部消して作り直す。
+  await p.evaluate(() => {
+    store = {};
+    const list1 = flat(1);
+    store["L1"] = { answers: {}, pos: 0, elapsed: 0, done: true, hist: {} };
+    list1.forEach((x) => {
+      const a = (x.q.n % 3 === 0) ? x.q.a : (x.q.a % x.q.nopt) + 1; // 3の倍数だけ正解＝16問
+      store["L1"].answers[x.q.n] = a; store["L1"].hist[x.q.n] = a;
+    });
+    store["1"] = { answers: {}, pos: 0, elapsed: 0, done: true, hist: {}, score: 0 };
+    list1.forEach((x) => {
+      const a = (x.q.n % 4 === 0) ? x.q.a : (x.q.a % x.q.nopt) + 1; // 4の倍数だけ正解＝12問
+      store["1"].answers[x.q.n] = a; store["1"].hist[x.q.n] = a;
+    });
+    mode = "learn"; store.mode = "learn"; writeStore();
+    goHome();
+  });
+  await p.waitForTimeout(200);
+  // L1: 16正解／50、real1: 12正解／50 → 学習＋本番で延べ100問・28正解
+  const wst = await p.evaluate(() => weakStats());
+  t(wst.total === 100, "解答した延べ問数が2モード分を合わせている: " + wst.total);
+  t(wst.ok === 28, "正解数が2モード分を合わせている: " + wst.ok);
+  t((await p.locator("#weak-open-sub").textContent()).includes("延べ100問"), "ホームの案内に延べ数が出る");
+  await p.locator("#weak-open").click(); await p.waitForTimeout(200);
+  t(await p.locator("#view-weak.is-active").count() === 1, "苦手分野の画面が開く");
+  t(await p.locator("#weak-dai .row").count() === 6, "大問ごとが6行（3回とも同じ番号でまとまる）");
+  t(await p.locator("#weak-fmt .row").count() >= 5, "形式ごとの内訳が出る");
+  const wlead = await p.locator("#weak-lead").textContent();
+  t(wlead.includes("100問") && wlead.includes("28%"), "解答数と正答率が本文に出る: " + wlead);
+  t(wlead.includes("いちばん弱いのは"), "いちばん弱い分野を名指しする");
+  await p.locator("#weak-home").click(); await p.waitForTimeout(200);
+  t(await p.locator("#view-home.is-active").count() === 1, "ホームに戻れる");
+
+  console.log("\n■ 苦手分野：はじめから解き直しても消えない");
+  p.once("dialog", (d) => d.accept());
+  await p.locator(".card").first().locator(".card__again").click(); await p.waitForTimeout(300);
+  t((await p.locator("#learn-count").textContent()).includes("1／50"), "見た目は問1からの解き直しになる");
+  await p.locator("#learn-quit").click(); await p.waitForTimeout(200);
+  t((await p.locator(".card").first().textContent()).includes("未着手"), "カードの表示は未着手に戻る");
+  const wstAfterReset = await p.evaluate(() => weakStats());
+  t(wstAfterReset.total === 100, "リセットしても延べ問数は消えない: " + wstAfterReset.total);
+  t(wstAfterReset.ok === 28, "リセットしても正解数は消えない: " + wstAfterReset.ok);
+  t(await p.locator("#weak-open").isVisible(), "リセットしても「苦手分野を見る」は出たまま");
+
+  console.log("\n■ 苦手分野：解き直して正解すると数字が上向く");
+  await p.evaluate(() => {
+    // さっき間違えていた問1を、今度は正解にして答え直す
+    const item = flat(1).find((x) => x.q.n === 1);
+    answerLearn(1, item.q.a);
+  });
+  await p.waitForTimeout(200);
+  const wstImproved = await p.evaluate(() => weakStats());
+  t(wstImproved.total === 100, "延べ問数は変わらない: " + wstImproved.total);
+  t(wstImproved.ok === 29, "間違えていた1問を正解し直すと、正解数が1増える: " + wstImproved.ok);
+
+  console.log("\n■ 苦手分野：まだ何も解いていないとき");
+  await p.evaluate(() => {
+    store = {};
+    writeStore(); goHome();
+  });
+  await p.waitForTimeout(200);
+  t(await p.locator("#weak-open").isHidden(), "解答が1問もないときは「苦手分野を見る」を出さない");
+
   console.log("\n  実行時エラー: " + (errs.length ? errs.join(" | ") : "なし"));
   if (errs.length) bad++;
   await b.close(); server.close();

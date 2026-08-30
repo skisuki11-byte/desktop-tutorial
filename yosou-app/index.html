@@ -26,6 +26,12 @@
   </div>
   <p class="modes__hint" id="modes-hint"></p>
 
+  <button class="weakcard" type="button" id="weak-open" hidden>
+    <span class="weakcard__name">苦手分野を見る</span>
+    <span class="weakcard__sub" id="weak-open-sub"></span>
+    <span class="weakcard__go">›</span>
+  </button>
+
   <div class="cards" id="home-cards"></div>
 
   <div class="total" id="home-total"></div>
@@ -42,6 +48,9 @@
       <p>すべての大問にリード文と下線部・空欄があります。設問の<span class="ex-ref">下線部a</span>を押すと、リード文の該当箇所が開いて光ります。3項目の年代整序などは本番と同じ<b>6択</b>です。</p>
       <h2>目標</h2>
       <p>本番モードで80点。落とした大問と、正答率の低い設問形式が、そのまま弱点です。</p>
+      <h2>苦手分野を見る</h2>
+      <p>1問でも解答するとホームに出ます。学習モード・本番モード・3回ぶんの解答をすべて合わせて、大問（時代）ごと・設問の形式ごとに正答率を集計し、弱いものから並べます。各回の結果画面にも同じ内訳が出ますが、こちらは3回の合計なので、より確かな傾向が見えます。</p>
+      <p><b>「はじめから解き直す」をしても、この集計は消えません。</b>その問題を最後に解いたときの答えで数えているので、間違えていた問題を解き直して正解できれば、次に開いたときは正答率が上がって見えます。繰り返すほど、苦手分野がそのまま克服の記録になります。</p>
       <h2>紙で解きたいとき</h2>
       <p class="more__links">
         <a href="https://claude.ai/code/artifact/91be59f4-c43c-4af9-904f-4ff0cc7579ab" target="_blank" rel="noopener">第1回の印刷用ページ</a>
@@ -197,6 +206,19 @@
     <button class="foot__btn foot__btn--mid" id="review-jump" type="button">結果へ</button>
     <button class="foot__btn" id="review-next" type="button">次 →</button>
   </nav>
+</section>
+
+<!-- 苦手分野（3回・2モードをまとめて見る） -->
+<section class="view" id="view-weak">
+  <header class="bar">
+    <button class="bar__btn" id="weak-home" type="button">← ホーム</button>
+    <span class="bar__mid">苦手分野</span>
+    <span class="bar__count"></span>
+  </header>
+  <p class="weak__lead" id="weak-lead"></p>
+  <div class="breakdown" id="weak-dai"></div>
+  <div class="breakdown" id="weak-fmt"></div>
+  <p class="weak__note">学習モードと本番モード、3回ぶんの解答をすべて合わせて集計しています。件数が少ない分野は誤差が大きいので、あくまで目安にしてください。</p>
 </section>
 
 <script src="app.js"></script>
