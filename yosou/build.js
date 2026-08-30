@@ -102,6 +102,10 @@ const fmtTable = `<table class="basis__t">
     </tbody>
   </table>`;
 
+// 版は書き出した日時（日本時間）。どの版を印刷したのかを紙の上で確かめられるようにする。
+const stamp = new Date(Date.now() + 9 * 3600 * 1000)
+  .toISOString().slice(0, 16).replace("T", " ").replace(/-/g, ".");
+
 const dist = [0, 0, 0, 0, 0, 0];
 all.forEach((q) => dist[q.a - 1]++);
 
@@ -109,7 +113,7 @@ const body = `
 <header class="cover">
   <p class="cover__eyebrow">令和8年度　高等学校 第3学年　9月</p>
   <h1 class="cover__title">基礎学力到達度テスト<br><span>世界史探究　予想問題　${SET.name}</span></h1>
-  <p class="cover__meta">${SET.sub}　　試験時間 60分（想定）／100点満点（各問2点）　　作成日 2026年8月24日</p>
+  <p class="cover__meta">${SET.sub}　　試験時間 60分（想定）／100点満点（各問2点）　　版 ${stamp}</p>
 
   <div class="cover__box">
     <h2>注意事項</h2>
@@ -187,7 +191,7 @@ ${exam.map(section).join("")}
 
 <footer class="foot">
   <p>令和5・6・7年度の実物157問の分析にもとづく予想問題。的中を保証するものではない。</p>
-  <p class="foot__ver">作成 2026年8月24日／全${all.length}問</p>
+  <p class="foot__ver">版 ${stamp}／全${all.length}問</p>
 </footer>
 
 <button class="printbtn" type="button" onclick="window.print()">印刷する</button>

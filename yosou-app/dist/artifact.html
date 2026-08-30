@@ -132,7 +132,7 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 }
 .total b{font-size:16px;color:var(--ink);}
 
-.more{max-width:640px;margin:8px auto 40px;padding:0 18px;}
+.more{max-width:640px;margin:8px auto 0;padding:0 18px;}
 .more summary{
   cursor:pointer;font-size:13px;color:var(--ink-3);padding:10px 0;
   list-style:none;
@@ -145,7 +145,13 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 .more__body p{margin:0 0 8px;}
 .more__links{display:flex;flex-wrap:wrap;gap:12px;}
 .more__links a{color:var(--ch2);}
-.ver{font-size:11px;color:var(--ink-3);margin-top:20px;}
+/* いちばん下の版表示。更新が端末に届いたかを確かめるための目印 */
+.ver{
+  max-width:640px;margin:24px auto 0;
+  padding:0 18px calc(28px + env(safe-area-inset-bottom));
+  font-size:11px;letter-spacing:.04em;color:var(--ink-3);opacity:.7;
+  font-variant-numeric:tabular-nums;
+}
 
 /* ───────── 共通のバー ───────── */
 .bar{
@@ -431,10 +437,11 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
         <a href="https://claude.ai/code/artifact/d0e7a679-7fcc-41a7-ade5-66ec1a9ffd88" target="_blank" rel="noopener">第3回</a>
       </p>
       <h2>一問一答アプリ</h2>
-      <p class="more__links"><a href="../" target="_blank" rel="noopener">434問の一問一答はこちら</a></p>
-      <p class="ver" id="ver"></p>
+      <p class="more__links"><a href="../" target="_blank" rel="noopener">449問の一問一答はこちら</a></p>
     </div>
   </details>
+
+  <p class="ver" id="ver"></p>
 </section>
 
 <!-- 学習モード -->
@@ -594,7 +601,7 @@ const SETS = [{"id":1,"name":"第1回","sub":"直近の反動を重く見た配�
    ・記録は localStorage に置き、書けない環境では sessionStorage に落とす。 */
 "use strict";
 
-var VERSION = "2026.08.30 23:34";
+var VERSION = "2026.08.31 06:35";
 var CIRCLE = "①②③④⑤⑥";
 var LIMIT = 60 * 60;           // 本番モードの制限時間（秒）
 var KEY = "yosou-v1";

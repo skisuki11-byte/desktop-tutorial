@@ -129,7 +129,7 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 }
 .total b{font-size:16px;color:var(--ink);}
 
-.more{max-width:640px;margin:8px auto 40px;padding:0 18px;}
+.more{max-width:640px;margin:8px auto 0;padding:0 18px;}
 .more summary{
   cursor:pointer;font-size:13px;color:var(--ink-3);padding:10px 0;
   list-style:none;
@@ -142,7 +142,13 @@ button{font-family:inherit;font-size:inherit;color:inherit;}
 .more__body p{margin:0 0 8px;}
 .more__links{display:flex;flex-wrap:wrap;gap:12px;}
 .more__links a{color:var(--ch2);}
-.ver{font-size:11px;color:var(--ink-3);margin-top:20px;}
+/* いちばん下の版表示。更新が端末に届いたかを確かめるための目印 */
+.ver{
+  max-width:640px;margin:24px auto 0;
+  padding:0 18px calc(28px + env(safe-area-inset-bottom));
+  font-size:11px;letter-spacing:.04em;color:var(--ink-3);opacity:.7;
+  font-variant-numeric:tabular-nums;
+}
 
 /* ───────── 共通のバー ───────── */
 .bar{
