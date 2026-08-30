@@ -53,10 +53,19 @@ function rec(m, id) {
   var k = keyOf(m, id);
   if (!store[k]) store[k] = { answers: {}, pos: 0, elapsed: 0, done: false };
   if (!store[k].answers) store[k].answers = {};
+  /* hist は「はじめから解き直す」で消さない記録。苦手分野はここから集計するので、
+     何度リセットしても、これまで解いた分は積み上がったままになる。
+     まだ hist を持たない古いデータは、いまの answers をそのまま引き継ぐ（初回だけ）。 */
+  if (!store[k].hist) {
+    store[k].hist = {};
+    for (var n in store[k].answers) if (store[k].answers.hasOwnProperty(n)) store[k].hist[n] = store[k].answers[n];
+  }
   return store[k];
 }
 function clearRec(m, id) {
-  store[keyOf(m, id)] = { answers: {}, pos: 0, elapsed: 0, done: false };
+  var k = keyOf(m, id);
+  var hist = (store[k] && store[k].hist) || {};
+  store[k] = { answers: {}, pos: 0, elapsed: 0, done: false, hist: hist };
   writeStore();
 }
 
@@ -176,7 +185,7 @@ function renderHome() {
       again.className = "card__again";
       again.textContent = "はじめから解き直す";
       again.addEventListener("click", function () {
-        if (!confirm(s.name + "（学習モード）のこれまでの答えを消して、問1から解き直しますか。")) return;
+        if (!confirm(s.name + "（学習モード）を問1から解き直しますか。苦手分野の集計にはこれまでの分も残ります。")) return;
         clearRec("learn", s.id);
         startLearn(s.id, flat(s.id), false);
       });
@@ -360,6 +369,7 @@ function answerLearn(n, a) {
   if (answeredIn(n)) return;
   if (cur.again) cur.redone[n] = true;
   r.answers[n] = a;
+  r.hist[n] = a;
   if (!cur.again) r.pos = cur.idx;
   writeStore();
   renderLearn(false);
@@ -485,6 +495,7 @@ function renderQ() {
 function pick(n, a) {
   var r = rec("real", cur.id);
   r.answers[n] = a;
+  r.hist[n] = a;
   saveProgress();
   var opts = $("exam-opts").querySelectorAll(".opt");
   for (var i = 0; i < opts.length; i++) opts[i].classList.toggle("is-picked", i + 1 === a);
@@ -560,7 +571,9 @@ function weakStats() {
     ["learn", "real"].forEach(function (m) {
       var r = rec(m, s.id);
       flat(s.id).forEach(function (x) {
-        var your = r.answers[x.q.n];
+        /* hist を見る。「はじめから解き直す」をしても answers だけが空になるので、
+           ここは今の一発分ではなく、これまでで最後に答えた分がずっと反映される。 */
+        var your = r.hist[x.q.n];
         if (!your) return;
         var hit = your === x.q.a;
         total++; if (hit) ok++;
@@ -687,7 +700,7 @@ $("lresult-real").addEventListener("click", function () {
   startExam(cur.id);
 });
 $("lresult-reset").addEventListener("click", function () {
-  if (!confirm(setOf(cur.id).name + " の学習モードの記録を消して、最初からやり直しますか。")) return;
+  if (!confirm(setOf(cur.id).name + " の学習モードを最初からやり直しますか。苦手分野の集計にはこれまでの分も残ります。")) return;
   clearRec("learn", cur.id);
   startLearn(cur.id, flat(cur.id), false);
 });
@@ -708,7 +721,7 @@ $("result-home").addEventListener("click", goHome);
 $("result-wrong").addEventListener("click", function () { startReview(true, "view-result"); });
 $("result-all").addEventListener("click", function () { startReview(false, "view-result"); });
 $("result-retry").addEventListener("click", function () {
-  if (!confirm(setOf(cur.id).name + " の記録を消して、もう一度はじめから解きますか。")) return;
+  if (!confirm(setOf(cur.id).name + " をもう一度はじめから解きますか。苦手分野の集計にはこれまでの分も残ります。")) return;
   clearRec("real", cur.id);
   startExam(cur.id);
 });
