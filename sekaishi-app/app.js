@@ -111,7 +111,7 @@
     return "c" + n36(s.charAt(0)) + "-" + ("0" + n36(s.substr(1, 2))).slice(-2);
   }
 
-  /* 434問ぶんの記録を数KBの文字列に詰める。URL に丸ごと載る長さにするため。
+  /* 449問ぶんの記録を数KBの文字列に詰める。URL に丸ごと載る長さにするため。
      1問あたり6文字＝章1・番号2・正答数1・誤答数1・連続正解1。 */
   function packState(st) {
     var ids = Object.keys(st.stats).sort(), rec = [], i;
