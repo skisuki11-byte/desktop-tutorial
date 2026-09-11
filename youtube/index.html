@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<title>チャンネル分析</title>
+<meta name="description" content="YouTube の公式APIで、自分のチャンネルの視聴・維持率・流入・検索語を分析する。">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="チャンネル分析">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f1115'/%3E%3Crect x='6' y='18' width='4' height='8' rx='1.5' fill='%232a78d6'/%3E%3Crect x='13' y='12' width='4' height='14' rx='1.5' fill='%232a78d6'/%3E%3Crect x='20' y='6' width='4' height='20' rx='1.5' fill='%23eb6834'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><rect x="3" y="13" width="4" height="8" rx="1.5"/><rect x="10" y="8" width="4" height="13" rx="1.5"/><rect x="17" y="3" width="4" height="18" rx="1.5" class="m-accent"/></svg>
+      </span>
+      <div class="brand-text">
+        <div class="brand-title">チャンネル分析</div>
+        <div class="brand-sub" id="brandSub">未接続</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <label class="period" hidden id="periodWrap">
+        <span class="sr-only">集計する期間</span>
+        <select id="period">
+          <option value="7">過去7日</option>
+          <option value="28" selected>過去28日</option>
+          <option value="90">過去90日</option>
+          <option value="365">過去365日</option>
+        </select>
+      </label>
+      <button class="icon-btn" id="btnReload" type="button" title="取り直す" hidden>↻</button>
+      <button class="icon-btn" id="btnTheme" type="button" title="明るさを切り替える">◐</button>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs" hidden>
+    <button class="tab active" data-view="dash">概要</button>
+    <button class="tab" data-view="videos">動画</button>
+    <button class="tab" data-view="traffic">流入</button>
+    <button class="tab" data-view="audience">視聴者</button>
+    <button class="tab" data-view="audit">診断</button>
+    <button class="tab" data-view="settings">設定</button>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ============ 接続前 ============ -->
+  <section id="view-setup" class="view active">
+    <div class="hero">
+      <p class="hero-eyebrow">YouTube Data API v3 ／ YouTube Analytics API v2</p>
+      <h1 class="hero-title">自分のチャンネルを、公式のデータで分析する</h1>
+      <p class="hero-lead">
+        視聴回数・総再生時間・視聴維持率・流入経路・検索語まで、YouTube 公式のAPIから直接読み取ります。
+        データはこのブラウザの中だけで処理され、どこにも送られません。
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="btnConnect" type="button">YouTube アカウントにつなぐ</button>
+        <a class="btn btn-ghost" href="README.md">準備の手順を読む</a>
+      </div>
+      <p class="hero-note" id="setupHint" hidden>
+        はじめに「設定」でクライアントIDを登録してください。Google Cloud で自分用に1つ作ります（無料・5分）。
+      </p>
+      <p class="error-box" id="setupError" hidden></p>
+    </div>
+
+    <div class="cards3">
+      <div class="mini">
+        <h3>できること</h3>
+        <ul>
+          <li>期間ごとの視聴回数・総再生時間・平均視聴時間の推移と、前の期間との比較</li>
+          <li>動画1本ごとの<b>視聴維持率グラフ</b>（どこで離脱したか）</li>
+          <li>流入経路の内訳と、<b>YouTube検索で実際に使われた語</b></li>
+          <li>国・デバイス・再生場所・登録者／非登録者の別</li>
+          <li>題名・説明文・タグの作りの点検</li>
+        </ul>
+      </div>
+      <div class="mini">
+        <h3>できないこと</h3>
+        <ul>
+          <li><b>vidIQ 本体への接続</b>。vidIQ は外部向けのAPIを公開していません</li>
+          <li>他人のチャンネルの成績。視聴維持率や流入は所有者しか取得できません（これは vidIQ でも同じ）</li>
+          <li>キーワードの検索ボリューム推定。YouTube は公開していません（vidIQ の数値も独自推定です）</li>
+        </ul>
+      </div>
+      <div class="mini">
+        <h3>データの扱い</h3>
+        <ul>
+          <li>通信は <b>ブラウザ → Google</b> の直通。当方のサーバーは経由しません</li>
+          <li>アクセストークンは保存しません。タブを閉じれば消えます</li>
+          <li>読み取り専用の権限しか要求しません。動画の変更・削除はできません</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 概要 ============ -->
+  <section id="view-dash" class="view">
+    <div class="range-note" id="rangeNote"></div>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>視聴回数の推移</h2>
+        <span class="legend-inline"><i class="sw-line"></i>この期間<i class="sw-dash"></i>前の同じ期間</span>
+      </div>
+      <div class="chart-box" id="chartViews"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-head"><h2>総再生時間の推移</h2></div>
+        <div class="chart-box" id="chartWatch"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>登録者の増減</h2>
+          <span class="legend-inline"><i class="sw-up"></i>増えた<i class="sw-down"></i>減った</span>
+        </div>
+        <div class="chart-box" id="chartSubs"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>この期間に伸びた動画</h2><span class="hint">期間内の視聴回数順</span></div>
+      <div id="topVideos" class="vlist"></div>
+    </div>
+  </section>
+
+  <!-- ============ 動画 ============ -->
+  <section id="view-videos" class="view">
+    <div class="toolbar">
+      <input type="search" id="videoSearch" class="search-box" placeholder="題名で絞り込む">
+      <label class="sortwrap"><span class="sr-only">並び順</span>
+        <select id="videoSort">
+          <option value="views">期間内の視聴回数順</option>
+          <option value="watch">総再生時間順</option>
+          <option value="avg">平均視聴時間順</option>
+          <option value="pct">平均視聴率順</option>
+          <option value="subs">登録者の増加順</option>
+          <option value="new">公開が新しい順</option>
+          <option value="vph">公開後の勢い（1日あたり）順</option>
+          <option value="seo">点検の点数が低い順</option>
+        </select>
+      </label>
+    </div>
+    <div class="panel panel-flush">
+      <div class="table-scroll">
+        <table class="vtable">
+          <thead><tr>
+            <th>動画</th><th class="num">視聴回数</th><th class="num">総再生時間</th>
+            <th class="num">平均視聴時間</th><th class="num">平均視聴率</th><th class="num">登録者</th><th class="num">点検</th>
+          </tr></thead>
+          <tbody id="videoRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 流入 ============ -->
+  <section id="view-traffic" class="view">
+    <div class="panel">
+      <div class="panel-head"><h2>流入経路</h2><span class="hint">視聴回数の内訳</span></div>
+      <div id="trafficTypes"></div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-head"><h2>YouTube検索で使われた語</h2></div>
+        <p class="lead">実際に検索してこの動画にたどり着いた語。題名・説明文に入れるべき語の、いちばん確かな手がかりです。</p>
+        <div id="searchTerms"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>外部サイトからの流入</h2></div>
+        <div id="extSources"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>再生された場所</h2></div>
+      <div id="playbackLoc"></div>
+    </div>
+  </section>
+
+  <!-- ============ 視聴者 ============ -->
+  <section id="view-audience" class="view">
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-head"><h2>国・地域</h2></div>
+        <div id="geo"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>デバイス</h2></div>
+        <div id="devices"></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-head"><h2>登録者か、そうでないか</h2></div>
+        <div id="subStatus"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>年齢と性別</h2><span class="hint">視聴時間に占める割合</span></div>
+        <div id="demo"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 診断 ============ -->
+  <section id="view-audit" class="view">
+    <div class="panel">
+      <div class="panel-head"><h2>チャンネル全体の傾向</h2></div>
+      <p class="lead">
+        1本ずつ見ても分からない、チャンネル全体の癖を点検します。
+        判定の根拠は YouTube 公式のクリエイター向け案内と、直せば効くと分かっている作り方に限っています。
+      </p>
+      <div id="channelAudit" class="checks"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>公開した曜日ごとの成績</h2><span class="hint">1本あたりの平均</span></div>
+      <p class="lead">同じ内容でも、届き方は出し方で変わります。ただし本数が少ないうちは偶然の差が大きいので、目安として見てください。</p>
+      <div id="weekday"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>直したい動画</h2><span class="hint">点検の点数が低い順</span></div>
+      <div id="auditList" class="vlist"></div>
+    </div>
+  </section>
+
+  <!-- ============ 設定 ============ -->
+  <section id="view-settings" class="view">
+    <div class="panel">
+      <div class="panel-head"><h2>クライアントID</h2></div>
+      <p class="lead">
+        Google Cloud で自分用に1つ作った「OAuth クライアントID」を入れてください。
+        秘密の値ではありませんが、この端末の中にだけ保存します。作り方は
+        <a href="README.md">README</a> の手順1〜4にあります。
+      </p>
+      <div class="field">
+        <input type="text" id="clientId" class="input" placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com" spellcheck="false">
+        <button class="btn btn-primary" id="btnSaveId" type="button">保存</button>
+      </div>
+      <p class="hint" id="originHint"></p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>取得済みのデータ</h2></div>
+      <p class="lead">
+        同じ問い合わせは30分ぶんだけ手元に貯めています。1日に使える問い合わせ回数には上限があるためです。
+        最新にしたいときは上の「↻」か、こちらから消してください。
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="btnClearCache" type="button">貯めたデータを消す</button>
+        <button class="btn btn-ghost" id="btnDisconnect" type="button">接続を解除する</button>
+        <button class="btn btn-danger" id="btnResetAll" type="button">すべて初期化する</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>要求している権限</h2></div>
+      <ul class="scopes">
+        <li><code>youtube.readonly</code> … 動画の一覧・題名・説明文・タグを読む</li>
+        <li><code>yt-analytics.readonly</code> … 自分のチャンネルの成績を読む</li>
+      </ul>
+      <p class="hint">どちらも読み取り専用です。動画の投稿・変更・削除はこのアプリではできません。</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ 動画1本の詳細 ============ -->
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet-body" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head">
+      <h2 id="sheetTitle">—</h2>
+      <button class="icon-btn" id="btnSheetClose" type="button" title="閉じる">✕</button>
+    </div>
+    <div class="sheet-scroll" id="sheetBodyInner"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<div class="loading" id="loading" hidden><div class="spinner"></div><span id="loadingText">読み込んでいます…</span></div>
+
+<script src="js/store.js"></script>
+<script src="js/api.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/seo.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
