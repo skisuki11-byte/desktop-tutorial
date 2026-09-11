@@ -14,14 +14,19 @@
   'use strict';
 
   var GSI = 'https://accounts.google.com/gsi/client';
-  var SCOPES = [
+  var BASE = [
     'https://www.googleapis.com/auth/youtube.readonly',          // 動画の一覧・題名・タグ
     'https://www.googleapis.com/auth/yt-analytics.readonly'      // 成績（読み取りのみ）
-  ].join(' ');
+  ];
+  // 収益はここだけ別枠にする。お金の情報は、見たいと言われてから取りに行く。
+  // 最初から求めると、収益化していないチャンネルにも不要な同意を強いることになる。
+  var MONEY = 'https://www.googleapis.com/auth/yt-analytics-monetary.readonly';
 
   var token = null;         // メモリだけ
   var tokenAt = 0;
+  var money = false;        // いま持っているトークンに収益の権限が入っているか
   var client = null;        // GIS のトークン発行係
+  var clientScope = '';     // その発行係に渡した権限の並び
   var loading = null;
 
   /* GIS の読み込み。1度だけ。 */
@@ -42,20 +47,34 @@
 
   /* トークンをもらう。
      first=true のときだけ同意画面を出す。以降は黙って更新する。 */
-  function requestToken(interactive) {
+  function scopes(withMoney) {
+    return BASE.concat(withMoney ? [MONEY] : []).join(' ');
+  }
+
+  function requestToken(interactive, withMoney) {
+    if (withMoney == null) withMoney = money;
     return loadGsi().then(function () {
       var id = global.Store.clientId();
       if (!id) throw new Error('NO_CLIENT_ID');
 
+      var want = scopes(withMoney);
+      // 権限の並びが変わったら発行係を作り直す。
+      // 同じ発行係を使い回すと、前の権限のままのトークンが返ってしまう。
+      if (client && clientScope !== want) { client = null; }
+
       return new Promise(function (resolve, reject) {
         if (!client) {
+          clientScope = want;
           client = global.google.accounts.oauth2.initTokenClient({
             client_id: id,
-            scope: SCOPES,
+            scope: want,
             callback: function (res) {
               if (res && res.access_token) {
                 token = res.access_token;
                 tokenAt = Date.now();
+                // 実際に下りた権限を見る。求めても断られることがあるため、
+                // 「求めた」ではなく「下りた」で判断する。
+                money = String(res.scope || '').indexOf(MONEY) >= 0;
                 resolve(token);
               } else {
                 reject(new Error('ログインを完了できませんでした。'));
@@ -131,16 +150,26 @@
   }
 
   global.Api = {
-    scopes: SCOPES,
+    scopes: function () { return scopes(money); },
 
     connected: function () { return !!token; },
     /* 画面の「つなぐ」ボタンから。ここだけ同意画面を出す。 */
     connect: function () { return requestToken(true); },
+
+    /* 収益を見る権限を持っているか */
+    hasMoney: function () { return money; },
+    /* 収益の権限を足す。もう一度だけ同意画面が出る。
+       断られた場合は money が false のままなので、呼んだ側で分かる。 */
+    enableMoney: function () {
+      if (money) return Promise.resolve(true);
+      return requestToken(true, true).then(function () { return money; });
+    },
+
     disconnect: function () {
       if (token && global.google && global.google.accounts) {
         try { global.google.accounts.oauth2.revoke(token); } catch (e) {}
       }
-      token = null; client = null;
+      token = null; client = null; clientScope = ''; money = false;
     },
 
     /* ---------- Data API（動画そのもの） ---------- */

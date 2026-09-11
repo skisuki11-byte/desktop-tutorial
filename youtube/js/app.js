@@ -171,6 +171,24 @@
       if (!confirm('クライアントIDと貯めたデータをすべて消します。よろしいですか。')) return;
       Api.disconnect(); Store.reset(); location.reload();
     });
+    $('btnEnableMoney').addEventListener('click', function () {
+      $('revenueError').hidden = true;
+      busy(true, 'Google の同意画面を開いています…');
+      Api.enableMoney().then(function (ok) {
+        busy(false);
+        if (!ok) {
+          $('revenueError').hidden = false;
+          $('revenueError').textContent = '収益を見る権限が下りませんでした。同意画面で「YouTube の収益レポートの表示」にチェックが入っているかご確認ください。';
+          return;
+        }
+        S.loaded.revenue = false;
+        loadRevenue();
+      }).catch(function (e) {
+        busy(false);
+        $('revenueError').hidden = false;
+        $('revenueError').textContent = e.message;
+      });
+    });
     $('videoSearch').addEventListener('input', renderVideoTable);
     $('videoSort').addEventListener('change', renderVideoTable);
     $('sheetBg').addEventListener('click', closeSheet);
@@ -200,6 +218,7 @@
     });
     window.scrollTo(0, 0);
     if (view === 'videos') loadVideos();
+    if (view === 'revenue') loadRevenue();
     if (view === 'traffic') loadTraffic();
     if (view === 'audience') loadAudience();
     if (view === 'audit') loadAudit();
@@ -377,6 +396,7 @@
             top: bad.slice(0, 2).map(function (c) { return c.label; }).join('／') || '軽微'
           };
         });
+        renderScale(Api.rows(r[0]), Api.rows(r[2]));
         renderInsight(host, Insight.build({
           now28: Api.rows(r[0]), prev28: Api.rows(r[1]),
           now90: Api.rows(r[2]), prev90: Api.rows(r[3]),
@@ -413,14 +433,22 @@
       '<p class="hint">％はそれぞれ「直前の同じ長さの期間」との比較です。</p></div>' +
 
       '<h3 class="next-title">次にやること</h3>' +
+      /* 見出しと根拠の数字だけ畳まずに出し、やり方は開いたときに出す。
+         3つ全部を開いたままにすると、いちばん大事な1つ目が
+         スクロールの上に押し上げられて読まれないため。
+         details/summary を使うのは、JavaScriptが動かない場合でも開き、
+         キーボードと読み上げでも同じように扱えるため。 */
       '<ol class="next-list">' + ins.actions.map(function (a, i) {
-        return '<li class="next-item">' +
+        return '<li>' +
+          '<details class="next-item"' + (i === 0 ? ' open' : '') + '>' +
+          '<summary class="next-head">' +
           '<span class="next-no">' + (i + 1) + '</span>' +
-          '<div class="next-body">' +
-          '<b>' + esc(a.title) + '</b>' +
-          '<span class="next-why">' + esc(a.why) + '</span>' +
-          '<span class="next-how">' + esc(a.how) + '</span>' +
-          '</div></li>';
+          '<span class="next-lead"><b>' + esc(a.title) + '</b>' +
+          '<span class="next-why">' + esc(a.why) + '</span></span>' +
+          '<span class="next-chev" aria-hidden="true"></span>' +
+          '</summary>' +
+          '<div class="next-how">' + esc(a.how) + '</div>' +
+          '</details></li>';
       }).join('') + '</ol>' +
       '</div>';
   }
@@ -434,8 +462,197 @@
   function deltaTag(p) {
     if (p == null) return '<span class="delta flat">—</span>';
     var cls = p > 5 ? 'up' : p < -5 ? 'down' : 'flat';
-    var sign = p > 0 ? '＋' : p < 0 ? '−' : '±';
-    return '<span class="delta ' + cls + '">' + sign + Math.abs(p).toFixed(0) + '%</span>';
+    // 四捨五入して0になるものは「±0%」と書く。
+    // −0.4% を「−0%」と出すと、減っているのか同じなのか読めない。
+    var r = Math.round(Math.abs(p));
+    if (r === 0) return '<span class="delta flat">±0%</span>';
+    return '<span class="delta ' + cls + '">' + (p > 0 ? '＋' : '−') + r + '%</span>';
+  }
+
+
+  /* ========== 収益 ==========
+     金額の指標は別の権限が要るので、押されたときだけ取りに行く。
+
+     ▼ RPM と CPM を API の値の平均で出さない理由
+     日ごとの cpm をそのまま平均すると「平均の平均」になり、
+     広告が多く出た日と少ない日が同じ重みになってしまう。
+     YouTube の定義どおり、合計どうしを割って出す。
+       RPM         = 推定収益の合計 ÷ 視聴回数の合計 × 1000
+       CPM         = 総収入の合計   ÷ 広告表示回数の合計 × 1000
+       再生ベースCPM = 総収入の合計   ÷ 収益化された再生の合計 × 1000 */
+  var MONEY_METRICS = 'views,estimatedRevenue,estimatedAdRevenue,estimatedRedPartnerRevenue,' +
+    'grossRevenue,adImpressions,monetizedPlaybacks';
+
+  function loadRevenue() {
+    if (!S.channel) return;
+    var gate = $('revenueGate'), body = $('revenueBody');
+    if (!Api.hasMoney()) { gate.hidden = false; body.hidden = true; return; }
+    gate.hidden = true; body.hidden = false;
+    if (S.loaded.revenue) return;
+    S.loaded.revenue = true;
+
+    var p = period();
+    $('revRangeNote').innerHTML =
+      '<b>' + p.start + '</b> 〜 <b>' + p.end + '</b>（' + p.days + '日間）の推定収益です。' +
+      '<span class="hint">YouTube の推定値で、確定額ではありません。月末の調整で増減します。</span>';
+
+    /* 通貨は円で求める。指定できなかった場合はチャンネルの既定に任せ、
+       画面には「チャンネルの通貨」と出して、円と決めつけないようにする。 */
+    reportMoney(p, 'day').then(function (r) {
+      renderRevenue(Api.rows(r.res), r.currency, p);
+      return reportMoney(p, 'video').then(function (rv) {
+        renderRevenueVideos(Api.rows(rv.res), rv.currency);
+      }).catch(function (e) { panelError($('revVideos'), e); });
+    }).catch(function (e) {
+      $('revKpis').innerHTML = '';
+      $('chartRevenue').innerHTML = '';
+      $('revVideos').innerHTML = '';
+      $('revNotes').innerHTML = '';
+      $('revRangeNote').innerHTML = '';
+      panelError(body, moneyMessage(e));
+    });
+  }
+
+  function reportMoney(p, dim) {
+    var base = {
+      startDate: p.start, endDate: p.end, dimensions: dim, metrics: MONEY_METRICS
+    };
+    if (dim === 'video') { base.sort = '-estimatedRevenue'; base.maxResults = 25; }
+    var withJpy = {}; for (var k in base) withJpy[k] = base[k];
+    withJpy.currency = 'JPY';
+    return Api.report(withJpy).then(function (res) { return { res: res, currency: 'JPY' }; })
+      .catch(function (e) {
+        if (e.status === 400) {   // 通貨の指定だけが通らなかった場合
+          return Api.report(base).then(function (res) { return { res: res, currency: null }; });
+        }
+        throw e;
+      });
+  }
+
+  function moneyMessage(e) {
+    var m = e && e.message || '';
+    if (e && (e.status === 403 || /forbidden|insufficient/i.test(m))) {
+      return new Error('このチャンネルでは収益データを取得できませんでした。' +
+        'YouTube パートナープログラムに参加していないチャンネルには収益の記録自体がありません。' +
+        '参加済みの場合は、ログインしたアカウントがそのチャンネルの所有者かをご確認ください。');
+    }
+    return e;
+  }
+
+  function renderRevenue(rows, cur, p) {
+    var money = function (v) { return Chart.fmtMoney(v, cur || 'JPY'); };
+    var curNote = cur ? '' : '（チャンネルの通貨）';
+
+    var rev = sum(rows, 'estimatedRevenue');
+    var ad = sum(rows, 'estimatedAdRevenue');
+    var red = sum(rows, 'estimatedRedPartnerRevenue');
+    var gross = sum(rows, 'grossRevenue');
+    var imps = sum(rows, 'adImpressions');
+    var mplays = sum(rows, 'monetizedPlaybacks');
+    var views = sum(rows, 'views');
+
+    var rpm = views ? rev / views * 1000 : 0;
+    var cpm = imps ? gross / imps * 1000 : 0;
+    var pcpm = mplays ? gross / mplays * 1000 : 0;
+    var mrate = views ? mplays / views * 100 : 0;
+
+    if (!rev && !gross && !imps) {
+      $('revKpis').innerHTML = '';
+      $('chartRevenue').innerHTML =
+        '<p class="chart-empty">この期間の収益データは0件です。<br>' +
+        '収益化前の期間か、まだ広告が配信されていない可能性があります。</p>';
+      $('revNotes').innerHTML = '';
+      return;
+    }
+
+    var tiles = [
+      { label: '推定収益' + curNote, value: money(rev), note: '税引前・YouTube の取り分を引いたあと' },
+      { label: '広告収益', value: money(ad), note: '推定収益のうち広告ぶん' },
+      { label: 'Premium からの収益', value: money(red), note: '推定収益のうち会員視聴ぶん' },
+      { label: '推定RPM', value: money(rpm), note: '視聴1000回あたりの手取り' },
+      { label: '再生ベースCPM', value: money(pcpm), note: '収益化された再生1000回あたりの総収入' },
+      { label: '収益化された再生', value: Chart.fmtPct(mrate), note: Chart.fmtInt(mplays) + '回 / 視聴' + Chart.fmtInt(views) + '回' }
+    ];
+    $('revKpis').innerHTML = tiles.map(function (t) {
+      return '<div class="kpi"><div class="kpi-label">' + esc(t.label) + '</div>' +
+        '<div class="kpi-value kpi-money">' + t.value + '</div>' +
+        '<div class="kpi-foot"><span class="kpi-note">' + esc(t.note) + '</span></div></div>';
+    }).join('');
+
+    Chart.line($('chartRevenue'), {
+      values: rows.map(function (r) { return { date: r.day, value: Number(r.estimatedRevenue) || 0 }; }),
+      label: '推定収益', unit: cur === 'JPY' ? '円' : '', height: 200
+    });
+
+    $('revNotes').innerHTML = [
+      { level: 'info', label: 'RPM・CPM は合計から計算しています',
+        detail: '推定RPM = 推定収益の合計 ÷ 視聴回数の合計 × 1000。CPM も同じく合計どうしで割っています。',
+        why: '日ごとの数値をそのまま平均すると「平均の平均」になり、広告が多く出た日と少ない日が同じ重みになってしまいます。YouTube の定義どおり合計から出しています。' },
+      { level: 'info', label: 'これは推定値です',
+        detail: 'YouTube 側の月末調整（無効なトラフィックの除外など）で増減します。',
+        why: '確定額は AdSense の支払いレポートで確認してください。ここの数字は日々の判断のためのものです。' },
+      { level: 'info', label: '推定収益は「手取り」、CPM は「総収入」基準',
+        detail: '推定収益 = YouTube の取り分を引いたあと。CPM の計算に使う総収入 = 引く前。',
+        why: 'RPM と CPM を並べて比べると必ず CPM のほうが大きく見えますが、基準が違うためで、異常ではありません。' },
+      { level: 'info', label: cur === 'JPY' ? '日本円で取得しています' : 'チャンネルの既定通貨で表示しています',
+        detail: cur === 'JPY' ? 'Google のレートで換算された値です。' : '円での取得が通らなかったため、チャンネルの通貨のまま出しています。',
+        why: '' }
+    ].map(checkRow).join('');
+  }
+
+  function renderRevenueVideos(rows, cur) {
+    var host = $('revVideos');
+    if (!rows.length) { host.innerHTML = '<p class="chart-empty">この期間に収益のあった動画がありません</p>'; return; }
+    var ids = rows.map(function (r) { return r.video; });
+    fetchVideoDetails(ids).catch(function () {}).then(function () {
+      Chart.hbar(host, rows.map(function (r) {
+        var v = S.videos[r.video];
+        var views = Number(r.views) || 0;
+        var rev = Number(r.estimatedRevenue) || 0;
+        return {
+          label: v ? v.snippet.title : r.video,
+          value: rev,
+          sub: '視聴' + Chart.fmtInt(views) + '回 ・ RPM ' +
+            Chart.fmtMoney(views ? rev / views * 1000 : 0, cur || 'JPY')
+        };
+      }), { format: function (v) { return Chart.fmtMoney(v, cur || 'JPY'); } });
+    });
+  }
+
+  /* ========== チャンネルの規模 ========== */
+  function renderScale(rows28, rows90) {
+    var host = $('scale');
+    if (!host || !S.channel) return;
+    var st = S.channel.statistics || {};
+    var id = S.channel.id;
+    var g28 = sum(rows28, 'subscribersGained') - sum(rows28, 'subscribersLost');
+    var g90 = sum(rows90, 'subscribersGained') - sum(rows90, 'subscribersLost');
+
+    host.innerHTML =
+      '<div class="scale-grid">' +
+      scaleCell('登録者', Chart.fmtInt(st.subscriberCount || 0) + '人',
+        (g28 >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(g28)) + '（直近28日）') +
+      scaleCell('総再生回数', Chart.fmtInt(st.viewCount || 0) + '回', 'チャンネル開設からの累計') +
+      scaleCell('公開中の動画', Chart.fmtInt(st.videoCount || 0) + '本', '') +
+      scaleCell('登録者の伸び', (g90 >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(g90)) + '人',
+        '直近90日') +
+      '</div>' +
+      '<div class="scale-ext">' +
+      '<a class="btn btn-ghost" href="https://socialblade.com/youtube/channel/' + esc(id) +
+      '" target="_blank" rel="noopener">Social Blade で順位を見る ↗</a>' +
+      '</div>' +
+      '<p class="note">' +
+      '<b>世界ランク・国別ランク・カテゴリ別ランクをこの画面に出すことはできません。</b>' +
+      'Social Blade は無料の公開APIを出しておらず（順位を取るには有料の Business API が必要）、' +
+      'サイトの中身をブラウザから直接読むことも、向こう側の設定で塞がれているためです。' +
+      'サーバーを1つ用意すれば回避できますが、このアプリは置くだけで動く作りにしてあるので、' +
+      '順位はボタンから本家を開いて見てください。' +
+      'なお上の登録者数・総再生回数は、Social Blade の推定値ではなく YouTube 公式の値です。</p>';
+  }
+  function scaleCell(label, value, note) {
+    return '<div class="scale-cell"><span class="scale-label">' + esc(label) + '</span>' +
+      '<b class="scale-value">' + value + '</b>' +
+      (note ? '<span class="scale-note">' + esc(note) + '</span>' : '') + '</div>';
   }
 
   /* ========== 動画 ========== */
@@ -738,13 +955,19 @@
   }
 
   var WD = ['日', '月', '火', '水', '木', '金', '土'];
+  var WEEKDAY_WINDOW_DAYS = 180;
   function renderWeekday(vids) {
     var host = $('weekday');
     var by = {};
+    /* 直近180日に公開したものだけを見る。
+       何年も前の動画まで混ぜると、その動画が「いま」稼いでいる視聴回数が
+       当時の公開曜日の手柄になってしまい、曜日の比較として意味をなさない。 */
     vids.forEach(function (v) {
       var r = S.period[v.id];
       if (!r || !v.snippet || !v.snippet.publishedAt) return;
-      var d = new Date(v.snippet.publishedAt).getDay();
+      var pub = new Date(v.snippet.publishedAt);
+      if ((Date.now() - pub.getTime()) / 86400000 > WEEKDAY_WINDOW_DAYS) return;
+      var d = pub.getDay();
       by[d] = by[d] || { n: 0, views: 0 };
       by[d].n++; by[d].views += Number(r.views) || 0;
     });
@@ -753,13 +976,17 @@
     }).sort(function (a, b) { return b.value - a.value; });
 
     if (rows.length < 3) {
-      host.innerHTML = '<p class="chart-empty">曜日を比べられるだけの本数がありません（3曜日以上に投稿があると出ます）</p>';
+      host.innerHTML = '<p class="chart-empty">曜日を比べられるだけの本数がありません' +
+        '（直近' + WEEKDAY_WINDOW_DAYS + '日に3曜日以上へ投稿があると出ます）</p>';
       return;
     }
     Chart.hbar(host, rows, { share: false });
     host.insertAdjacentHTML('beforeend',
-      '<p class="note">1本あたりの期間内視聴回数です。本数の少ない曜日はたまたま伸びた1本に引きずられます。' +
-      '最低でも各曜日3本くらい溜まってから判断してください。</p>');
+      '<p class="note">直近' + WEEKDAY_WINDOW_DAYS + '日に公開した動画だけを数えた、' +
+      '1本あたりの期間内視聴回数です。何年も前の動画を混ぜると、いま稼いでいる分が' +
+      '当時の曜日の手柄になってしまうため除いています。' +
+      'それでも本数の少ない曜日はたまたま伸びた1本に引きずられるので、' +
+      '各曜日3本くらい溜まってから判断してください。</p>');
   }
 
   function renderAuditList() {
