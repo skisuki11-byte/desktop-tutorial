@@ -53,6 +53,19 @@
 
   function requestToken(interactive, withMoney) {
     if (withMoney == null) withMoney = money;
+
+    /* まだ期限内の通行証が端末にあれば、それを使う。
+       Google に一度も問い合わせないので、いちばん速く、いちばん確実。
+       黙っての取り直しは、スマホのブラウザではしばしば拒まれるため、
+       そこに頼りきらない。 */
+    if (!interactive) {
+      var saved = global.Store.loadToken();
+      if (saved && (!withMoney || saved.m)) {
+        token = saved.t; money = saved.m; tokenAt = Date.now();
+        return Promise.resolve(token);
+      }
+    }
+
     return loadGsi().then(function () {
       var id = global.Store.clientId();
       if (!id) throw new Error('NO_CLIENT_ID');
@@ -76,6 +89,7 @@
                 // 「求めた」ではなく「下りた」で判断する。
                 money = String(res.scope || '').indexOf(MONEY) >= 0;
                 global.Store.setEverConnected(true);
+                global.Store.saveToken(token, res.expires_in, money);
                 resolve(token);
               } else {
                 reject(new Error('ログインを完了できませんでした。'));
@@ -121,8 +135,9 @@
     return (token ? Promise.resolve(token) : requestToken(false)).then(function (t) {
       return fetch(url, { headers: { Authorization: 'Bearer ' + t } });
     }).then(function (res) {
-      if (res.status === 401 && !retried) {   // 期限切れ。黙って取り直して1回だけやり直す
+      if (res.status === 401 && !retried) {   // 期限切れ。捨てて取り直し、1回だけやり直す
         token = null;
+        global.Store.clearToken();
         return requestToken(false).then(function () { return call(url, true); });
       }
       return res.json().catch(function () { return {}; }).then(function (body) {
@@ -175,6 +190,10 @@
       return requestToken(false);
     },
 
+    /* 端末に期限内の通行証があるか。画面を出す前の判断に使う
+       （あるなら「つなぐ」を一瞬も見せずに済む）。 */
+    hasSavedToken: function () { return !!global.Store.loadToken(); },
+
     /* 収益を見る権限を持っているか */
     hasMoney: function () { return money; },
     /* 収益の権限を足す。もう一度だけ同意画面が出る。
@@ -188,6 +207,7 @@
       if (token && global.google && global.google.accounts) {
         try { global.google.accounts.oauth2.revoke(token); } catch (e) {}
       }
+      global.Store.clearToken();
       token = null; client = null; clientScope = ''; money = false;
     },
 

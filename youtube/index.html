@@ -23,7 +23,7 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="13" width="4" height="8" rx="1.5"/><rect x="10" y="8" width="4" height="13" rx="1.5"/><rect x="17" y="3" width="4" height="18" rx="1.5" class="m-accent"/></svg>
       </span>
       <div class="brand-text">
-        <div class="brand-title">チャンネル分析</div>
+        <div class="brand-title" id="brandTitle">チャンネル分析</div>
         <div class="brand-sub" id="brandSub">未接続</div>
       </div>
     </div>
@@ -303,6 +303,31 @@
         <button class="btn btn-primary" id="btnSaveId" type="button">保存</button>
       </div>
       <p class="hint" id="originHint"></p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>ログイン状態</h2></div>
+      <label class="switch">
+        <input type="checkbox" id="keepSignedIn" checked>
+        <span class="switch-body">
+          <b>この端末でログインしたままにする</b>
+          <span class="switch-note">
+            Google から下りた通行証を、期限（約1時間）まで端末に置いておきます。
+            期限内に開き直したときは、Google に問い合わせずそのまま読めます。
+            切ると、開くたびに接続し直すことになります。
+          </span>
+        </span>
+      </label>
+      <div class="check check-info mt">
+        <span class="check-mark" aria-hidden="true">i</span>
+        <div class="check-body">
+          <b>置いてあるのは読み取り専用の通行証だけです</b>
+          <span class="check-why">
+            このサイト専用の領域に入るので、他のサイトからは読めません。
+            権限は読み取り専用なので、これを持っていても動画の投稿・変更・削除はできません。
+            約1時間で自動的に切れます。「接続を解除する」を押すとすぐ消えます。
+          </span>
+        </div>
+      </div>
     </div>
     <div class="panel">
       <div class="panel-head"><h2>取得済みのデータ</h2></div>

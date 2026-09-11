@@ -133,7 +133,7 @@
     $('btnTheme').addEventListener('click', cycleTheme);
     $('btnConnect').addEventListener('click', connect);
     $('btnReload').addEventListener('click', function () {
-      Store.cacheClear(); S.loaded = {}; loadDash(true);
+      Store.cacheClear(); S.loaded = {}; loadDash(true, S.view);
     });
     $('period').addEventListener('click', function (e) {
       var b = e.target.closest('.seg');
@@ -141,7 +141,10 @@
       Store.setDays(b.dataset.days);
       syncPeriodButtons();
       S.loaded = {};
-      loadDash(true);
+      // いま見ている画面のまま、その画面の数字だけ入れ替える。
+      // 収益を見ているときに期間を押して概要へ飛ばされるのでは、
+      // 「収益を1年で見たい」という当たり前のことができない。
+      loadDash(true, S.view);
     });
     $('btnSettings').addEventListener('click', function () {
       show(S.view === 'settings' ? 'dash' : 'settings');
@@ -165,6 +168,13 @@
         toast(v ? '保存しました。「概要」の上にある↻か、接続からお試しください。' : 'この端末の設定を消しました。');
       }
     });
+    $('keepSignedIn').checked = Store.keepSignedIn();
+    $('keepSignedIn').addEventListener('change', function () {
+      Store.setKeepSignedIn(this.checked);
+      toast(this.checked
+        ? '次からは、期限内なら開くだけで読めます。'
+        : '端末に置いた通行証を消しました。次からは開くたびに接続し直します。');
+    });
     $('btnClearCache').addEventListener('click', function () {
       Store.cacheClear(); S.loaded = {}; toast('貯めたデータを消しました。');
     });
@@ -173,7 +183,9 @@
       S = { channel: null, videos: {}, period: {}, loaded: {}, view: 'setup' };
       $('tabs').hidden = true; $('filterbar').hidden = true;
       $('btnReload').hidden = true; $('btnSettings').hidden = true;
+      $('brandTitle').textContent = 'チャンネル分析';
       $('brandSub').textContent = '未接続';
+      clearInterval(S.subsTimer); S.subsTimer = null;
       show('setup');
       toast('接続を解除しました。');
     });
@@ -229,6 +241,49 @@
     }).catch(function () {
       busy(false);
     });
+  }
+
+  /* 上部に、チャンネル名と登録者数を出す。
+     つないだあとは、アプリ名より「いま何人か」のほうが知りたい情報なので、
+     大きいほうの行をチャンネル名に譲る。
+
+     ▼ 「リアルタイム」について正直に書いておくこと
+     YouTube は2019年から、APIで返す登録者数を上位3桁に丸めている。
+     12,437人なら 12,400 と返る。これは所有者が自分のチャンネルを見ても同じで、
+     正確な数はYouTube Studio でしか見られない。
+     Social Blade などの「リアルタイム登録者数」も、同じ丸めた値を
+     何度も取り直しているだけで、1人単位では動かない。
+     そのため、ここでは丸めた値に加えて、
+     正確に取れる「直近28日の純増」を並べて出す。 */
+  function renderBrand() {
+    if (!S.channel) return;
+    var st = S.channel.statistics || {};
+    $('brandTitle').textContent = S.channel.snippet.title;
+    var subs = Number(st.subscriberCount || 0);
+    var html = '登録者 <b>' + Chart.fmtInt(subs) + '</b>';
+    if (S.subsDelta != null) {
+      html += '<span class="brand-delta ' + (S.subsDelta >= 0 ? 'up' : 'down') + '">' +
+        (S.subsDelta >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(S.subsDelta)) + '</span>';
+    }
+    var sub = $('brandSub');
+    sub.innerHTML = html;
+    sub.title = 'YouTube は登録者数を上位3桁に丸めて返します（正確な数は YouTube Studio でのみ確認できます）。' +
+      '右の数字は直近28日の純増で、こちらは正確な値です。';
+  }
+
+  /* 登録者数を取り直す。開いている間だけ動かし、隠れていたら休む。 */
+  function startSubsWatch() {
+    if (S.subsTimer) return;
+    S.subsTimer = setInterval(function () {
+      if (document.hidden || !S.channel) return;
+      Api.data('channels', { part: 'statistics', mine: 'true', _t: Math.floor(Date.now() / 120000) })
+        .then(function (res) {
+          var it = res.items && res.items[0];
+          if (!it) return;
+          S.channel.statistics = it.statistics;
+          renderBrand();
+        }).catch(function () {});
+    }, 120000);   // 2分おき。丸めた値なので、これ以上細かく見ても動かない
   }
 
   function applyTheme() {
@@ -292,7 +347,7 @@
   }
 
   /* ========== 概要 ========== */
-  function loadDash(refresh) {
+  function loadDash(refresh, stayOn) {
     var p = period();
     busy(true, 'チャンネルの情報を読み込んでいます…');
 
@@ -302,9 +357,9 @@
       var ch = res.items && res.items[0];
       if (!ch) throw new Error('このアカウントに YouTube チャンネルが見つかりません。チャンネルを持つアカウントでログインしてください。');
       S.channel = ch;
-      $('brandSub').textContent = ch.snippet.title;
       $('tabs').hidden = false; $('btnReload').hidden = false; $('btnSettings').hidden = false;
-      show('dash');
+      renderBrand();
+      show(stayOn && $('view-' + stayOn) ? stayOn : 'dash');
 
       $('rangeNote').innerHTML =
         '<b>' + p.start + '</b> 〜 <b>' + p.end + '</b>（' + p.days + '日間）の成績です。' +
@@ -316,7 +371,11 @@
           .catch(function () { return {}; })
       ]);
     }).then(function (r) {
-      renderDash(Api.rows(r[0]), Api.rows(r[1]), p);
+      var rows = Api.rows(r[0]);
+      S.subsDelta = sum(rows, 'subscribersGained') - sum(rows, 'subscribersLost');
+      renderBrand();
+      startSubsWatch();
+      renderDash(rows, Api.rows(r[1]), p);
       loadInsight();           // 上段の診断。失敗してもここで止めない
       return loadVideos();     // 概要の下段でも動画を使う
     }).catch(function (e) {
