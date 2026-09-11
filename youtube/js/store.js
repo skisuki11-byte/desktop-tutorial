@@ -29,6 +29,24 @@
   var cfg = read(K_CFG, {});
   var cache = read(K_CACHE, {});
 
+  /* 端末に保存できたかどうか。
+     アプリ内ブラウザやプライベートモードは書き込みを拒むことがあり、
+     黙って失敗すると「保存したのに毎回消える」ように見えるため、
+     結果を持っておいて画面で知らせる。 */
+  var storable = (function () {
+    try {
+      localStorage.setItem('ytlab.probe', '1');
+      localStorage.removeItem('ytlab.probe');
+      return true;
+    } catch (e) { return false; }
+  })();
+
+  /* config.js に置いた値。端末の保存が使えなくてもここから読める。 */
+  function baked() {
+    var c = global.YTLAB_CONFIG || {};
+    return (c.clientId || '').trim();
+  }
+
   function prune() {
     var keys = Object.keys(cache);
     var now = Date.now();
@@ -45,8 +63,21 @@
 
   global.Store = {
     /* ---------- 設定 ---------- */
-    clientId: function () { return (cfg.clientId || '').trim(); },
-    setClientId: function (v) { cfg.clientId = String(v || '').trim(); write(K_CFG, cfg); },
+    /* この端末で入れた値を優先し、無ければ config.js の値を使う。
+       どちらも空のときだけ「未登録」になる。 */
+    clientId: function () { return (cfg.clientId || '').trim() || baked(); },
+    setClientId: function (v) {
+      cfg.clientId = String(v || '').trim();
+      return write(K_CFG, cfg);      // 保存できたかを呼び出し側に返す
+    },
+    /* いま使っているIDがどこから来たか。設定画面の説明に使う。 */
+    clientIdSource: function () {
+      if ((cfg.clientId || '').trim()) return 'device';
+      if (baked()) return 'file';
+      return 'none';
+    },
+    bakedClientId: baked,
+    canStore: function () { return storable; },
 
     /* 期間（日数）。既定は28日＝YouTube Studio と同じ既定値 */
     days: function () { return cfg.days || 28; },

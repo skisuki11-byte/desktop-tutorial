@@ -7,10 +7,10 @@
  *  Google への問い合わせ（accounts.google.com / googleapis.com）は
  *  別のオリジンなので一切触らない。認証に割り込むと事故になる。
  */
-var CACHE = 'ytlab-v1';
+var CACHE = 'ytlab-v2';
 var ASSETS = [
-  './', './index.html', './manifest.webmanifest', './css/style.css',
-  './js/store.js', './js/api.js', './js/chart.js', './js/seo.js', './js/app.js',
+  './', './index.html', './manifest.webmanifest', './css/style.css', './config.js',
+  './js/store.js', './js/api.js', './js/chart.js', './js/seo.js', './js/insight.js', './js/app.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'
 ];
 

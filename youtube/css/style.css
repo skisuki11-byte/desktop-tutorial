@@ -336,3 +336,74 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
   border-top-color:var(--accent);animation:spin .8s linear infinite
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- 概要の上段：いまの状態と次の一手 ----------
+   ここだけ左に太い色帯を入れて、判定の重さを一目で分かるようにする。
+   ただし色だけに頼らず、必ず「順調／注意／要対処」の文字を添える。 */
+.verdict{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:20px 22px;margin-bottom:16px;box-shadow:var(--shadow);
+  border-left:5px solid var(--info)
+}
+.verdict-good{border-left-color:var(--good)}
+.verdict-ok{border-left-color:var(--accent)}
+.verdict-warn{border-left-color:var(--warn)}
+.verdict-bad{border-left-color:var(--bad)}
+.verdict-head{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:8px}
+.verdict-badge{
+  font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;
+  background:var(--info-bg);color:var(--info);flex:none;letter-spacing:.04em
+}
+.verdict-good .verdict-badge{background:var(--good-bg);color:var(--good)}
+.verdict-ok .verdict-badge{background:var(--info-bg);color:var(--accent)}
+.verdict-warn .verdict-badge{background:var(--warn-bg);color:var(--warn)}
+.verdict-bad .verdict-badge{background:var(--bad-bg);color:var(--bad)}
+.verdict-title{font-size:1.3rem;letter-spacing:-.01em}
+.verdict-summary{margin:0 0 18px;color:var(--ink-2);font-size:.92rem;max-width:46em}
+
+.verdict-table-wrap{overflow-x:auto}
+.verdict-table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:420px}
+.verdict-table thead th{
+  text-align:right;padding:0 0 9px;font-weight:600;color:var(--muted);font-size:.78rem;
+  border-bottom:1px solid var(--line)
+}
+.verdict-table thead th:first-child{width:8em}
+.verdict-table thead small{display:block;font-weight:400;font-size:.7rem;opacity:.8}
+.verdict-table tbody th{
+  text-align:left;padding:10px 8px 10px 0;font-weight:500;color:var(--ink-2);
+  border-bottom:1px solid var(--line-2);white-space:nowrap
+}
+.verdict-table td{
+  text-align:right;padding:10px 0;border-bottom:1px solid var(--line-2);
+  font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap
+}
+.verdict-table td .delta{margin-left:8px;font-weight:700}
+.verdict-table-wrap .hint{margin:8px 0 0}
+
+.next-title{margin:22px 0 10px;font-size:.95rem}
+.next-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.next-item{display:flex;gap:12px;padding:13px 15px;border-radius:var(--r-sm);background:var(--panel-2);border:1px solid var(--line)}
+.next-no{
+  width:23px;height:23px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+  display:grid;place-items:center;font-size:.76rem;font-weight:700;flex:none;margin-top:2px
+}
+.next-body{display:flex;flex-direction:column;gap:4px;min-width:0}
+.next-body b{font-size:.93rem}
+.next-why{font-size:.82rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.next-how{font-size:.82rem;color:var(--muted)}
+.mb{margin-bottom:14px}
+@media (max-width:640px){
+  .verdict{padding:17px 16px}
+  .verdict-title{font-size:1.12rem}
+  /* スマホでは28日と90日を必ず両方見せる。
+     横スクロールの向こうに90日が隠れると、2つを見比べるという
+     この表の目的そのものが果たせなくなるため、
+     文字を詰めて％を数字の下に回し、2列とも画面に収める。 */
+  .verdict-table{min-width:0;font-size:.8rem}
+  .verdict-table thead th:first-child{width:5.4em}
+  .verdict-table thead small{font-size:.62rem}
+  .verdict-table tbody th{padding-right:4px;font-size:.78rem}
+  .verdict-table td{padding:9px 0}
+  .verdict-table td .delta{display:block;width:max-content;margin:3px 0 0 auto;font-size:.7rem}
+  .next-item{padding:12px 13px}
+}

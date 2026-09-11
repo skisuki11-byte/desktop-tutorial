@@ -18,6 +18,12 @@
      3日前を終わりにする。 */
   var LAG_DAYS = 3;
 
+  /* 日ごとの推移で取る指標。概要でも診断でも同じ並びを使う。
+     文字列が同じなら問い合わせ先のURLも同じになるので、
+     控えが共用でき、2か所で違う数字が出る事故も起きない。 */
+  var DAILY = 'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,' +
+    'subscribersGained,subscribersLost,likes,comments,shares';
+
   var S = {
     channel: null,
     videos: {},      // videoId -> Data API の1件
@@ -31,8 +37,10 @@
     return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   }
   function shift(base, days) { var d = new Date(base); d.setDate(d.getDate() + days); return d; }
-  function period() {
-    var n = Store.days();
+  /* n日ぶんの窓と、その直前の同じ長さの窓。
+     診断は画面の期間指定と関係なく 28日と90日で見るので、
+     日数から窓を作れるようにしておく。 */
+  function windowOf(n) {
     var end = shift(new Date(), -LAG_DAYS);
     var start = shift(end, -(n - 1));
     return {
@@ -41,6 +49,7 @@
       prevStart: ymd(shift(start, -n)), prevEnd: ymd(shift(start, -1))
     };
   }
+  function period() { return windowOf(Store.days()); }
 
   /* ========== 見せ方の共通部品 ========== */
   function fmtWatch(min) {
@@ -50,6 +59,8 @@
   }
   function fmtDelta(now, before) {
     if (before == null || !isFinite(before)) return '';
+    // 前が0以下だと「何％増えた」に意味がない（−10→＋10 を「200%増」とは言えない）
+    if (before < 0) return '';
     if (!before) return now ? '<span class="delta up">新規</span>' : '';
     var r = (now - before) / before * 100;
     var cls = r > 0.5 ? 'up' : r < -0.5 ? 'down' : 'flat';
@@ -113,10 +124,11 @@
   function boot() {
     applyTheme();
     $('period').value = String(Store.days());
-    $('clientId').value = Store.clientId();
+    $('clientId').value = (Store.clientIdSource() === 'device') ? Store.clientId() : '';
     $('originHint').textContent =
       'Google Cloud の「承認済みの JavaScript 生成元」には ' + location.origin + ' を登録してください。';
     $('setupHint').hidden = !!Store.clientId();
+    renderIdStatus();
 
     $('btnTheme').addEventListener('click', cycleTheme);
     $('btnConnect').addEventListener('click', connect);
@@ -135,9 +147,15 @@
       if (v && !/\.apps\.googleusercontent\.com$/.test(v)) {
         return toast('クライアントIDは .apps.googleusercontent.com で終わります。取り違えていませんか。');
       }
-      Store.setClientId(v);
-      $('setupHint').hidden = !!v;
-      toast(v ? '保存しました。「概要」の上にある↻か、接続からお試しください。' : 'クライアントIDを消しました。');
+      var ok = Store.setClientId(v);
+      $('setupHint').hidden = !!Store.clientId();
+      renderIdStatus();
+      if (!ok) {
+        // 黙って消えるのがいちばん困るので、はっきり言う
+        toast('このブラウザには保存できませんでした。今回だけ有効です。config.js に書いておく方法をREADMEに記載しています。');
+      } else {
+        toast(v ? '保存しました。「概要」の上にある↻か、接続からお試しください。' : 'この端末の設定を消しました。');
+      }
     });
     $('btnClearCache').addEventListener('click', function () {
       Store.cacheClear(); S.loaded = {}; toast('貯めたデータを消しました。');
@@ -226,17 +244,13 @@
         '<span class="hint">YouTube の集計は確定までに数日かかるため、直近' + LAG_DAYS + '日は含めていません。</span>';
 
       return Promise.all([
-        Api.report({
-          startDate: p.start, endDate: p.end, dimensions: 'day',
-          metrics: 'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained,subscribersLost,likes,comments,shares'
-        }),
-        Api.report({
-          startDate: p.prevStart, endDate: p.prevEnd, dimensions: 'day',
-          metrics: 'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained,subscribersLost'
-        }).catch(function () { return {}; })
+        Api.report({ startDate: p.start, endDate: p.end, dimensions: 'day', metrics: DAILY }),
+        Api.report({ startDate: p.prevStart, endDate: p.prevEnd, dimensions: 'day', metrics: DAILY })
+          .catch(function () { return {}; })
       ]);
     }).then(function (r) {
       renderDash(Api.rows(r[0]), Api.rows(r[1]), p);
+      loadInsight();           // 上段の診断。失敗してもここで止めない
       return loadVideos();     // 概要の下段でも動画を使う
     }).catch(function (e) {
       if (S.channel) { toast(e.message); }
@@ -297,6 +311,131 @@
     Chart.delta($('chartSubs'), rows.map(function (r) {
       return { date: r.day, gained: Number(r.subscribersGained) || 0, lost: Number(r.subscribersLost) || 0 };
     }));
+  }
+
+
+  /* ========== 設定：IDの出どころ ========== */
+  function renderIdStatus() {
+    var host = $('idStatus');
+    if (!host) return;
+    var src = Store.clientIdSource();
+    var msg = {
+      device: ['good', 'この端末に保存したIDを使っています。'],
+      file:   ['good', 'config.js に書いてあるIDを使っています。どの端末で開いても入力は要りません。'],
+      none:   ['warn', 'まだ登録されていません。下の欄に貼って保存してください。']
+    }[src];
+    var extra = '';
+    if (!Store.canStore()) {
+      extra = '<span class="check-why">このブラウザは保存領域を使えません（アプリ内ブラウザやプライベートモードでよく起きます）。' +
+        '入力しても次に開いたときには消えます。毎回入力したくない場合は、config.js にIDを書いておく方法をご検討ください。</span>';
+    } else if (src === 'device' && Store.bakedClientId()) {
+      extra = '<span class="check-why">config.js にもIDがありますが、この端末で入れたほうを優先しています。' +
+        '欄を空にして保存すると config.js のほうに戻ります。</span>';
+    }
+    host.innerHTML = '<div class="check check-' + msg[0] + '">' +
+      '<span class="check-mark" aria-hidden="true">' + (msg[0] === 'good' ? '✓' : '!') + '</span>' +
+      '<div class="check-body"><b>' + esc(msg[1]) + '</b>' + extra + '</div></div>';
+  }
+
+  /* ========== 概要の上段：いまの状態と次の一手 ========== */
+  function loadInsight() {
+    var host = $('insight');
+    if (!host) return;
+    host.innerHTML = '<p class="skeleton">28日と90日を照らし合わせています…</p>';
+
+    var w28 = windowOf(28), w90 = windowOf(90);
+    var soft = function (p) { return p.catch(function () { return {}; }); };
+
+    var uploads = ((S.channel || {}).contentDetails || {}).relatedPlaylists || {};
+    var listPromise = uploads.uploads
+      ? Api.data('playlistItems', { part: 'contentDetails', playlistId: uploads.uploads, maxResults: 50 })
+        .then(function (res) {
+          return fetchVideoDetails((res.items || []).map(function (i) { return i.contentDetails.videoId; }));
+        }).catch(function () {})
+      : Promise.resolve();
+
+    Promise.all([
+      Api.report({ startDate: w28.start, endDate: w28.end, dimensions: 'day', metrics: DAILY }),
+      soft(Api.report({ startDate: w28.prevStart, endDate: w28.prevEnd, dimensions: 'day', metrics: DAILY })),
+      soft(Api.report({ startDate: w90.start, endDate: w90.end, dimensions: 'day', metrics: DAILY })),
+      soft(Api.report({ startDate: w90.prevStart, endDate: w90.prevEnd, dimensions: 'day', metrics: DAILY })),
+      soft(Api.report({ startDate: w28.start, endDate: w28.end, dimensions: 'insightTrafficSourceType', metrics: 'views' })),
+      soft(Api.report({ startDate: w28.start, endDate: w28.end, dimensions: 'subscribedStatus', metrics: 'views' })),
+      soft(Api.report({
+        startDate: w28.start, endDate: w28.end, dimensions: 'video',
+        metrics: 'views,averageViewDuration', sort: '-views', maxResults: 20
+      })),
+      listPromise
+    ]).then(function (r) {
+      var videos28 = Api.rows(r[6]);
+      return fetchVideoDetails(videos28.map(function (v) { return v.video; })).then(function () {
+        var audits = Object.keys(S.videos).map(function (id) {
+          var a = Seo.audit(S.videos[id]);
+          var bad = a.checks.filter(function (c) { return c.level === 'bad' || c.level === 'warn'; });
+          return {
+            id: id, title: S.videos[id].snippet.title, score: a.score,
+            top: bad.slice(0, 2).map(function (c) { return c.label; }).join('／') || '軽微'
+          };
+        });
+        renderInsight(host, Insight.build({
+          now28: Api.rows(r[0]), prev28: Api.rows(r[1]),
+          now90: Api.rows(r[2]), prev90: Api.rows(r[3]),
+          traffic: Api.rows(r[4]), subs: Api.rows(r[5]),
+          videos28: videos28, meta: S.videos,
+          uploads: Object.keys(S.videos).map(function (k) { return S.videos[k]; }),
+          audits: audits
+        }), w28, w90);
+      });
+    }).catch(function (e) { panelError(host, e); });
+  }
+
+  function renderInsight(host, ins, w28, w90) {
+    var badge = { good: '順調', ok: '前向き', warn: '注意', bad: '要対処', info: '変化なし' }[ins.level];
+
+    var rows = ins.metrics.map(function (m) {
+      return '<tr><th>' + esc(m.label) + '</th>' +
+        '<td>' + metricValue(m.a, m.kind) + deltaTag(m.ap) + '</td>' +
+        '<td>' + metricValue(m.b, m.kind) + deltaTag(m.bp) + '</td></tr>';
+    }).join('');
+
+    host.innerHTML =
+      '<div class="verdict verdict-' + ins.level + '">' +
+      '<div class="verdict-head">' +
+      '<span class="verdict-badge">' + badge + '</span>' +
+      '<h2 class="verdict-title">' + esc(ins.title) + '</h2>' +
+      '</div>' +
+      '<p class="verdict-summary">' + esc(ins.summary) + '</p>' +
+
+      '<div class="verdict-table-wrap"><table class="verdict-table">' +
+      '<thead><tr><th></th><th>直近28日<small>' + w28.start.slice(5) + '〜' + w28.end.slice(5) + '</small></th>' +
+      '<th>直近90日<small>' + w90.start.slice(5) + '〜' + w90.end.slice(5) + '</small></th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table>' +
+      '<p class="hint">％はそれぞれ「直前の同じ長さの期間」との比較です。</p></div>' +
+
+      '<h3 class="next-title">次にやること</h3>' +
+      '<ol class="next-list">' + ins.actions.map(function (a, i) {
+        return '<li class="next-item">' +
+          '<span class="next-no">' + (i + 1) + '</span>' +
+          '<div class="next-body">' +
+          '<b>' + esc(a.title) + '</b>' +
+          '<span class="next-why">' + esc(a.why) + '</span>' +
+          '<span class="next-how">' + esc(a.how) + '</span>' +
+          '</div></li>';
+      }).join('') + '</ol>' +
+      '</div>';
+  }
+
+  function metricValue(v, kind) {
+    if (kind === 'watch') return fmtWatch(v);
+    if (kind === 'dur') return Chart.fmtDur(v);
+    if (kind === 'signed') return (v >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(v));
+    return Chart.fmtInt(v);
+  }
+  function deltaTag(p) {
+    if (p == null) return '<span class="delta flat">—</span>';
+    var cls = p > 5 ? 'up' : p < -5 ? 'down' : 'flat';
+    var sign = p > 0 ? '＋' : p < 0 ? '−' : '±';
+    return '<span class="delta ' + cls + '">' + sign + Math.abs(p).toFixed(0) + '%</span>';
   }
 
   /* ========== 動画 ========== */
