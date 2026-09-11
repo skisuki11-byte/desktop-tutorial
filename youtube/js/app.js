@@ -123,7 +123,7 @@
   /* ========== 起動 ========== */
   function boot() {
     applyTheme();
-    $('period').value = String(Store.days());
+    syncPeriodButtons();
     $('clientId').value = (Store.clientIdSource() === 'device') ? Store.clientId() : '';
     $('originHint').textContent =
       'Google Cloud の「承認済みの JavaScript 生成元」には ' + location.origin + ' を登録してください。';
@@ -135,8 +135,16 @@
     $('btnReload').addEventListener('click', function () {
       Store.cacheClear(); S.loaded = {}; loadDash(true);
     });
-    $('period').addEventListener('change', function () {
-      Store.setDays(this.value); S.loaded = {}; loadDash(true);
+    $('period').addEventListener('click', function (e) {
+      var b = e.target.closest('.seg');
+      if (!b || String(Store.days()) === b.dataset.days) return;
+      Store.setDays(b.dataset.days);
+      syncPeriodButtons();
+      S.loaded = {};
+      loadDash(true);
+    });
+    $('btnSettings').addEventListener('click', function () {
+      show(S.view === 'settings' ? 'dash' : 'settings');
     });
     $('tabs').addEventListener('click', function (e) {
       var b = e.target.closest('.tab');
@@ -162,7 +170,8 @@
     });
     $('btnDisconnect').addEventListener('click', function () {
       Api.disconnect(); Store.cacheClear(); S = { channel: null, videos: {}, period: {}, loaded: {}, view: 'setup' };
-      $('tabs').hidden = true; $('periodWrap').hidden = true; $('btnReload').hidden = true;
+      $('tabs').hidden = true; $('filterbar').hidden = true;
+      $('btnReload').hidden = true; $('btnSettings').hidden = true;
       $('brandSub').textContent = '未接続';
       show('setup');
       toast('接続を解除しました。');
@@ -196,6 +205,17 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
   }
 
+  /* いま選ばれている期間に印をつける。
+     押せる場所と、いま選ばれているものが一目で分かる状態を保つ。 */
+  function syncPeriodButtons() {
+    var now = String(Store.days());
+    document.querySelectorAll('#period .seg').forEach(function (b) {
+      var on = b.dataset.days === now;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
   function applyTheme() {
     var t = Store.theme();
     if (t === 'auto') document.documentElement.removeAttribute('data-theme');
@@ -213,9 +233,22 @@
     document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
     var target = $('view-' + view);
     if (target) target.classList.add('active');
+
+    var active = null;
     document.querySelectorAll('.tab').forEach(function (t) {
-      t.classList.toggle('active', t.dataset.view === view);
+      var on = t.dataset.view === view;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-current', on ? 'page' : 'false');
+      if (on) active = t;
     });
+    // 選んだタブが端に隠れたままにならないよう、見える位置へ寄せる
+    if (active && active.scrollIntoView) {
+      try { active.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+    }
+    $('btnSettings').classList.toggle('is-on', view === 'settings');
+    // 期間は中身の画面にだけ効く。設定では出さない。
+    $('filterbar').hidden = !(S.channel && view !== 'settings');
+
     window.scrollTo(0, 0);
     if (view === 'videos') loadVideos();
     if (view === 'revenue') loadRevenue();
@@ -255,7 +288,7 @@
       if (!ch) throw new Error('このアカウントに YouTube チャンネルが見つかりません。チャンネルを持つアカウントでログインしてください。');
       S.channel = ch;
       $('brandSub').textContent = ch.snippet.title;
-      $('tabs').hidden = false; $('periodWrap').hidden = false; $('btnReload').hidden = false;
+      $('tabs').hidden = false; $('btnReload').hidden = false; $('btnSettings').hidden = false;
       show('dash');
 
       $('rangeNote').innerHTML =
@@ -432,26 +465,34 @@
       '<tbody>' + rows + '</tbody></table>' +
       '<p class="hint">％はそれぞれ「直前の同じ長さの期間」との比較です。</p></div>' +
 
-      '<h3 class="next-title">次にやること</h3>' +
-      /* 見出しと根拠の数字だけ畳まずに出し、やり方は開いたときに出す。
-         3つ全部を開いたままにすると、いちばん大事な1つ目が
-         スクロールの上に押し上げられて読まれないため。
-         details/summary を使うのは、JavaScriptが動かない場合でも開き、
-         キーボードと読み上げでも同じように扱えるため。 */
+      /* 「次にやること」はひとまとめで開閉する。
+         畳んでいる間は、いま何をすべきかの見出しすら出さない。
+         状態の判定を読んだうえで「で、何をするのか」と思ったときに開く、
+         という順番にしたいため。開いたら3つとも最後まで出す。 */
+      '<details class="next" id="nextBox"' + (openNext() ? ' open' : '') + '>' +
+      '<summary class="next-summary">' +
+      '<span class="next-title">次にやること</span>' +
+      '<span class="next-count">' + ins.actions.length + '件</span>' +
+      '<span class="next-chev" aria-hidden="true"></span>' +
+      '</summary>' +
       '<ol class="next-list">' + ins.actions.map(function (a, i) {
-        return '<li>' +
-          '<details class="next-item"' + (i === 0 ? ' open' : '') + '>' +
-          '<summary class="next-head">' +
+        return '<li class="next-item">' +
           '<span class="next-no">' + (i + 1) + '</span>' +
-          '<span class="next-lead"><b>' + esc(a.title) + '</b>' +
-          '<span class="next-why">' + esc(a.why) + '</span></span>' +
-          '<span class="next-chev" aria-hidden="true"></span>' +
-          '</summary>' +
-          '<div class="next-how">' + esc(a.how) + '</div>' +
-          '</details></li>';
-      }).join('') + '</ol>' +
+          '<div class="next-body">' +
+          '<b>' + esc(a.title) + '</b>' +
+          '<span class="next-why">' + esc(a.why) + '</span>' +
+          '<span class="next-how">' + esc(a.how) + '</span>' +
+          '</div></li>';
+      }).join('') + '</ol></details>' +
       '</div>';
+
+    var box = $('nextBox');
+    if (box) box.addEventListener('toggle', function () { Store.setNextOpen(box.open); });
   }
+
+  /* 開いたか閉じたかはこの端末に覚えておく。
+     毎回開き直す／毎回畳み直すのは、どちらも使う人の手間になるため。 */
+  function openNext() { return Store.nextOpen(); }
 
   function metricValue(v, kind) {
     if (kind === 'watch') return fmtWatch(v);
@@ -737,10 +778,27 @@
       Chart.fmtInt(s.views) + '回 ・ ' + fmtWatch(s.watch) + ' ・ 平均' + Chart.fmtDur(s.avg) +
       (s.subs ? ' ・ 登録＋' + Chart.fmtInt(s.subs) : '') +
       '</span></span>' +
-      (s.seo != null ? '<span class="vscore ' + scoreClass(s.seo) + '">' + s.seo + '</span>' : '') +
+      (s.seo != null ? '<span class="vscore ' + scoreClass(s.seo) + '" title="作りの点数 ' + s.seo +
+        '点（' + scoreWord(s.seo) + '）題名・説明文・タグの点検結果">' + s.seo + '</span>' : '') +
       '</button>';
   }
   function scoreClass(n) { return n >= 85 ? 'ok' : n >= 65 ? 'mid' : 'ng'; }
+  function scoreWord(n) { return n >= 85 ? '良好' : n >= 65 ? '要改善' : '要修正'; }
+  /* 点数だけ置かれても読めないので、どこにでも同じ説明を添える。 */
+  var SCORE_LEGEND =
+    '<b>「作りの点数」とは</b>　題名・説明文・タグの作りを100点満点で点検した結果です。' +
+    '視聴回数や人気とは関係ありません。' +
+    '<span class="legend-keys">' +
+    '<i class="vscore ok">85+</i>良好' +
+    '<i class="vscore mid">65-84</i>要改善' +
+    '<i class="vscore ng">〜64</i>要修正</span>' +
+    '動画を押すと、何が引っかかっているか（題名が長すぎる・章がない など）と、' +
+    'その理由が出ます。';
+  function paintLegend() {
+    ['scoreLegend', 'scoreLegend2'].forEach(function (id) {
+      var el = $(id); if (el) el.innerHTML = SCORE_LEGEND;
+    });
+  }
 
   function bindVideoClicks(host) {
     host.querySelectorAll('[data-id]').forEach(function (b) {
@@ -767,18 +825,22 @@
     }[sortBy];
     rows.sort(cmp);
 
+    paintLegend();
     $('videoRows').innerHTML = rows.length ? rows.map(function (s) {
       return '<tr data-id="' + esc(s.id) + '">' +
         '<td class="cell-title">' +
         (s.thumb ? '<img src="' + esc(s.thumb) + '" alt="" loading="lazy">' : '') +
         '<span><b>' + esc(s.title) + '</b><small>' + (s.publishedAt || '').slice(0, 10) +
         ' ・ 公開後1日あたり' + Chart.fmtInt(s.perDay) + '回</small></span></td>' +
-        '<td class="num">' + Chart.fmtInt(s.views) + '</td>' +
-        '<td class="num">' + fmtWatch(s.watch) + '</td>' +
-        '<td class="num">' + Chart.fmtDur(s.avg) + '</td>' +
-        '<td class="num">' + Chart.fmtPct(s.pct) + '</td>' +
-        '<td class="num">' + (s.subs ? '＋' + Chart.fmtInt(s.subs) : '—') + '</td>' +
-        '<td class="num">' + (s.seo != null ? '<span class="vscore ' + scoreClass(s.seo) + '">' + s.seo + '</span>' : '—') + '</td>' +
+        '<td class="num" data-label="視聴回数">' + Chart.fmtInt(s.views) + '</td>' +
+        '<td class="num" data-label="総再生時間">' + fmtWatch(s.watch) + '</td>' +
+        '<td class="num" data-label="平均視聴時間">' + Chart.fmtDur(s.avg) + '</td>' +
+        '<td class="num" data-label="平均視聴率">' + Chart.fmtPct(s.pct) + '</td>' +
+        '<td class="num" data-label="登録者">' + (s.subs ? '＋' + Chart.fmtInt(s.subs) : '—') + '</td>' +
+        '<td class="num" data-label="作りの点数">' + (s.seo != null
+          ? '<span class="vscore ' + scoreClass(s.seo) + '" title="題名・説明文・タグの点検結果">' +
+            s.seo + '<em>' + scoreWord(s.seo) + '</em></span>'
+          : '—') + '</td>' +
         '</tr>';
     }).join('') : '<tr><td colspan="7"><p class="chart-empty">該当する動画がありません</p></td></tr>';
     bindVideoClicks($('videoRows'));
@@ -1043,8 +1105,10 @@
 
     var checks = s.audit ? s.audit.checks : [];
     $('sheetChecks').innerHTML =
-      (s.audit ? '<div class="score-head"><span class="vscore ' + scoreClass(s.audit.score) + '">' + s.audit.score + '</span>' +
-        '<span class="hint">100点満点。vidIQ のスコアとは別物で、公開されている作り方の指針だけで判定しています。</span></div>' : '') +
+      (s.audit ? '<div class="score-head"><span class="vscore ' + scoreClass(s.audit.score) + '">' +
+        s.audit.score + '<em>' + scoreWord(s.audit.score) + '</em></span>' +
+        '<span class="hint">題名・説明文・タグの作りを100点満点で点検した結果です。視聴回数や人気とは関係ありません。' +
+        'vidIQ のスコアとも別物で、公開されている作り方の指針だけで判定しています。</span></div>' : '') +
       checks.map(checkRow).join('');
 
     fill('sheetRetention', Api.report({

@@ -83,6 +83,11 @@
     days: function () { return cfg.days || 28; },
     setDays: function (n) { cfg.days = Number(n) || 28; write(K_CFG, cfg); },
 
+    /* 「次にやること」を開いた状態で終えたか。次に開いたときも同じ状態にする。 */
+    // 既定は閉じた状態。まず「いまどうなっているか」を読んでから開く順番にする。
+    nextOpen: function () { return cfg.nextOpen === true; },
+    setNextOpen: function (v) { cfg.nextOpen = !!v; write(K_CFG, cfg); },
+
     theme: function () { return cfg.theme || 'auto'; },
     setTheme: function (v) { cfg.theme = v; write(K_CFG, cfg); },
 

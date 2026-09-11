@@ -78,34 +78,76 @@ a{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* ---------- 上部 ---------- */
+/* ---------- 上部 ----------
+   直すまでの形は、よく押す「期間」を右上の隅に小さく置いていた。
+   画面が狭いとブランド名に押されて端で切れ、指で押せなくなる。
+   よく使うものほど広い面積を与える、という当たり前の原則を外していた。
+
+   作り直した形:
+     1段目 … 名前と、たまにしか押さないもの（更新・明るさ・設定）
+     2段目 … 見る場所（タブ）
+     3段目 … 見る期間。横いっぱいに4つ並べ、1タップで切り替わる
+   選択肢は4つしかないので、開いて選ばせる形より並べたほうが速い。
+   指で押す的は、どれも最低44pxを確保する（小さいと押し損ねる）。 */
 .topbar{position:sticky;top:0;z-index:30;background:var(--chrome);color:var(--chrome-ink)}
-.topbar-inner{max-width:1180px;margin:0 auto;padding:11px 16px;display:flex;align-items:center;gap:12px;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.topbar-inner{
+  max-width:1180px;margin:0 auto;padding:10px 12px;
+  display:flex;align-items:center;gap:10px;justify-content:space-between
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
 .brand-mark{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.09);display:grid;place-items:center;flex:none}
 .brand-mark svg{width:19px;height:19px;fill:var(--chrome-ink)}
 .brand-mark .m-accent{fill:var(--brandmark)}
-.brand-title{font-weight:700;line-height:1.25;letter-spacing:.02em}
-.brand-sub{font-size:.74rem;color:var(--chrome-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
-.topbar-right{display:flex;align-items:center;gap:8px;flex:none}
-.period select,.sortwrap select{
-  background:rgba(255,255,255,.08);color:var(--chrome-ink);border:1px solid rgba(255,255,255,.14);
-  border-radius:8px;padding:6px 9px;font:inherit;font-size:.84rem;cursor:pointer
-}
-.period select option{background:#1b1f26;color:#fff}
+.brand-text{min-width:0}
+.brand-title{font-weight:700;line-height:1.25;letter-spacing:.02em;font-size:.98rem}
+.brand-sub{font-size:.74rem;color:var(--chrome-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw}
+.topbar-right{display:flex;align-items:center;gap:4px;flex:none}
 .icon-btn{
-  width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.14);
-  background:rgba(255,255,255,.06);color:var(--chrome-ink);cursor:pointer;font-size:.95rem;line-height:1
+  width:44px;height:44px;border-radius:11px;border:0;background:transparent;
+  color:var(--chrome-ink);cursor:pointer;font-size:1.02rem;line-height:1;
+  display:grid;place-items:center
 }
-.icon-btn:hover{background:rgba(255,255,255,.14)}
-.tabs{max-width:1180px;margin:0 auto;padding:0 10px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.icon-btn:hover{background:rgba(255,255,255,.12)}
+.icon-btn.is-on{background:rgba(255,255,255,.18)}
+
+/* タブ。狭い画面では横に流れるので、端が切れていることが分かるよう
+   右側をうっすら透かし、指を離した位置で止まるようにする。 */
+.tabs{
+  max-width:1180px;margin:0 auto;padding:0 6px;display:flex;gap:0;
+  overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch;
+  -webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 22px),transparent 100%);
+  mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 22px),transparent 100%)
+}
+@media (min-width:760px){.tabs{-webkit-mask-image:none;mask-image:none}}
 .tabs::-webkit-scrollbar{display:none}
 .tab{
-  background:none;border:0;color:var(--chrome-sub);padding:9px 14px;font:inherit;font-size:.88rem;
-  cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap
+  background:none;border:0;color:var(--chrome-sub);padding:0 15px;height:44px;
+  font:inherit;font-size:.9rem;cursor:pointer;border-bottom:2.5px solid transparent;
+  white-space:nowrap;scroll-snap-align:center;flex:none
 }
 .tab:hover{color:var(--chrome-ink)}
 .tab.active{color:var(--chrome-ink);border-bottom-color:var(--brandmark);font-weight:600}
+
+/* 期間。横いっぱいの1段を与える。 */
+.filterbar{background:var(--chrome);border-top:1px solid rgba(255,255,255,.08)}
+.segmented{
+  max-width:1180px;margin:0 auto;padding:8px 12px 10px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:4px
+}
+.seg{
+  height:44px;   /* 指で押す的は最低44px。これより小さいと押し損ねる */border:0;border-radius:9px;background:rgba(255,255,255,.07);
+  color:var(--chrome-sub);font:inherit;font-size:.86rem;font-weight:600;cursor:pointer;
+  display:grid;place-items:center;transition:background .14s ease,color .14s ease
+}
+.seg:hover{background:rgba(255,255,255,.14);color:var(--chrome-ink)}
+.seg.is-on{background:var(--chrome-ink);color:var(--chrome)}
+@media (min-width:760px){
+  /* 画面が広ければ指ではなく矢印で押すので、横幅も高さも詰めてよい */
+  .segmented{grid-template-columns:repeat(4,minmax(0,96px));justify-content:start;padding:6px 12px 9px}
+  .seg{height:36px}
+  .icon-btn{width:38px;height:38px}
+}
 
 /* ---------- 骨格 ---------- */
 main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
@@ -380,56 +422,63 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 .verdict-table td .delta{margin-left:8px;font-weight:700}
 .verdict-table-wrap .hint{margin:8px 0 0}
 
-.next-title{margin:22px 0 10px;font-size:.95rem}
-.next-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-.next-no{
-  width:23px;height:23px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
-  display:grid;place-items:center;font-size:.76rem;font-weight:700;flex:none;margin-top:2px
-}
-.next-why{font-size:.82rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
-.mb{margin-bottom:14px}
+/* 診断の表は、スマホでも28日と90日を必ず両方見せる。
+   横スクロールの向こうに90日が隠れると、2つを見比べるという
+   この表の目的そのものが果たせなくなるため、文字を詰めて
+   ％を数字の下に回し、2列とも画面に収める。 */
 @media (max-width:640px){
-  .verdict{padding:17px 16px}
+  .verdict{padding:16px 14px}
   .verdict-title{font-size:1.12rem}
-  /* スマホでは28日と90日を必ず両方見せる。
-     横スクロールの向こうに90日が隠れると、2つを見比べるという
-     この表の目的そのものが果たせなくなるため、
-     文字を詰めて％を数字の下に回し、2列とも画面に収める。 */
   .verdict-table{min-width:0;font-size:.8rem}
-  .verdict-table thead th:first-child{width:5.4em}
+  .verdict-table thead th:first-child{width:5em}
   .verdict-table thead small{font-size:.62rem}
   .verdict-table tbody th{padding-right:4px;font-size:.78rem}
   .verdict-table td{padding:9px 0}
   .verdict-table td .delta{display:block;width:max-content;margin:3px 0 0 auto;font-size:.7rem}
-  .next-item{padding:12px 13px}
 }
 
-/* ---------- 「次にやること」の開閉 ----------
-   見出しと根拠の数字は常に見せ、やり方だけ畳む。
-   details/summary をそのまま使う（JSが動かなくても開き、
+/* ---------- 「次にやること」 ----------
+   畳んでいる間は中身を一切出さない。
+   まず「いまどうなっているか」を読み、そのうえで
+   「で、何をするのか」と思ったときに開く、という順番にしたいため。
+   details/summary をそのまま使う（JavaScriptが動かなくても開き、
    キーボードと読み上げでも同じ操作になる）。 */
-.next-item{
-  display:block;   /* details は箱として縦に積む。横並びにすると中身が潰れる */
-  border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel-2);overflow:hidden
+.next{margin-top:20px;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--panel-2)}
+.next-summary{
+  display:flex;align-items:center;gap:10px;padding:0 16px;min-height:52px;
+  cursor:pointer;list-style:none;user-select:none
 }
-.next-head{
-  display:flex;gap:12px;align-items:flex-start;padding:13px 15px;cursor:pointer;
-  list-style:none;user-select:none
+.next-summary::-webkit-details-marker{display:none}
+.next-summary:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.next-title{font-size:.98rem;font-weight:700;margin:0;flex:1}
+.next-count{
+  font-size:.73rem;font-weight:700;color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 14%,transparent);padding:2px 9px;border-radius:999px
 }
-.next-head::-webkit-details-marker{display:none}
-.next-head:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
-.next-item[open] .next-head{padding-bottom:6px}
-.next-lead{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
-.next-lead b{font-size:.93rem}
 .next-chev{
-  flex:none;width:9px;height:9px;margin:6px 2px 0 0;border-right:2px solid var(--muted);
-  border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .18s ease
+  flex:none;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:rotate(45deg);margin-top:-4px;transition:transform .18s ease
 }
-.next-item[open] .next-chev{transform:rotate(-135deg);margin-top:9px}
-.next-item .next-how{display:block;padding:0 15px 14px 50px;font-size:.82rem;color:var(--muted)}
-@media (max-width:640px){
-  .next-item .next-how{padding-left:15px}
+.next[open] .next-chev{transform:rotate(-135deg);margin-top:3px}
+.next-list{
+  list-style:none;margin:0;padding:2px 16px 16px;display:flex;flex-direction:column;gap:10px
 }
+/* details は閉じていれば中身を隠すが、直下の子に display を書くと
+   その指定が勝って隠れなくなる。閉じている間は明示的に消す。 */
+.next:not([open]) .next-list{display:none}
+.next-item{
+  display:flex;gap:12px;padding:13px 15px;border-radius:var(--r-sm);
+  background:var(--panel);border:1px solid var(--line)
+}
+.next-no{
+  width:23px;height:23px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+  display:grid;place-items:center;font-size:.76rem;font-weight:700;flex:none;margin-top:2px
+}
+.next-body{display:flex;flex-direction:column;gap:4px;min-width:0}
+.next-body b{font-size:.93rem}
+.next-why{font-size:.82rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.next-how{font-size:.82rem;color:var(--muted)}
+.mb{margin-bottom:14px}
 
 /* ---------- 収益 ---------- */
 .kpi-money{font-size:1.3rem}
@@ -442,3 +491,72 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 .scale-note{font-size:.72rem;color:var(--muted)}
 .scale-ext{margin-top:14px}
 .check code{font-family:var(--mono);font-size:.76rem;background:var(--panel);padding:1px 5px;border-radius:4px}
+
+/* ---------- スマホでの作り ----------
+   前提は「片手で、縦に読む」こと。横に流れる表と、
+   端に隠れる操作をなくす。 */
+
+/* 表を横スクロールさせない。
+   6列を狭い画面に押し込むと、指で横に送りながら読むことになり、
+   どの数字がどの動画のものか分からなくなる。1本ぶんを1枚の札にして縦に積む。 */
+@media (max-width:720px){
+  .table-scroll{overflow:visible}
+  .vtable{min-width:0;display:block}
+  .vtable thead{display:none}
+  .vtable tbody{display:flex;flex-direction:column;gap:8px;padding:10px}
+  .vtable tr{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;
+    border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel-2);padding:11px 12px
+  }
+  .vtable tbody tr:hover td{background:transparent}
+  .vtable td{border:0;padding:0}
+  .vtable .cell-title{grid-column:1 / -1;min-width:0;gap:11px;align-items:flex-start}
+  .vtable .cell-title img{width:84px;height:47px}   /* 小さすぎると何の動画か分からない */
+  .vtable .cell-title b{max-width:none;white-space:normal;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .vtable .num{
+    display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+    font-size:.86rem;padding:5px 0 0;border-top:1px solid var(--line-2)
+  }
+  .vtable .num::before{
+    content:attr(data-label);color:var(--muted);font-size:.72rem;font-weight:400;
+    font-variant-numeric:normal
+  }
+  .toolbar{flex-direction:column;gap:8px}
+  .toolbar .search-box,.toolbar .sortwrap,.toolbar .sortwrap select{width:100%;flex:none}
+}
+
+/* 指の届く範囲と、端末の切り欠き。
+   iPhone の下端はホームバーに隠れるので、その分を空ける。 */
+main{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))}
+.sheet-scroll{padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+.toast{bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+
+@media (max-width:640px){
+  main{padding-left:14px;padding-right:14px}
+  .panel{padding:15px 14px;border-radius:12px}
+  .panel-head{margin-bottom:10px}
+  h2{font-size:.98rem}
+  .kpi{padding:12px}
+  .kpi-value{font-size:1.3rem}
+  .kpi-money{font-size:1.16rem}
+  /* 押せるものは指1本ぶん（44px）を確保する */
+  .btn{padding:12px 18px;min-height:44px}
+  .vcard{padding:10px;min-height:56px}
+  .next-summary{min-height:56px}
+  .tab{padding:0 13px}
+}
+
+/* 点数の意味を、点数のすぐそばに置く。
+   数字だけ置いて「押せば分かる」にすると、押されないまま誤解される。 */
+.legend-note{
+  margin:10px 2px 0;font-size:.78rem;color:var(--muted);line-height:1.8
+}
+.legend-note b{color:var(--ink-2);font-size:.8rem}
+.legend-keys{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 6px;vertical-align:middle}
+.legend-keys .vscore{font-size:.7rem;padding:2px 6px;min-width:0;margin-left:4px}
+.legend-keys .vscore:first-child{margin-left:0}
+.vscore em{
+  display:block;font-style:normal;font-weight:600;font-size:.62rem;opacity:.85;margin-top:1px
+}
+#scoreLegend{margin-bottom:12px}
