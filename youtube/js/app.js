@@ -778,10 +778,27 @@
       Chart.fmtInt(s.views) + '回 ・ ' + fmtWatch(s.watch) + ' ・ 平均' + Chart.fmtDur(s.avg) +
       (s.subs ? ' ・ 登録＋' + Chart.fmtInt(s.subs) : '') +
       '</span></span>' +
-      (s.seo != null ? '<span class="vscore ' + scoreClass(s.seo) + '">' + s.seo + '</span>' : '') +
+      (s.seo != null ? '<span class="vscore ' + scoreClass(s.seo) + '" title="作りの点数 ' + s.seo +
+        '点（' + scoreWord(s.seo) + '）題名・説明文・タグの点検結果">' + s.seo + '</span>' : '') +
       '</button>';
   }
   function scoreClass(n) { return n >= 85 ? 'ok' : n >= 65 ? 'mid' : 'ng'; }
+  function scoreWord(n) { return n >= 85 ? '良好' : n >= 65 ? '要改善' : '要修正'; }
+  /* 点数だけ置かれても読めないので、どこにでも同じ説明を添える。 */
+  var SCORE_LEGEND =
+    '<b>「作りの点数」とは</b>　題名・説明文・タグの作りを100点満点で点検した結果です。' +
+    '視聴回数や人気とは関係ありません。' +
+    '<span class="legend-keys">' +
+    '<i class="vscore ok">85+</i>良好' +
+    '<i class="vscore mid">65-84</i>要改善' +
+    '<i class="vscore ng">〜64</i>要修正</span>' +
+    '動画を押すと、何が引っかかっているか（題名が長すぎる・章がない など）と、' +
+    'その理由が出ます。';
+  function paintLegend() {
+    ['scoreLegend', 'scoreLegend2'].forEach(function (id) {
+      var el = $(id); if (el) el.innerHTML = SCORE_LEGEND;
+    });
+  }
 
   function bindVideoClicks(host) {
     host.querySelectorAll('[data-id]').forEach(function (b) {
@@ -808,6 +825,7 @@
     }[sortBy];
     rows.sort(cmp);
 
+    paintLegend();
     $('videoRows').innerHTML = rows.length ? rows.map(function (s) {
       return '<tr data-id="' + esc(s.id) + '">' +
         '<td class="cell-title">' +
@@ -819,7 +837,10 @@
         '<td class="num" data-label="平均視聴時間">' + Chart.fmtDur(s.avg) + '</td>' +
         '<td class="num" data-label="平均視聴率">' + Chart.fmtPct(s.pct) + '</td>' +
         '<td class="num" data-label="登録者">' + (s.subs ? '＋' + Chart.fmtInt(s.subs) : '—') + '</td>' +
-        '<td class="num" data-label="点検">' + (s.seo != null ? '<span class="vscore ' + scoreClass(s.seo) + '">' + s.seo + '</span>' : '—') + '</td>' +
+        '<td class="num" data-label="作りの点数">' + (s.seo != null
+          ? '<span class="vscore ' + scoreClass(s.seo) + '" title="題名・説明文・タグの点検結果">' +
+            s.seo + '<em>' + scoreWord(s.seo) + '</em></span>'
+          : '—') + '</td>' +
         '</tr>';
     }).join('') : '<tr><td colspan="7"><p class="chart-empty">該当する動画がありません</p></td></tr>';
     bindVideoClicks($('videoRows'));
@@ -1084,8 +1105,10 @@
 
     var checks = s.audit ? s.audit.checks : [];
     $('sheetChecks').innerHTML =
-      (s.audit ? '<div class="score-head"><span class="vscore ' + scoreClass(s.audit.score) + '">' + s.audit.score + '</span>' +
-        '<span class="hint">100点満点。vidIQ のスコアとは別物で、公開されている作り方の指針だけで判定しています。</span></div>' : '') +
+      (s.audit ? '<div class="score-head"><span class="vscore ' + scoreClass(s.audit.score) + '">' +
+        s.audit.score + '<em>' + scoreWord(s.audit.score) + '</em></span>' +
+        '<span class="hint">題名・説明文・タグの作りを100点満点で点検した結果です。視聴回数や人気とは関係ありません。' +
+        'vidIQ のスコアとも別物で、公開されている作り方の指針だけで判定しています。</span></div>' : '') +
       checks.map(checkRow).join('');
 
     fill('sheetRetention', Api.report({

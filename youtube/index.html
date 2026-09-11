@@ -138,6 +138,7 @@
     <div class="panel">
       <div class="panel-head"><h2>この期間に伸びた動画</h2><span class="hint">期間内の視聴回数順</span></div>
       <div id="topVideos" class="vlist"></div>
+      <p class="legend-note" id="scoreLegend2"></p>
     </div>
 
     <div class="panel">
@@ -205,12 +206,13 @@
         </select>
       </label>
     </div>
+    <p class="legend-note" id="scoreLegend"></p>
     <div class="panel panel-flush">
       <div class="table-scroll">
         <table class="vtable">
           <thead><tr>
             <th>動画</th><th class="num">視聴回数</th><th class="num">総再生時間</th>
-            <th class="num">平均視聴時間</th><th class="num">平均視聴率</th><th class="num">登録者</th><th class="num">点検</th>
+            <th class="num">平均視聴時間</th><th class="num">平均視聴率</th><th class="num">登録者</th><th class="num">作りの点数</th>
           </tr></thead>
           <tbody id="videoRows"></tbody>
         </table>
