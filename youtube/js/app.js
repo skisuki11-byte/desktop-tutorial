@@ -183,9 +183,9 @@
       S = { channel: null, videos: {}, period: {}, loaded: {}, view: 'setup' };
       $('tabs').hidden = true; $('filterbar').hidden = true;
       $('btnReload').hidden = true; $('btnSettings').hidden = true;
+      document.querySelector('.brand-text').classList.remove('is-connected');
       $('brandTitle').textContent = 'チャンネル分析';
       $('brandSub').textContent = '未接続';
-      clearInterval(S.subsTimer); S.subsTimer = null;
       show('setup');
       toast('接続を解除しました。');
     });
@@ -255,35 +255,33 @@
      何度も取り直しているだけで、1人単位では動かない。
      そのため、ここでは丸めた値に加えて、
      正確に取れる「直近28日の純増」を並べて出す。 */
+  /* 上部の表示。つないだあとは、アプリ名より「いま何人か」のほうが
+     知りたい情報なので、チャンネル名を小さい行に下げ、
+     登録者数をいちばん大きい字にする。
+
+     ▼ 取り直さない理由
+     YouTube は2019年から、APIで返す登録者数を上位3桁に丸めている。
+     12,437人なら 12,400 と返り、これは所有者が自分のチャンネルを見ても同じ。
+     つまり何分おきに取り直しても数字は動かない。
+     通信と1日の利用枠を使うだけなので、つないだ時点の値をそのまま出す。
+     取り直したいときは上の「↻」を押せばよい。
+     右に添える直近28日の純増のほうは、丸められていない正確な値。 */
   function renderBrand() {
     if (!S.channel) return;
     var st = S.channel.statistics || {};
+    var box = document.querySelector('.brand-text');
+    box.classList.add('is-connected');
+
     $('brandTitle').textContent = S.channel.snippet.title;
-    var subs = Number(st.subscriberCount || 0);
-    var html = '登録者 <b>' + Chart.fmtInt(subs) + '</b>';
+    var html = '<b>' + Chart.fmtInt(Number(st.subscriberCount || 0)) + '</b><span class="brand-unit">人</span>';
     if (S.subsDelta != null) {
       html += '<span class="brand-delta ' + (S.subsDelta >= 0 ? 'up' : 'down') + '">' +
         (S.subsDelta >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(S.subsDelta)) + '</span>';
     }
     var sub = $('brandSub');
     sub.innerHTML = html;
-    sub.title = 'YouTube は登録者数を上位3桁に丸めて返します（正確な数は YouTube Studio でのみ確認できます）。' +
+    sub.title = '登録者数。YouTube は上位3桁に丸めて返すため、正確な数は YouTube Studio でのみ確認できます。' +
       '右の数字は直近28日の純増で、こちらは正確な値です。';
-  }
-
-  /* 登録者数を取り直す。開いている間だけ動かし、隠れていたら休む。 */
-  function startSubsWatch() {
-    if (S.subsTimer) return;
-    S.subsTimer = setInterval(function () {
-      if (document.hidden || !S.channel) return;
-      Api.data('channels', { part: 'statistics', mine: 'true', _t: Math.floor(Date.now() / 120000) })
-        .then(function (res) {
-          var it = res.items && res.items[0];
-          if (!it) return;
-          S.channel.statistics = it.statistics;
-          renderBrand();
-        }).catch(function () {});
-    }, 120000);   // 2分おき。丸めた値なので、これ以上細かく見ても動かない
   }
 
   function applyTheme() {
@@ -374,7 +372,6 @@
       var rows = Api.rows(r[0]);
       S.subsDelta = sum(rows, 'subscribersGained') - sum(rows, 'subscribersLost');
       renderBrand();
-      startSubsWatch();
       renderDash(rows, Api.rows(r[1]), p);
       loadInsight();           // 上段の診断。失敗してもここで止めない
       return loadVideos();     // 概要の下段でも動画を使う
