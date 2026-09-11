@@ -391,7 +391,23 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 .verdict-ok{border-left-color:var(--accent)}
 .verdict-warn{border-left-color:var(--warn)}
 .verdict-bad{border-left-color:var(--bad)}
-.verdict-head{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:8px}
+/* 畳んだときに見えるのは判定と一言だけ。三角を押すと理由と表が出る。 */
+.vbox{margin:0}
+.verdict-summary{display:block;cursor:pointer;list-style:none;user-select:none;padding:2px 0}
+.verdict-summary::-webkit-details-marker{display:none}
+.verdict-summary:hover .verdict-title{text-decoration:underline;text-underline-offset:3px}
+.verdict-head{display:flex;align-items:center;gap:11px;flex-wrap:nowrap;margin-bottom:6px}
+.verdict-chev{
+  flex:none;width:10px;height:10px;margin-left:auto;margin-top:-4px;
+  border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);
+  transform:rotate(45deg);transition:transform .18s ease
+}
+.vbox[open] .verdict-chev{transform:rotate(-135deg);margin-top:3px}
+.verdict-one{display:block;color:var(--ink-2);font-size:.92rem}
+.verdict-detail{margin:14px 0 16px;color:var(--muted);font-size:.87rem;max-width:46em}
+/* details の中身は既定で隠れるが、直下の子に display を書くと
+   その指定が勝って隠れなくなる。閉じている間は明示的に消す。 */
+.vbox:not([open]) .verdict-body{display:none}
 .verdict-badge{
   font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;
   background:var(--info-bg);color:var(--info);flex:none;letter-spacing:.04em
@@ -400,8 +416,7 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 .verdict-ok .verdict-badge{background:var(--info-bg);color:var(--accent)}
 .verdict-warn .verdict-badge{background:var(--warn-bg);color:var(--warn)}
 .verdict-bad .verdict-badge{background:var(--bad-bg);color:var(--bad)}
-.verdict-title{font-size:1.3rem;letter-spacing:-.01em}
-.verdict-summary{margin:0 0 18px;color:var(--ink-2);font-size:.92rem;max-width:46em}
+.verdict-title{font-size:1.3rem;letter-spacing:-.01em;font-weight:700;min-width:0}
 
 .verdict-table-wrap{overflow-x:auto}
 .verdict-table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:420px}
@@ -443,7 +458,7 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
    「で、何をするのか」と思ったときに開く、という順番にしたいため。
    details/summary をそのまま使う（JavaScriptが動かなくても開き、
    キーボードと読み上げでも同じ操作になる）。 */
-.next{margin-top:20px;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--panel-2)}
+.next{margin-top:18px;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--panel-2)}
 .next-summary{
   display:flex;align-items:center;gap:10px;padding:0 16px;min-height:52px;
   cursor:pointer;list-style:none;user-select:none

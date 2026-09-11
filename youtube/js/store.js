@@ -88,6 +88,15 @@
     nextOpen: function () { return cfg.nextOpen === true; },
     setNextOpen: function (v) { cfg.nextOpen = !!v; write(K_CFG, cfg); },
 
+    /* 一度でもつなげたか。次からは同意画面を出さずに黙って取り直すため。
+       トークンそのものは保存しない（保存するのは「前に通った」という事実だけ）。 */
+    everConnected: function () { return cfg.everConnected === true; },
+    setEverConnected: function (v) { cfg.everConnected = !!v; write(K_CFG, cfg); },
+
+    /* 判定の詳しい説明と28日／90日の表を開いた状態で終えたか。既定は閉じた状態。 */
+    verdictOpen: function () { return cfg.verdictOpen === true; },
+    setVerdictOpen: function (v) { cfg.verdictOpen = !!v; write(K_CFG, cfg); },
+
     theme: function () { return cfg.theme || 'auto'; },
     setTheme: function (v) { cfg.theme = v; write(K_CFG, cfg); },
 

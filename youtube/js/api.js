@@ -75,6 +75,7 @@
                 // 実際に下りた権限を見る。求めても断られることがあるため、
                 // 「求めた」ではなく「下りた」で判断する。
                 money = String(res.scope || '').indexOf(MONEY) >= 0;
+                global.Store.setEverConnected(true);
                 resolve(token);
               } else {
                 reject(new Error('ログインを完了できませんでした。'));
@@ -153,8 +154,26 @@
     scopes: function () { return scopes(money); },
 
     connected: function () { return !!token; },
-    /* 画面の「つなぐ」ボタンから。ここだけ同意画面を出す。 */
-    connect: function () { return requestToken(true); },
+
+    /* 画面の「つなぐ」ボタンから。
+       一度許してもらったあとは、同意画面を出さずに取り直せる。
+       毎回わざわざ押させ直す理由がないので、まず黙って試し、
+       だめだったときだけ同意画面を出す。 */
+    connect: function () {
+      if (!global.Store.everConnected()) return requestToken(true);
+      return requestToken(false).catch(function () { return requestToken(true); });
+    },
+
+    /* 画面を開いた直後に、黙ってつなぎ直す。
+       Google 側に「この人はもう許可済み」と分かる状態が残っていれば、
+       何も出さずにトークンが下りる。残っていなければ失敗するので、
+       そのときだけ「つなぐ」ボタンを見せる。 */
+    resume: function () {
+      if (!global.Store.clientId() || !global.Store.everConnected()) {
+        return Promise.reject(new Error('NOT_YET'));
+      }
+      return requestToken(false);
+    },
 
     /* 収益を見る権限を持っているか */
     hasMoney: function () { return money; },
