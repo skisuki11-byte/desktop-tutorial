@@ -22,5 +22,5 @@
 window.YTLAB_CONFIG = {
   // Google Cloud で作った「ウェブ アプリケーション」のクライアントID。
   // 例: '000000000000-xxxxxxxxxxxx.apps.googleusercontent.com'
-  clientId: ''
+  clientId: '128161798962-pdhlsrgs80vjuhmvbncivpgqdtt53umk.apps.googleusercontent.com'
 };
