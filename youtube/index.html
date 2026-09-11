@@ -46,6 +46,7 @@
     <button class="tab" data-view="videos">動画</button>
     <button class="tab" data-view="traffic">流入</button>
     <button class="tab" data-view="audience">視聴者</button>
+    <button class="tab" data-view="revenue">収益</button>
     <button class="tab" data-view="audit">診断</button>
     <button class="tab" data-view="settings">設定</button>
   </nav>
@@ -133,6 +134,53 @@
     <div class="panel">
       <div class="panel-head"><h2>この期間に伸びた動画</h2><span class="hint">期間内の視聴回数順</span></div>
       <div id="topVideos" class="vlist"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>チャンネルの規模</h2><span class="hint">累計の数字</span></div>
+      <div id="scale"></div>
+    </div>
+  </section>
+
+  <!-- ============ 収益 ============ -->
+  <section id="view-revenue" class="view">
+    <div id="revenueGate" class="panel">
+      <div class="panel-head"><h2>収益</h2></div>
+      <p class="lead">
+        推定収益・広告収益・YouTube Premium からの収益・RPM・CPM を、YouTube 公式のデータで表示します。
+      </p>
+      <div class="check check-info">
+        <span class="check-mark" aria-hidden="true">i</span>
+        <div class="check-body">
+          <b>読み込むには、もう一度だけ同意が必要です</b>
+          <span class="check-why">
+            お金の情報は別の権限（<code>yt-analytics-monetary.readonly</code>）になっています。
+            最初からまとめて求めると、収益化していないチャンネルにも要らない同意を強いることになるため、
+            見たいと押されたときだけ求める作りにしています。こちらも読み取り専用です。
+          </span>
+        </div>
+      </div>
+      <div class="btn-row mt">
+        <button class="btn btn-primary" id="btnEnableMoney" type="button">収益データを読み込む</button>
+      </div>
+      <p class="error-box" id="revenueError" hidden></p>
+    </div>
+
+    <div id="revenueBody" hidden>
+      <div class="range-note" id="revRangeNote"></div>
+      <div class="kpis" id="revKpis"></div>
+      <div class="panel">
+        <div class="panel-head"><h2>推定収益の推移</h2></div>
+        <div class="chart-box" id="chartRevenue"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>動画別の推定収益</h2><span class="hint">期間内の収益順</span></div>
+        <div id="revVideos"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>数字の出し方</h2></div>
+        <div id="revNotes" class="checks"></div>
+      </div>
     </div>
   </section>
 

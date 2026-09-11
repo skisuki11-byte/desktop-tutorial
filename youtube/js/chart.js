@@ -24,12 +24,36 @@
 
   /* ---------- 数の見せ方 ---------- */
   function fmtInt(v) { return Math.round(v).toLocaleString('ja-JP'); }
+  /* 1万以上は「万・億」で縮める。1万未満はそのまま出す。
+     以前は1000以上を「k」にしていたが、5,000が「5.0k」で
+     50,000が「5.0万」という不統一な並びになり、桁を読み違える。
+     日本語の画面なので単位は万・億に統一する。 */
   function fmtAxis(v) {
     var a = Math.abs(v);
-    if (a >= 100000000) return (v / 100000000).toFixed(a % 100000000 ? 1 : 0) + '億';
-    if (a >= 10000) return (v / 10000).toFixed(a >= 100000 ? 0 : 1) + '万';
-    if (a >= 1000) return (v / 1000).toFixed(a >= 10000 ? 0 : 1) + 'k';
-    return String(Math.round(v));
+    // 小数を出すかは「割ったあとの値」で決める。割る前の値で決めると
+    // 99,999 が「10.0万」、100,000 が「10万」と不揃いになる。
+    var unit = function (x, u) {
+      return (Math.abs(x) >= 10 ? Math.round(x) : Math.round(x * 10) / 10) + u;
+    };
+    if (a >= 100000000) return unit(v / 100000000, '億');
+    if (a >= 10000) return unit(v / 10000, '万');
+    return Math.round(v).toLocaleString('ja-JP');
+  }
+
+  /* お金。円は小数を出さない（1円未満まで見せても判断が変わらないため）。
+     ドルなどは額が小さいと 0 に潰れてしまうので、100未満のときだけ小数2桁を残す。 */
+  function fmtMoney(v, cur) {
+    var n = Number(v) || 0;
+    cur = cur || 'JPY';
+    var dec = (cur === 'JPY' || Math.abs(n) >= 100) ? 0 : 2;
+    try {
+      return n.toLocaleString('ja-JP', {
+        style: 'currency', currency: cur,
+        minimumFractionDigits: dec, maximumFractionDigits: dec
+      });
+    } catch (e) {
+      return n.toFixed(dec) + ' ' + cur;
+    }
   }
   function fmtPct(v) { return (Math.round(v * 10) / 10) + '%'; }
   function fmtDur(sec) {
@@ -350,6 +374,7 @@
 
   global.Chart = {
     line: line, hbar: hbar, delta: delta, retention: retention, spark: spark,
-    fmtInt: fmtInt, fmtAxis: fmtAxis, fmtPct: fmtPct, fmtDur: fmtDur, esc: esc
+    fmtInt: fmtInt, fmtAxis: fmtAxis, fmtPct: fmtPct, fmtDur: fmtDur,
+    fmtMoney: fmtMoney, esc: esc
   };
 })(window);
