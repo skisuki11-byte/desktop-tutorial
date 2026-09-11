@@ -12,6 +12,7 @@
 
   var K_CFG = 'ytlab.config.v1';
   var K_CACHE = 'ytlab.cache.v1';
+  var K_TOKEN = 'ytlab.token.v1';
   var CACHE_TTL = 30 * 60 * 1000;   // 30分。分析値は1日1回しか更新されないので十分
   var CACHE_MAX = 120;              // 貯めすぎると localStorage の上限に当たる
 
@@ -88,10 +89,46 @@
     nextOpen: function () { return cfg.nextOpen === true; },
     setNextOpen: function (v) { cfg.nextOpen = !!v; write(K_CFG, cfg); },
 
-    /* 一度でもつなげたか。次からは同意画面を出さずに黙って取り直すため。
-       トークンそのものは保存しない（保存するのは「前に通った」という事実だけ）。 */
+    /* 一度でもつなげたか。 */
     everConnected: function () { return cfg.everConnected === true; },
     setEverConnected: function (v) { cfg.everConnected = !!v; write(K_CFG, cfg); },
+
+    /* ---------- ログイン状態を保つ ----------
+       以前は「前に通った」という事実だけを覚え、開くたびに Google へ
+       黙って取り直しに行っていた。ところがこの取り直しは、
+       スマホのブラウザ（とくにアプリ内ブラウザや、追跡防止が強い設定）では
+       しばしば拒まれる。結果として毎回ログインになっていた。
+
+       そこで、下りた通行証そのものを期限つきで端末に置く。
+       期限内に開き直したときは、Google に一度も問い合わせずそのまま読める。
+
+       ▼ 承知しておくこと
+       ・置き場所はこの端末のこのサイト専用の領域で、他のサイトからは読めない
+       ・権限は読み取り専用の2つ（＋収益を見たなら3つ）だけ。
+         これを持っていても、動画の投稿・変更・削除はできない
+       ・約1時間で自動的に切れる。切れたら捨てて取り直す
+       ・気になる場合は設定で止められる。止めると以前と同じ動きに戻る */
+    keepSignedIn: function () { return cfg.keepSignedIn !== false; },
+    setKeepSignedIn: function (v) {
+      cfg.keepSignedIn = !!v;
+      write(K_CFG, cfg);
+      if (!v) this.clearToken();
+    },
+    saveToken: function (token, expiresInSec, money) {
+      if (!this.keepSignedIn()) return;
+      // 期限ぎりぎりで使うと通信の途中で切れるので、1分手前で切れた扱いにする
+      var exp = Date.now() + (Number(expiresInSec) || 3600) * 1000 - 60000;
+      write(K_TOKEN, { t: token, exp: exp, m: !!money });
+    },
+    loadToken: function () {
+      if (!this.keepSignedIn()) return null;
+      var v = read(K_TOKEN, null);
+      if (!v || !v.t || !(v.exp > Date.now())) { this.clearToken(); return null; }
+      return v;
+    },
+    clearToken: function () {
+      try { localStorage.removeItem(K_TOKEN); } catch (e) {}
+    },
 
     /* 判定の詳しい説明と28日／90日の表を開いた状態で終えたか。既定は閉じた状態。 */
     verdictOpen: function () { return cfg.verdictOpen === true; },
@@ -124,7 +161,11 @@
 
     reset: function () {
       cfg = {}; cache = {};
-      try { localStorage.removeItem(K_CFG); localStorage.removeItem(K_CACHE); } catch (e) {}
+      try {
+        localStorage.removeItem(K_CFG);
+        localStorage.removeItem(K_CACHE);
+        localStorage.removeItem(K_TOKEN);
+      } catch (e) {}
     }
   };
 })(window);
