@@ -169,7 +169,8 @@
       Store.cacheClear(); S.loaded = {}; toast('貯めたデータを消しました。');
     });
     $('btnDisconnect').addEventListener('click', function () {
-      Api.disconnect(); Store.cacheClear(); S = { channel: null, videos: {}, period: {}, loaded: {}, view: 'setup' };
+      Api.disconnect(); Store.cacheClear(); Store.setEverConnected(false);
+      S = { channel: null, videos: {}, period: {}, loaded: {}, view: 'setup' };
       $('tabs').hidden = true; $('filterbar').hidden = true;
       $('btnReload').hidden = true; $('btnSettings').hidden = true;
       $('brandSub').textContent = '未接続';
@@ -213,6 +214,20 @@
       var on = b.dataset.days === now;
       b.classList.toggle('is-on', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  /* 開いた直後に、黙ってつなぎ直す。
+     前に許可してあれば、そのまま概要まで進む。
+     だめだったときは何も言わずに「つなぐ」の画面を出す
+     （失敗を知らせても、押す場所は同じなので邪魔になるだけ）。 */
+  function autoConnect() {
+    if (!Store.clientId() || !Store.everConnected()) return;
+    busy(true, '前回の接続で読み込んでいます…');
+    Api.resume().then(function () {
+      return loadDash(false);
+    }).catch(function () {
+      busy(false);
     });
   }
 
@@ -451,25 +466,32 @@
         '<td>' + metricValue(m.b, m.kind) + deltaTag(m.bp) + '</td></tr>';
     }).join('');
 
+    /* 畳んだときに見えるのは「判定」と「一言」だけ。
+       理由と数字の表は、押したときに出す。
+       開くたびに毎回スクロールさせないための作り。 */
     host.innerHTML =
       '<div class="verdict verdict-' + ins.level + '">' +
-      '<div class="verdict-head">' +
-      '<span class="verdict-badge">' + badge + '</span>' +
-      '<h2 class="verdict-title">' + esc(ins.title) + '</h2>' +
-      '</div>' +
-      '<p class="verdict-summary">' + esc(ins.summary) + '</p>' +
 
+      '<details class="vbox"' + (Store.verdictOpen() ? ' open' : '') + ' id="verdictBox">' +
+      '<summary class="verdict-summary">' +
+      '<span class="verdict-head">' +
+      '<span class="verdict-badge">' + badge + '</span>' +
+      '<span class="verdict-title">' + esc(ins.title) + '</span>' +
+      '<span class="verdict-chev" aria-hidden="true"></span>' +
+      '</span>' +
+      '<span class="verdict-one">' + esc(ins.one) + '</span>' +
+      '</summary>' +
+
+      '<div class="verdict-body">' +
+      '<p class="verdict-detail">' + esc(ins.detail) + '</p>' +
       '<div class="verdict-table-wrap"><table class="verdict-table">' +
       '<thead><tr><th></th><th>直近28日<small>' + w28.start.slice(5) + '〜' + w28.end.slice(5) + '</small></th>' +
       '<th>直近90日<small>' + w90.start.slice(5) + '〜' + w90.end.slice(5) + '</small></th></tr></thead>' +
       '<tbody>' + rows + '</tbody></table>' +
       '<p class="hint">％はそれぞれ「直前の同じ長さの期間」との比較です。</p></div>' +
+      '</div></details>' +
 
-      /* 「次にやること」はひとまとめで開閉する。
-         畳んでいる間は、いま何をすべきかの見出しすら出さない。
-         状態の判定を読んだうえで「で、何をするのか」と思ったときに開く、
-         という順番にしたいため。開いたら3つとも最後まで出す。 */
-      '<details class="next" id="nextBox"' + (openNext() ? ' open' : '') + '>' +
+      '<details class="next" id="nextBox"' + (Store.nextOpen() ? ' open' : '') + '>' +
       '<summary class="next-summary">' +
       '<span class="next-title">次にやること</span>' +
       '<span class="next-count">' + ins.actions.length + '件</span>' +
@@ -486,13 +508,12 @@
       }).join('') + '</ol></details>' +
       '</div>';
 
-    var box = $('nextBox');
-    if (box) box.addEventListener('toggle', function () { Store.setNextOpen(box.open); });
+    // 開いたか閉じたかはこの端末に覚える。毎回開き直すのは手間になるため。
+    var vb = $('verdictBox');
+    if (vb) vb.addEventListener('toggle', function () { Store.setVerdictOpen(vb.open); });
+    var nb = $('nextBox');
+    if (nb) nb.addEventListener('toggle', function () { Store.setNextOpen(nb.open); });
   }
-
-  /* 開いたか閉じたかはこの端末に覚えておく。
-     毎回開き直す／毎回畳み直すのは、どちらも使う人の手間になるため。 */
-  function openNext() { return Store.nextOpen(); }
 
   function metricValue(v, kind) {
     if (kind === 'watch') return fmtWatch(v);
@@ -681,14 +702,7 @@
       '<div class="scale-ext">' +
       '<a class="btn btn-ghost" href="https://socialblade.com/youtube/channel/' + esc(id) +
       '" target="_blank" rel="noopener">Social Blade で順位を見る ↗</a>' +
-      '</div>' +
-      '<p class="note">' +
-      '<b>世界ランク・国別ランク・カテゴリ別ランクをこの画面に出すことはできません。</b>' +
-      'Social Blade は無料の公開APIを出しておらず（順位を取るには有料の Business API が必要）、' +
-      'サイトの中身をブラウザから直接読むことも、向こう側の設定で塞がれているためです。' +
-      'サーバーを1つ用意すれば回避できますが、このアプリは置くだけで動く作りにしてあるので、' +
-      '順位はボタンから本家を開いて見てください。' +
-      'なお上の登録者数・総再生回数は、Social Blade の推定値ではなく YouTube 公式の値です。</p>';
+      '</div>';
   }
   function scaleCell(label, value, note) {
     return '<div class="scale-cell"><span class="scale-label">' + esc(label) + '</span>' +
@@ -1170,6 +1184,7 @@
   }
 
   boot();
+  autoConnect();
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(function () {});
