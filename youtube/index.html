@@ -104,6 +104,7 @@
 
   <!-- ============ 概要 ============ -->
   <section id="view-dash" class="view">
+    <div id="insight"></div>
     <div class="range-note" id="rangeNote"></div>
     <div class="kpis" id="kpis"></div>
 
@@ -242,6 +243,7 @@
         秘密の値ではありませんが、この端末の中にだけ保存します。作り方は
         <a href="README.md">README</a> の手順1〜4にあります。
       </p>
+      <div id="idStatus" class="checks mb"></div>
       <div class="field">
         <input type="text" id="clientId" class="input" placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com" spellcheck="false">
         <button class="btn btn-primary" id="btnSaveId" type="button">保存</button>
@@ -287,10 +289,12 @@
 <div class="toast" id="toast" hidden></div>
 <div class="loading" id="loading" hidden><div class="spinner"></div><span id="loadingText">読み込んでいます…</span></div>
 
+<script src="config.js"></script>
 <script src="js/store.js"></script>
 <script src="js/api.js"></script>
 <script src="js/chart.js"></script>
 <script src="js/seo.js"></script>
+<script src="js/insight.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
