@@ -205,12 +205,28 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
 @media (max-width:1024px){.kpis{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);position:relative;overflow:hidden}
-.kpi-label{font-size:.75rem;color:var(--muted);margin-bottom:5px}
-.kpi-value{font-size:1.42rem;font-weight:700;line-height:1.2;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.kpi{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;align-items:stretch;text-align:left;
+  font:inherit;color:inherit;cursor:pointer;width:100%;
+  transition:border-color .14s ease,transform .08s ease
+}
+.kpi:hover{border-color:var(--accent)}
+.kpi:active{transform:scale(.985)}
+/* 押せることが分かるよう、右上に小さな印を出す。
+   数字だけ並んでいると、触れるものだと気づかれない。 */
+.kpi-more{
+  position:absolute;top:12px;right:12px;width:7px;height:7px;
+  border-right:2px solid var(--muted);border-top:2px solid var(--muted);
+  transform:rotate(45deg);opacity:.55
+}
+.kpi:hover .kpi-more{border-color:var(--accent);opacity:1}
+.kpi-label{font-size:.75rem;color:var(--muted);margin-bottom:5px;display:block;padding-right:14px}
+.kpi-value{display:block;font-size:1.42rem;font-weight:700;line-height:1.2;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 .kpi-foot{margin-top:5px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-height:19px}
 .kpi-note{font-size:.72rem;color:var(--muted)}
-.kpi-spark{margin-top:8px;height:28px;opacity:.55}
+.kpi-spark{display:block;margin-top:8px;height:28px;opacity:.55}
 .delta{font-size:.74rem;font-weight:700;padding:1px 6px;border-radius:5px}
 .delta.up{color:var(--good);background:var(--good-bg)}
 .delta.down{color:var(--bad);background:var(--bad-bg)}
@@ -605,3 +621,20 @@ main{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))}
 .switch-body{display:flex;flex-direction:column;gap:4px;min-width:0}
 .switch-body b{font-size:.9rem}
 .switch-note{font-size:.81rem;color:var(--muted)}
+
+/* ---------- 数字カードを押したときの中身 ---------- */
+.mhead{margin-bottom:6px}
+.mbig{font-size:2rem;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
+.mcmp{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:6px 0 2px}
+.mhead .hint{margin:4px 0 0}
+.mstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:9px;margin:14px 0 2px}
+.mstat{
+  display:flex;flex-direction:column;gap:2px;padding:10px 12px;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm)
+}
+.mstat span{font-size:.72rem;color:var(--muted)}
+.mstat b{font-size:1rem;font-variant-numeric:tabular-nums}
+.mval{
+  flex:none;font-size:.86rem;font-weight:700;font-variant-numeric:tabular-nums;
+  color:var(--ink);white-space:nowrap
+}
