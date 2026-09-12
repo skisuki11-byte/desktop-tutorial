@@ -203,6 +203,48 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 /* ---------- 数字カード ---------- */
 .range-note{margin:0 0 14px;font-size:.85rem;color:var(--ink-2)}
 .range-note .hint{display:block}
+
+/* ---------- 直近の速報値 ----------
+   確定値（KPIカード・判定・グラフ）とは、はっきり見た目を分ける。
+   同じ見た目で並べると、確定していない数字が確定値と同格に見えてしまう。
+   淡い枠だけで囲み、地の色は付けない。 .next/.lens と同じ details/summary。 */
+.prov{margin:0 0 16px;border:1px dashed var(--line);border-radius:var(--r-sm)}
+.prov-summary{
+  display:flex;align-items:center;gap:10px;padding:0 16px;min-height:48px;
+  cursor:pointer;list-style:none;user-select:none
+}
+.prov-summary::-webkit-details-marker{display:none}
+.prov-summary:hover{background:color-mix(in srgb,var(--muted) 6%,transparent)}
+.prov-title{font-size:.9rem;font-weight:700;color:var(--ink-2);margin:0;flex:1}
+.prov-badge{
+  font-size:.68rem;font-weight:700;color:var(--warn);
+  background:var(--warn-bg);padding:2px 8px;border-radius:999px
+}
+.prov-chev{
+  flex:none;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:rotate(45deg);margin-top:-4px;transition:transform .18s ease
+}
+.prov[open] .prov-chev{transform:rotate(-135deg);margin-top:3px}
+.prov-body{padding:2px 16px 14px}
+.prov:not([open]) .prov-body{display:none}
+.prov-note{font-size:.78rem;color:var(--muted);line-height:1.6;margin:0 0 10px}
+.prov-note b{color:var(--ink-2)}
+.prov-list{display:flex;flex-direction:column;gap:6px}
+.prov-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 10px;background:var(--panel-2);border-radius:var(--r-sm);flex-wrap:wrap
+}
+.prov-date{font-size:.78rem;color:var(--muted);flex:none;white-space:nowrap}
+.prov-date em{
+  font-style:normal;margin-left:6px;font-size:.68rem;font-weight:700;color:var(--warn);
+  background:var(--warn-bg);padding:1px 6px;border-radius:999px
+}
+.prov-nums{display:flex;align-items:baseline;gap:10px;font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.prov-nums b{font-size:.9rem;font-weight:700;color:var(--ink)}
+.prov-nums i{font-style:normal;font-size:.78rem;color:var(--muted)}
+@media (max-width:480px){
+  .prov-row{flex-direction:column;align-items:flex-start;gap:4px}
+}
 /* カードは7枚ある。6列だと1枚が浮くので、列は4にして
    先頭の「登録への転換」だけ幅を2つぶん取らせ、どの幅でも端が揃うようにする。
      4列 … (2+2) ＋ 4   3列 … 3 ＋ 3 ＋ 3   2列 … 2 ＋ 2×3

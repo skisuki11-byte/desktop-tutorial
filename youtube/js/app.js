@@ -51,6 +51,15 @@
   }
   function period() { return windowOf(Store.days()); }
 
+  /* 「確定した数字」の締めより後ろ、いままだ集計が動いている日。
+     LAG_DAYS ぶん（既定3日）。いちばん最後（今日）はまだ1日が終わっていないので、
+     他の2日と違う注意を添える。 */
+  function provisionalWindow() {
+    var end = new Date();
+    var start = shift(end, -(LAG_DAYS - 1));
+    return { start: ymd(start), end: ymd(end), today: ymd(end) };
+  }
+
   /* ========== 見せ方の共通部品 ========== */
   function fmtWatch(min) {
     if (min >= 60000) return Math.round(min / 60).toLocaleString('ja-JP') + '時間';
@@ -423,6 +432,7 @@
       renderBrand();
       renderDash(rows, Api.rows(r[1]), p);
       loadInsight();           // 上段の診断。失敗してもここで止めない
+      loadProvisional();       // 直近の速報値。失敗してもここで止めない
       return loadVideos();     // 概要の下段でも動画を使う
     }).catch(function (e) {
       if (S.channel) { toast(e.message); }
@@ -432,6 +442,69 @@
         show('setup');
       }
     }).then(function () { busy(false); });
+  }
+
+  /* ========== 直近の速報値 ==========
+     確定した数字（直近3日を除いたもの）だけを見せる設計は変えない。
+     判定やグラフがこの3日でブレると、あとから数字が増えて
+     「減った」ように誤読される事故が起きるため。
+
+     ただし「いまの勢い」を知りたいことはある。そこで、確定値とは
+     はっきり分けた別枠に、未確定のまま速報として出す。
+     ・判定にも「次にやること」にも一切使わない
+     ・畳んだ状態で始める（確定値ではないので、見るかどうかは人による）
+     ・失敗してもここだけ黙って消える（他の枠を巻き込まない） */
+  function loadProvisional() {
+    var host = $('provisional');
+    if (!host) return;
+    var w = provisionalWindow();
+    Api.report({ startDate: w.start, endDate: w.end, dimensions: 'day', metrics: DAILY })
+      .then(function (res) { renderProvisional(host, Api.rows(res), w); })
+      .catch(function () { host.innerHTML = ''; });   // 取れないときは何も出さない
+  }
+
+  function renderProvisional(host, rows, w) {
+    if (!rows.length) { host.innerHTML = ''; return; }
+    var byDay = {};
+    rows.forEach(function (r) { byDay[r.day] = r; });
+
+    var days = [];
+    for (var d = new Date(w.start + 'T00:00:00'); ymd(d) <= w.end; d.setDate(d.getDate() + 1)) {
+      days.push(ymd(d));
+    }
+
+    var list = days.map(function (day) {
+      var r = byDay[day] || {};
+      var isToday = day === w.today;
+      return '<div class="prov-row">' +
+        '<span class="prov-date">' + day.slice(5).replace('-', '/') +
+        (isToday ? '<em>本日</em>' : '') + '</span>' +
+        '<span class="prov-nums">' +
+        '<b>' + Chart.fmtInt(Number(r.views) || 0) + '</b>回' +
+        '<i>' + fmtWatch(Number(r.estimatedMinutesWatched) || 0) + '</i>' +
+        '<i>' + ((Number(r.subscribersGained) || 0) - (Number(r.subscribersLost) || 0) >= 0 ? '＋' : '−') +
+        Chart.fmtInt(Math.abs((Number(r.subscribersGained) || 0) - (Number(r.subscribersLost) || 0))) + '人</i>' +
+        '</span></div>';
+    }).join('');
+
+    host.innerHTML =
+      '<details class="prov" id="provBox"' + (Store.provisionalOpen() ? ' open' : '') + '>' +
+      '<summary class="prov-summary">' +
+      '<span class="prov-title">直近の速報値</span>' +
+      '<span class="prov-badge">未確定</span>' +
+      '<span class="prov-chev" aria-hidden="true"></span>' +
+      '</summary>' +
+      '<div class="prov-body">' +
+      '<p class="prov-note">' + w.start.slice(5).replace('-', '/') + '〜' + w.today.slice(5).replace('-', '/') +
+      'の値です。YouTube 側の集計がまだ確定していないため、あとから数字が動きます' +
+      '（多くの場合は増える方向です）。' +
+      '<b>判定にも「次にやること」にも使っていません。</b>' +
+      '本日ぶんは1日が終わっていないため、とくに低く出ます。</p>' +
+      '<div class="prov-list">' + list + '</div>' +
+      '</div></details>';
+
+    var box = $('provBox');
+    if (box) box.addEventListener('toggle', function () { Store.setProvisionalOpen(box.open); });
   }
 
   function sum(rows, key) {
