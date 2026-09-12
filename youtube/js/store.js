@@ -134,6 +134,11 @@
     verdictOpen: function () { return cfg.verdictOpen === true; },
     setVerdictOpen: function (v) { cfg.verdictOpen = !!v; write(K_CFG, cfg); },
 
+    /* 「分析の観点」の開閉。判定より下にあり、読むかどうかは人によるので、
+       畳んだ・開いたをそのまま覚える（既定は畳んだまま）。 */
+    lensOpen: function () { return cfg.lensOpen === true; },
+    setLensOpen: function (v) { cfg.lensOpen = !!v; write(K_CFG, cfg); },
+
     theme: function () { return cfg.theme || 'auto'; },
     setTheme: function (v) { cfg.theme = v; write(K_CFG, cfg); },
 

@@ -203,9 +203,15 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 /* ---------- 数字カード ---------- */
 .range-note{margin:0 0 14px;font-size:.85rem;color:var(--ink-2)}
 .range-note .hint{display:block}
-.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
-@media (max-width:1024px){.kpis{grid-template-columns:repeat(3,1fr)}}
-@media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+/* カードは7枚ある。6列だと最後の1枚が浮くので、列は4にして
+   最後の「登録への転換」だけ幅を2つぶん取らせ、どの幅でも端が揃うようにする。
+     4列 … 4 ＋ (2+2)   3列 … 3 ＋ 3 ＋ 3   2列 … 2×3 ＋ 2
+   最後の1枚は種類の違う数字（結果ではなく効率）なので、
+   大きく置いておくほうが並びの中で埋もれない。 */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi-wide{grid-column:span 2}
+@media (max-width:1024px){.kpis{grid-template-columns:repeat(3,1fr)}.kpi-wide{grid-column:span 3}}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}.kpi-wide{grid-column:span 2}}
 .kpi{
   background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;
   box-shadow:var(--shadow);position:relative;overflow:hidden;
@@ -474,6 +480,11 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
   font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap
 }
 .verdict-table td .delta{margin-left:8px;font-weight:700}
+/* 判定を書き換えるのはこの行。表の中で同じ重さに見えていると、
+   「視聴回数は増えている」の隣で読み飛ばされる。上に線を引いて段を分ける。 */
+.verdict-table .vrow-key th,.verdict-table .vrow-key td{border-top:2px solid var(--line);padding-top:12px}
+.verdict-table .vrow-key th{color:var(--ink)}
+.verdict-table tbody th small{display:block;font-weight:400;font-size:.68rem;color:var(--muted);margin-top:2px}
 .verdict-table-wrap .hint{margin:8px 0 0}
 
 /* 診断の表は、スマホでも28日と90日を必ず両方見せる。
@@ -533,6 +544,75 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 .next-why{font-size:.82rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .next-how{font-size:.82rem;color:var(--muted)}
 .mb{margin-bottom:14px}
+
+/* ---------- 分析の観点 ----------
+   判定（結論）と「次にやること」（指示）のあいだに置く、根拠の置き場所。
+   ここが無いと、出された打ち手を信じるしかなくなる。
+   既定は畳んだまま。毎回読むものではなく、
+   「なぜそう言えるのか」と思ったときに開くものだから。
+   作りは .next と揃える。同じ見た目のものは同じ操作、が守られるようにする。 */
+.lens{margin-top:14px;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--panel-2)}
+.lens-summary{
+  display:flex;align-items:center;gap:10px;padding:0 16px;min-height:52px;
+  cursor:pointer;list-style:none;user-select:none
+}
+.lens-summary::-webkit-details-marker{display:none}
+.lens-summary:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.lens-title{font-size:.98rem;font-weight:700;margin:0;flex:1}
+.lens-count{
+  font-size:.73rem;font-weight:700;color:var(--muted);
+  background:color-mix(in srgb,var(--muted) 14%,transparent);padding:2px 9px;border-radius:999px
+}
+.lens-chev{
+  flex:none;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:rotate(45deg);margin-top:-4px;transition:transform .18s ease
+}
+.lens[open] .lens-chev{transform:rotate(-135deg);margin-top:3px}
+.lens-list{padding:2px 16px 16px;display:flex;flex-direction:column;gap:10px}
+/* 閉じているあいだは明示的に消す（直下の子に display を書くと
+   details の既定の隠し方が効かなくなるため） */
+.lens:not([open]) .lens-list{display:none}
+.lens-item{
+  padding:13px 15px;border-radius:var(--r-sm);background:var(--panel);
+  border:1px solid var(--line);border-left:3px solid var(--line)
+}
+.lens-good{border-left-color:var(--good)}
+.lens-info{border-left-color:var(--muted)}
+.lens-warn{border-left-color:var(--warn)}
+.lens-bad{border-left-color:var(--bad)}
+.lens-clear{border-left-color:var(--good)}
+.lens-head{display:flex;align-items:center;gap:9px;margin-bottom:9px;flex-wrap:wrap}
+.lens-tag{
+  font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px;flex:none;
+  background:color-mix(in srgb,var(--muted) 16%,transparent);color:var(--muted)
+}
+.lens-good .lens-tag,.lens-clear .lens-tag{background:var(--good-bg);color:var(--good)}
+.lens-warn .lens-tag{background:var(--warn-bg);color:var(--warn)}
+.lens-bad .lens-tag{background:var(--bad-bg);color:var(--bad)}
+.lens-name{font-size:.93rem;min-width:0}
+/* 数字は2つ並べて「いくつから、いくつへ」が一目で分かるようにする。
+   狭いときは縦に積む。横に詰めて文字を小さくするより読める。 */
+.lens-nums{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+@media (max-width:480px){.lens-nums{grid-template-columns:1fr}}
+.lens-num{
+  display:flex;flex-direction:column;gap:2px;padding:9px 11px;
+  background:var(--panel-2);border-radius:var(--r-sm);min-width:0
+}
+.lens-num-label{font-size:.71rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lens-num-value{
+  font-size:.95rem;font-weight:700;font-variant-numeric:tabular-nums;
+  display:flex;align-items:baseline;gap:7px;flex-wrap:wrap
+}
+.lens-num-value .delta{font-size:.7rem;font-weight:700}
+.lens-body{margin:0;font-size:.83rem;color:var(--muted);line-height:1.75}
+.lens-clear-list{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.lens-clear-list li{display:flex;flex-direction:column;gap:3px;padding-left:17px;position:relative}
+.lens-clear-list li::before{
+  content:'';position:absolute;left:0;top:5px;width:9px;height:5px;
+  border-left:2px solid var(--good);border-bottom:2px solid var(--good);transform:rotate(-45deg)
+}
+.lens-clear-list b{font-size:.85rem;color:var(--ink-2)}
+.lens-clear-list span{font-size:.8rem;color:var(--muted);line-height:1.7}
 
 /* ---------- 収益 ---------- */
 .kpi-money{font-size:1.3rem}
@@ -730,6 +810,17 @@ main{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))}
   .r-next li{margin-bottom:4pt}
   .r-next b{display:block;font-size:8.8pt}
   .r-next span{color:#444}
+
+  /* 観点は「どこを見て言っているか」だけ載せる。説明の文章まで入れると1枚を超える。
+     題名が長いこともあるので、観点の表だけは折り返しを許す。 */
+  .r-lens tbody th{white-space:normal;font-weight:700;color:#000;width:40%}
+  .r-lens tbody td{white-space:normal;text-align:right;color:#333;font-size:7.6pt;line-height:1.4}
+  .r-lens .r-l-warn th::before{content:'▲ ';color:#8a5b00}
+  .r-lens .r-l-bad th::before{content:'● ';color:#a3201a}
+  .r-lens .r-l-good th::before{content:'✓ ';color:#0a6b45}
+  .r-lens .r-l-info th::before{content:'・'}
+  .r-clear{margin:0;padding-left:11pt;font-size:7.8pt;color:#333}
+  .r-clear li{margin-bottom:1.5pt}
 
   .r-note{font-size:7.2pt;color:#666;margin-top:2pt}
   .r-foot{margin-top:7pt;padding-top:4pt;border-top:0.5pt solid #bbb;
