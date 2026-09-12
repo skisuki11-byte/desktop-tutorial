@@ -773,7 +773,190 @@ main{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))}
    画面では一切出さない。印刷のときだけ、画面のほうを全部隠して
    これだけを出す。A4・1枚に収めるため、9pt前後まで字を詰め、
    グラフは載せない（紙では軸の数字が小さくなって読めないため）。 */
-#report{display:none}
+/* ---------- 分析レポート（A4・1枚） ----------
+   ▼ 版面
+   上から順に、題字帯 → 判定帯 → 数字の帯 → 2段組 → 動画表 → 流入 → 出典。
+   縦に積むだけだと、内容が増えた月に下からこぼれる。
+   いちばん嵩んでいた「主な数字」を縦の表から横の帯に変え、
+   5つの数字を1本の帯に収めた。読む側も、縦に目を往復せず1行で済む。
+
+   2段組は、左に「次にやること」、右に「観点」と「問題ではないこと」。
+   左が広いのは、紙を見ながら動くのはそちらだから。
+   右は根拠なので、見出しと数字だけでよい。
+
+   ▼ 色
+   紙は白地・黒字。色（インク）を使うのは3か所だけに絞る。
+     ・判定の重さ（左の縦罫）
+     ・増えた／減った（符号と一緒に。色だけには頼らない）
+     ・転換の帯（判定を書き換える数字なので、1つだけ地を敷く）
+   全面に色を敷かないのは、インクを使ううえ、どこが大事か分からなくなるため。
+
+   ▼ 寸法をすべて em で書いている理由
+   内容の量は月によって変わる。観点が4つ出る月も、題名が長い月もある。
+   固定の級数で組むと、そういう月にだけ2枚目がこぼれる。
+   そこで根の級数だけを --r-fit で縮め、他は全部その相対（em）にしてある。
+   入りきらなければ、字も余白も一緒に少しだけ縮んで1枚に収まる。
+   縮める量は印刷の直前に実測して決める（app.js の fitReport）。
+
+   ▼ 画面にも同じ寸法を効かせている理由
+   縮め具合を測るには、印刷と同じ組み方で一度並べてみる必要がある。
+   印刷のときだけ効く書き方では、画面で測れない。
+   #report は画面では display:none なので、測るときだけ画面外で開く。 */
+#report{
+  display:none;
+  --r-ink:#000; --r-sub:#444; --r-dim:#6b6b6b;
+  --r-rule:#111; --r-hair:#c9c9c9; --r-fine:#e2e2e2;
+  --r-good:#0a6b45; --r-bad:#a3201a; --r-warn:#8a5b00; --r-key:#1a5fb4;
+  font-size:calc(8.7pt * var(--r-fit, 1));
+  line-height:1.5;color:var(--r-ink);font-family:var(--sans);
+  font-variant-numeric:tabular-nums
+}
+/* 縮め具合を測るあいだだけ、紙と同じ幅で画面外に置く */
+#report.is-measuring{
+  display:block;position:fixed;left:-4000px;top:0;
+  width:190mm;            /* A4(210mm) − 左右の余白(10mm×2) */
+  background:#fff
+}
+
+/* 見出しの作り。小さな冠（eyebrow）＋細い罫。
+   紙は触れないので、段の変わり目が見た目だけで分かる必要がある。 */
+#report .r-h{
+  font-size:.8em;font-weight:700;letter-spacing:.09em;
+  color:var(--r-dim);text-transform:none;
+  border-bottom:.7pt solid var(--r-rule);
+  padding-bottom:.3em;margin:1.1em 0 .6em
+}
+#report .r-h:first-child{margin-top:0}
+
+/* ▼ 題字帯 */
+#report .r-head{
+  display:flex;justify-content:space-between;align-items:baseline;gap:1.4em;
+  border-bottom:2pt solid var(--r-rule);padding-bottom:.5em;margin-bottom:.9em
+}
+#report .r-title{font-size:1.75em;font-weight:700;line-height:1.15;letter-spacing:-.01em}
+#report .r-sub{font-size:.88em;color:var(--r-sub);margin-top:.25em;letter-spacing:.02em}
+#report .r-meta{font-size:.82em;color:var(--r-dim);text-align:right;line-height:1.6;white-space:nowrap}
+#report .r-meta b{font-size:1.5em;color:var(--r-ink);letter-spacing:-.01em}
+
+/* ▼ 判定帯　左の縦罫だけで重さを示す。地は敷かない。 */
+#report .r-verdict{
+  border-left:2.5pt solid var(--r-dim);padding:.1em 0 .1em .8em;margin-bottom:1em
+}
+#report .r-verdict.r-good{border-left-color:var(--r-good)}
+#report .r-verdict.r-ok{border-left-color:var(--r-key)}
+#report .r-verdict.r-warn{border-left-color:var(--r-warn)}
+#report .r-verdict.r-bad{border-left-color:var(--r-bad)}
+#report .r-badge{
+  font-size:.76em;font-weight:700;letter-spacing:.08em;
+  color:var(--r-dim);display:block;margin-bottom:.15em
+}
+#report .r-good .r-badge{color:var(--r-good)}
+#report .r-ok .r-badge{color:var(--r-key)}
+#report .r-warn .r-badge{color:var(--r-warn)}
+#report .r-bad .r-badge{color:var(--r-bad)}
+#report .r-vtitle{font-size:1.3em;font-weight:700;line-height:1.25;letter-spacing:-.01em}
+#report .r-one{font-size:.95em;color:var(--r-sub);margin-top:.2em}
+#report .r-detail{color:var(--r-dim);margin-top:.35em;font-size:.9em;line-height:1.6}
+
+/* ▼ 数字の帯　5つを横1本に。縦の表より低く収まり、1行で読める。 */
+#report .r-figs{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  border-top:.7pt solid var(--r-hair);border-bottom:.7pt solid var(--r-hair);
+  margin-bottom:1em
+}
+#report .r-fig{padding:.55em .7em .6em;border-left:.5pt solid var(--r-fine);min-width:0}
+#report .r-fig:first-child{border-left:0;padding-left:.7em}
+/* 判定を書き換えるのはこの1つ。地を薄く敷いて、帯の中で1つだけ持ち上げる。 */
+#report .r-fig.is-key{background:#f2f2f2;border-left:0}
+#report .r-fig.is-key + .r-fig{border-left:0}
+#report .r-fig-label{
+  font-size:.76em;color:var(--r-dim);letter-spacing:.03em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block
+}
+#report .r-fig.is-key .r-fig-label{color:var(--r-ink);font-weight:700}
+#report .r-fig-now{
+  display:flex;align-items:baseline;gap:.35em;flex-wrap:wrap;margin-top:.15em
+}
+#report .r-fig-v{font-size:1.28em;font-weight:700;line-height:1.2;letter-spacing:-.01em}
+#report .r-fig-prev{
+  font-size:.76em;color:var(--r-dim);margin-top:.2em;
+  display:flex;align-items:baseline;gap:.3em;flex-wrap:wrap
+}
+#report .r-fig-note{font-size:.72em;color:var(--r-dim);margin-top:.15em;display:block}
+#report .r-up{color:var(--r-good);font-weight:700}
+#report .r-down{color:var(--r-bad);font-weight:700}
+#report .r-flat{color:var(--r-dim)}
+
+/* ▼ 2段組 */
+#report .r-cols{display:flex;gap:1.6em;align-items:flex-start}
+#report .r-main{flex:1.35 1 0;min-width:0}
+#report .r-side{flex:1 1 0;min-width:0}
+
+/* 次にやること　番号は本当に順番（上から効く順）なので数字で出す。 */
+#report .r-next{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.65em}
+#report .r-next li{display:flex;gap:.6em}
+#report .r-next-no{
+  flex:none;width:1.45em;height:1.45em;border:.8pt solid var(--r-rule);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8em;font-weight:700;line-height:1;margin-top:.1em
+}
+#report .r-next-b{min-width:0}
+#report .r-next-b b{display:block;font-size:1.02em;line-height:1.35}
+#report .r-next-b span{display:block;color:var(--r-sub);font-size:.92em;line-height:1.55;margin-top:.1em}
+
+/* 観点　見出しと数字だけ。説明の文章は紙に載せない（画面で開ける）。 */
+#report .r-lens{display:flex;flex-direction:column;gap:.5em}
+#report .r-lens-item{display:flex;gap:.5em;align-items:baseline}
+#report .r-lens-mark{flex:none;font-size:.8em;line-height:1.5;color:var(--r-dim)}
+#report .r-l-warn .r-lens-mark{color:var(--r-warn)}
+#report .r-l-bad .r-lens-mark{color:var(--r-bad)}
+#report .r-l-good .r-lens-mark{color:var(--r-good)}
+#report .r-lens-b{min-width:0;flex:1}
+#report .r-lens-b b{font-size:.95em;display:block;line-height:1.35}
+#report .r-lens-n{
+  display:block;font-size:.85em;color:var(--r-sub);line-height:1.5;
+  overflow:hidden;text-overflow:ellipsis
+}
+#report .r-lens-n i{font-style:normal;color:var(--r-dim)}
+
+/* 問題ではないこと　鉤（チェック）は自前で描く。絵文字は紙で化ける。 */
+#report .r-clear{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.3em}
+#report .r-clear li{position:relative;padding-left:1.1em;font-size:.9em;color:var(--r-sub);line-height:1.45}
+#report .r-clear li::before{
+  content:'';position:absolute;left:0;top:.42em;width:.5em;height:.26em;
+  border-left:1pt solid var(--r-good);border-bottom:1pt solid var(--r-good);
+  transform:rotate(-45deg)
+}
+
+/* ▼ 動画表 */
+#report .r-table{width:100%;border-collapse:collapse;font-size:.92em;margin-top:.1em}
+#report .r-table th,#report .r-table td{padding:.32em .4em;border-bottom:.5pt solid var(--r-fine);vertical-align:baseline}
+#report .r-table thead th{
+  font-size:.82em;font-weight:700;color:var(--r-dim);letter-spacing:.03em;
+  border-bottom:.7pt solid var(--r-hair);text-align:right;white-space:nowrap
+}
+#report .r-table thead th:first-child{text-align:left}
+#report .r-table tbody th{
+  text-align:left;font-weight:400;color:var(--r-ink);
+  width:99%;max-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+#report .r-table td{text-align:right;white-space:nowrap}
+#report .r-table .r-key-col{font-weight:700}
+
+/* ▼ 流入　棒も表も使わず、1行に並べる。順位と割合だけ分かればよい。 */
+#report .r-flow{display:flex;flex-wrap:wrap;gap:.2em 1.2em;font-size:.88em;margin-top:.1em}
+#report .r-flow span{color:var(--r-sub);white-space:nowrap}
+#report .r-flow b{color:var(--r-ink);font-weight:700}
+
+#report .r-note{font-size:.8em;color:var(--r-dim);margin:.35em 0 0;line-height:1.5}
+#report .r-foot{
+  margin-top:1.1em;padding-top:.45em;border-top:.5pt solid var(--r-hair);
+  font-size:.78em;color:var(--r-dim);line-height:1.55
+}
+
+/* 段の途中で改ページさせない */
+#report table,#report tr,#report .r-verdict,#report .r-figs,
+#report .r-next li,#report .r-lens-item{break-inside:avoid;page-break-inside:avoid}
 
 @media print{
   /* 端末の配色に関係なく、紙は白地・黒字にする。
@@ -785,67 +968,5 @@ main{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))}
   html,body{background:#fff !important;color:#000 !important}
   .topbar, main, .sheet, .toast, .loading{display:none !important}
   #report{display:block}
-
   @page{size:A4 portrait;margin:11mm 10mm}
-  #report{font-size:8.6pt;line-height:1.45;color:#000;font-family:var(--sans)}
-
-  .r-head{display:flex;justify-content:space-between;align-items:flex-end;
-    gap:12px;border-bottom:1.6pt solid #000;padding-bottom:5pt;margin-bottom:7pt}
-  .r-title{font-size:14pt;font-weight:700;line-height:1.2}
-  .r-sub{font-size:8pt;color:#444;margin-top:2pt}
-  .r-meta{font-size:8pt;color:#444;text-align:right;line-height:1.5;white-space:nowrap}
-  .r-meta b{font-size:11pt;color:#000}
-
-  .r-verdict{border:0.8pt solid #999;border-left:3pt solid #666;padding:5pt 7pt;margin-bottom:7pt}
-  .r-verdict.r-good{border-left-color:#0a6b45}
-  .r-verdict.r-warn{border-left-color:#8a5b00}
-  .r-verdict.r-bad{border-left-color:#a3201a}
-  .r-verdict.r-ok{border-left-color:#1a5fb4}
-  .r-badge{display:inline-block;border:0.8pt solid #666;padding:0 4pt;font-size:7.4pt;
-    margin-right:5pt;vertical-align:1pt}
-  .r-verdict b{font-size:10.5pt}
-  .r-detail{color:#444;margin-top:3pt}
-
-  .r-cols{display:flex;gap:10pt;margin-bottom:6pt}
-  .r-col{flex:1;min-width:0}
-  .r-h{font-size:9pt;font-weight:700;border-bottom:0.8pt solid #000;
-    padding-bottom:2pt;margin:6pt 0 4pt}
-
-  .r-table{width:100%;border-collapse:collapse;font-size:8.2pt}
-  .r-table th, .r-table td{padding:2.4pt 3pt;border-bottom:0.5pt solid #ddd;vertical-align:top}
-  .r-table thead th{font-size:7.4pt;color:#555;border-bottom:0.8pt solid #999;text-align:right}
-  .r-table thead th:first-child{text-align:left}
-  /* 指標名は折り返させない。狭いと1文字ずつ縦に並んでしまう。 */
-  .r-table tbody th{text-align:left;font-weight:500;color:#222;white-space:nowrap}
-  /* 動画の題名だけは、残り幅いっぱいまで使って途中で切る。 */
-  .r-videos tbody th{white-space:nowrap;width:99%}
-  .r-table td{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .r-simple tbody th{font-weight:400}
-  .r-videos tbody th{font-weight:400;max-width:0;overflow:hidden;text-overflow:ellipsis}
-  .r-up{color:#0a6b45;font-weight:700}
-  .r-down{color:#a3201a;font-weight:700}
-  .r-flat{color:#777}
-
-  .r-next{margin:0;padding-left:13pt}
-  .r-next li{margin-bottom:4pt}
-  .r-next b{display:block;font-size:8.8pt}
-  .r-next span{color:#444}
-
-  /* 観点は「どこを見て言っているか」だけ載せる。説明の文章まで入れると1枚を超える。
-     題名が長いこともあるので、観点の表だけは折り返しを許す。 */
-  .r-lens tbody th{white-space:normal;font-weight:700;color:#000;width:40%}
-  .r-lens tbody td{white-space:normal;text-align:right;color:#333;font-size:7.6pt;line-height:1.4}
-  .r-lens .r-l-warn th::before{content:'▲ ';color:#8a5b00}
-  .r-lens .r-l-bad th::before{content:'● ';color:#a3201a}
-  .r-lens .r-l-good th::before{content:'✓ ';color:#0a6b45}
-  .r-lens .r-l-info th::before{content:'・'}
-  .r-clear{margin:0;padding-left:11pt;font-size:7.8pt;color:#333}
-  .r-clear li{margin-bottom:1.5pt}
-
-  .r-note{font-size:7.2pt;color:#666;margin-top:2pt}
-  .r-foot{margin-top:7pt;padding-top:4pt;border-top:0.5pt solid #bbb;
-    font-size:7pt;color:#666}
-
-  /* 表の途中で改ページさせない */
-  table, tr, .r-verdict, .r-next li{break-inside:avoid;page-break-inside:avoid}
 }
