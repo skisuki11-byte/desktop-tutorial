@@ -235,13 +235,22 @@
       list.className = 'hbar';
 
       rows.forEach(function (r) {
-        var row = document.createElement('div');
-        row.className = 'hbar-row';
+        /* id が付いている行は押せるようにする（押した先で1本の詳細を開く）。
+           付いていない行はただの内訳なので、押せる見た目にしない。
+           押せないものを押せそうに見せるのは、いちばん困らせる作りなので。 */
+        var row = document.createElement(r.id ? 'button' : 'div');
+        row.className = 'hbar-row' + (r.id ? ' is-link' : '');
+        if (r.id) {
+          row.type = 'button';
+          row.dataset.id = r.id;
+          row.setAttribute('aria-label', r.label + 'の詳細を見る');
+        }
         var share = total ? (r.value / total * 100) : 0;
         row.innerHTML =
           '<div class="hbar-head"><span class="hbar-label" title="' + esc(r.label) + '">' + esc(r.label) + '</span>' +
           '<span class="hbar-val">' + fmt(r.value) +
-          (opt.share !== false && total ? ' <em>' + fmtPct(share) + '</em>' : '') + '</span></div>' +
+          (opt.share !== false && total ? ' <em>' + fmtPct(share) + '</em>' : '') +
+          (r.id ? '<span class="hbar-more" aria-hidden="true"></span>' : '') + '</span></div>' +
           '<div class="hbar-track"><div class="hbar-fill" style="width:' +
           Math.max(1.5, r.value / max * 100) + '%"></div></div>' +
           (r.sub ? '<div class="hbar-sub">' + esc(r.sub) + '</div>' : '');

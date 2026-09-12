@@ -409,14 +409,15 @@
 
     var out = verdict(s, l, conv);
     out.metrics = [
+      /* 先頭に置く。判定を書き換えるのはこの行なので、
+         「視聴回数は増えている」を読んだあとに出てきたのでは遅い。
+         概要の数字カードとも並びを揃えている。 */
+      { label: '登録への転換', a: c28, ap: cp28, b: c90, bp: cp90, kind: 'per1k',
+        note: '1,000視聴あたりの登録者数' },
       { label: '視聴回数', a: v28, ap: pct(v28, v28p), b: v90, bp: pct(v90, v90p), kind: 'int' },
       { label: '総再生時間', a: w28, ap: pct(w28, w28p), b: w90, bp: pct(w90, w90p), kind: 'watch' },
       { label: '平均視聴時間', a: a28, ap: pct(a28, a28p), b: a90, bp: pct(a90, a90p), kind: 'dur' },
-      { label: '登録者の純増', a: n28, ap: pct(n28, n28p), b: n90, bp: pct(n90, n90p), kind: 'signed' },
-      /* いちばん下に置いているが、判定を書き換えるのはこの行。
-         視聴回数が増えていても、ここが落ちていれば「順調」ではない。 */
-      { label: '登録への転換', a: c28, ap: cp28, b: c90, bp: cp90, kind: 'per1k',
-        note: '1,000視聴あたりの登録者数' }
+      { label: '登録者の純増', a: n28, ap: pct(n28, n28p), b: n90, bp: pct(n90, n90p), kind: 'signed' }
     ];
 
     var recent28 = (d.uploads || []).filter(function (v) {
