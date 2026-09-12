@@ -29,7 +29,8 @@
     videos: {},      // videoId -> Data API の1件
     period: {},      // 期間内の成績（動画ごと）
     loaded: {},      // 読み込み済みのタブ
-    view: 'setup'
+    view: 'setup',
+    periodGen: 0      // 期間を切り替えるたびに進む世代番号。下の注記を参照
   };
 
   /* ========== 日付 ========== */
@@ -100,6 +101,10 @@
     }
   }
   function panelError(host, err) {
+    /* この枠がグラフを描いたことのある枠なら、幅の監視が付いたままになっている。
+       消さずに文章へ差し替えると、あとで幅が動いたときに古いグラフが
+       この文章の上に復活してしまう（Chart.clear の説明を参照）。 */
+    Chart.clear(host);
     host.innerHTML = '<p class="error-box">' + esc(err && err.message || String(err)) + '</p>';
   }
   /* 1枠ぶんの取得。失敗してもそこだけで止める。 */
@@ -163,7 +168,9 @@
       connect();
     });
     $('btnReload').addEventListener('click', function () {
-      Store.cacheClear(); S.loaded = {}; loadDash(true, S.view);
+      // 連打したときに、前の取り直しぶんの返事が後から届いて上書きしないよう、
+      // 期間を変えたときと同じ世代番号を進めておく。
+      Store.cacheClear(); S.loaded = {}; S.periodGen++; loadDash(true, S.view);
     });
     $('period').addEventListener('click', function (e) {
       var b = e.target.closest('.seg');
@@ -171,6 +178,7 @@
       Store.setDays(b.dataset.days);
       syncPeriodButtons();
       S.loaded = {}; S.unsubsState = null;
+      S.periodGen++;   // 前の期間ぶんの問い合わせが後から届いても、もう受け取らない
       // いま見ている画面のまま、その画面の数字だけ入れ替える。
       // 収益を見ているときに期間を押して概要へ飛ばされるのでは、
       // 「収益を1年で見たい」という当たり前のことができない。
@@ -210,7 +218,7 @@
     });
     $('btnDisconnect').addEventListener('click', function () {
       Api.disconnect(); Store.cacheClear(); Store.setEverConnected(false);
-      S = { channel: null, videos: {}, period: {}, loaded: {}, view: 'setup' };
+      S = { channel: null, videos: {}, period: {}, loaded: {}, view: 'setup', periodGen: S.periodGen + 1 };
       $('tabs').hidden = true; $('filterbar').hidden = true;
       $('btnReload').hidden = true; $('btnSettings').hidden = true;
       document.querySelector('.brand-text').classList.remove('is-connected');
@@ -835,8 +843,8 @@
       }).catch(function (e) { panelError($('revVideos'), e); });
     }).catch(function (e) {
       $('revKpis').innerHTML = '';
-      $('chartRevenue').innerHTML = '';
-      $('revVideos').innerHTML = '';
+      Chart.clear($('chartRevenue'));
+      Chart.clear($('revVideos'));
       $('revNotes').innerHTML = '';
       $('revRangeNote').innerHTML = '';
       panelError(body, moneyMessage(e));
@@ -889,6 +897,7 @@
 
     if (!rev && !gross && !imps) {
       $('revKpis').innerHTML = '';
+      Chart.clear($('chartRevenue'));   // 前の期間のグラフの監視を外してから文章に差し替える
       $('chartRevenue').innerHTML =
         '<p class="chart-empty">この期間の収益データは0件です。<br>' +
         '収益化前の期間か、まだ広告が配信されていない可能性があります。</p>';
@@ -933,7 +942,7 @@
 
   function renderRevenueVideos(rows, cur) {
     var host = $('revVideos');
-    if (!rows.length) { host.innerHTML = '<p class="chart-empty">この期間に収益のあった動画がありません</p>'; return; }
+    if (!rows.length) { Chart.clear(host); host.innerHTML = '<p class="chart-empty">この期間に収益のあった動画がありません</p>'; return; }
 
     /* 動画1本ぶんの収益を控えておく。押して詳細を開いたときに、
        そこでもう一度問い合わせずに済ませるため。
@@ -1094,24 +1103,41 @@
   }
 
   /* ========== 動画 ========== */
+  /* ▼ なぜ「世代番号」を見ているか
+     期間を素早く切り替えると（例：365日を押した直後に7日を押す）、
+     2つの問い合わせが同時に飛ぶことになる。どちらも同じ S.period に
+     書き込むため、あとから「届いた」ほうが、あとから「押した」ほうとは
+     限らずに勝ってしまう——365日ぶんの返事が7日ぶんより遅れて届けば、
+     画面はもう7日を選んでいるのに、365日の古い数字で上書きされる。
+     これが「期間を変えても診断タブの曜日別・投稿本数が変わらない
+     （ように見える／前の値に戻る）」の正体だった。
+
+     直すために、問い合わせを始めた瞬間の世代番号を覚えておき、
+     返事が届いた時点で世代が進んでいたら（＝もう別の期間が選ばれていたら）
+     何もせずに捨てる。捨てられた問い合わせの分は、次にこのタブを
+     開いたときに最新の期間で改めて取りに行く。 */
   function loadVideos() {
     if (S.loaded.videos) { renderVideoTable(); renderTopVideos(); return S.videosPromise || Promise.resolve(); }
     var p = period();
+    var gen = S.periodGen;
     S.videosPromise = Api.report({
       startDate: p.start, endDate: p.end, dimensions: 'video',
       metrics: 'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained,likes,comments',
       sort: '-views', maxResults: 200
     }).then(function (res) {
+      if (gen !== S.periodGen) return;   // その間に期間が変わっていた。この返事は捨てる
       var rows = Api.rows(res);
       S.period = {};
       rows.forEach(function (r) { S.period[r.video] = r; });
       var ids = rows.map(function (r) { return r.video; });
       return fetchVideoDetails(ids);
     }).then(function () {
+      if (gen !== S.periodGen) return;
       S.loaded.videos = true;
       renderVideoTable(); renderTopVideos();
-      loadUnsubsByVideo(p);   // 失敗してもいい追加分。動画一覧の本体とは切り離す
+      loadUnsubsByVideo(p, gen);   // 失敗してもいい追加分。動画一覧の本体とは切り離す
     }).catch(function (e) {
+      if (gen !== S.periodGen) return;
       $('videoRows').innerHTML = '<tr><td colspan="7"><p class="error-box">' + esc(e.message) + '</p></td></tr>';
     });
     return S.videosPromise;
@@ -1125,12 +1151,13 @@
 
      解決したら、すでに描いてある動画一覧・トップ5・登録者の増減シートに
      数字を足して描き直す（進んだら黙って足す、というやり方）。 */
-  function loadUnsubsByVideo(p) {
+  function loadUnsubsByVideo(p, gen) {
     S.unsubsState = 'loading';
     S.unsubsPromise = Api.report({
       startDate: p.start, endDate: p.end, dimensions: 'video',
       metrics: 'subscribersLost', sort: '-subscribersLost', maxResults: 200
     }).then(function (res) {
+      if (gen !== S.periodGen) return;   // 期間が変わっていた。この返事は捨てる
       Api.rows(res).forEach(function (r) {
         if (S.period[r.video]) S.period[r.video].subscribersLost = r.subscribersLost;
       });
@@ -1138,6 +1165,7 @@
       if (S.loaded.videos) { renderVideoTable(); renderTopVideos(); }
       refreshSubsSheetIfOpen();
     }).catch(function () {
+      if (gen !== S.periodGen) return;
       S.unsubsState = 'unavailable';
       refreshSubsSheetIfOpen();
     });
@@ -1332,6 +1360,7 @@
         return { label: r.insightTrafficSourceDetail, value: Number(r.views) || 0 };
       });
       if (!rows.length) {
+        Chart.clear(host);
         host.innerHTML = '<p class="chart-empty">この期間、YouTube検索からの流入がありません。<br>' +
           '検索で見つかるには、まず題名と説明文に「探されている言葉」が入っている必要があります。</p>';
         return;
@@ -1346,7 +1375,7 @@
       var rows = Api.rows(res).map(function (r) {
         return { label: r.insightTrafficSourceDetail, value: Number(r.views) || 0 };
       });
-      if (!rows.length) { host.innerHTML = '<p class="chart-empty">外部サイトからの流入はありません</p>'; return; }
+      if (!rows.length) { Chart.clear(host); host.innerHTML = '<p class="chart-empty">外部サイトからの流入はありません</p>'; return; }
       Chart.hbar(host, rows, { share: false });
     });
 
@@ -1453,7 +1482,12 @@
         })
       : Promise.resolve();
 
-    chain.then(function () {
+    /* 曜日別の「1本あたりの視聴回数」は、選んだ期間の動画別成績（S.period）を使う。
+       この診断タブだけ開いて動画タブを一度も開いていないと S.period が空のまま、
+       期間を変えた直後だと前の期間の値がまだ残ったままのことがある
+       （show('audit') は、動画タブ用の問い合わせが終わる前に呼ばれるため）。
+       ここで loadVideos() を待ってから描けば、常にいま選んでいる期間の値になる。 */
+    Promise.all([chain, loadVideos()]).then(function () {
       var vids = Object.keys(S.videos).map(function (k) { return S.videos[k]; });
       var checks = Seo.channelAudit(vids);
       host.innerHTML = checks.length
@@ -1475,18 +1509,23 @@
   }
 
   var WD = ['日', '月', '火', '水', '木', '金', '土'];
-  var WEEKDAY_WINDOW_DAYS = 180;
+  /* いま選んでいる期間と同じ幅だけ、公開日を遡って見る。
+     以前は180日で固定していたため、上の期間セレクタ（7日／28日／90日／1年）を
+     押しても、この曜日別と「投稿本数」がまったく変わらなかった。
+     「1本あたりの期間内視聴回数」を謳っている以上、対象の動画も
+     同じ「期間内」で選ばないと、名前と中身が食い違ってしまう。 */
   function renderWeekday(vids) {
     var host = $('weekday');
+    var windowDays = period().days;
     var by = {};
-    /* 直近180日に公開したものだけを見る。
+    /* 選んだ期間より前に公開されたものは見ない。
        何年も前の動画まで混ぜると、その動画が「いま」稼いでいる視聴回数が
        当時の公開曜日の手柄になってしまい、曜日の比較として意味をなさない。 */
     vids.forEach(function (v) {
       var r = S.period[v.id];
       if (!r || !v.snippet || !v.snippet.publishedAt) return;
       var pub = new Date(v.snippet.publishedAt);
-      if ((Date.now() - pub.getTime()) / 86400000 > WEEKDAY_WINDOW_DAYS) return;
+      if ((Date.now() - pub.getTime()) / 86400000 > windowDays) return;
       var d = pub.getDay();
       by[d] = by[d] || { n: 0, views: 0 };
       by[d].n++; by[d].views += Number(r.views) || 0;
@@ -1496,15 +1535,17 @@
     }).sort(function (a, b) { return b.value - a.value; });
 
     if (rows.length < 3) {
+      Chart.clear(host);   // 前の期間の棒グラフの監視を外してから文章に差し替える
       host.innerHTML = '<p class="chart-empty">曜日を比べられるだけの本数がありません' +
-        '（直近' + WEEKDAY_WINDOW_DAYS + '日に3曜日以上へ投稿があると出ます）</p>';
+        '（直近' + windowDays + '日に3曜日以上へ投稿があると出ます。上の期間セレクタを' +
+        '長く（90日・1年）すると増えることがあります）</p>';
       return;
     }
     Chart.hbar(host, rows, { share: false });
     host.insertAdjacentHTML('beforeend',
-      '<p class="note">直近' + WEEKDAY_WINDOW_DAYS + '日に公開した動画だけを数えた、' +
-      '1本あたりの期間内視聴回数です。何年も前の動画を混ぜると、いま稼いでいる分が' +
-      '当時の曜日の手柄になってしまうため除いています。' +
+      '<p class="note">直近' + windowDays + '日（いま選んでいる期間と同じ幅）に公開した' +
+      '動画だけを数えた、1本あたりの期間内視聴回数です。それより前の動画を混ぜると、' +
+      'いま稼いでいる分が当時の曜日の手柄になってしまうため除いています。' +
       'それでも本数の少ない曜日はたまたま伸びた1本に引きずられるので、' +
       '各曜日3本くらい溜まってから判断してください。</p>');
   }
