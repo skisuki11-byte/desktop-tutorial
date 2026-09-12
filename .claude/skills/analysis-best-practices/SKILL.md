@@ -1,6 +1,6 @@
 ---
 name: analysis-best-practices
-description: Apply world-class analytical rigor — root-cause analysis, hypothesis-driven investigation, bias-aware statistical reasoning, and behavioral-psychology insight into why people actually act — distilled from real-world success and failure cases (John Snow's cholera map, Toyota's Five Whys, Amazon's Correction of Errors, Moneyball, Netflix vs. Blockbuster, the Challenger disaster, LTCM's collapse, Zillow Offers, Target's pregnancy-prediction backlash, Kodak's buried digital camera, the disposition effect, Save More Tomorrow, the testing effect, YouTube's watch-time-optimization backlash) — whenever analyzing data, investigating a cause, evaluating a trend, or writing up findings for this repo's apps (yosou exam predictions, youtube channel analytics, dividend/investment tracking, solar output, cashbook spending, sekaishi exam-pattern study) or any other repo. Trigger on "分析", "分析力", "原因", "なぜ", "根本原因", "考察", "傾向", "予測", "検証", "データ分析", "相関", "因果", "心理", "行動", or any request to investigate why something happened, evaluate a trend, or back a conclusion with data.
+description: Apply world-class analytical rigor — root-cause analysis, hypothesis-driven investigation, bias-aware statistical reasoning, and a behavioral-economics toolkit (loss aversion, mental accounting, default/status-quo effects, framing, anchoring, overconfidence, the endowment effect, herding, the sunk-cost fallacy, the availability heuristic, nudge-vs-sludge) for why people actually act — distilled from real-world success and failure cases (John Snow's cholera map, Toyota's Five Whys, Amazon's Correction of Errors, Moneyball, Netflix vs. Blockbuster, the Challenger disaster, LTCM's collapse, Zillow Offers, Target's pregnancy-prediction backlash, Kodak's buried digital camera, the disposition effect, Save More Tomorrow, opt-out organ donation, UK pension auto-enrollment, the Asian disease framing experiment, "Boys Will Be Boys" overconfidence research, GameStop-style herding, the testing effect, YouTube's watch-time-optimization backlash) — whenever analyzing data, investigating a cause, evaluating a trend, or writing up findings for this repo's apps (yosou exam predictions, youtube channel analytics, dividend/investment tracking, solar output, cashbook spending, sekaishi exam-pattern study) or any other repo. Trigger on "分析", "分析力", "原因", "なぜ", "根本原因", "考察", "傾向", "予測", "検証", "データ分析", "相関", "因果", "心理", "行動経済学", "バイアス", or any request to investigate why something happened, evaluate a trend, or back a conclusion with data.
 ---
 
 # 分析ベストプラクティス
@@ -52,8 +52,9 @@ description: Apply world-class analytical rigor — root-cause analysis, hypothe
 6. **整合性チェック** — 同じ結論を別の測り方でも導けるか、2通り以上の算出方法で突き合わせる。
 7. **プレモータム（事前検死）** — 結論・施策を決める前に「これが外れるとしたら何が原因か」を先に考える。
 8. **不確実性の明示** — サンプルが小さい・偶然の可能性がある場合はそう書く。過剰な確信を装わない。
-9. **心理学の組み込み** — 損失回避・メンタルアカウンティング・内発的動機づけなど、数字を動かす
-   人間の心理を踏まえて解釈し、施策を設計する。「最後は人の心が動く」ことを前提にする。
+9. **心理学・行動経済学の組み込み** — 損失回避・デフォルト効果・フレーミング・アンカリング・
+   自信過剰・保有効果・群衆行動・サンクコストなど、数字を動かす人間の非合理性を踏まえて
+   解釈し、施策を設計する。「最後は人の心が動く」ことを前提にする。
 
 ## やってはいけないこと
 
@@ -67,5 +68,5 @@ description: Apply world-class analytical rigor — root-cause analysis, hypothe
 
 - `references/principles.md` — 分析フレームワークの詳細（MECE・なぜなぜ分析・相関と因果・バイアス一覧など）
 - `references/case-studies.md` — 成功事例・失敗事例と、そこから導いた教訓
-- `references/psychology.md` — 損失回避・メンタルアカウンティング・内発的動機づけなど、分析に組み込む心理学の原則と実例
+- `references/psychology.md` — 損失回避・デフォルト効果・フレーミング・アンカリング・自信過剰・保有効果・群衆行動・サンクコスト・ナッジとスラッジなど、分析に組み込む心理学・行動経済学の原則と実例
 - `references/checklist.md` — このリポジトリ（yosou/youtube/dividend/solar/cashbook/sekaishi）に適用するための実践チェックリスト
