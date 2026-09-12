@@ -29,6 +29,9 @@
   var clientScope = '';     // その発行係に渡した権限の並び
   var loading = null;
   var gsiTries = 0;         // ログイン用スクリプトを取りに行った回数
+  var refreshing = null;    // 進行中の「黙っての取り直し」（同時に何本頼んでも1本に相乗りする）
+  var pendingOk = null, pendingNg = null;  // 発行係のcallbackは使い回されるので、
+                                            // 「いま待っている約束」への配線は毎回ここで最新化する
 
   /* ▼ 待ち時間の上限
      Google 側の仕組みは「うまくいかなかった」を必ず知らせてくれるとは限らない。
@@ -119,9 +122,13 @@
         token = saved.t; money = saved.m; tokenAt = Date.now();
         return Promise.resolve(token);
       }
+      /* 同時に複数のパネルが期限切れを検知しても、黙っての取り直しは1本にまとめる。
+         別々に requestAccessToken() を呼ぶと、発行係のcallbackは1つしか無いため
+         後から来た返事しか届かず、残りは待ち時間いっぱい待って失敗する。 */
+      if (refreshing) return refreshing;
     }
 
-    return loadGsi().then(function () {
+    var task = loadGsi().then(function () {
       var id = global.Store.clientId();
       if (!id) throw new Error('NO_CLIENT_ID');
 
@@ -134,6 +141,10 @@
       var ask = new Promise(function (resolve, reject) {
         var ok = function (v) { if (!settled) { settled = true; resolve(v); } };
         var ng = function (e) { if (!settled) { settled = true; reject(e); } };
+        /* 発行係(client)のcallbackはinitTokenClientの時点で固定され、以降使い回される。
+           ここで毎回「いま待っている約束」に配線し直しておかないと、2回目以降の呼び出しは
+           1回目のクロージャ（すでにsettled済み）に返事が届くだけで、二度と解決しなくなる。 */
+        pendingOk = ok; pendingNg = ng;
         if (!client) {
           clientScope = want;
           client = global.google.accounts.oauth2.initTokenClient({
@@ -148,18 +159,17 @@
                 money = String(res.scope || '').indexOf(MONEY) >= 0;
                 global.Store.setEverConnected(true);
                 global.Store.saveToken(token, res.expires_in, money);
-                ok(token);
+                if (pendingOk) pendingOk(token);
               } else {
-                ng(new Error('ログインを完了できませんでした。'));
+                if (pendingNg) pendingNg(new Error('ログインを完了できませんでした。'));
               }
             },
             error_callback: function (err) {
               var t = (err && err.type) || '';
-              if (t === 'popup_closed' || t === 'popup_failed_to_open') {
-                ng(new Error('ログイン画面が閉じられました。ポップアップの許可をご確認ください。'));
-              } else {
-                ng(new Error('ログインできませんでした（' + (err && err.message || t || '原因不明') + '）。'));
-              }
+              var e = (t === 'popup_closed' || t === 'popup_failed_to_open')
+                ? new Error('ログイン画面が閉じられました。ポップアップの許可をご確認ください。')
+                : new Error('ログインできませんでした（' + (err && err.message || t || '原因不明') + '）。');
+              if (pendingNg) pendingNg(e);
             }
           });
         }
@@ -181,6 +191,15 @@
         throw e;
       });
     });
+
+    if (!interactive) {
+      refreshing = task.then(
+        function (t) { refreshing = null; return t; },
+        function (e) { refreshing = null; throw e; }
+      );
+      return refreshing;
+    }
+    return task;
   }
 
   /* APIの返事の中の、人に見せてよい説明文を取り出す。 */

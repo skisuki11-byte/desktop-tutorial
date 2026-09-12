@@ -170,14 +170,14 @@
     $('btnReload').addEventListener('click', function () {
       // 連打したときに、前の取り直しぶんの返事が後から届いて上書きしないよう、
       // 期間を変えたときと同じ世代番号を進めておく。
-      Store.cacheClear(); S.loaded = {}; S.periodGen++; loadDash(true, S.view);
+      Store.cacheClear(); S.loaded = {}; S.trafficRows = null; S.periodGen++; loadDash(true, S.view);
     });
     $('period').addEventListener('click', function (e) {
       var b = e.target.closest('.seg');
       if (!b || String(Store.days()) === b.dataset.days) return;
       Store.setDays(b.dataset.days);
       syncPeriodButtons();
-      S.loaded = {}; S.unsubsState = null;
+      S.loaded = {}; S.unsubsState = null; S.trafficRows = null;
       S.periodGen++;   // 前の期間ぶんの問い合わせが後から届いても、もう受け取らない
       // いま見ている画面のまま、その画面の数字だけ入れ替える。
       // 収益を見ているときに期間を押して概要へ飛ばされるのでは、
@@ -214,7 +214,7 @@
         : '端末に置いた通行証を消しました。次からは開くたびに接続し直します。');
     });
     $('btnClearCache').addEventListener('click', function () {
-      Store.cacheClear(); S.loaded = {}; toast('貯めたデータを消しました。');
+      Store.cacheClear(); S.loaded = {}; S.trafficRows = null; toast('貯めたデータを消しました。');
     });
     $('btnDisconnect').addEventListener('click', function () {
       Api.disconnect(); Store.cacheClear(); Store.setEverConnected(false);
@@ -625,9 +625,10 @@
     var listPromise = uploads.uploads
       ? Api.data('playlistItems', { part: 'contentDetails', playlistId: uploads.uploads, maxResults: 50 })
         .then(function (res) {
-          return fetchVideoDetails((res.items || []).map(function (i) { return i.contentDetails.videoId; }));
-        }).catch(function () {})
-      : Promise.resolve();
+          var ids = (res.items || []).map(function (i) { return i.contentDetails.videoId; });
+          return fetchVideoDetails(ids).then(function () { return ids; });
+        }).catch(function () { return []; })
+      : Promise.resolve([]);
 
     Promise.all([
       Api.report({ startDate: w28.start, endDate: w28.end, dimensions: 'day', metrics: DAILY }),
@@ -653,8 +654,17 @@
       listPromise
     ]).then(function (r) {
       var videos28 = Api.rows(r[7]);
-      return fetchVideoDetails(videos28.map(function (v) { return v.video; })).then(function () {
-        var audits = Object.keys(S.videos).map(function (id) {
+      var video28Ids = videos28.map(function (v) { return v.video; });
+      var uploadIds = r[8] || [];
+      return fetchVideoDetails(video28Ids).then(function () {
+        /* この診断の対象は「直近28日の上位」と「最新アップロード」だけに絞る。
+           S.videosは動画タブ・収益タブなど他の画面も書き込む共有キャッシュで、
+           一度入ったら消えないため、そのまま使うとどのタブを先に開いたかで
+           診断の対象本数・結果が変わってしまう（読み込み順序に依存する不具合）。 */
+        var idSet = {};
+        video28Ids.concat(uploadIds).forEach(function (id) { if (id) idSet[id] = true; });
+        var scopedIds = Object.keys(idSet).filter(function (id) { return S.videos[id]; });
+        var audits = scopedIds.map(function (id) {
           var a = Seo.audit(S.videos[id]);
           var bad = a.checks.filter(function (c) { return c.level === 'bad' || c.level === 'warn'; });
           return {
@@ -668,7 +678,7 @@
           now90: Api.rows(r[2]), prev90: Api.rows(r[3]),
           traffic: Api.rows(r[4]), prevTraffic: Api.rows(r[5]), subs: Api.rows(r[6]),
           videos28: videos28, meta: S.videos,
-          uploads: Object.keys(S.videos).map(function (k) { return S.videos[k]; }),
+          uploads: scopedIds.map(function (id) { return S.videos[id]; }),
           audits: audits,
           /* 同規模チャンネルの相場と比べるために要る。1,000視聴あたりの
              登録数は「率」なので分かりやすいが、そもそも今の登録者の
