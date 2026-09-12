@@ -384,7 +384,17 @@
 <div id="report" aria-hidden="true"><div id="reportBody"></div></div>
 
 <div class="toast" id="toast" hidden></div>
-<div class="loading" id="loading" hidden><div class="spinner"></div><span id="loadingText">読み込んでいます…</span></div>
+<div class="loading" id="loading" hidden>
+  <div class="spinner"></div>
+  <span id="loadingText">読み込んでいます…</span>
+  <!-- 返事が来ないまま待たせ続けないための抜け道。
+       しばらく進まないときだけ出る。 -->
+  <div class="loading-stuck" id="loadingStuck" hidden>
+    <p>時間がかかっています。しばらく開いていなかったときは、
+       前回の接続の期限が切れていることがあります。</p>
+    <button type="button" class="btn btn-primary" id="btnRetryConnect">つなぎ直す</button>
+  </div>
+</div>
 
 <script src="config.js"></script>
 <script src="js/store.js"></script>
