@@ -139,6 +139,11 @@
     lensOpen: function () { return cfg.lensOpen === true; },
     setLensOpen: function (v) { cfg.lensOpen = !!v; write(K_CFG, cfg); },
 
+    /* 「直近の速報値」の開閉。既定は畳んだまま
+       （確定した数字ではないので、見るかどうかは人による）。 */
+    provisionalOpen: function () { return cfg.provisionalOpen === true; },
+    setProvisionalOpen: function (v) { cfg.provisionalOpen = !!v; write(K_CFG, cfg); },
+
     theme: function () { return cfg.theme || 'auto'; },
     setTheme: function (v) { cfg.theme = v; write(K_CFG, cfg); },
 
