@@ -211,6 +211,8 @@
         $('revenueError').textContent = e.message;
       });
     });
+    $('btnReport').addEventListener('click', makeReport);
+    $('btnCopyForClaude').addEventListener('click', copyForClaude);
     $('videoSearch').addEventListener('input', renderVideoTable);
     $('videoSort').addEventListener('change', renderVideoTable);
     $('sheetBg').addEventListener('click', closeSheet);
@@ -525,6 +527,7 @@
   }
 
   function renderInsight(host, ins, w28, w90) {
+    S.insight = ins; S.w28 = w28; S.w90 = w90;   // レポートで使う
     var badge = { good: '順調', ok: '前向き', warn: '注意', bad: '要対処', info: '変化なし' }[ins.level];
 
     var rows = ins.metrics.map(function (m) {
@@ -777,6 +780,96 @@
       (note ? '<span class="scale-note">' + esc(note) + '</span>' : '') + '</div>';
   }
 
+
+  /* ========== 分析レポート ==========
+     いま画面に出ている内容を1枚にまとめる。
+     足りない材料（流入経路）は、押されたときだけ取りに行く。 */
+  function reportContext() {
+    var p = period();
+    var all = S.loaded.videos ? allStats() : [];
+    var total = (S.trafficRows || []).reduce(function (a, r) { return a + r.value; }, 0);
+    return {
+      channel: (S.channel && S.channel.snippet.title) || '',
+      subsTotal: Number((S.channel && S.channel.statistics && S.channel.statistics.subscriberCount) || 0),
+      period: p, w28: S.w28, w90: S.w90,
+      insight: S.insight,
+      videos: all.slice().sort(function (a, b) { return b.views - a.views; }),
+      lost: all.filter(function (v) { return v.unsubs > 0; })
+        .sort(function (a, b) { return b.unsubs - a.unsubs; }),
+      traffic: (S.trafficRows || []).map(function (r) {
+        return { label: r.label, value: r.value, share: total ? r.value / total * 100 : 0 };
+      })
+    };
+  }
+
+  /* 流入経路はレポートに入れたいが、「流入」タブを開いていないと手元に無い。
+     押されたときに1回だけ取りに行く（取れなくてもレポートは出す）。 */
+  function ensureTraffic() {
+    if (S.trafficRows) return Promise.resolve();
+    var p = period();
+    return Api.report({
+      startDate: p.start, endDate: p.end,
+      dimensions: 'insightTrafficSourceType', metrics: 'views', sort: '-views'
+    }).then(function (res) {
+      S.trafficRows = Api.rows(res).map(function (r) {
+        return {
+          label: TRAFFIC[r.insightTrafficSourceType] || r.insightTrafficSourceType,
+          value: Number(r.views) || 0
+        };
+      });
+    }).catch(function () { S.trafficRows = []; });
+  }
+
+  function makeReport() {
+    if (!S.channel) return;
+    busy(true, 'レポートを組み立てています…');
+    ensureTraffic().then(function () {
+      var d = Report.collect(reportContext());
+      $('reportBody').innerHTML = Report.html(d);
+      busy(false);
+      /* 印刷画面は組み立て終わってから開く。
+         中身が入る前に開くと、白紙のまま印刷されてしまう。 */
+      setTimeout(function () { global_print(); }, 60);
+    }).catch(function (e) { busy(false); toast(e.message); });
+  }
+  function global_print() { try { window.print(); } catch (e) {} }
+
+  function copyForClaude() {
+    if (!S.channel) return;
+    busy(true, '文章を組み立てています…');
+    ensureTraffic().then(function () {
+      var text = Report.forClaude(Report.collect(reportContext()));
+      busy(false);
+      return writeClipboard(text).then(function () {
+        toast('コピーしました。Claude に貼り付けてください。');
+      }).catch(function () {
+        // コピーが許されない場合は、選べる形で出す（黙って失敗させない）
+        showCopyFallback(text);
+      });
+    }).catch(function (e) { busy(false); toast(e.message); });
+  }
+
+  function writeClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return Promise.reject(new Error('no clipboard'));
+  }
+
+  /* 自動コピーが使えない環境（古いブラウザ、安全でない接続など）向け。
+     手で選んでコピーできるように、文章そのものを出す。 */
+  function showCopyFallback(text) {
+    $('sheetTitle').textContent = 'Claude に貼る文章';
+    $('sheet').hidden = false;
+    document.body.classList.add('locked');
+    $('sheetBodyInner').innerHTML =
+      '<p class="lead">自動でコピーできませんでした。下の文章を選んでコピーし、Claude に貼り付けてください。</p>' +
+      '<textarea class="copybox" readonly rows="18"></textarea>';
+    var ta = $('sheetBodyInner').querySelector('.copybox');
+    ta.value = text;
+    ta.focus(); ta.select();
+  }
+
   /* ========== 動画 ========== */
   function loadVideos() {
     if (S.loaded.videos) { renderVideoTable(); renderTopVideos(); return S.videosPromise || Promise.resolve(); }
@@ -866,6 +959,10 @@
       pct: Number(r.averageViewPercentage) || 0,
       subs: Number(r.subscribersGained) || 0,
       unsubs: Number(r.subscribersLost) || 0,
+      /* 視聴回数あたりの率。実数だけでは本数の違う動画を比べられない
+         （10万回で185人解除と、1千回で185人解除では意味がまるで違う）。 */
+      subRate: Number(r.views) ? (Number(r.subscribersGained) || 0) / Number(r.views) * 100 : 0,
+      unsubRate: Number(r.views) ? (Number(r.subscribersLost) || 0) / Number(r.views) * 100 : 0,
       likes: Number(r.likes) || 0,
       comments: Number(r.comments) || 0,
       lifetime: Number(st.viewCount) || 0,
@@ -960,7 +1057,8 @@
         '<td class="num" data-label="登録者">' +
         (s.subs || s.unsubs
           ? '<span class="subcell">' + (s.subs ? '＋' + Chart.fmtInt(s.subs) : '±0') +
-            (s.unsubs ? '<em class="v-down">−' + Chart.fmtInt(s.unsubs) + '</em>' : '') + '</span>'
+            (s.unsubs ? '<em class="v-down">−' + Chart.fmtInt(s.unsubs) + '</em>' : '') +
+            (s.unsubs ? '<i class="rate">解除率 ' + Chart.fmtRate(s.unsubRate) + '</i>' : '') + '</span>'
           : '—') + '</td>' +
         '<td class="num" data-label="作りの点数">' + (s.seo != null
           ? '<span class="vscore ' + scoreClass(s.seo) + '" title="題名・説明文・タグの点検結果">' +
@@ -1276,10 +1374,17 @@
         '</div>';
     }
     if (key === 'subs') {
+      var gained = sum(S.dayRows, 'subscribersGained');
+      var lost = sum(S.dayRows, 'subscribersLost');
+      var vws = sum(S.dayRows, 'views');
       extra = '<div class="mstats">' +
-        mstat('増えた', '＋' + Chart.fmtInt(sum(S.dayRows, 'subscribersGained')) + '人') +
-        mstat('減った', '−' + Chart.fmtInt(sum(S.dayRows, 'subscribersLost')) + '人') +
-        '</div>';
+        mstat('増えた', '＋' + Chart.fmtInt(gained) + '人') +
+        mstat('減った', '−' + Chart.fmtInt(lost) + '人') +
+        mstat('登録率', Chart.fmtRate(vws ? gained / vws * 100 : 0)) +
+        mstat('解除率', Chart.fmtRate(vws ? lost / vws * 100 : 0)) +
+        '</div>' +
+        '<p class="note">率はどちらも「視聴1回あたり何人か」です。実数だけでは' +
+        '再生数の違う期間・動画を比べられないため、率も並べています。</p>';
     }
 
     $('sheetBodyInner').innerHTML =
@@ -1373,6 +1478,7 @@
           '<span class="subcell">' +
           '<b class="' + pCls + '">' + pSign + Chart.fmtInt(v[primaryKey]) + '人</b>' +
           (v[otherKey] ? '<em class="' + oCls + '">' + oSign + Chart.fmtInt(v[otherKey]) + '人</em>' : '') +
+          '<i class="rate">解除率 ' + Chart.fmtRate(v.unsubRate) + '</i>' +
           '</span></button>';
       }).join('') : '<p class="chart-empty">' + emptyMsg + '</p>';
       bindVideoClicks(host);

@@ -136,7 +136,8 @@ a{color:var(--accent)}
   display:grid;grid-template-columns:repeat(4,1fr);gap:4px
 }
 .seg{
-  height:44px;   /* 指で押す的は最低44px。これより小さいと押し損ねる */border:0;border-radius:9px;background:rgba(255,255,255,.07);
+  /* 指で押す的は最低44px。これより小さいと押し損ねる */
+  height:44px;border:0;border-radius:9px;background:rgba(255,255,255,.07);
   color:var(--chrome-sub);font:inherit;font-size:.86rem;font-weight:600;cursor:pointer;
   display:grid;place-items:center;transition:background .14s ease,color .14s ease
 }
@@ -335,6 +336,9 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 .subcell{display:inline-flex;flex-direction:column;align-items:flex-end;gap:1px}
 .subcell b{font-weight:700}
 .subcell em{font-style:normal;font-weight:700;font-size:.7rem}
+/* 率は実数より一段落として置く。判断の主役は実数のほうで、
+   率は「本数の違う動画と比べるとき」に効く補助のため。 */
+.subcell .rate{font-style:normal;font-size:.66rem;color:var(--muted);white-space:nowrap}
 .v-up{color:var(--good)}
 .v-down{color:var(--bad)}
 .cell-title{display:flex;align-items:center;gap:10px;min-width:300px}
@@ -656,4 +660,81 @@ main{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))}
 .mval{
   flex:none;font-size:.86rem;font-weight:700;font-variant-numeric:tabular-nums;
   color:var(--ink);white-space:nowrap
+}
+
+/* 貼り付け用の文章を出す枠（自動コピーが使えないとき） */
+.copybox{
+  width:100%;padding:12px;border:1px solid var(--line);border-radius:var(--r-sm);
+  background:var(--panel-2);color:var(--ink);font-family:var(--mono);font-size:.78rem;
+  line-height:1.6;resize:vertical
+}
+
+/* ---------- 印刷（PDF保存）用の1枚 ----------
+   画面では一切出さない。印刷のときだけ、画面のほうを全部隠して
+   これだけを出す。A4・1枚に収めるため、9pt前後まで字を詰め、
+   グラフは載せない（紙では軸の数字が小さくなって読めないため）。 */
+#report{display:none}
+
+@media print{
+  /* 端末の配色に関係なく、紙は白地・黒字にする。
+     暗い配色のままだと、インクを大量に使ううえ読みにくい。 */
+  :root, :root[data-theme="dark"], :root[data-theme="light"]{
+    --ink:#000; --ink-2:#222; --muted:#555; --line:#bbb; --line-2:#ddd;
+    --good:#0a6b45; --bad:#a3201a; --accent:#1a5fb4;
+  }
+  html,body{background:#fff !important;color:#000 !important}
+  .topbar, main, .sheet, .toast, .loading{display:none !important}
+  #report{display:block}
+
+  @page{size:A4 portrait;margin:11mm 10mm}
+  #report{font-size:8.6pt;line-height:1.45;color:#000;font-family:var(--sans)}
+
+  .r-head{display:flex;justify-content:space-between;align-items:flex-end;
+    gap:12px;border-bottom:1.6pt solid #000;padding-bottom:5pt;margin-bottom:7pt}
+  .r-title{font-size:14pt;font-weight:700;line-height:1.2}
+  .r-sub{font-size:8pt;color:#444;margin-top:2pt}
+  .r-meta{font-size:8pt;color:#444;text-align:right;line-height:1.5;white-space:nowrap}
+  .r-meta b{font-size:11pt;color:#000}
+
+  .r-verdict{border:0.8pt solid #999;border-left:3pt solid #666;padding:5pt 7pt;margin-bottom:7pt}
+  .r-verdict.r-good{border-left-color:#0a6b45}
+  .r-verdict.r-warn{border-left-color:#8a5b00}
+  .r-verdict.r-bad{border-left-color:#a3201a}
+  .r-verdict.r-ok{border-left-color:#1a5fb4}
+  .r-badge{display:inline-block;border:0.8pt solid #666;padding:0 4pt;font-size:7.4pt;
+    margin-right:5pt;vertical-align:1pt}
+  .r-verdict b{font-size:10.5pt}
+  .r-detail{color:#444;margin-top:3pt}
+
+  .r-cols{display:flex;gap:10pt;margin-bottom:6pt}
+  .r-col{flex:1;min-width:0}
+  .r-h{font-size:9pt;font-weight:700;border-bottom:0.8pt solid #000;
+    padding-bottom:2pt;margin:6pt 0 4pt}
+
+  .r-table{width:100%;border-collapse:collapse;font-size:8.2pt}
+  .r-table th, .r-table td{padding:2.4pt 3pt;border-bottom:0.5pt solid #ddd;vertical-align:top}
+  .r-table thead th{font-size:7.4pt;color:#555;border-bottom:0.8pt solid #999;text-align:right}
+  .r-table thead th:first-child{text-align:left}
+  /* 指標名は折り返させない。狭いと1文字ずつ縦に並んでしまう。 */
+  .r-table tbody th{text-align:left;font-weight:500;color:#222;white-space:nowrap}
+  /* 動画の題名だけは、残り幅いっぱいまで使って途中で切る。 */
+  .r-videos tbody th{white-space:nowrap;width:99%}
+  .r-table td{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .r-simple tbody th{font-weight:400}
+  .r-videos tbody th{font-weight:400;max-width:0;overflow:hidden;text-overflow:ellipsis}
+  .r-up{color:#0a6b45;font-weight:700}
+  .r-down{color:#a3201a;font-weight:700}
+  .r-flat{color:#777}
+
+  .r-next{margin:0;padding-left:13pt}
+  .r-next li{margin-bottom:4pt}
+  .r-next b{display:block;font-size:8.8pt}
+  .r-next span{color:#444}
+
+  .r-note{font-size:7.2pt;color:#666;margin-top:2pt}
+  .r-foot{margin-top:7pt;padding-top:4pt;border-top:0.5pt solid #bbb;
+    font-size:7pt;color:#666}
+
+  /* 表の途中で改ページさせない */
+  table, tr, .r-verdict, .r-next li{break-inside:avoid;page-break-inside:avoid}
 }
