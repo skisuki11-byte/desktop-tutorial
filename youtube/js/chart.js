@@ -132,6 +132,24 @@
     }
   }
 
+  /* グラフを描いた枠に、あとから「この期間はデータがありません」のような
+     ただの文章を出すとき用。
+
+     ▼ なぜこれが要るか
+     グラフを描いた枠には、上の responsive() が「幅が変わったら描き直す」
+     監視を付けたままにしている。その枠に（Chart.line などを介さず）
+     直接 innerHTML でただの文章を書き込んでも、監視は外れないまま残る。
+     あとでタブの切り替えなどにより幅が動くと、監視が生きていたグラフの
+     古い中身がそのまま復活して、書いたはずの文章を上書きしてしまう
+     （実際、期間を短くして「本数が足りません」を出したはずが、
+       タブを行き来しているうちに前の期間の古いグラフに戻る形で起きた）。
+
+     ただの文章に切り替える前に必ずこれを呼び、監視を外してから書く。 */
+  function clear(host) {
+    if (host._chartRo) { host._chartRo.disconnect(); host._chartRo = null; }
+    host.innerHTML = '';
+  }
+
   /* ========== 折れ線（日ごとの推移） ==========
      values: [{date:'2026-01-01', value:123}]
      compare: 直前の同じ長さの期間。比較は主役ではないので点線の灰色にする。 */
@@ -392,6 +410,7 @@
   }
 
   global.Chart = {
+    clear: clear,
     line: line, hbar: hbar, delta: delta, retention: retention, spark: spark,
     fmtInt: fmtInt, fmtAxis: fmtAxis, fmtPct: fmtPct, fmtRate: fmtRate, fmtDur: fmtDur,
     fmtMoney: fmtMoney, esc: esc
