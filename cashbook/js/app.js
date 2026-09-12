@@ -27,6 +27,7 @@
     return Number(p[1]) + '/' + Number(p[2]);
   }
   function jpMonth(k) {
+    if (!k) return '不明';
     var p = k.split('-');
     return p[0] + '年' + Number(p[1]) + '月';
   }
