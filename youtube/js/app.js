@@ -73,9 +73,22 @@
     clearTimeout(t._timer);
     t._timer = setTimeout(function () { t.hidden = true; }, 3600);
   }
+  /* ▼ 待たせるときは、必ず抜け道を用意する
+     通信の相手はこちらの都合では動かない。返事が来ないことは必ず起きる。
+     そのとき「接続中…」だけが出たまま何も押せないと、
+     アプリを落として開き直すしか手がなくなる。
+     しばらく返事が無ければ、理由と「やり直す」ボタンを出す。 */
+  var STUCK_MS = 15000;
+
   function busy(on, text) {
-    $('loading').hidden = !on;
+    var host = $('loading');
+    host.hidden = !on;
     if (text) $('loadingText').textContent = text;
+    clearTimeout(host._stuck);
+    $('loadingStuck').hidden = true;
+    if (on) {
+      host._stuck = setTimeout(function () { $('loadingStuck').hidden = false; }, STUCK_MS);
+    }
   }
   function panelError(host, err) {
     host.innerHTML = '<p class="error-box">' + esc(err && err.message || String(err)) + '</p>';
@@ -132,6 +145,14 @@
 
     $('btnTheme').addEventListener('click', cycleTheme);
     $('btnConnect').addEventListener('click', connect);
+    /* 待たされたときの抜け道。端末に残った通行証を捨て、
+       同意画面から作り直す。1回押せば必ず前に進む道にする。 */
+    $('btnRetryConnect').addEventListener('click', function () {
+      busy(false);
+      Api.wake();
+      Store.clearToken();
+      connect();
+    });
     $('btnReload').addEventListener('click', function () {
       Store.cacheClear(); S.loaded = {}; loadDash(true, S.view);
     });
@@ -240,8 +261,34 @@
     busy(true, '前回の接続で読み込んでいます…');
     Api.resume().then(function () {
       return loadDash(false);
-    }).catch(function () {
+    }).catch(function (e) {
       busy(false);
+      /* 黙ってのつなぎ直しは、時間が空くと通らないことがある。
+         通らなかったことを隠して待たせ続けず、
+         1回押せば済む形にして前に出す。 */
+      if (!S.channel) {
+        show('setup');
+        $('setupError').hidden = false;
+        $('setupError').textContent = (e && e.message === 'SILENT_TIMEOUT') || !e
+          ? '前回の接続の期限が切れていました。下の「Google アカウントでつなぐ」を押してください。'
+          : e.message;
+      }
+    });
+  }
+
+  /* 画面に戻ってきたとき。
+     長く離れていると、端末に置いた通行証の期限（約1時間）が切れている。
+     その状態で放っておくと、次に何か押したときに固まったように見えるので、
+     戻ってきた時点で Google 側の発行係を作り直しておく。 */
+  function watchWake() {
+    var away = 0;
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { away = Date.now(); return; }
+      if (!away || Date.now() - away < 60000) return;   // 少し離れただけなら何もしない
+      away = 0;
+      Api.wake();
+      // 通行証が切れていて、まだ何も読めていなければ、つなぎ直しを試す
+      if (!S.channel && Store.everConnected() && $('loading').hidden) autoConnect();
     });
   }
 
@@ -1880,6 +1927,7 @@
   }
 
   boot();
+  watchWake();
   autoConnect();
 
   if ('serviceWorker' in navigator && location.protocol === 'https:') {

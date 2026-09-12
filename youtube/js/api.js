@@ -28,22 +28,77 @@
   var client = null;        // GIS のトークン発行係
   var clientScope = '';     // その発行係に渡した権限の並び
   var loading = null;
+  var gsiTries = 0;         // ログイン用スクリプトを取りに行った回数
 
-  /* GIS の読み込み。1度だけ。 */
+  /* ▼ 待ち時間の上限
+     Google 側の仕組みは「うまくいかなかった」を必ず知らせてくれるとは限らない。
+     知らせが来ないまま黙り込むと、こちらは待ち続けるしかなくなり、
+     画面は「接続中…」のまま二度と進まない。
+     そうさせないため、どの待ちにも必ず上限を置く。 */
+  var T_SCRIPT = 12000;     // ログイン用スクリプトの読み込み
+  var T_SILENT = 10000;     // 黙っての取り直し（うまくいくときは1〜2秒で返る）
+  var T_PROMPT = 180000;    // 同意画面。人が操作する時間なので長めに取る
+
+  /* 約束が時間内に片付かなければ、こちらから打ち切る。
+     onTimeout で、次にやり直せるよう後始末をする。 */
+  function withTimeout(promise, ms, message, onTimeout) {
+    var timer = null;
+    return Promise.race([
+      promise.then(function (v) { clearTimeout(timer); return v; },
+                   function (e) { clearTimeout(timer); throw e; }),
+      new Promise(function (_, reject) {
+        timer = setTimeout(function () {
+          if (onTimeout) { try { onTimeout(); } catch (e) {} }
+          reject(new Error(message));
+        }, ms);
+      })
+    ]);
+  }
+
+  /* GIS の読み込み。読み込めたら使い回す。
+
+     ▼ 失敗した約束を持ち続けないこと
+     以前はここで作った約束を、成否にかかわらずそのまま覚えていた。
+     一度でも読み込みに失敗すると、その「失敗した約束」が残り続け、
+     あとから何度つなごうとしても即座に同じ失敗を返す——つまり、
+     アプリを立ち上げ直して変数が消えるまで、二度とログインできなくなる。
+     （時間を空けて開くと接続中のまま進まず、落として開き直すと直る、
+       という症状はこれが原因だった。）
+     失敗したら覚えたものを捨て、次はまっさらからやり直す。 */
   function loadGsi() {
     if (loading) return loading;
-    loading = new Promise(function (resolve, reject) {
-      if (global.google && global.google.accounts) return resolve();
-      var s = document.createElement('script');
-      s.src = GSI; s.async = true; s.defer = true;
-      s.onload = function () { resolve(); };
-      s.onerror = function () {
+    if (global.google && global.google.accounts) {
+      loading = Promise.resolve();
+      return loading;
+    }
+    var el = null;
+    loading = withTimeout(new Promise(function (resolve, reject) {
+      el = document.createElement('script');
+      /* やり直しのときはURLの末尾を変える。
+         ブラウザは同じURLの「まだ返事の無い取り寄せ」を1本にまとめるので、
+         同じURLのまま貼り直すと、止まったままの取り寄せに相乗りしてしまい、
+         やはり返事が来ない。末尾を変えると別の取り寄せとして出し直せる。 */
+      el.src = GSI + (gsiTries ? '?retry=' + Date.now() : '');
+      gsiTries++;
+      el.async = true; el.defer = true;
+      el.onload = function () { resolve(); };
+      el.onerror = function () {
         reject(new Error('Google のログイン用スクリプトを読み込めませんでした。通信環境をご確認ください。'));
       };
-      document.head.appendChild(s);
-    });
+      document.head.appendChild(el);
+    }), T_SCRIPT, 'Google への接続に時間がかかっています。通信環境をご確認のうえ、もう一度お試しください。')
+      .catch(function (e) {
+        loading = null;                                  // 次はまっさらからやり直す
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+        throw e;
+      });
     return loading;
   }
+
+  /* 発行係を捨てる。
+     画面を長く離れたあとの発行係は、内側の仕組みが止まっていて
+     いくら頼んでも返事をしないことがある。作り直せば直る。 */
+  function resetClient() { client = null; clientScope = ''; }
 
   /* トークンをもらう。
      first=true のときだけ同意画面を出す。以降は黙って更新する。 */
@@ -75,7 +130,10 @@
       // 同じ発行係を使い回すと、前の権限のままのトークンが返ってしまう。
       if (client && clientScope !== want) { client = null; }
 
-      return new Promise(function (resolve, reject) {
+      var settled = false;     // 打ち切ったあとに返事が来ることがあるので、二重に扱わない
+      var ask = new Promise(function (resolve, reject) {
+        var ok = function (v) { if (!settled) { settled = true; resolve(v); } };
+        var ng = function (e) { if (!settled) { settled = true; reject(e); } };
         if (!client) {
           clientScope = want;
           client = global.google.accounts.oauth2.initTokenClient({
@@ -90,22 +148,37 @@
                 money = String(res.scope || '').indexOf(MONEY) >= 0;
                 global.Store.setEverConnected(true);
                 global.Store.saveToken(token, res.expires_in, money);
-                resolve(token);
+                ok(token);
               } else {
-                reject(new Error('ログインを完了できませんでした。'));
+                ng(new Error('ログインを完了できませんでした。'));
               }
             },
             error_callback: function (err) {
               var t = (err && err.type) || '';
               if (t === 'popup_closed' || t === 'popup_failed_to_open') {
-                reject(new Error('ログイン画面が閉じられました。ポップアップの許可をご確認ください。'));
+                ng(new Error('ログイン画面が閉じられました。ポップアップの許可をご確認ください。'));
               } else {
-                reject(new Error('ログインできませんでした（' + (err && err.message || t || '原因不明') + '）。'));
+                ng(new Error('ログインできませんでした（' + (err && err.message || t || '原因不明') + '）。'));
               }
             }
           });
         }
-        client.requestAccessToken({ prompt: interactive ? 'consent' : '' });
+        // 頼む段階で投げることがある（発行係が壊れている等）
+        try { client.requestAccessToken({ prompt: interactive ? 'consent' : '' }); }
+        catch (e) { ng(e); }
+      });
+
+      return withTimeout(
+        ask,
+        interactive ? T_PROMPT : T_SILENT,
+        interactive
+          ? 'ログイン画面からの返事がありませんでした。もう一度お試しください。'
+          : 'SILENT_TIMEOUT',
+        resetClient     // 返事が来ないときは発行係を作り直す
+      ).catch(function (e) {
+        // うまくいかなかった発行係は残さない。次は作り直しから始める。
+        resetClient();
+        throw e;
       });
     });
   }
@@ -176,6 +249,8 @@
        だめだったときだけ同意画面を出す。 */
     connect: function () {
       if (!global.Store.everConnected()) return requestToken(true);
+      /* まず黙って試す。返事が来なければ10秒で打ち切り、同意画面に乗り換える。
+         打ち切らずに待つと「接続中…」のまま進まなくなる。 */
       return requestToken(false).catch(function () { return requestToken(true); });
     },
 
@@ -208,8 +283,15 @@
         try { global.google.accounts.oauth2.revoke(token); } catch (e) {}
       }
       global.Store.clearToken();
-      token = null; client = null; clientScope = ''; money = false;
+      token = null; money = false;
+      resetClient();
     },
+
+    /* 画面に戻ってきたときに呼ぶ。
+       長く離れているあいだに、Google 側の仕組みが止まっていることがある。
+       止まった発行係に頼むと返事が来ないので、先に捨てておく。
+       端末に残した通行証はそのまま使えるので、触らない。 */
+    wake: function () { resetClient(); },
 
     /* ---------- Data API（動画そのもの） ---------- */
     data: function (path, params) {
