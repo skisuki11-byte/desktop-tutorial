@@ -31,7 +31,9 @@
     if (ins) {
       rows = ins.metrics.map(function (m) {
         return {
-          label: m.label,
+          label: m.label, note: m.note,
+          /* 判定を書き換える数字（登録への転換）だけ、帯の中で1つ持ち上げる。 */
+          key: m.kind === 'per1k',
           a: fmtMetric(m.a, m.kind), ap: m.ap,
           b: fmtMetric(m.b, m.kind), bp: m.bp
         };
@@ -82,66 +84,80 @@
     return d.getFullYear() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + ('0' + d.getDate()).slice(-2);
   }
 
-  /* 紙に出す1枚を組み立てる。 */
+  /* 紙に出す1枚を組み立てる。
+
+     ▼ 何を載せ、何を落としたか
+     載せるのは「いまどうなっていて、なぜそう言えて、次に何をするか」。
+     紙は触れないので、開いて確かめる先が無い。だから根拠は
+     「どこを見て言っているか」だけを短く置き、理由の文章は画面に残す。
+
+     落としたのは「登録を解除された動画」の表。
+     この一覧は、YouTube が「解除する直前に見ていた動画」を記録したもので、
+     その動画が原因という意味ではない。紙の上では注意書きごと読み飛ばされて
+     「この動画が悪い」と誤読されやすく、しかも打ち手に繋がらない。
+     Claude に渡す文章のほうには入れてある（読む側が前提を汲めるため）。
+
+     グラフも入れない。画面のグラフは触って値を読むためのもので、
+     紙に落とすと軸の数字が小さくなり、かえって読めない。 */
+  var LEVEL_WORD = { good: '順調', ok: '前向き', warn: '注意', bad: '要対処', info: '変化なし' };
+  var LENS_MARK = { good: '✓', info: '・', warn: '▲', bad: '●' };
+
   function html(d) {
     var C = global.Chart;
     var v = d.verdict;
-    var badge = v ? ({ good: '順調', ok: '前向き', warn: '注意', bad: '要対処', info: '変化なし' }[v.level]) : '';
 
     return '' +
+      /* 題字帯 */
       '<div class="r-head">' +
       '<div><div class="r-title">' + esc(d.channel) + '</div>' +
       '<div class="r-sub">チャンネル分析レポート　' + d.period.start + ' 〜 ' + d.period.end +
       '（' + d.period.days + '日間）</div></div>' +
-      '<div class="r-meta">登録者 <b>' + C.fmtInt(d.subs) + '</b>人<br>' + ymd(d.made) + ' 作成</div>' +
+      '<div class="r-meta">登録者<br><b>' + C.fmtInt(d.subs) + '</b>人<br>' + ymd(d.made) + ' 作成</div>' +
       '</div>' +
 
+      /* 判定帯 */
       (v ? '<div class="r-verdict r-' + v.level + '">' +
-        '<span class="r-badge">' + badge + '</span>' +
-        '<b>' + esc(v.title) + '</b>　' + esc(v.one) +
+        '<span class="r-badge">' + (LEVEL_WORD[v.level] || '') + '</span>' +
+        '<div class="r-vtitle">' + esc(v.title) + '</div>' +
+        '<div class="r-one">' + esc(v.one) + '</div>' +
         '<div class="r-detail">' + esc(v.detail) + '</div>' +
         '</div>' : '') +
 
+      /* 数字の帯 */
+      (d.metrics.length ? '<div class="r-figs">' + d.metrics.map(function (m) {
+        return '<div class="r-fig' + (m.key ? ' is-key' : '') + '">' +
+          '<span class="r-fig-label">' + esc(m.label) + '</span>' +
+          '<span class="r-fig-now"><span class="r-fig-v">' + m.a + '</span>' + pctTag(m.ap) + '</span>' +
+          '<span class="r-fig-prev">90日 ' + m.b + ' ' + pctTag(m.bp) + '</span>' +
+          (m.note ? '<span class="r-fig-note">' + esc(m.note) + '</span>' : '') +
+          '</div>';
+      }).join('') + '</div>' +
+        '<p class="r-note">大きい数字は直近28日。％はそれぞれ「直前の同じ長さの期間」との比較。</p>' : '') +
+
+      /* 2段組 */
       '<div class="r-cols">' +
 
-      '<div class="r-col">' +
-      '<div class="r-h">主な数字</div>' +
-      '<table class="r-table"><thead><tr><th></th><th>直近28日</th><th>直近90日</th></tr></thead><tbody>' +
-      d.metrics.map(function (m) {
-        return '<tr><th>' + esc(m.label) + '</th>' +
-          '<td>' + m.a + ' ' + pctTag(m.ap) + '</td>' +
-          '<td>' + m.b + ' ' + pctTag(m.bp) + '</td></tr>';
-      }).join('') +
-      '</tbody></table>' +
-      '<div class="r-note">％は直前の同じ長さの期間との比較。</div>' +
-
-      (d.traffic.length ? '<div class="r-h">流入経路</div>' +
-        '<table class="r-table r-simple"><tbody>' +
-        d.traffic.map(function (t) {
-          return '<tr><th>' + esc(t.label) + '</th><td>' + C.fmtInt(t.value) + '回</td>' +
-            '<td>' + C.fmtPct(t.share) + '</td></tr>';
-        }).join('') + '</tbody></table>' : '') +
-      '</div>' +
-
-      '<div class="r-col">' +
+      '<div class="r-main">' +
       '<div class="r-h">次にやること</div>' +
       '<ol class="r-next">' +
-      (v ? v.actions.map(function (a) {
-        return '<li><b>' + esc(a.title) + '</b><span>' + esc(a.why) + '</span></li>';
+      (v ? v.actions.map(function (a, i) {
+        return '<li><span class="r-next-no">' + (i + 1) + '</span>' +
+          '<span class="r-next-b"><b>' + esc(a.title) + '</b>' +
+          '<span>' + esc(a.why) + '</span></span></li>';
       }).join('') : '') +
       '</ol>' +
+      '</div>' +
 
-      /* 観点は紙では見出しと数字だけにする。説明の文章まで載せると
-         1枚に収まらない。「どこを見て言っているか」が分かれば、
-         詳しい理由は画面で開ける。 */
+      '<div class="r-side">' +
       (d.lenses.length ? '<div class="r-h">分析の観点</div>' +
-        '<table class="r-table r-simple r-lens"><tbody>' +
-        d.lenses.map(function (x) {
-          return '<tr class="r-l-' + x.level + '"><th>' + esc(x.title) + '</th>' +
-            '<td>' + (x.nums || []).map(function (u) {
-              return esc(u.label) + ' ' + esc(u.value);
-            }).join('<br>') + '</td></tr>';
-        }).join('') + '</tbody></table>' : '') +
+        '<div class="r-lens">' + d.lenses.map(function (x) {
+          return '<div class="r-lens-item r-l-' + x.level + '">' +
+            '<span class="r-lens-mark">' + (LENS_MARK[x.level] || '・') + '</span>' +
+            '<span class="r-lens-b"><b>' + esc(x.title) + '</b>' +
+            (x.nums || []).map(function (u) {
+              return '<span class="r-lens-n"><i>' + esc(clip(u.label, 22)) + '</i> ' + esc(u.value) + '</span>';
+            }).join('') + '</span></div>';
+        }).join('') + '</div>' : '') +
 
       (d.clear.length ? '<div class="r-h">問題ではないと確認できたこと</div>' +
         '<ul class="r-clear">' + d.clear.map(function (c) {
@@ -151,36 +167,39 @@
 
       '</div>' +
 
-      '<div class="r-h">この期間に伸びた動画</div>' +
-      '<table class="r-table r-videos"><thead><tr>' +
+      /* 動画表 */
+      '<div class="r-h">この期間に見られた動画</div>' +
+      '<table class="r-table"><thead><tr>' +
       '<th>動画</th><th>視聴</th><th>平均視聴</th><th>登録</th><th>／1,000視聴</th>' +
       '</tr></thead><tbody>' +
       d.videos.map(function (s) {
         return '<tr><th>' + esc(s.title) + '</th>' +
           '<td>' + C.fmtInt(s.views) + '</td>' +
           '<td>' + C.fmtDur(s.avg) + '</td>' +
-          '<td>＋' + C.fmtInt(s.subs) + (s.unsubs ? ' / −' + C.fmtInt(s.unsubs) : '') + '</td>' +
-          '<td>' + s.subPer1k.toFixed(2) + '人</td></tr>';
+          '<td>＋' + C.fmtInt(s.subs) + '</td>' +
+          '<td class="r-key-col">' + s.subPer1k.toFixed(2) + '</td></tr>';
       }).join('') + '</tbody></table>' +
-      '<div class="r-note">「／1,000視聴」は1,000回再生されるうち何人が登録したか。' +
-      '本数の違う動画を比べられるのはこちら。</div>' +
+      '<p class="r-note">「／1,000視聴」は1,000回再生されるうち何人が登録したか。' +
+      '本数の違う動画を比べられるのはこちら。登録者数そのものは再生数の大小でほぼ決まる。</p>' +
 
-      (d.lost.length ? '<div class="r-h">登録を解除された動画</div>' +
-        '<table class="r-table r-videos"><tbody>' +
-        d.lost.map(function (s) {
-          return '<tr><th>' + esc(s.title) + '</th>' +
-            '<td>−' + C.fmtInt(s.unsubs) + '人</td>' +
-            '<td>解除率 ' + C.fmtRate(s.unsubRate) + '</td>' +
-            '<td>視聴 ' + C.fmtInt(s.views) + '</td></tr>';
-        }).join('') + '</tbody></table>' +
-        '<div class="r-note">YouTube が「解除する直前に見ていた動画」として記録したもの。' +
-        'その動画が原因とは限らない。</div>' : '') +
+      /* 流入 */
+      (d.traffic.length ? '<div class="r-h">どこから来ているか</div>' +
+        '<div class="r-flow">' + d.traffic.map(function (t) {
+          return '<span>' + esc(t.label) + ' <b>' + C.fmtPct(t.share) + '</b></span>';
+        }).join('') + '</div>' : '') +
 
       '<div class="r-foot">' +
       'YouTube Data API v3 ／ YouTube Analytics API v2 から取得。' +
       '集計が確定するまで数日かかるため、直近3日は含まない。' +
       '登録者の合計は YouTube が上位3桁に丸めた値、増減は丸めのない正確な値。' +
+      '「登録への転換」は増えた登録者 ÷ 視聴回数 × 1000（解除は引いていない）。' +
       '</div>';
+  }
+
+  /* 長い題名を紙幅に収める。途中で切って「…」を付ける。 */
+  function clip(s, n) {
+    s = String(s || '');
+    return s.length > n ? s.slice(0, n - 1) + '…' : s;
   }
 
   /* Claude に貼るための文章。数字だけでなく、何を答えてほしいかまで書く。
@@ -311,5 +330,55 @@
     return L.join('\n');
   }
 
-  global.Report = { collect: collect, html: html, forClaude: forClaude };
+  /* ========== 1枚に収める ==========
+     版面は1枚に収まる作りにしてあるが、中身の量は月によって変わる。
+     観点が4つ出る月、題名の長い動画が並ぶ月、打ち手の説明が長い月——
+     どこかで必ず溢れる。決め打ちの級数で組むかぎり、これは直せない。
+
+     そこで、印刷の直前に「紙と同じ幅で一度並べて、高さを測る」。
+     溢れていたら根の級数だけを縮める。他の寸法は全部その相対（em）なので、
+     字も余白も一緒に縮み、組みは崩れない。
+
+     縮める下限は0.78。これ以上小さくすると紙の上で読めなくなるので、
+     そこまで縮めても収まらない場合は、2枚目に送るほうを選ぶ。
+     読めない1枚より、読める2枚のほうがましなので。 */
+  var FIT_FLOOR = 0.78;
+
+  function fit(el) {
+    if (!el || !el.getBoundingClientRect) return 1;
+    el.style.setProperty('--r-fit', '1');
+    el.classList.add('is-measuring');
+
+    /* A4縦(297mm) − 上下の余白(11mm×2) = 275mm。
+       印刷画面の設定でこれより余白が広くなることがあるので、
+       270mm を目標にして少しだけ余裕を持たせる。 */
+    var limit = mmToPx(270);
+    var h = el.scrollHeight;
+    var f = 1;
+    if (limit > 0 && h > limit) {
+      /* 面積はおおよそ級数の2乗で効くので、平方根から当てる。
+         そのあと1回だけ測り直して、行の折り返しのずれを詰める。 */
+      f = Math.max(FIT_FLOOR, Math.sqrt(limit / h));
+      el.style.setProperty('--r-fit', String(f));
+      var h2 = el.scrollHeight;
+      if (h2 > limit) {
+        f = Math.max(FIT_FLOOR, f * Math.sqrt(limit / h2));
+        el.style.setProperty('--r-fit', String(f));
+      }
+    }
+    el.classList.remove('is-measuring');
+    return f;
+  }
+
+  /* mm を画面の px に直す。端末ごとに違うので、実物を置いて測る。 */
+  function mmToPx(mm) {
+    var probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;left:-9999px;top:0;height:' + mm + 'mm';
+    document.body.appendChild(probe);
+    var px = probe.getBoundingClientRect().height;
+    document.body.removeChild(probe);
+    return px;
+  }
+
+  global.Report = { collect: collect, html: html, forClaude: forClaude, fit: fit };
 })(window);

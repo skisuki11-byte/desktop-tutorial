@@ -928,6 +928,7 @@
     ensureTraffic().then(function () {
       var d = Report.collect(reportContext());
       $('reportBody').innerHTML = Report.html(d);
+      Report.fit($('report'));
       busy(false);
       /* 印刷画面は組み立て終わってから開く。
          中身が入る前に開くと、白紙のまま印刷されてしまう。 */
