@@ -6,8 +6,12 @@
  *
  *  Google への問い合わせ（accounts.google.com / googleapis.com）は
  *  別のオリジンなので一切触らない。認証に割り込むと事故になる。
+ *
+ *  この数字は、設定画面に出す「バージョン」（js/app.js の APP_VERSION）と
+ *  必ず揃えること。ズレると、控えを新しくしたつもりの回だけ
+ *  画面の表示が古いまま、ということが起こる。
  */
-var CACHE = 'ytlab-v18';
+var CACHE = 'ytlab-v20';
 var ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css', './config.js',
   './js/store.js', './js/api.js', './js/chart.js', './js/seo.js', './js/insight.js', './js/report.js', './js/app.js',

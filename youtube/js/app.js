@@ -13,6 +13,16 @@
   var $ = function (id) { return document.getElementById(id); };
   var esc = Chart.esc;
 
+  /* ▼ バージョン
+     何かおかしいとき・直したはずが直っていないときに、
+     「いつの時点のものを見ているか」を伝えられるようにしておく。
+     置くだけで動く作り（ビルド手順が無い）なので、番号は手で上げる。
+     sw.js の CACHE の数字と必ず揃えること
+     （揃っていないと、控えを新しくしたつもりの回とズレて、
+       ここの表示だけ古いまま、ということが起こる）。 */
+  var APP_VERSION = 'v20';
+  var APP_UPDATED = '2026-09-12 22:57';
+
   /* 分析値が確定するまで2〜3日かかる。
      昨日までを入れると、あとから増えて「減った」ように見えるので、
      3日前を終わりにする。 */
@@ -151,6 +161,9 @@
   function boot() {
     applyTheme();
     syncPeriodButtons();
+    if ($('appVersion')) {
+      $('appVersion').textContent = 'バージョン ' + APP_VERSION + '（' + APP_UPDATED + ' 更新）';
+    }
     $('clientId').value = (Store.clientIdSource() === 'device') ? Store.clientId() : '';
     $('originHint').textContent =
       'Google Cloud の「承認済みの JavaScript 生成元」には ' + location.origin + ' を登録してください。';
