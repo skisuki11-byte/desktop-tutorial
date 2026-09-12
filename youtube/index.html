@@ -145,6 +145,20 @@
       <div class="panel-head"><h2>チャンネルの規模</h2><span class="hint">累計の数字</span></div>
       <div id="scale"></div>
     </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>分析レポート</h2><span class="hint">この期間のまとめ</span></div>
+      <p class="lead">
+        いま画面に出ている数字と判定を、A4・1枚にまとめて出します。
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnReport" type="button">PDFで保存（印刷）</button>
+        <button class="btn btn-ghost" id="btnCopyForClaude" type="button">Claudeに貼る用にコピー</button>
+      </div>
+      <p class="hint mt">
+        PDFは端末の印刷画面から「PDFに保存」を選びます。追加の登録も通信も要りません。
+      </p>
+    </div>
   </section>
 
   <!-- ============ 収益 ============ -->
@@ -366,6 +380,9 @@
   </div>
 </div>
 
+<!-- 印刷用の1枚。画面には出さず、印刷のときだけ出す。 -->
+<div id="report" aria-hidden="true"><div id="reportBody"></div></div>
+
 <div class="toast" id="toast" hidden></div>
 <div class="loading" id="loading" hidden><div class="spinner"></div><span id="loadingText">読み込んでいます…</span></div>
 
@@ -375,6 +392,7 @@
 <script src="js/chart.js"></script>
 <script src="js/seo.js"></script>
 <script src="js/insight.js"></script>
+<script src="js/report.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

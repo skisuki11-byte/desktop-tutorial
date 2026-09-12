@@ -56,6 +56,16 @@
     }
   }
   function fmtPct(v) { return (Math.round(v * 10) / 10) + '%'; }
+  /* 1%未満の割合。解除率のように 0.0X% の桁で効くものは、
+     小数1桁だと 0.1% と 0.04% が同じ「0.0%」に潰れて比べられなくなる。
+     小さいときだけ桁を増やす。 */
+  function fmtRate(v) {
+    var a = Math.abs(v);
+    if (!a) return '0%';
+    if (a < 0.01) return '0.01%未満';
+    if (a < 1) return (Math.round(v * 100) / 100) + '%';
+    return (Math.round(v * 10) / 10) + '%';
+  }
   function fmtDur(sec) {
     sec = Math.round(sec || 0);
     var m = Math.floor(sec / 60), s = sec % 60;
@@ -374,7 +384,7 @@
 
   global.Chart = {
     line: line, hbar: hbar, delta: delta, retention: retention, spark: spark,
-    fmtInt: fmtInt, fmtAxis: fmtAxis, fmtPct: fmtPct, fmtDur: fmtDur,
+    fmtInt: fmtInt, fmtAxis: fmtAxis, fmtPct: fmtPct, fmtRate: fmtRate, fmtDur: fmtDur,
     fmtMoney: fmtMoney, esc: esc
   };
 })(window);
