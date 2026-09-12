@@ -635,6 +635,11 @@
       soft(Api.report({ startDate: w90.start, endDate: w90.end, dimensions: 'day', metrics: DAILY })),
       soft(Api.report({ startDate: w90.prevStart, endDate: w90.prevEnd, dimensions: 'day', metrics: DAILY })),
       soft(Api.report({ startDate: w28.start, endDate: w28.end, dimensions: 'insightTrafficSourceType', metrics: 'views' })),
+      /* 前の28日ぶんの流入内訳。視聴の伸びが「新しい人に届いた」ことによるものか、
+         「すでに登録している人がより多く見ているだけ」かを見分けるために要る。
+         後者なら、転換率（1,000視聴あたりの登録）が落ちるのは自然な結果であって、
+         作りが悪くなったわけではない。 */
+      soft(Api.report({ startDate: w28.prevStart, endDate: w28.prevEnd, dimensions: 'insightTrafficSourceType', metrics: 'views' })),
       soft(Api.report({ startDate: w28.start, endDate: w28.end, dimensions: 'subscribedStatus', metrics: 'views' })),
       /* 登録者数まで一緒に取る。1,000視聴あたり何人が登録したかを
          動画ごとに出せないと、「上位と長い尾の差」「条件の揃った2本の差」の
@@ -647,7 +652,7 @@
       })),
       listPromise
     ]).then(function (r) {
-      var videos28 = Api.rows(r[6]);
+      var videos28 = Api.rows(r[7]);
       return fetchVideoDetails(videos28.map(function (v) { return v.video; })).then(function () {
         var audits = Object.keys(S.videos).map(function (id) {
           var a = Seo.audit(S.videos[id]);
@@ -661,10 +666,15 @@
         renderInsight(host, Insight.build({
           now28: Api.rows(r[0]), prev28: Api.rows(r[1]),
           now90: Api.rows(r[2]), prev90: Api.rows(r[3]),
-          traffic: Api.rows(r[4]), subs: Api.rows(r[5]),
+          traffic: Api.rows(r[4]), prevTraffic: Api.rows(r[5]), subs: Api.rows(r[6]),
           videos28: videos28, meta: S.videos,
           uploads: Object.keys(S.videos).map(function (k) { return S.videos[k]; }),
-          audits: audits
+          audits: audits,
+          /* 同規模チャンネルの相場と比べるために要る。1,000視聴あたりの
+             登録数は「率」なので分かりやすいが、そもそも今の登録者の
+             純増そのものが、同じ規模のチャンネルと比べて速いのか遅いのか
+             は、これが無いと判断できない。 */
+          subsTotal: Number((S.channel && S.channel.statistics && S.channel.statistics.subscriberCount) || 0)
         }), w28, w90);
       });
     }).catch(function (e) { panelError(host, e); });

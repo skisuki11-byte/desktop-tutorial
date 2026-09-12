@@ -5,7 +5,7 @@
  *  「28日も90日も視聴回数は増えている」＝順調、と出しておきながら、
  *  同じ期間に 1,000回見られるうち何人が登録するかは半分に落ちていた。
  *  数字は増えているのに、チャンネルとしては痩せていた。
- *  そこで、判定は次の5つの観点を並べて見るようにしている。
+ *  そこで、判定は次の観点を並べて見るようにしている。
  *
  *   1. 転換   1,000視聴あたり何人が登録したか。
  *             視聴回数が伸びても、ここが落ちていれば「順調」とは言えない。
@@ -14,6 +14,10 @@
  *             API の平均視聴時間 と 総再生時間÷視聴回数。
  *             大きくずれる／逆方向に動くときは、ショートやライブが
  *             混ざって、全体の平均が別のものを測っている合図になる。
+ *             「向きが逆かどうか」は、画面に表示する丸めた数字の符号で
+ *             判定する。丸める前の生の値で判定すると、表示上は
+ *             +5%／−24%のように逆に見えるのに「向きは揃っている」と
+ *             書いてしまう食い違いが起きるため。
  *   3. 偏り   上位数本と、それ以外（長い尾）で登録の効率を比べる。
  *             視聴の大半が尾にあるのに登録は上位が作っている、という形は多い。
  *             このとき打つ手は「もっと伸ばす」ではなく「尾を直す」になる。
@@ -23,6 +27,15 @@
  *   5. 除外   問題ではないと確認できたことを、はっきり書いて返す。
  *             これが無いと、解除率のような「目立つが効かない」数字に
  *             手をかけて時間を使ってしまう。
+ *   6. 視聴の中身   転換率の低下が、届き方（既存↔新規の構成変化）による
+ *             ものか、届いたあとの伝え方によるものかを切り分ける。
+ *             登録フィード・ホームの割合が増えているだけなら、
+ *             転換率が下がるのは自然な結果で、作りの問題ではない。
+ *   7. 相場   同じくらいの規模のチャンネルと比べて、登録者の増え方が
+ *             速いか遅いか。転換率という「率」だけを見ていると、
+ *             視聴回数が伸びている局面で、実際には人並み外れて
+ *             速く伸びていることを見落としやすい。外部の調査（vidIQ）を
+ *             引用した目安であり、断定の材料にはしない。
  *
  *  ▼ 打ち手の優先順（上から見て、当てはまった順に3つ）
  *   1. 投稿が止まっている   … 何を直しても出さなければ始まらない
@@ -194,8 +207,19 @@
 
     var gap = Math.abs(api - der) / der * 100;
     var dApi = pct(api, apiP), dDer = pct(der, derP);
-    var opposite = dApi != null && dDer != null &&
-      Math.abs(dApi) >= FLAT && Math.abs(dDer) >= FLAT && (dApi > 0) !== (dDer > 0);
+    /* 「向きが逆かどうか」は、四捨五入して画面に出す数字（±5%・±24%…）の
+       符号で決める。以前は丸める前の生の値に±5%以上の変化があるかで
+       判定していたため、生の値が+4.6%（表示は「+5%」）のようなときに
+       「向きは揃っている」という文章と、目の前の「+5%」「−24%」という
+       表示が食い違って見える事故が起きていた。
+       読む人が実際に見る数字と、判定の根拠を必ず一致させる。 */
+    var sign = function (p) {
+      if (p == null) return 0;
+      var r = Math.round(p);
+      return r > 0 ? 1 : r < 0 ? -1 : 0;
+    };
+    var sApi = sign(dApi), sDer = sign(dDer);
+    var opposite = sApi !== 0 && sDer !== 0 && sApi !== sDer;
 
     var lvl = opposite ? 'warn' : (gap >= 20 ? 'info' : 'good');
     var body;
@@ -317,6 +341,118 @@
       ],
       ratio: best.ratio, pair: best
     };
+  }
+
+  /* 6. 視聴の中身 — 増えた視聴は「新規」か「既存」か。
+     転換率（1,000視聴あたりの登録）が落ちていても、原因が作りの側にあるとは
+     限らない。すでに登録している人がこれまでより多く見るようになっただけなら、
+     その人たちはもう登録しようがないので、転換率は指標としてただ下がる。
+     これは「登録フィード・ホーム」からの流入が占める割合が、
+     前の期間と比べて増えているかどうかで見分けられる。 */
+  var AUDIENCE_SHIFT = 6;   // 登録フィードの割合がこれ以上ポイント動いたら取り上げる
+  function lensAudienceMix(d) {
+    var now = share(d.traffic, 'insightTrafficSourceType', 'SUBSCRIBER');
+    var before = share(d.prevTraffic, 'insightTrafficSourceType', 'SUBSCRIBER');
+    if (!sum(d.traffic, 'views') || !sum(d.prevTraffic, 'views')) return null;   // 前期の内訳が無ければ何も言えない
+
+    var diff = now - before;   // ポイント差（％の差ではなくポイントの差）
+    var lvl = Math.abs(diff) >= AUDIENCE_SHIFT ? (diff > 0 ? 'warn' : 'good') : 'info';
+    var body;
+    if (diff >= AUDIENCE_SHIFT) {
+      body = '「登録フィード・ホーム」からの視聴が、視聴全体に占める割合を' + Math.round(diff) +
+        'ポイント増やしています（' + Math.round(before) + '% → ' + Math.round(now) + '%）。' +
+        'ここはすでに登録している人がほとんどの入口です。視聴回数の伸びのうち、' +
+        'この分は「新しく届いた」わけではないので、転換率が落ちて見えるのは自然な結果でもあります。' +
+        'ただし、そのぶん新規発見の入口（関連動画・検索）の取り分は相対的に細っています。' +
+        '転換率を戻すより先に、「流入」タブで関連動画・検索の割合が同時に落ちていないかを確かめてください。';
+    } else if (diff <= -AUDIENCE_SHIFT) {
+      body = '「登録フィード・ホーム」からの視聴が、視聴全体に占める割合を' + Math.round(Math.abs(diff)) +
+        'ポイント減らしています（' + Math.round(before) + '% → ' + Math.round(now) + '%）。' +
+        '視聴の伸びは、既存の登録者が見る量が増えたからではなく、新しい人に届いた分だと言えます。' +
+        'それでも転換率が落ちているなら、原因は届き方ではなく「登録する理由が伝わっているか」の側にあります。';
+    } else {
+      body = '「登録フィード・ホーム」の割合はほぼ変わっていません（' + Math.round(before) + '% → ' +
+        Math.round(now) + '%）。視聴の伸びが既存の登録者に偏ったせいで転換率が落ちたわけではなさそうです。' +
+        '原因は届き方より、届いたあとの「登録する理由の伝え方」の側にある可能性が高くなります。';
+    }
+    return {
+      key: 'audience', level: lvl, title: '視聴の増え方（新規か、既存か）',
+      body: body,
+      nums: [
+        { label: '登録フィード・ホームの割合（今回）', value: fixed(now, 0) + '%' },
+        { label: '登録フィード・ホームの割合（前回）', value: fixed(before, 0) + '%' }
+      ]
+    };
+  }
+
+  /* 7. 相場 — 同じくらいの規模のチャンネルと比べて、登録者は速く増えているか。
+     1,000視聴あたりの転換率は「率」なので分かりやすいが、そもそも今の
+     純増そのものが世間と比べて速いのか遅いのかは、これが無いと分からない。
+     視聴回数が伸びている局面では特に、「転換率が落ちている」という悪い面だけを
+     見て、実際には人並み外れて速く伸びていることを見落としやすい。
+
+     ▼ 数字の出どころ
+     vidIQ が2026年に61,000,000チャンネル（うち有効サンプル1,175万）を
+     分析した調査から、登録者の規模帯ごとの「月間登録者増加率の中央値」を
+     引用している。外部の調査であり、時間が経てば古くなる。
+     あくまで「だいたいの相場感」として使うためのもので、
+     このチャンネルの伸びが良いか悪いかを断定する材料ではない。 */
+  var GROWTH_BENCHMARK = [
+    { max: 1000, monthly: 1.26 },      // 1〜999人
+    { max: 10000, monthly: 0.51 },     // 1,000〜9,999人
+    { max: 100000, monthly: 0.48 }     // 1万〜99,999人
+  ];
+  function benchmarkFor(subs) {
+    for (var i = 0; i < GROWTH_BENCHMARK.length; i++) {
+      if (subs < GROWTH_BENCHMARK[i].max) return GROWTH_BENCHMARK[i];
+    }
+    return null;   // 10万人以上は、参照した調査の対象外
+  }
+  function lensBenchmark(d, subsTotal) {
+    if (!subsTotal) return null;
+    var bm = benchmarkFor(subsTotal);
+    if (!bm) return null;
+
+    var n28 = sum(d.now28, 'subscribersGained') - sum(d.now28, 'subscribersLost');
+    var n90 = sum(d.now90, 'subscribersGained') - sum(d.now90, 'subscribersLost');
+    var rate28 = subsTotal ? n28 / subsTotal * 100 : 0;
+    var rate90 = subsTotal ? n90 / subsTotal * 100 : 0;
+    // 月次の中央値を28日・90日に引き直す。90日は複利（月次を3回重ねる）で出す。
+    var bm28 = bm.monthly * 28 / 30;
+    var bm90 = (Math.pow(1 + bm.monthly / 100, 3) - 1) * 100;
+    var mult28 = bm28 > 0 ? rate28 / bm28 : null;
+    var mult90 = bm90 > 0 ? rate90 / bm90 : null;
+
+    var slow = (mult28 != null && mult28 < 0.5) || (mult90 != null && mult90 < 0.5);
+    var lvl = slow ? 'warn' : 'info';
+    var body;
+    if (slow) {
+      body = '同規模（登録者' + scaleWord(subsTotal) + '前後）のチャンネルの相場は月' + fixed(bm.monthly, 2) +
+        '%ほどです（vidIQ、2026年の調査）。このチャンネルの伸び方は相場よりゆっくりで、' +
+        '転換率の低下がそのまま純増の鈍さに出ています。①②の打ち手を優先してください。';
+    } else {
+      body = '同規模（登録者' + scaleWord(subsTotal) + '前後）のチャンネルの相場は月' + fixed(bm.monthly, 2) +
+        '%ほどです（vidIQ、2026年の調査）。' +
+        (mult28 != null && mult28 >= 1
+          ? 'このチャンネルは相場の約' + fixed(Math.max(mult28 || 0, mult90 || 0), 1) + '倍のペースで伸びています。' +
+            '転換率（1,000視聴あたりの登録）は落ちていても、純増そのものは崩れていません。'
+          : '純増そのものは大きく崩れてはいません。') +
+        '転換率の低下は「いま伸びている勢い」を将来も保てるかの先行指標として見てください。' +
+        '外部の調査に基づく目安であり、断定の材料ではありません。';
+    }
+    return {
+      key: 'benchmark', level: lvl, title: '登録者の伸び方（同規模との比較）',
+      body: body,
+      nums: [
+        { label: '直近28日の純増率', value: fixed(rate28, 1) + '%' + (bm28 ? '（相場 ' + fixed(bm28, 2) + '%）' : '') },
+        { label: '直近90日の純増率', value: fixed(rate90, 1) + '%' + (bm90 ? '（相場 ' + fixed(bm90, 2) + '%）' : '') }
+      ]
+    };
+  }
+  function scaleWord(n) {
+    if (n < 1000) return Math.round(n / 100) * 100 + '人';
+    if (n < 10000) return Math.round(n / 1000) + '千人';
+    return Math.round(n / 10000) + '万人';
   }
 
   /* 5. 除外 — 問題ではないと確認できたこと。
@@ -441,7 +577,9 @@
       lensConversion(conv),
       lensReconcile(d),
       lensConcentration(d),
-      lensPair(d)
+      lensPair(d),
+      lensAudienceMix(d),
+      lensBenchmark(d, d.subsTotal)
     ].filter(Boolean);
     out.clear = ruledOut(d, m);
 
