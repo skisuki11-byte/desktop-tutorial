@@ -19,6 +19,10 @@
 
   function esc(s) { return global.Chart.esc(s); }
 
+  /* 率で並べるときの最低再生数（app.js と同じ考え方）。
+     少ない再生数で率を出すと、10回再生で1人登録が「100人／1,000視聴」になる。 */
+  var CONV_MIN = 300;
+
   /* レポートに要る材料をまとめる。画面が持っているものをそのまま使う。 */
   function collect(ctx) {
     var C = global.Chart;
@@ -40,7 +44,14 @@
       w28: ctx.w28, w90: ctx.w90,
       verdict: ins,
       metrics: rows,
+      lenses: (ins && ins.lenses) || [],
+      clear: (ins && ins.clear) || [],
+      conv: (ins && ins.conv) || null,
       videos: ctx.videos.slice(0, 5),
+      /* 転換の良し悪しは、紙でもClaude向けでも一緒に渡す。
+         視聴回数の上位だけ見ても「どれが登録に効いたか」は出てこない。 */
+      convBest: ctx.convBest || [],
+      convWorst: ctx.convWorst || [],
       lost: ctx.lost.slice(0, 3),
       traffic: ctx.traffic.slice(0, 5),
       made: new Date()
@@ -49,6 +60,7 @@
 
   function fmtMetric(v, kind) {
     var C = global.Chart;
+    if (kind === 'per1k') return v.toFixed(2) + '人';
     if (kind === 'watch') return fmtWatchLocal(v);
     if (kind === 'dur') return C.fmtDur(v);
     if (kind === 'signed') return (v >= 0 ? '＋' : '−') + C.fmtInt(Math.abs(v));
@@ -118,21 +130,40 @@
         return '<li><b>' + esc(a.title) + '</b><span>' + esc(a.why) + '</span></li>';
       }).join('') : '') +
       '</ol>' +
+
+      /* 観点は紙では見出しと数字だけにする。説明の文章まで載せると
+         1枚に収まらない。「どこを見て言っているか」が分かれば、
+         詳しい理由は画面で開ける。 */
+      (d.lenses.length ? '<div class="r-h">分析の観点</div>' +
+        '<table class="r-table r-simple r-lens"><tbody>' +
+        d.lenses.map(function (x) {
+          return '<tr class="r-l-' + x.level + '"><th>' + esc(x.title) + '</th>' +
+            '<td>' + (x.nums || []).map(function (u) {
+              return esc(u.label) + ' ' + esc(u.value);
+            }).join('<br>') + '</td></tr>';
+        }).join('') + '</tbody></table>' : '') +
+
+      (d.clear.length ? '<div class="r-h">問題ではないと確認できたこと</div>' +
+        '<ul class="r-clear">' + d.clear.map(function (c) {
+          return '<li>' + esc(c.title) + '</li>';
+        }).join('') + '</ul>' : '') +
       '</div>' +
 
       '</div>' +
 
       '<div class="r-h">この期間に伸びた動画</div>' +
       '<table class="r-table r-videos"><thead><tr>' +
-      '<th>動画</th><th>視聴</th><th>平均視聴</th><th>登録</th><th>解除率</th>' +
+      '<th>動画</th><th>視聴</th><th>平均視聴</th><th>登録</th><th>／1,000視聴</th>' +
       '</tr></thead><tbody>' +
       d.videos.map(function (s) {
         return '<tr><th>' + esc(s.title) + '</th>' +
           '<td>' + C.fmtInt(s.views) + '</td>' +
           '<td>' + C.fmtDur(s.avg) + '</td>' +
           '<td>＋' + C.fmtInt(s.subs) + (s.unsubs ? ' / −' + C.fmtInt(s.unsubs) : '') + '</td>' +
-          '<td>' + C.fmtRate(s.unsubRate) + '</td></tr>';
+          '<td>' + s.subPer1k.toFixed(2) + '人</td></tr>';
       }).join('') + '</tbody></table>' +
+      '<div class="r-note">「／1,000視聴」は1,000回再生されるうち何人が登録したか。' +
+      '本数の違う動画を比べられるのはこちら。</div>' +
 
       (d.lost.length ? '<div class="r-h">登録を解除された動画</div>' +
         '<table class="r-table r-videos"><tbody>' +
@@ -153,7 +184,13 @@
   }
 
   /* Claude に貼るための文章。数字だけでなく、何を答えてほしいかまで書く。
-     「これを分析して」と数字だけ渡されても、読む側は何を判断すればいいか分からない。 */
+     「これを分析して」と数字だけ渡されても、読む側は何を判断すればいいか分からない。
+
+     ▼ アプリ側の観点も一緒に渡す理由
+     アプリは5つの観点（転換・整合・偏り・対・除外）で先に当たりを付けている。
+     それを伏せて数字だけ渡すと、読む側は同じ道をもう一度たどることになり、
+     そのぶん深いところまで進めない。当たりを渡したうえで
+     「合っているか、他に何が読めるか」を聞くほうが、返ってくるものが厚くなる。 */
   function forClaude(d) {
     var C = global.Chart;
     var L = [];
@@ -161,6 +198,15 @@
     L.push('');
     L.push('チャンネル「' + d.channel + '」の数字です。伸ばすために次に何をすべきか、');
     L.push('優先順位をつけて教えてください。数字の根拠も示してください。');
+    L.push('');
+    L.push('とくに次の点をお願いします。');
+    L.push('');
+    L.push('1. 視聴回数だけでなく「1,000視聴あたりの登録者数」で判断してください。');
+    L.push('   視聴回数が伸びていても、この比率が落ちていれば伸びているとは言えません。');
+    L.push('2. 下の「アプリ側の観点」が合っているかを確かめ、違うなら指摘してください。');
+    L.push('3. 打ち手は3つまで。それぞれ、どの数字を見てそう言うのかを添えてください。');
+    L.push('4. 「これは問題ではない」と言えるものも挙げてください。');
+    L.push('   直さなくていいところが決まらないと、時間の使い先が決まりません。');
     L.push('');
     L.push('- 期間: ' + d.period.start + ' 〜 ' + d.period.end + '（' + d.period.days + '日間）');
     L.push('- 登録者: ' + C.fmtInt(d.subs) + '人（YouTubeが上位3桁に丸めた値）');
@@ -176,6 +222,28 @@
       var f = function (p) { return p == null ? '—' : (p > 0 ? '+' : '') + Math.round(p) + '%'; };
       L.push('| ' + m.label + ' | ' + m.a + ' | ' + f(m.ap) + ' | ' + m.b + ' | ' + f(m.bp) + ' |');
     });
+    if (d.lenses.length) {
+      L.push('');
+      L.push('## アプリ側の観点（合っているかを確かめてください）');
+      var word = { good: '良好', info: '参考', warn: '注意', bad: '要対処' };
+      d.lenses.forEach(function (x) {
+        L.push('');
+        L.push('### ' + x.title + '（' + (word[x.level] || '') + '）');
+        L.push('');
+        (x.nums || []).forEach(function (u) {
+          L.push('- ' + u.label + ': ' + u.value +
+            (u.pct != null ? '（前期比 ' + (u.pct > 0 ? '+' : '') + Math.round(u.pct) + '%）' : ''));
+        });
+        L.push('');
+        L.push(x.body);
+      });
+    }
+    if (d.clear.length) {
+      L.push('');
+      L.push('## アプリ側が「問題ではない」と判断したもの');
+      L.push('');
+      d.clear.forEach(function (c) { L.push('- **' + c.title + '** — ' + c.why); });
+    }
     if (d.traffic.length) {
       L.push('');
       L.push('## 流入経路');
@@ -187,13 +255,39 @@
     L.push('');
     L.push('## この期間に伸びた動画');
     L.push('');
-    L.push('| 題名 | 視聴回数 | 平均視聴時間 | 平均視聴率 | 登録 | 解除 | 解除率 |');
-    L.push('|---|---|---|---|---|---|---|');
+    L.push('| 題名 | 視聴回数 | 平均視聴時間 | 平均視聴率 | 登録 | 1,000視聴あたり | 解除 | 解除率 |');
+    L.push('|---|---|---|---|---|---|---|---|');
     d.videos.forEach(function (s) {
       L.push('| ' + s.title.replace(/\|/g, '｜') + ' | ' + C.fmtInt(s.views) + ' | ' +
-        C.fmtDur(s.avg) + ' | ' + C.fmtPct(s.pct) + ' | +' + C.fmtInt(s.subs) + ' | −' +
-        C.fmtInt(s.unsubs) + ' | ' + C.fmtRate(s.unsubRate) + ' |');
+        C.fmtDur(s.avg) + ' | ' + C.fmtPct(s.pct) + ' | +' + C.fmtInt(s.subs) + ' | ' +
+        s.subPer1k.toFixed(2) + '人 | −' + C.fmtInt(s.unsubs) + ' | ' + C.fmtRate(s.unsubRate) + ' |');
     });
+
+    /* 転換の良い順・悪い順。視聴回数の上位だけでは
+       「同じくらい見られているのに登録だけ違う2本」が見えない。
+       条件の揃った比較ができる材料を、そのまま渡す。 */
+    if (d.convWorst.length) {
+      L.push('');
+      L.push('## 登録への転換が低い動画（' + CONV_MIN + '回以上再生されたもの）');
+      L.push('');
+      L.push('| 題名 | 視聴回数 | 平均視聴時間 | 1,000視聴あたりの登録 |');
+      L.push('|---|---|---|---|');
+      d.convWorst.forEach(function (s) {
+        L.push('| ' + s.title.replace(/\|/g, '｜') + ' | ' + C.fmtInt(s.views) + ' | ' +
+          C.fmtDur(s.avg) + ' | ' + s.subPer1k.toFixed(2) + '人 |');
+      });
+    }
+    if (d.convBest.length) {
+      L.push('');
+      L.push('## 登録への転換が高い動画（同条件）');
+      L.push('');
+      L.push('| 題名 | 視聴回数 | 平均視聴時間 | 1,000視聴あたりの登録 |');
+      L.push('|---|---|---|---|');
+      d.convBest.forEach(function (s) {
+        L.push('| ' + s.title.replace(/\|/g, '｜') + ' | ' + C.fmtInt(s.views) + ' | ' +
+          C.fmtDur(s.avg) + ' | ' + s.subPer1k.toFixed(2) + '人 |');
+      });
+    }
     if (d.lost.length) {
       L.push('');
       L.push('## 登録を解除された動画（解除の直前に見られていた動画）');
@@ -210,6 +304,10 @@
     L.push('- 集計確定まで数日かかるため、直近3日は含まない');
     L.push('- 「解除された動画」は、その動画が原因という意味ではなく、');
     L.push('  YouTubeが「解除の直前に見ていた動画」として記録したもの');
+    L.push('- 「1,000視聴あたりの登録」は、増えた人数 ÷ 視聴回数 × 1000。');
+    L.push('  解除は引いていない（見た人が登録したかを見る数字のため）');
+    L.push('- 登録者の合計は YouTube が上位3桁に丸めた値。増減は丸めのない正確な値');
+    L.push('- 平均視聴時間には、ショート動画やライブの視聴も混ざっている可能性がある');
     return L.join('\n');
   }
 

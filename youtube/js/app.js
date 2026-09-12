@@ -403,6 +403,13 @@
     var pct = weighted(rows, 'averageViewPercentage', 'views'), pPct = weighted(prev, 'averageViewPercentage', 'views');
     var net = sum(rows, 'subscribersGained') - sum(rows, 'subscribersLost');
     var pNet = sum(prev, 'subscribersGained') - sum(prev, 'subscribersLost');
+    /* 1,000視聴あたり何人が登録したか。
+       視聴回数と登録者数を別々に眺めているだけでは、
+       「見られる数が増えただけで、残る人は増えていない」状態に気づけない。
+       純増ではなく「増えた数」で割る。解除の動きが混ざると
+       「見た人が登録したか」という問いの答えにならないため。 */
+    var conv = views ? sum(rows, 'subscribersGained') / views * 1000 : 0;
+    var pConv = pViews ? sum(prev, 'subscribersGained') / pViews * 1000 : 0;
     var st = (S.channel && S.channel.statistics) || {};
 
     // 押したときに中を見せるので、その場の数字は控えに持っておく
@@ -415,7 +422,11 @@
       { key: 'pct', label: '平均視聴率', value: Chart.fmtPct(pct), delta: fmtDelta(pct, pPct), note: '動画の長さに対する割合' },
       { key: 'subs', label: '登録者の増減', value: (net >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(net)), delta: fmtDelta(net, pNet), note: '合計 ' + Chart.fmtInt(st.subscriberCount || 0) + '人' },
       // 3つ並ぶので桁を詰める（42,463 ではなく 4.2万）。1行に収まらないと読みにくい。
-      { key: 'engage', label: '高評価 / コメント', value: Chart.fmtAxis(sum(rows, 'likes')) + ' / ' + Chart.fmtAxis(sum(rows, 'comments')), note: '共有 ' + Chart.fmtAxis(sum(rows, 'shares')) + '回' }
+      { key: 'engage', label: '高評価 / コメント', value: Chart.fmtAxis(sum(rows, 'likes')) + ' / ' + Chart.fmtAxis(sum(rows, 'comments')), note: '共有 ' + Chart.fmtAxis(sum(rows, 'shares')) + '回' },
+      /* 最後に置いて幅を取る。6つの結果に対して、これは「効率」を見る
+         ひとつ違う種類の数字なので、並びの中で埋もれないようにする。 */
+      { key: 'conv', wide: true, label: '登録への転換', value: conv.toFixed(2) + '人',
+        delta: fmtDelta(conv, pConv), note: '1,000視聴あたりの登録者数' }
     ];
 
     /* 数字だけ見せて終わりにせず、押せば中を開けるようにする。
@@ -423,7 +434,7 @@
        どの動画が押し上げた（下げた）かを見ないと分からないため。
        押せることが分かるよう、右上に小さな印を出す。 */
     $('kpis').innerHTML = tiles.map(function (t, i) {
-      return '<button type="button" class="kpi" data-metric="' + t.key + '" aria-label="' + esc(t.label) + 'の内訳を見る">' +
+      return '<button type="button" class="kpi' + (t.wide ? ' kpi-wide' : '') + '" data-metric="' + t.key + '" aria-label="' + esc(t.label) + 'の内訳を見る">' +
         '<span class="kpi-more" aria-hidden="true"></span>' +
         '<span class="kpi-label">' + esc(t.label) + '</span>' +
         '<span class="kpi-value">' + t.value + '</span>' +
@@ -497,9 +508,14 @@
       soft(Api.report({ startDate: w90.prevStart, endDate: w90.prevEnd, dimensions: 'day', metrics: DAILY })),
       soft(Api.report({ startDate: w28.start, endDate: w28.end, dimensions: 'insightTrafficSourceType', metrics: 'views' })),
       soft(Api.report({ startDate: w28.start, endDate: w28.end, dimensions: 'subscribedStatus', metrics: 'views' })),
+      /* 登録者数まで一緒に取る。1,000視聴あたり何人が登録したかを
+         動画ごとに出せないと、「上位と長い尾の差」「条件の揃った2本の差」の
+         2つの観点が成り立たない。この組み合わせは動画タブでも使っていて通る。
+         本数は20本では尾が見えないので、60本まで広げる。 */
       soft(Api.report({
         startDate: w28.start, endDate: w28.end, dimensions: 'video',
-        metrics: 'views,averageViewDuration', sort: '-views', maxResults: 20
+        metrics: 'views,averageViewDuration,averageViewPercentage,subscribersGained',
+        sort: '-views', maxResults: 60
       })),
       listPromise
     ]).then(function (r) {
@@ -531,7 +547,8 @@
     var badge = { good: '順調', ok: '前向き', warn: '注意', bad: '要対処', info: '変化なし' }[ins.level];
 
     var rows = ins.metrics.map(function (m) {
-      return '<tr><th>' + esc(m.label) + '</th>' +
+      return '<tr' + (m.kind === 'per1k' ? ' class="vrow-key"' : '') + '><th>' + esc(m.label) +
+        (m.note ? '<small>' + esc(m.note) + '</small>' : '') + '</th>' +
         '<td>' + metricValue(m.a, m.kind) + deltaTag(m.ap) + '</td>' +
         '<td>' + metricValue(m.b, m.kind) + deltaTag(m.bp) + '</td></tr>';
     }).join('');
@@ -561,6 +578,8 @@
       '<p class="hint">％はそれぞれ「直前の同じ長さの期間」との比較です。</p></div>' +
       '</div></details>' +
 
+      lensHtml(ins) +
+
       '<details class="next" id="nextBox"' + (Store.nextOpen() ? ' open' : '') + '>' +
       '<summary class="next-summary">' +
       '<span class="next-title">次にやること</span>' +
@@ -583,9 +602,68 @@
     if (vb) vb.addEventListener('toggle', function () { Store.setVerdictOpen(vb.open); });
     var nb = $('nextBox');
     if (nb) nb.addEventListener('toggle', function () { Store.setNextOpen(nb.open); });
+    var lb = $('lensBox');
+    if (lb) lb.addEventListener('toggle', function () { Store.setLensOpen(lb.open); });
+  }
+
+  /* ========== 分析の観点 ==========
+     判定は結論の1行、「次にやること」は動きの指示。
+     そのあいだに「なぜそう言えるのか」を置く場所が無いと、
+     出された打ち手を信じるしかなくなり、自分で判断できなくなる。
+     ここは根拠の置き場所。数字を並べたうえで、読み方まで書く。
+
+     「問題ではないと確認できたこと」を最後に必ず出すのが要点。
+     どこを触らなくていいかが決まらないと、目につく数字（解除率など）に
+     時間を使ってしまい、効く場所に手が回らない。 */
+  var LENS_WORD = { good: '良好', info: '参考', warn: '注意', bad: '要対処' };
+
+  function lensHtml(ins) {
+    var lenses = ins.lenses || [], clear = ins.clear || [];
+    if (!lenses.length && !clear.length) return '';
+    var n = lenses.length + (clear.length ? 1 : 0);
+
+    return '<details class="lens" id="lensBox"' + (Store.lensOpen() ? ' open' : '') + '>' +
+      '<summary class="lens-summary">' +
+      '<span class="lens-title">分析の観点</span>' +
+      '<span class="lens-count">' + n + '件</span>' +
+      '<span class="lens-chev" aria-hidden="true"></span>' +
+      '</summary>' +
+      '<div class="lens-list">' +
+      lenses.map(function (x) {
+        return '<article class="lens-item lens-' + x.level + '">' +
+          '<div class="lens-head">' +
+          '<span class="lens-tag">' + (LENS_WORD[x.level] || '') + '</span>' +
+          '<b class="lens-name">' + esc(x.title) + '</b>' +
+          '</div>' +
+          (x.nums && x.nums.length
+            ? '<div class="lens-nums">' + x.nums.map(function (u) {
+                return '<div class="lens-num">' +
+                  '<span class="lens-num-label">' + esc(u.label) + '</span>' +
+                  '<span class="lens-num-value">' + esc(u.value) +
+                  (u.pct != null ? deltaTag(u.pct) : '') + '</span></div>';
+              }).join('') + '</div>'
+            : '') +
+          '<p class="lens-body">' + esc(x.body) + '</p>' +
+          '</article>';
+      }).join('') +
+      (clear.length
+        ? '<article class="lens-item lens-clear">' +
+          '<div class="lens-head">' +
+          '<span class="lens-tag">除外</span>' +
+          '<b class="lens-name">問題ではないと確認できたこと</b>' +
+          '</div>' +
+          '<p class="lens-body">ここに挙がったものは、いま直しても増え方は変わりません。' +
+          '手を入れる先を決めるときは、この外側から選んでください。</p>' +
+          '<ul class="lens-clear-list">' + clear.map(function (c) {
+            return '<li><b>' + esc(c.title) + '</b><span>' + esc(c.why) + '</span></li>';
+          }).join('') + '</ul>' +
+          '</article>'
+        : '') +
+      '</div></details>';
   }
 
   function metricValue(v, kind) {
+    if (kind === 'per1k') return v.toFixed(2) + '人';
     if (kind === 'watch') return fmtWatch(v);
     if (kind === 'dur') return Chart.fmtDur(v);
     if (kind === 'signed') return (v >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(v));
@@ -794,12 +872,25 @@
       period: p, w28: S.w28, w90: S.w90,
       insight: S.insight,
       videos: all.slice().sort(function (a, b) { return b.views - a.views; }),
+      /* 転換の良い順・悪い順。再生の少ない動画は率が跳ねるので同じしきい値で外す。 */
+      convBest: convRanked(all).slice(0, convTake(all)),
+      convWorst: convRanked(all).reverse().slice(0, convTake(all)),
       lost: all.filter(function (v) { return v.unsubs > 0; })
         .sort(function (a, b) { return b.unsubs - a.unsubs; }),
       traffic: (S.trafficRows || []).map(function (r) {
         return { label: r.label, value: r.value, share: total ? r.value / total * 100 : 0 };
       })
     };
+  }
+
+  function convRanked(all) {
+    return all.filter(function (v) { return v.views >= CONV_MIN_VIEWS; })
+      .sort(function (a, b) { return b.subPer1k - a.subPer1k; });
+  }
+  /* 良い順と悪い順が同じ動画で埋まらない本数までにする。
+     同じ1本が両方に出ていると、比較の材料として読めなくなる。 */
+  function convTake(all) {
+    return Math.min(3, Math.floor(convRanked(all).length / 2));
   }
 
   /* 流入経路はレポートに入れたいが、「流入」タブを開いていないと手元に無い。
@@ -963,6 +1054,9 @@
          （10万回で185人解除と、1千回で185人解除では意味がまるで違う）。 */
       subRate: Number(r.views) ? (Number(r.subscribersGained) || 0) / Number(r.views) * 100 : 0,
       unsubRate: Number(r.views) ? (Number(r.subscribersLost) || 0) / Number(r.views) * 100 : 0,
+      /* 1,000視聴あたりの登録者数。本数の違う動画を横に並べて比べるための共通のものさし。
+         subRate（％）と同じ中身だが、桁を人数の実感に合わせている（0.156% より 1.56人）。 */
+      subPer1k: Number(r.views) ? (Number(r.subscribersGained) || 0) / Number(r.views) * 1000 : 0,
       likes: Number(r.likes) || 0,
       comments: Number(r.comments) || 0,
       lifetime: Number(st.viewCount) || 0,
@@ -1344,6 +1438,19 @@
       tips: '登録者は結果であって原因ではありません。動くのは維持率と流入のほうなので、' +
         'この数字が伸び悩むときは、登録を促す前に「最後まで見られているか」を先に見てください。'
     },
+    /* この1枚がいちばん効く。合計の登録者数は「どれだけ見られたか」に
+       引きずられるので、見られ方が変わっただけで動く。
+       1,000視聴で割ると、その影響が落ちて「作りが効いているか」だけが残る。 */
+    conv: {
+      label: '登録への転換', dayKey: null, vidKey: 'subscribersGained', unit: '人',
+      total: function (r) { var v = sum(r, 'views'); return v ? sum(r, 'subscribersGained') / v * 1000 : 0; },
+      fmt: function (v) { return v.toFixed(2) + '人／1,000視聴'; },
+      means: '1,000回再生されるうち、何人が登録したかです。増えた人数を視聴回数で割って出しています（解除は引きません。「見た人が登録したか」を見る数字なので、解除を混ぜると別の問いの答えになってしまいます）。',
+      tips: '登録者数そのものは、たまたま1本当たれば増えます。この数字は当たり外れの影響が落ちるので、' +
+        '「作りが効いているか」を見るのに向きます。視聴回数が伸びているのにここが落ちているときは、' +
+        '本数を増やしても同じ比率でしか積み上がりません。増やす前に、いちばん見られている1本の' +
+        '終了画面・説明文の1行目・固定コメントを直すほうが先です。'
+    },
     engage: {
       label: '高評価 / コメント', dayKey: 'likes', vidKey: 'likes', unit: '件',
       total: function (r) { return sum(r, 'likes'); },
@@ -1373,6 +1480,20 @@
         mstat('高評価率', Chart.fmtPct(sum(S.dayRows, 'views') ? sum(S.dayRows, 'likes') / sum(S.dayRows, 'views') * 100 : 0)) +
         '</div>';
     }
+    if (key === 'conv') {
+      var cg = sum(S.dayRows, 'subscribersGained');
+      var cv = sum(S.dayRows, 'views');
+      var cl = sum(S.dayRows, 'subscribersLost');
+      extra = '<div class="mstats">' +
+        mstat('視聴回数', Chart.fmtInt(cv) + '回') +
+        mstat('増えた登録者', '＋' + Chart.fmtInt(cg) + '人') +
+        mstat('1,000視聴あたり', (cv ? cg / cv * 1000 : 0).toFixed(2) + '人') +
+        mstat('解除も引いた場合', (cv ? (cg - cl) / cv * 1000 : 0).toFixed(2) + '人') +
+        '</div>' +
+        '<p class="note">「解除も引いた場合」は純増で割ったものです。' +
+        '実際に残る人数の目安になりますが、作りが効いているかを見るときは' +
+        '解除を引かないほうの数字を使ってください。</p>';
+    }
     if (key === 'subs') {
       var gained = sum(S.dayRows, 'subscribersGained');
       var lost = sum(S.dayRows, 'subscribersLost');
@@ -1399,7 +1520,18 @@
       '<h3>何を数えた数字か</h3><p class="lead">' + esc(m.means) + '</p>' +
       '<h3>日ごとの動き</h3>' +
       '<div class="chart-box" id="mChart"></div>' +
-      (key === 'subs'
+      (key === 'conv'
+        ? '<h3>登録に繋がっている動画</h3>' +
+          '<p class="lead">1,000視聴あたりの登録者数が多い順です。' +
+          '再生数の少ない動画は数字が大きく振れるので、この期間に' + CONV_MIN_VIEWS +
+          '回以上再生されたものだけを並べています。</p>' +
+          '<div id="mConvBest" class="vlist"></div>' +
+          '<h3>登録に繋がっていない動画</h3>' +
+          '<p class="lead">同じ条件で、少ない順です。ここに並ぶ動画は、見られてはいるのに' +
+          '次に繋がっていません。上の一覧の1本と見比べて、説明文の1行目・終了画面・' +
+          '固定コメントで何が違うかを探すのがいちばん早い直し方です。</p>' +
+          '<div id="mConvWorst" class="vlist"></div>'
+        : key === 'subs'
         ? '<h3>登録のきっかけになった動画</h3>' +
           '<p class="lead">この期間、登録者が増えたときに直前に見ていた動画の上位です。' +
           '動画を押すと、その1本の維持率と流入が見られます。</p>' +
@@ -1413,7 +1545,22 @@
           '<div id="mVideos" class="vlist"></div>') +
       '<h3>読み方</h3><p class="lead">' + esc(m.tips) + '</p>';
 
-    if (key === 'subs') {
+    if (key === 'conv') {
+      /* 日ごとの率。視聴の無い日は0ではなく「計算できない日」なので、
+         0として描くと谷を作って誤読させる。その日は前後を繋がずに0扱いにせず、
+         視聴のある日だけを並べる。 */
+      var per1k = function (r) {
+        var v = Number(r.views) || 0;
+        return v ? (Number(r.subscribersGained) || 0) / v * 1000 : 0;
+      };
+      Chart.line($('mChart'), {
+        values: S.dayRows.filter(function (r) { return Number(r.views) > 0; })
+          .map(function (r) { return { date: r.day, value: per1k(r) }; }),
+        compare: S.prevRows.filter(function (r) { return Number(r.views) > 0; })
+          .map(function (r) { return { date: r.day, value: per1k(r) }; }),
+        label: m.label, unit: '人／1,000視聴', height: 200
+      });
+    } else if (key === 'subs') {
       Chart.delta($('mChart'), S.dayRows.map(function (r) {
         return { date: r.day, gained: Number(r.subscribersGained) || 0, lost: Number(r.subscribersLost) || 0 };
       }));
@@ -1425,7 +1572,9 @@
       });
     }
 
-    if (key === 'subs') {
+    if (key === 'conv') {
+      renderConvVideos();
+    } else if (key === 'subs') {
       renderSubsVideos();
     } else {
       var rows = allStats().filter(function (v) { return v[statKey(key)] > 0; })
@@ -1435,6 +1584,53 @@
         : '<p class="chart-empty">この期間に該当する動画がありません</p>';
       bindVideoClicks($('mVideos'));
     }
+  }
+
+  /* 率で並べるときの最低再生数。
+     10回再生されて1人登録した動画は「100人／1,000視聴」になってしまい、
+     率の一覧を意味のないもので埋めてしまう。しきい値を置いて外す。 */
+  var CONV_MIN_VIEWS = 300;
+
+  /* 「登録への転換」の一覧。多い順と少ない順を両方出す。
+     多い順だけでは「何が効いているか」しか分からず、直す先が出てこない。
+     少ない順に並ぶ動画こそが、見られているのに次に繋がっていない取りこぼしで、
+     同じだけ見られている上の1本と見比べれば、差は作りの側に絞り込める。 */
+  function renderConvVideos() {
+    var best = $('mConvBest'), worst = $('mConvWorst');
+    if (!S.loaded.videos) {
+      best.innerHTML = worst.innerHTML = '<p class="skeleton">読み込んでいます…</p>';
+      (S.videosPromise || Promise.resolve()).then(refreshConvSheetIfOpen);
+      return;
+    }
+    var rows = allStats().filter(function (v) { return v.views >= CONV_MIN_VIEWS; });
+    if (rows.length < 2) {
+      best.innerHTML = worst.innerHTML =
+        '<p class="chart-empty">この期間に' + CONV_MIN_VIEWS + '回以上再生された動画が足りません</p>';
+      return;
+    }
+    var sorted = rows.slice().sort(function (a, b) { return b.subPer1k - a.subPer1k; });
+    /* 本数が少ないと、上位5本と下位5本が同じ顔ぶれの裏返しになってしまう。
+       それでは見比べる材料にならないので、重ならないところまで減らす。 */
+    var k = Math.min(5, Math.floor(sorted.length / 2));
+    var draw = function (host, list) {
+      host.innerHTML = list.map(function (v) {
+        return '<button class="vcard" data-id="' + esc(v.id) + '" type="button">' +
+          (v.thumb ? '<img class="vthumb" src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '<span class="vthumb"></span>') +
+          '<span class="vbody"><span class="vtitle">' + esc(v.title) + '</span>' +
+          '<span class="vmeta">' + Chart.fmtInt(v.views) + '回 ・ 登録＋' + Chart.fmtInt(v.subs) +
+          '人 ・ 平均' + Chart.fmtDur(v.avg) + '</span></span>' +
+          '<span class="subcell">' +
+          '<b>' + v.subPer1k.toFixed(2) + '</b>' +
+          '<i class="rate">人／1,000視聴</i>' +
+          '</span></button>';
+      }).join('');
+      bindVideoClicks(host);
+    };
+    draw(best, sorted.slice(0, k));
+    draw(worst, sorted.slice().reverse().slice(0, k));
+  }
+  function refreshConvSheetIfOpen() {
+    if (!$('sheet').hidden && $('sheetTitle').textContent === METRICS.conv.label) renderConvVideos();
   }
 
   /* 登録者は「増えた」「減った」で意味が正反対なので、
@@ -1500,7 +1696,8 @@
 
   /* 指標の名前を、動画1本ぶんの持ち物の名前に置き換える */
   function statKey(key) {
-    return { views: 'views', watch: 'watch', avg: 'avg', pct: 'pct', subs: 'subs', engage: 'likes' }[key];
+    return { views: 'views', watch: 'watch', avg: 'avg', pct: 'pct', subs: 'subs',
+      conv: 'subPer1k', engage: 'likes' }[key];
   }
   function mstat(label, value) {
     return '<div class="mstat"><span>' + esc(label) + '</span><b>' + value + '</b></div>';
@@ -1512,6 +1709,7 @@
       avg: Chart.fmtDur(v.avg),
       pct: Chart.fmtPct(v.pct),
       subs: '＋' + Chart.fmtInt(v.subs) + '人',
+      conv: v.subPer1k.toFixed(2) + '人',
       engage: Chart.fmtInt(v.likes) + '件'
     }[key];
     return '<button class="vcard" data-id="' + esc(v.id) + '" type="button">' +
