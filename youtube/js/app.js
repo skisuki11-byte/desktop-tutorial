@@ -140,7 +140,7 @@
       if (!b || String(Store.days()) === b.dataset.days) return;
       Store.setDays(b.dataset.days);
       syncPeriodButtons();
-      S.loaded = {};
+      S.loaded = {}; S.unsubsState = null;
       // いま見ている画面のまま、その画面の数字だけ入れ替える。
       // 収益を見ているときに期間を押して概要へ飛ばされるのでは、
       // 「収益を1年で見たい」という当たり前のことができない。
@@ -779,9 +779,9 @@
 
   /* ========== 動画 ========== */
   function loadVideos() {
-    if (S.loaded.videos) { renderVideoTable(); renderTopVideos(); return Promise.resolve(); }
+    if (S.loaded.videos) { renderVideoTable(); renderTopVideos(); return S.videosPromise || Promise.resolve(); }
     var p = period();
-    return Api.report({
+    S.videosPromise = Api.report({
       startDate: p.start, endDate: p.end, dimensions: 'video',
       metrics: 'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained,likes,comments',
       sort: '-views', maxResults: 200
@@ -794,9 +794,44 @@
     }).then(function () {
       S.loaded.videos = true;
       renderVideoTable(); renderTopVideos();
+      loadUnsubsByVideo(p);   // 失敗してもいい追加分。動画一覧の本体とは切り離す
     }).catch(function (e) {
       $('videoRows').innerHTML = '<tr><td colspan="7"><p class="error-box">' + esc(e.message) + '</p></td></tr>';
     });
+    return S.videosPromise;
+  }
+
+  /* 動画ごとの「解除された数」だけを、別枠で・失敗してもいいように取りに行く。
+     dimensions=video に subscribersLost を組み合わせる問い合わせを
+     受け付けないアカウント・期間があり得る。それを動画一覧の本体（views など）
+     と同じ問い合わせに混ぜると、失敗したときに視聴回数まで巻き込んで
+     表全体が壊れてしまう。切り離しておけば、これだけ失敗しても他は動く。
+
+     解決したら、すでに描いてある動画一覧・トップ5・登録者の増減シートに
+     数字を足して描き直す（進んだら黙って足す、というやり方）。 */
+  function loadUnsubsByVideo(p) {
+    S.unsubsState = 'loading';
+    S.unsubsPromise = Api.report({
+      startDate: p.start, endDate: p.end, dimensions: 'video',
+      metrics: 'subscribersLost', sort: '-subscribersLost', maxResults: 200
+    }).then(function (res) {
+      Api.rows(res).forEach(function (r) {
+        if (S.period[r.video]) S.period[r.video].subscribersLost = r.subscribersLost;
+      });
+      S.unsubsState = 'ok';
+      if (S.loaded.videos) { renderVideoTable(); renderTopVideos(); }
+      refreshSubsSheetIfOpen();
+    }).catch(function () {
+      S.unsubsState = 'unavailable';
+      refreshSubsSheetIfOpen();
+    });
+    return S.unsubsPromise;
+  }
+
+  /* 「登録者の増減」のシートを開いたまま、あとから解除数が届く／諦めがつく
+     ことがある。開いたままならそのぶん描き直す。他の指標を見ているときは触らない。 */
+  function refreshSubsSheetIfOpen() {
+    if (!$('sheet').hidden && $('sheetTitle').textContent === METRICS.subs.label) renderSubsVideos();
   }
 
   /* Data API は1回につき50件まで。まとめて取る。 */
@@ -830,6 +865,7 @@
       avg: Number(r.averageViewDuration) || 0,
       pct: Number(r.averageViewPercentage) || 0,
       subs: Number(r.subscribersGained) || 0,
+      unsubs: Number(r.subscribersLost) || 0,
       likes: Number(r.likes) || 0,
       comments: Number(r.comments) || 0,
       lifetime: Number(st.viewCount) || 0,
@@ -859,7 +895,8 @@
       '<span class="vtitle">' + esc(s.title) + '</span>' +
       '<span class="vmeta">' +
       Chart.fmtInt(s.views) + '回 ・ ' + fmtWatch(s.watch) + ' ・ 平均' + Chart.fmtDur(s.avg) +
-      (s.subs ? ' ・ 登録＋' + Chart.fmtInt(s.subs) : '') +
+      (s.subs || s.unsubs ? ' ・ 登録＋' + Chart.fmtInt(s.subs) +
+        (s.unsubs ? '（−' + Chart.fmtInt(s.unsubs) + '）' : '') : '') +
       '</span></span>' +
       (s.seo != null ? '<span class="vscore ' + scoreClass(s.seo) + '" title="作りの点数 ' + s.seo +
         '点（' + scoreWord(s.seo) + '）題名・説明文・タグの点検結果">' + s.seo + '</span>' : '') +
@@ -902,6 +939,7 @@
       avg: function (a, b) { return b.avg - a.avg; },
       pct: function (a, b) { return b.pct - a.pct; },
       subs: function (a, b) { return b.subs - a.subs; },
+      unsubs: function (a, b) { return b.unsubs - a.unsubs; },
       new: function (a, b) { return new Date(b.publishedAt) - new Date(a.publishedAt); },
       vph: function (a, b) { return b.perDay - a.perDay; },
       seo: function (a, b) { return (a.seo == null ? 999 : a.seo) - (b.seo == null ? 999 : b.seo); }
@@ -919,7 +957,11 @@
         '<td class="num" data-label="総再生時間">' + fmtWatch(s.watch) + '</td>' +
         '<td class="num" data-label="平均視聴時間">' + Chart.fmtDur(s.avg) + '</td>' +
         '<td class="num" data-label="平均視聴率">' + Chart.fmtPct(s.pct) + '</td>' +
-        '<td class="num" data-label="登録者">' + (s.subs ? '＋' + Chart.fmtInt(s.subs) : '—') + '</td>' +
+        '<td class="num" data-label="登録者">' +
+        (s.subs || s.unsubs
+          ? '<span class="subcell">' + (s.subs ? '＋' + Chart.fmtInt(s.subs) : '±0') +
+            (s.unsubs ? '<em class="v-down">−' + Chart.fmtInt(s.unsubs) + '</em>' : '') + '</span>'
+          : '—') + '</td>' +
         '<td class="num" data-label="作りの点数">' + (s.seo != null
           ? '<span class="vscore ' + scoreClass(s.seo) + '" title="題名・説明文・タグの点検結果">' +
             s.seo + '<em>' + scoreWord(s.seo) + '</em></span>'
@@ -1252,9 +1294,18 @@
       '<h3>何を数えた数字か</h3><p class="lead">' + esc(m.means) + '</p>' +
       '<h3>日ごとの動き</h3>' +
       '<div class="chart-box" id="mChart"></div>' +
-      '<h3>この数字を作っている動画</h3>' +
-      '<p class="lead">上位5本です。動画を押すと、その1本の維持率と流入が見られます。</p>' +
-      '<div id="mVideos" class="vlist"></div>' +
+      (key === 'subs'
+        ? '<h3>登録のきっかけになった動画</h3>' +
+          '<p class="lead">この期間、登録者が増えたときに直前に見ていた動画の上位です。' +
+          '動画を押すと、その1本の維持率と流入が見られます。</p>' +
+          '<div id="mVideosGained" class="vlist"></div>' +
+          '<h3>登録を解除された動画</h3>' +
+          '<p class="lead">この期間、登録を解除される直前に見ていた動画の上位です。' +
+          'YouTube が「その動画が原因」として記録しているわけではない点に注意してください。</p>' +
+          '<div id="mVideosLost" class="vlist"></div>'
+        : '<h3>この数字を作っている動画</h3>' +
+          '<p class="lead">上位5本です。動画を押すと、その1本の維持率と流入が見られます。</p>' +
+          '<div id="mVideos" class="vlist"></div>') +
       '<h3>読み方</h3><p class="lead">' + esc(m.tips) + '</p>';
 
     if (key === 'subs') {
@@ -1269,14 +1320,76 @@
       });
     }
 
-    var rows = allStats().filter(function (v) { return v[statKey(key)] > 0; })
-      .sort(function (a, b) { return b[statKey(key)] - a[statKey(key)]; }).slice(0, 5);
-    $('mVideos').innerHTML = rows.length
-      ? rows.map(function (v) { return mvideo(v, key); }).join('')
-      : '<p class="chart-empty">この期間に該当する動画がありません</p>';
-    $('mVideos').querySelectorAll('[data-id]').forEach(function (b) {
-      b.addEventListener('click', function () { openSheet(b.dataset.id); });
-    });
+    if (key === 'subs') {
+      renderSubsVideos();
+    } else {
+      var rows = allStats().filter(function (v) { return v[statKey(key)] > 0; })
+        .sort(function (a, b) { return b[statKey(key)] - a[statKey(key)]; }).slice(0, 5);
+      $('mVideos').innerHTML = rows.length
+        ? rows.map(function (v) { return mvideo(v, key); }).join('')
+        : '<p class="chart-empty">この期間に該当する動画がありません</p>';
+      bindVideoClicks($('mVideos'));
+    }
+  }
+
+  /* 登録者は「増えた」「減った」で意味が正反対なので、
+     一つの一覧を数字の大小で並べるのではなく、2つに分けて出す。
+     動画一覧（allStats）にはすでに解除数も含まれている
+     （loadVideos の問い合わせに subscribersLost を足したため）ので、
+     ここは並べ替えて上位5件を切り出すだけで済み、別の問い合わせは要らない。
+
+     行ごとに、その動画で増えた数と減った数を両方見せる。
+     「増えた動画ランキング」に減った数が見えないと、差し引きの実感が湧かない
+     （＋200増えていても同時に−180減っていれば、実質は＋20でしかない）。
+
+     ▼ この一覧の正しい読み方
+     「登録を解除された動画」は、YouTube が「解除する直前に見ていた動画」として
+     記録したものであり、「その動画が原因で解除された」という意味ではない。
+     たまたま最後に見ていた動画が記録されるだけ。 */
+  function renderSubsVideos() {
+    var gHost = $('mVideosGained'), lHost = $('mVideosLost');
+
+    /* 動画一覧そのものがまだ届いていない（開いてすぐ押した等）。
+       届いたら、このシートがまだ「登録者の増減」を表示していれば描き直す。 */
+    if (!S.loaded.videos) {
+      gHost.innerHTML = lHost.innerHTML = '<p class="skeleton">読み込んでいます…</p>';
+      (S.videosPromise || Promise.resolve()).then(refreshSubsSheetIfOpen);
+      return;
+    }
+
+    var all = allStats();
+    function build(host, primaryKey, emptyMsg) {
+      var otherKey = primaryKey === 'subs' ? 'unsubs' : 'subs';
+      var pCls = primaryKey === 'subs' ? 'v-up' : 'v-down';
+      var pSign = primaryKey === 'subs' ? '＋' : '−';
+      var oCls = otherKey === 'subs' ? 'v-up' : 'v-down';
+      var oSign = otherKey === 'subs' ? '＋' : '−';
+      var rows = all.filter(function (v) { return v[primaryKey] > 0; })
+        .sort(function (a, b) { return b[primaryKey] - a[primaryKey]; }).slice(0, 5);
+      host.innerHTML = rows.length ? rows.map(function (v) {
+        return '<button class="vcard" data-id="' + esc(v.id) + '" type="button">' +
+          (v.thumb ? '<img class="vthumb" src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '<span class="vthumb"></span>') +
+          '<span class="vbody"><span class="vtitle">' + esc(v.title) + '</span></span>' +
+          '<span class="subcell">' +
+          '<b class="' + pCls + '">' + pSign + Chart.fmtInt(v[primaryKey]) + '人</b>' +
+          (v[otherKey] ? '<em class="' + oCls + '">' + oSign + Chart.fmtInt(v[otherKey]) + '人</em>' : '') +
+          '</span></button>';
+      }).join('') : '<p class="chart-empty">' + emptyMsg + '</p>';
+      bindVideoClicks(host);
+    }
+
+    // 増えたほうは、動画一覧の本体（常に取れる）だけで組み立てられる
+    build(gHost, 'subs', 'この期間、増えた登録者はいません');
+
+    // 減ったほうは、別枠で取りに行っている解除数の状態しだい
+    if (S.unsubsState === 'loading') {
+      lHost.innerHTML = '<p class="skeleton">読み込んでいます…</p>';
+      (S.unsubsPromise || Promise.resolve()).then(refreshSubsSheetIfOpen).catch(refreshSubsSheetIfOpen);
+    } else if (S.unsubsState === 'unavailable') {
+      lHost.innerHTML = '<p class="error-box">このチャンネルでは、動画ごとの解除数を取得できませんでした。</p>';
+    } else {
+      build(lHost, 'unsubs', 'この期間、登録の解除はありません');
+    }
   }
 
   /* 指標の名前を、動画1本ぶんの持ち物の名前に置き換える */
