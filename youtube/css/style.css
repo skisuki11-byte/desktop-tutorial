@@ -203,11 +203,11 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 /* ---------- 数字カード ---------- */
 .range-note{margin:0 0 14px;font-size:.85rem;color:var(--ink-2)}
 .range-note .hint{display:block}
-/* カードは7枚ある。6列だと最後の1枚が浮くので、列は4にして
-   最後の「登録への転換」だけ幅を2つぶん取らせ、どの幅でも端が揃うようにする。
-     4列 … 4 ＋ (2+2)   3列 … 3 ＋ 3 ＋ 3   2列 … 2×3 ＋ 2
-   最後の1枚は種類の違う数字（結果ではなく効率）なので、
-   大きく置いておくほうが並びの中で埋もれない。 */
+/* カードは7枚ある。6列だと1枚が浮くので、列は4にして
+   先頭の「登録への転換」だけ幅を2つぶん取らせ、どの幅でも端が揃うようにする。
+     4列 … (2+2) ＋ 4   3列 … 3 ＋ 3 ＋ 3   2列 … 2 ＋ 2×3
+   先頭の1枚は種類の違う数字（結果ではなく効率）で、いちばん先に見てほしいので、
+   大きく置いて並びの中で埋もれないようにしている。 */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
 .kpi-wide{grid-column:span 2}
 @media (max-width:1024px){.kpis{grid-template-columns:repeat(3,1fr)}.kpi-wide{grid-column:span 3}}
@@ -480,10 +480,11 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
   font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap
 }
 .verdict-table td .delta{margin-left:8px;font-weight:700}
-/* 判定を書き換えるのはこの行。表の中で同じ重さに見えていると、
-   「視聴回数は増えている」の隣で読み飛ばされる。上に線を引いて段を分ける。 */
-.verdict-table .vrow-key th,.verdict-table .vrow-key td{border-top:2px solid var(--line);padding-top:12px}
-.verdict-table .vrow-key th{color:var(--ink)}
+/* 判定を書き換えるのはこの行。表の先頭に置いたうえで、
+   下に線を引いて残りと段を分ける。同じ重さに見えていると、
+   すぐ下の「視聴回数は増えている」に埋もれて読み飛ばされる。 */
+.verdict-table .vrow-key th,.verdict-table .vrow-key td{border-bottom:2px solid var(--line);padding-bottom:12px}
+.verdict-table .vrow-key th{color:var(--ink);font-weight:700}
 .verdict-table tbody th small{display:block;font-weight:400;font-size:.68rem;color:var(--muted);margin-top:2px}
 .verdict-table-wrap .hint{margin:8px 0 0}
 
@@ -613,6 +614,25 @@ main{max-width:1180px;margin:0 auto;padding:18px 16px 64px}
 }
 .lens-clear-list b{font-size:.85rem;color:var(--ink-2)}
 .lens-clear-list span{font-size:.8rem;color:var(--muted);line-height:1.7}
+
+/* ---------- 押せる横棒（収益の動画別） ----------
+   ボタンにしても、押せない横棒と並びがずれないようにする。
+   押せることは右端の小さな印と、触ったときの反応で示す。 */
+.hbar-row.is-link{
+  display:block;width:100%;text-align:left;font:inherit;color:inherit;
+  background:none;border:0;padding:6px 8px;margin:-6px -8px;
+  border-radius:var(--r-sm);cursor:pointer;-webkit-appearance:none;appearance:none
+}
+.hbar-row.is-link:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.hbar-row.is-link:active{transform:scale(.995)}
+.hbar-row.is-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hbar-row.is-link:hover .hbar-fill{filter:brightness(1.12)}
+.hbar-more{
+  display:inline-block;width:6px;height:6px;margin-left:8px;vertical-align:1px;
+  border-right:2px solid var(--muted);border-top:2px solid var(--muted);
+  transform:rotate(45deg);opacity:.6
+}
+.hbar-row.is-link:hover .hbar-more{border-color:var(--accent);opacity:1}
 
 /* ---------- 収益 ---------- */
 .kpi-money{font-size:1.3rem}

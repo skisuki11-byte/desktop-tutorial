@@ -416,17 +416,17 @@
     S.dayRows = rows; S.prevRows = prev;
 
     var tiles = [
+      /* 先頭に置く。ここが落ちていれば、下に並ぶ数字がどれだけ増えていても
+         増え方は落ちている。いちばん最後に見る数字ではなく、最初に見る数字。 */
+      { key: 'conv', wide: true, label: '登録への転換', value: conv.toFixed(2) + '人',
+        delta: fmtDelta(conv, pConv), note: '1,000視聴あたりの登録者数' },
       { key: 'views', label: '視聴回数', value: Chart.fmtInt(views), delta: fmtDelta(views, pViews), spark: rows.map(function (r) { return r.views; }) },
       { key: 'watch', label: '総再生時間', value: fmtWatch(watch), delta: fmtDelta(watch, pWatch), spark: rows.map(function (r) { return r.estimatedMinutesWatched; }) },
       { key: 'avg', label: '平均視聴時間', value: Chart.fmtDur(avg), delta: fmtDelta(avg, pAvg), note: '1回の再生で見られた長さ' },
       { key: 'pct', label: '平均視聴率', value: Chart.fmtPct(pct), delta: fmtDelta(pct, pPct), note: '動画の長さに対する割合' },
       { key: 'subs', label: '登録者の増減', value: (net >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(net)), delta: fmtDelta(net, pNet), note: '合計 ' + Chart.fmtInt(st.subscriberCount || 0) + '人' },
       // 3つ並ぶので桁を詰める（42,463 ではなく 4.2万）。1行に収まらないと読みにくい。
-      { key: 'engage', label: '高評価 / コメント', value: Chart.fmtAxis(sum(rows, 'likes')) + ' / ' + Chart.fmtAxis(sum(rows, 'comments')), note: '共有 ' + Chart.fmtAxis(sum(rows, 'shares')) + '回' },
-      /* 最後に置いて幅を取る。6つの結果に対して、これは「効率」を見る
-         ひとつ違う種類の数字なので、並びの中で埋もれないようにする。 */
-      { key: 'conv', wide: true, label: '登録への転換', value: conv.toFixed(2) + '人',
-        delta: fmtDelta(conv, pConv), note: '1,000視聴あたりの登録者数' }
+      { key: 'engage', label: '高評価 / コメント', value: Chart.fmtAxis(sum(rows, 'likes')) + ' / ' + Chart.fmtAxis(sum(rows, 'comments')), note: '共有 ' + Chart.fmtAxis(sum(rows, 'shares')) + '回' }
     ];
 
     /* 数字だけ見せて終わりにせず、押せば中を開けるようにする。
@@ -762,6 +762,7 @@
     var views = sum(rows, 'views');
 
     var rpm = views ? rev / views * 1000 : 0;
+    S.chanRpm = rpm;          // 動画1本の RPM を比べる相手として使う
     var cpm = imps ? gross / imps * 1000 : 0;
     var pcpm = mplays ? gross / mplays * 1000 : 0;
     var mrate = views ? mplays / views * 100 : 0;
@@ -813,6 +814,14 @@
   function renderRevenueVideos(rows, cur) {
     var host = $('revVideos');
     if (!rows.length) { host.innerHTML = '<p class="chart-empty">この期間に収益のあった動画がありません</p>'; return; }
+
+    /* 動画1本ぶんの収益を控えておく。押して詳細を開いたときに、
+       そこでもう一度問い合わせずに済ませるため。
+       収益は権限も1日の枠も別なので、同じ数字を2度取りに行かない。 */
+    S.revByVideo = {};
+    S.revCurrency = cur || 'JPY';
+    rows.forEach(function (r) { S.revByVideo[r.video] = r; });
+
     var ids = rows.map(function (r) { return r.video; });
     fetchVideoDetails(ids).catch(function () {}).then(function () {
       Chart.hbar(host, rows.map(function (r) {
@@ -820,12 +829,14 @@
         var views = Number(r.views) || 0;
         var rev = Number(r.estimatedRevenue) || 0;
         return {
+          id: r.video,            // 押せる行にする
           label: v ? v.snippet.title : r.video,
           value: rev,
           sub: '視聴' + Chart.fmtInt(views) + '回 ・ RPM ' +
             Chart.fmtMoney(views ? rev / views * 1000 : 0, cur || 'JPY')
         };
       }), { format: function (v) { return Chart.fmtMoney(v, cur || 'JPY'); } });
+      bindVideoClicks(host);
     });
   }
 
@@ -1111,9 +1122,18 @@
     });
   }
 
+  /* 動画を押したら1本の詳細を開く。
+     1つ1つの要素ではなく、入れ物に1回だけ付ける（イベント委譲）。
+     理由は2つ。
+      ・グラフは画面幅が変わると中身を描き直すので、要素に直接付けた印は消える。
+        収益の横棒がそれで、押しても何も起きない状態になっていた。
+      ・描き直すたびに呼ばれても、印が二重三重に積み重ならない。 */
   function bindVideoClicks(host) {
-    host.querySelectorAll('[data-id]').forEach(function (b) {
-      b.addEventListener('click', function () { openSheet(b.dataset.id); });
+    if (!host || host._videoClicks) return;
+    host._videoClicks = true;
+    host.addEventListener('click', function (e) {
+      var t = e.target.closest('[data-id]');
+      if (t && host.contains(t)) openSheet(t.dataset.id);
     });
   }
 
@@ -1741,6 +1761,7 @@
       '<div><span>公開後1日あたり</span><b>' + Chart.fmtInt(s.perDay) + '回</b></div>' +
       '</div></div>' +
       '<a class="ext" href="https://www.youtube.com/watch?v=' + esc(id) + '" target="_blank" rel="noopener">YouTube で開く ↗</a>' +
+      moneyBlock(id) +
       '<h3>視聴維持率</h3>' +
       '<p class="lead">動画のどこで離脱されたか。急に落ちる場所が、直すべき場所です。' +
       '冒頭30秒の落ち方がいちばん効きます。</p>' +
@@ -1797,6 +1818,48 @@
         return { label: TRAFFIC[r.insightTrafficSourceType] || r.insightTrafficSourceType, value: Number(r.views) || 0 };
       }));
     });
+  }
+
+  /* 収益タブから押して開いたときだけ出す、その1本ぶんの収益。
+     「収益」タブで取った動画別の数字をそのまま使うので、追加の問い合わせはしない。
+     収益は権限も1日の枠も別なので、同じ数字を2度取りに行かない。
+
+     RPM を並べているのが要点。金額の大小は再生数の大小でほぼ決まるので、
+     「どの動画が儲かる作りか」は金額ではなく RPM を見ないと分からない。 */
+  function moneyBlock(id) {
+    var r = (S.revByVideo || {})[id];
+    if (!r) return '';
+    var cur = S.revCurrency || 'JPY';
+    var money = function (v) { return Chart.fmtMoney(v, cur); };
+    var views = Number(r.views) || 0;
+    var rev = Number(r.estimatedRevenue) || 0;
+    var gross = Number(r.grossRevenue) || 0;
+    var mplays = Number(r.monetizedPlaybacks) || 0;
+    var chanRpm = S.chanRpm;
+    var rpm = views ? rev / views * 1000 : 0;
+
+    var note = '';
+    if (chanRpm > 0 && rpm > 0) {
+      var d = (rpm - chanRpm) / chanRpm * 100;
+      note = Math.abs(d) < 10
+        ? 'RPM はチャンネル全体（' + money(chanRpm) + '）とほぼ同じです。'
+        : 'RPM はチャンネル全体（' + money(chanRpm) + '）より' +
+          Math.abs(Math.round(d)) + '%' + (d > 0 ? '高い' : '低い') + '本です。' +
+          (d > 0 ? 'この長さ・この題材は単価が取れています。同じ型で増やすのが効きます。'
+                 : '再生数のわりに手取りが薄い本です。長さが短くて広告が入る場所が少ないか、' +
+                   '広告主が付きにくい題材の可能性があります。');
+    }
+
+    return '<h3>この動画の収益</h3>' +
+      '<div class="mstats">' +
+      mstat('推定収益', money(rev)) +
+      mstat('推定RPM', money(rpm)) +
+      mstat('収益化された再生', mplays ? Chart.fmtInt(mplays) + '回' : '—') +
+      mstat('総収入', gross ? money(gross) : '—') +
+      '</div>' +
+      '<p class="note">推定収益は YouTube の取り分を引いたあとの手取り、総収入は引く前です。' +
+      '並べると必ず総収入のほうが大きく見えますが、基準が違うためで異常ではありません。' +
+      (note ? ' ' + note : '') + '</p>';
   }
 
   function closeSheet() {
