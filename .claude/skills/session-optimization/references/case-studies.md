@@ -33,6 +33,23 @@
   - https://introl.com/blog/prompt-caching-infrastructure-llm-cost-latency-reduction-guide-2025
   - https://ngrok.com/blog/prompt-caching
 
+### 5. LLMモデルルーティング/カスケード — 難度に応じた自動振り分け
+
+- 概要: すべてのクエリを安いモデルにまず投げ、自信度が閾値未満の時だけ高性能モデルに
+  エスカレーションする「カスケード」方式。事前分類せず結果の確信度で振り分ける。
+- 結果: RouteLLMはMT Benchで85%のコスト削減をGPT-4品質の95%を保ったまま達成。
+  FrugalGPTは組み合わせを学習することで最大98%のコスト削減を報告。総じて40〜85%の
+  コスト削減が品質をほぼ落とさず可能とされる。
+- 重要な留意点: 「1日1万リクエスト以上の規模でないと、ルーティングを構築する工数が
+  節約分を上回る」と明記されている。
+- 教訓: 難度に応じたモデルの使い分けは強力だが、それを自動化する仕組み自体にもコストが
+  かかる。個人開発規模では自動化せず、手動のヒューリスティック（作業の種類でモデルを
+  選ぶ）で十分に効果が出る。
+- 出典:
+  - https://tianpan.co/blog/2025-10-19-llm-routing-production
+  - https://tianpan.co/blog/2025-11-03-llm-routing-model-cascades
+  - https://neuraltrust.ai/blog/llm-model-routing
+
 ## 失敗事例
 
 ### 3. AutoGPT（2023）— ガードレールのない自律ループ
