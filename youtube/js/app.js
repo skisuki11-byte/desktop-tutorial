@@ -403,26 +403,37 @@
     var pNet = sum(prev, 'subscribersGained') - sum(prev, 'subscribersLost');
     var st = (S.channel && S.channel.statistics) || {};
 
+    // 押したときに中を見せるので、その場の数字は控えに持っておく
+    S.dayRows = rows; S.prevRows = prev;
+
     var tiles = [
-      { label: '視聴回数', value: Chart.fmtInt(views), delta: fmtDelta(views, pViews), spark: rows.map(function (r) { return r.views; }) },
-      { label: '総再生時間', value: fmtWatch(watch), delta: fmtDelta(watch, pWatch), spark: rows.map(function (r) { return r.estimatedMinutesWatched; }) },
-      { label: '平均視聴時間', value: Chart.fmtDur(avg), delta: fmtDelta(avg, pAvg), note: '1回の再生で見られた長さ' },
-      { label: '平均視聴率', value: Chart.fmtPct(pct), delta: fmtDelta(pct, pPct), note: '動画の長さに対する割合' },
-      { label: '登録者の増減', value: (net >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(net)), delta: fmtDelta(net, pNet), note: '合計 ' + Chart.fmtInt(st.subscriberCount || 0) + '人' },
+      { key: 'views', label: '視聴回数', value: Chart.fmtInt(views), delta: fmtDelta(views, pViews), spark: rows.map(function (r) { return r.views; }) },
+      { key: 'watch', label: '総再生時間', value: fmtWatch(watch), delta: fmtDelta(watch, pWatch), spark: rows.map(function (r) { return r.estimatedMinutesWatched; }) },
+      { key: 'avg', label: '平均視聴時間', value: Chart.fmtDur(avg), delta: fmtDelta(avg, pAvg), note: '1回の再生で見られた長さ' },
+      { key: 'pct', label: '平均視聴率', value: Chart.fmtPct(pct), delta: fmtDelta(pct, pPct), note: '動画の長さに対する割合' },
+      { key: 'subs', label: '登録者の増減', value: (net >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(net)), delta: fmtDelta(net, pNet), note: '合計 ' + Chart.fmtInt(st.subscriberCount || 0) + '人' },
       // 3つ並ぶので桁を詰める（42,463 ではなく 4.2万）。1行に収まらないと読みにくい。
-      { label: '高評価 / コメント', value: Chart.fmtAxis(sum(rows, 'likes')) + ' / ' + Chart.fmtAxis(sum(rows, 'comments')), note: '共有 ' + Chart.fmtAxis(sum(rows, 'shares')) + '回' }
+      { key: 'engage', label: '高評価 / コメント', value: Chart.fmtAxis(sum(rows, 'likes')) + ' / ' + Chart.fmtAxis(sum(rows, 'comments')), note: '共有 ' + Chart.fmtAxis(sum(rows, 'shares')) + '回' }
     ];
 
+    /* 数字だけ見せて終わりにせず、押せば中を開けるようにする。
+       「なぜこの数字になったか」は、日ごとの動きと、
+       どの動画が押し上げた（下げた）かを見ないと分からないため。
+       押せることが分かるよう、右上に小さな印を出す。 */
     $('kpis').innerHTML = tiles.map(function (t, i) {
-      return '<div class="kpi">' +
-        '<div class="kpi-label">' + esc(t.label) + '</div>' +
-        '<div class="kpi-value">' + t.value + '</div>' +
-        '<div class="kpi-foot">' + (t.delta || '') +
-        (t.note ? '<span class="kpi-note">' + esc(t.note) + '</span>' : '') + '</div>' +
-        (t.spark ? '<div class="kpi-spark" id="spark' + i + '"></div>' : '') +
-        '</div>';
+      return '<button type="button" class="kpi" data-metric="' + t.key + '" aria-label="' + esc(t.label) + 'の内訳を見る">' +
+        '<span class="kpi-more" aria-hidden="true"></span>' +
+        '<span class="kpi-label">' + esc(t.label) + '</span>' +
+        '<span class="kpi-value">' + t.value + '</span>' +
+        '<span class="kpi-foot">' + (t.delta || '') +
+        (t.note ? '<span class="kpi-note">' + esc(t.note) + '</span>' : '') + '</span>' +
+        (t.spark ? '<span class="kpi-spark" id="spark' + i + '"></span>' : '') +
+        '</button>';
     }).join('');
     tiles.forEach(function (t, i) { if (t.spark && $('spark' + i)) Chart.spark($('spark' + i), t.spark); });
+    $('kpis').querySelectorAll('[data-metric]').forEach(function (b) {
+      b.addEventListener('click', function () { openMetricSheet(b.dataset.metric); });
+    });
 
     var series = rows.map(function (r) { return { date: r.day, value: Number(r.views) || 0 }; });
     var cmp = prev.map(function (r) { return { date: r.day, value: Number(r.views) || 0 }; });
@@ -819,6 +830,8 @@
       avg: Number(r.averageViewDuration) || 0,
       pct: Number(r.averageViewPercentage) || 0,
       subs: Number(r.subscribersGained) || 0,
+      likes: Number(r.likes) || 0,
+      comments: Number(r.comments) || 0,
       lifetime: Number(st.viewCount) || 0,
       perDay: days ? (Number(st.viewCount) || 0) / days : 0,
       ageDays: days,
@@ -1141,6 +1154,152 @@
         '<span class="vscore ' + scoreClass(r.score) + '">' + r.score + '</span></button>';
     }).join('') : '<p class="chart-empty">直すところは見つかりませんでした</p>';
     bindVideoClicks($('auditList'));
+  }
+
+
+  /* ========== 数字カードを押したときの中身 ==========
+     出すのは3つ。数字そのものより、この3つが判断に要る。
+       1. この指標が何を数えたものか（言葉の定義）
+       2. 日ごとの動きと、前の同じ期間との比べ
+       3. どの動画がこの数字を作っているか
+     3つ目がいちばん効く。合計だけ見ても、直す先が分からないため。 */
+  var METRICS = {
+    views: {
+      label: '視聴回数', dayKey: 'views', vidKey: 'views', unit: '回',
+      total: function (r) { return sum(r, 'views'); },
+      fmt: function (v) { return Chart.fmtInt(v) + '回'; },
+      means: 'この期間に動画が再生された回数の合計です。同じ人が2回見れば2回と数えます。',
+      tips: '跳ねた日があれば、その日に何を出したか、どこから来たかを「流入」タブで確かめてください。' +
+        '本数を増やしても伸びないときは、視聴回数より先に平均視聴時間を見るほうが早く原因にたどり着きます。'
+    },
+    watch: {
+      label: '総再生時間', dayKey: 'estimatedMinutesWatched', vidKey: 'estimatedMinutesWatched', unit: '分',
+      total: function (r) { return sum(r, 'estimatedMinutesWatched'); },
+      fmt: function (v) { return fmtWatch(v); },
+      means: '視聴された時間の合計です。視聴回数 × 1回あたりの長さ、とほぼ同じ意味になります。',
+      tips: 'YouTube が動画を広げるかどうかは、視聴回数よりこちらに近いところで決まります。' +
+        '収益化の条件（公開動画の総再生時間4,000時間）もこの数字です。'
+    },
+    avg: {
+      label: '平均視聴時間', dayKey: 'averageViewDuration', vidKey: 'averageViewDuration', unit: '秒',
+      total: function (r) { return weighted(r, 'averageViewDuration', 'views'); },
+      fmt: function (v) { return Chart.fmtDur(v); },
+      means: '1回の再生で、どれだけの長さ見られたかです。視聴回数で重みをつけた平均で出しています（日ごとの値をただ足して割ると、視聴の少ない日が同じ重みになってしまうため）。',
+      tips: '長さの違う動画を比べるときは、％ではなくこちらを見てください。' +
+        '20分の動画の30%（6分）と、3分の動画の60%（1.8分）では、YouTube が評価するのは前者です。'
+    },
+    pct: {
+      label: '平均視聴率', dayKey: 'averageViewPercentage', vidKey: 'averageViewPercentage', unit: '%',
+      total: function (r) { return weighted(r, 'averageViewPercentage', 'views'); },
+      fmt: function (v) { return Chart.fmtPct(v); },
+      means: '動画の長さに対して、どれだけの割合が見られたかです。こちらも視聴回数で重みをつけた平均です。',
+      tips: '長い動画ほど低く出ます。BGM や作業用のような長尺で数％〜十数％になるのは普通で、それ自体は問題ではありません。' +
+        '同じ動画の過去と比べる、あるいは同じくらいの長さの動画どうしで比べるときにだけ意味を持ちます。'
+    },
+    subs: {
+      label: '登録者の増減', dayKey: null, vidKey: 'subscribersGained', unit: '人',
+      total: function (r) { return sum(r, 'subscribersGained') - sum(r, 'subscribersLost'); },
+      fmt: function (v) { return (v >= 0 ? '＋' : '−') + Chart.fmtInt(Math.abs(v)) + '人'; },
+      means: '増えた人数から、減った人数を引いた純増です。丸められていない正確な値です。',
+      tips: '登録者は結果であって原因ではありません。動くのは維持率と流入のほうなので、' +
+        'この数字が伸び悩むときは、登録を促す前に「最後まで見られているか」を先に見てください。'
+    },
+    engage: {
+      label: '高評価 / コメント', dayKey: 'likes', vidKey: 'likes', unit: '件',
+      total: function (r) { return sum(r, 'likes'); },
+      fmt: function (v) { return Chart.fmtInt(v) + '件'; },
+      means: '高評価の数です（日ごとのグラフも高評価）。コメントと共有の数は下にまとめています。',
+      tips: '高評価率（高評価 ÷ 視聴回数）は、内容が刺さったかの目安になります。' +
+        '2〜4%あれば良いほうです。ただし BGM のような「流しておく」動画では元々低く出ます。'
+    }
+  };
+
+  function openMetricSheet(key) {
+    var m = METRICS[key];
+    if (!m || !S.dayRows) return;
+    var p = period();
+    var now = m.total(S.dayRows), before = m.total(S.prevRows);
+
+    $('sheetTitle').textContent = m.label;
+    $('sheet').hidden = false;
+    document.body.classList.add('locked');
+
+    var extra = '';
+    if (key === 'engage') {
+      extra = '<div class="mstats">' +
+        mstat('高評価', Chart.fmtInt(sum(S.dayRows, 'likes')) + '件') +
+        mstat('コメント', Chart.fmtInt(sum(S.dayRows, 'comments')) + '件') +
+        mstat('共有', Chart.fmtInt(sum(S.dayRows, 'shares')) + '件') +
+        mstat('高評価率', Chart.fmtPct(sum(S.dayRows, 'views') ? sum(S.dayRows, 'likes') / sum(S.dayRows, 'views') * 100 : 0)) +
+        '</div>';
+    }
+    if (key === 'subs') {
+      extra = '<div class="mstats">' +
+        mstat('増えた', '＋' + Chart.fmtInt(sum(S.dayRows, 'subscribersGained')) + '人') +
+        mstat('減った', '−' + Chart.fmtInt(sum(S.dayRows, 'subscribersLost')) + '人') +
+        '</div>';
+    }
+
+    $('sheetBodyInner').innerHTML =
+      '<div class="mhead">' +
+      '<div class="mbig">' + m.fmt(now) + '</div>' +
+      '<div class="mcmp">' + deltaTag(Insight.pct(now, before)) +
+      '<span class="hint">前の同じ期間（' + p.prevStart.slice(5) + '〜' + p.prevEnd.slice(5) + '）は ' +
+      m.fmt(before) + '</span></div>' +
+      '<p class="hint">' + p.start + ' 〜 ' + p.end + '（' + p.days + '日間）</p>' +
+      '</div>' +
+      extra +
+      '<h3>何を数えた数字か</h3><p class="lead">' + esc(m.means) + '</p>' +
+      '<h3>日ごとの動き</h3>' +
+      '<div class="chart-box" id="mChart"></div>' +
+      '<h3>この数字を作っている動画</h3>' +
+      '<p class="lead">上位5本です。動画を押すと、その1本の維持率と流入が見られます。</p>' +
+      '<div id="mVideos" class="vlist"></div>' +
+      '<h3>読み方</h3><p class="lead">' + esc(m.tips) + '</p>';
+
+    if (key === 'subs') {
+      Chart.delta($('mChart'), S.dayRows.map(function (r) {
+        return { date: r.day, gained: Number(r.subscribersGained) || 0, lost: Number(r.subscribersLost) || 0 };
+      }));
+    } else {
+      Chart.line($('mChart'), {
+        values: S.dayRows.map(function (r) { return { date: r.day, value: Number(r[m.dayKey]) || 0 }; }),
+        compare: S.prevRows.map(function (r) { return { date: r.day, value: Number(r[m.dayKey]) || 0 }; }),
+        label: m.label, unit: m.unit, height: 200
+      });
+    }
+
+    var rows = allStats().filter(function (v) { return v[statKey(key)] > 0; })
+      .sort(function (a, b) { return b[statKey(key)] - a[statKey(key)]; }).slice(0, 5);
+    $('mVideos').innerHTML = rows.length
+      ? rows.map(function (v) { return mvideo(v, key); }).join('')
+      : '<p class="chart-empty">この期間に該当する動画がありません</p>';
+    $('mVideos').querySelectorAll('[data-id]').forEach(function (b) {
+      b.addEventListener('click', function () { openSheet(b.dataset.id); });
+    });
+  }
+
+  /* 指標の名前を、動画1本ぶんの持ち物の名前に置き換える */
+  function statKey(key) {
+    return { views: 'views', watch: 'watch', avg: 'avg', pct: 'pct', subs: 'subs', engage: 'likes' }[key];
+  }
+  function mstat(label, value) {
+    return '<div class="mstat"><span>' + esc(label) + '</span><b>' + value + '</b></div>';
+  }
+  function mvideo(v, key) {
+    var val = {
+      views: Chart.fmtInt(v.views) + '回',
+      watch: fmtWatch(v.watch),
+      avg: Chart.fmtDur(v.avg),
+      pct: Chart.fmtPct(v.pct),
+      subs: '＋' + Chart.fmtInt(v.subs) + '人',
+      engage: Chart.fmtInt(v.likes) + '件'
+    }[key];
+    return '<button class="vcard" data-id="' + esc(v.id) + '" type="button">' +
+      (v.thumb ? '<img class="vthumb" src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '<span class="vthumb"></span>') +
+      '<span class="vbody"><span class="vtitle">' + esc(v.title) + '</span>' +
+      '<span class="vmeta">' + (v.publishedAt || '').slice(0, 10) + ' 公開</span></span>' +
+      '<span class="mval">' + val + '</span></button>';
   }
 
   /* ========== 動画1本の詳細 ========== */
