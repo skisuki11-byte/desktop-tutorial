@@ -75,7 +75,7 @@
   function normalize(e) {
     return {
       no: e.no || nextNo(),
-      date: e.date,
+      date: e.date || '',
       kamoku: e.kamoku || 'その他',
       uchiwake: e.uchiwake || 'その他',
       tekiyo: e.tekiyo || '',
@@ -167,14 +167,17 @@
   /* 科目 -> {total, count, uchiwake:{name:{total,count}}} （支出／収入を分けて返す） */
   function byKamoku(rows) {
     var out = {}, inc = {};
-    rows.forEach(function (e) {
-      var bucket = e.income ? inc : out;
-      var amt = e.income ? e.income : e.expense;
-      if (!amt) return;
+    function credit(bucket, e, amt) {
       var g = bucket[e.kamoku] || (bucket[e.kamoku] = { total: 0, count: 0, uchiwake: {} });
       g.total += amt; g.count++;
       var u = g.uchiwake[e.uchiwake] || (g.uchiwake[e.uchiwake] = { total: 0, count: 0, rows: [] });
       u.total += amt; u.count++; u.rows.push(e);
+    }
+    /* 収入・支出は独立に計上する（totals/byMonth/withBalancesと同じ扱い）。
+       CSV取り込みなど、1行に両方の金額が入るケースでも支出側が消えないようにする。 */
+    rows.forEach(function (e) {
+      if (e.income) credit(inc, e, e.income);
+      if (e.expense) credit(out, e, e.expense);
     });
     return { expense: out, income: inc };
   }
