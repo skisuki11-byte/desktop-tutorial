@@ -469,13 +469,45 @@
       });
     }).then(function (photos) {
       var out = { app: 'ともしび', exportedAt: new Date().toISOString(), data: st, photos: photos };
-      var blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
+      var text = JSON.stringify(out);
+      var blob = new Blob([text], { type: 'application/json' });
+
+      // 埋め込み（iframe）で開かれているとダウンロードが働かない。
+      // 持ち出せると約束した以上、黙って失敗させずコピーの道を出す。
+      var embedded = false;
+      try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+      if (embedded) { copyOut(text, photos.length); return; }
+
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'tomoshibi-' + S.ymd(new Date()) + '.json';
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
     });
+  }
+
+  function copyOut(text, n) {
+    var mb = (text.length / 1048576).toFixed(1);
+    sheet('すべて手元に持ち出す',
+      'いまの開きかたではファイルを保存できないため、中身をそのままお渡しします。' +
+      '写真' + n + '枚をふくむ ' + mb + 'MB です。<br><br>' +
+      '<textarea id="export-text" readonly rows="4" style="width:100%;font-size:11px;' +
+      'background:var(--panel-2);color:var(--muted);border:1px solid var(--line);' +
+      'border-radius:10px;padding:10px"></textarea>',
+      [{ label: 'コピーする', primary: true, on: function () {} }]);
+    var ta = document.getElementById('export-text');
+    if (ta) ta.value = text;
+    var btn = document.querySelector('#sheet-root [data-act="0"]');
+    if (btn) {
+      btn.onclick = function () {
+        var t = document.getElementById('export-text');
+        t.select(); t.setSelectionRange(0, t.value.length);
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        if (!ok && navigator.clipboard) navigator.clipboard.writeText(t.value).catch(function () {});
+        btn.textContent = 'コピーしました';
+      };
+    }
   }
 
   function blobToDataURL(b) {
