@@ -1,917 +1,296 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ともしび UI案</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;600&amp;display=swap">
-<style>
-/* ==========================================================
-   ともしび — ペット供養アプリ UI案 v1
-   夜と灯り。画面の中でいちばん明るいものが「灯り」ひとつになるよう、
-   色数を絞り、装飾を足さない。トークン構成は cashbook / 英単語アプリと同じ
-   （--bg / --panel / --ink / --muted / --line / --r / --shadow）で揃え、
-   値だけをこの製品の主題に合わせて差し替えている。
-   ========================================================== */
-:root{
-  /* 面 */
-  --board:#08090b;      /* ボード（提案書）の地 */
-  --bg:#0e1013;         /* アプリの地＝夜 */
-  --panel:#16191f;      /* カード面 */
-  --panel-2:#1c2027;
-  --line:#262a32;
-  /* 文字 */
-  --ink:#e9e6e0;        /* 温かみのある白。純白は冷たい */
-  --muted:#9ba0a9;
-  --faint:#838892;      /* 4.5:1 を確保した最も薄い文字 */
-  /* 唯一のアクセント＝灯 */
-  --tomo:#f0b357;
-  --tomo-ink:#17130a;
-  --tomo-soft:rgba(240,179,87,.13);
-  --tomo-line:rgba(240,179,87,.32);
-  /* 形 */
-  --r:16px; --r-sm:10px; --r-lg:24px;
-  --shadow:0 1px 2px rgba(0,0,0,.5), 0 18px 44px rgba(0,0,0,.45);
-  /* 書体 */
-  --serif:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","MS PMincho",serif;
-  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;
-  /* 余白（4/8pxスケール） */
-  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px; --s12:48px; --s16:64px;
-}
-*{box-sizing:border-box}
-[hidden]{display:none !important}
-html,body{margin:0;padding:0}
-body{
-  background:var(--board); color:var(--ink);
-  font-family:var(--sans); font-size:15px; line-height:1.8;
-  -webkit-text-size-adjust:100%;
-  padding:0 16px 96px;
-}
-.wrap{max-width:1180px;margin:0 auto}
-
-/* ---------- ボードの見出し ---------- */
-.board-head{padding:56px 0 40px;border-bottom:1px solid var(--line)}
-.eyebrow{font-size:12px;letter-spacing:.16em;color:var(--tomo);margin:0 0 var(--s3);text-transform:none}
-.board-head h1{
-  font-family:var(--serif); font-weight:600; font-size:clamp(28px,6vw,44px);
-  line-height:1.35; margin:0 0 var(--s4); letter-spacing:.04em;
-}
-.board-head h1 .flame-inline{display:inline-block;vertical-align:-4px;margin-right:10px}
-.lede{color:var(--muted);max-width:60ch;margin:0 0 var(--s6);font-size:16px}
-.meta-row{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);font-size:13px;color:var(--faint)}
-.meta-row span{white-space:nowrap}
-
-h2.sec{
-  font-family:var(--serif); font-size:clamp(20px,4vw,26px); font-weight:600;
-  letter-spacing:.04em; margin:var(--s16) 0 var(--s3);
-}
-h2.sec .num{color:var(--tomo);font-size:.7em;margin-right:.7em;font-family:var(--sans);letter-spacing:.1em}
-.sec-note{color:var(--muted);max-width:68ch;margin:0 0 var(--s8);font-size:15px}
-
-/* ---------- 根拠カード ---------- */
-.cases{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-.case{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--s6)}
-.case h3{margin:0 0 var(--s2);font-size:15px;line-height:1.6}
-.case .tag{
-  display:inline-block;font-size:11px;letter-spacing:.08em;padding:2px 8px;border-radius:999px;
-  margin-bottom:var(--s3);border:1px solid var(--line);color:var(--faint)
-}
-.case .tag.ng{color:#e08c86;border-color:rgba(224,140,134,.3)}
-.case .tag.ok{color:var(--tomo);border-color:var(--tomo-line)}
-.case p{margin:0;color:var(--muted);font-size:14px;line-height:1.85}
-.case p b{color:var(--ink);font-weight:600}
-
-/* ---------- 画面ボード ---------- */
-.flow-label{
-  display:flex;align-items:center;gap:var(--s3);margin:var(--s12) 0 var(--s6);
-  font-size:13px;letter-spacing:.12em;color:var(--faint)
-}
-.flow-label::after{content:"";flex:1;height:1px;background:var(--line)}
-.board{display:grid;gap:var(--s12) var(--s6);grid-template-columns:repeat(auto-fill,minmax(288px,1fr));justify-items:center}
-.slot{width:100%;max-width:320px}
-.slot-cap{margin:var(--s4) 0 0}
-.slot-cap .no{font-size:12px;letter-spacing:.1em;color:var(--tomo);font-variant-numeric:tabular-nums}
-.slot-cap h3{margin:2px 0 var(--s2);font-size:16px;font-family:var(--serif);letter-spacing:.03em;font-weight:600}
-.slot-cap p{margin:0;font-size:13px;line-height:1.85;color:var(--muted)}
-.slot-cap p + p{margin-top:var(--s2)}
-.why{color:var(--faint);font-size:12.5px}
-.why b{color:var(--tomo);font-weight:500}
-
-/* ---------- 端末の枠 ---------- */
-.phone{
-  width:288px;height:626px;margin:0 auto;padding:8px;
-  background:#0a0b0e;border:1px solid #23262d;border-radius:40px;
-  box-shadow:var(--shadow); position:relative;
-}
-.screen{
-  position:absolute;inset:8px;border-radius:32px;background:var(--bg);
-  overflow:hidden;display:flex;flex-direction:column;
-}
-.statusbar{
-  flex:none;display:flex;justify-content:space-between;align-items:center;
-  padding:14px 22px 0;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;
-}
-.statusbar .sig{letter-spacing:2px}
-.body{flex:1;display:flex;flex-direction:column;padding:0 20px;min-height:0}
-.body.pad{padding-top:var(--s4)}
-.spacer{flex:1}
-
-/* ---------- 灯り ---------- */
-.altar{display:flex;flex-direction:column;align-items:center;gap:var(--s3);padding-top:16px}
-.flamebox{position:relative;width:56px;height:72px;display:grid;place-items:center}
-.glow{
-  position:absolute;width:120px;height:120px;border-radius:50%;
-  background:radial-gradient(circle,rgba(240,179,87,.28) 0%,rgba(240,179,87,.10) 38%,transparent 68%);
-  filter:blur(2px);animation:breathe 5.5s ease-in-out infinite;
-}
-.flame{position:relative;width:26px;height:34px;transform-origin:50% 100%;animation:flicker 4.5s ease-in-out infinite}
-.flame.lg{width:34px;height:44px}
-.wick{width:2px;height:9px;background:linear-gradient(#3a3126,#1b1a18);border-radius:1px;margin-top:-2px}
-@keyframes flicker{
-  0%,100%{transform:scaleY(1) scaleX(1);opacity:.96}
-  22%{transform:scaleY(1.07) scaleX(.965);opacity:1}
-  48%{transform:scaleY(.965) scaleX(1.025);opacity:.88}
-  73%{transform:scaleY(1.035) scaleX(.99);opacity:.98}
-}
-@keyframes breathe{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.07)}}
-
-/* 遺影（プレースホルダのシルエット） */
-.portrait{
-  position:relative;width:118px;height:118px;border-radius:50%;
-  background:radial-gradient(ellipse at 50% 30%,#2a2620 0%,#15161a 62%,#101115 100%);
-  display:grid;place-items:end center;overflow:hidden;
-  box-shadow:0 0 0 1px rgba(240,179,87,.14), 0 0 34px rgba(240,179,87,.10);
-}
-.portrait svg{width:94px;height:94px;opacity:.92;margin-bottom:-6px}
-.portrait::after{
-  content:"";position:absolute;inset:0;border-radius:50%;
-  background:linear-gradient(180deg,rgba(14,16,19,.55) 0%,transparent 42%);
-}
-.portrait.sm{width:86px;height:86px}
-.portrait.sm svg{width:68px;height:68px}
-
-.petname{font-family:var(--serif);font-size:24px;letter-spacing:.14em;margin:var(--s3) 0 2px;line-height:1.4}
-.petdates{font-size:11.5px;color:var(--faint);letter-spacing:.08em;font-variant-numeric:tabular-nums;margin:0}
-
-/* ひとつだけの節目の行 */
-.nextline{
-  margin:var(--s4) 0 0;text-align:center;font-family:var(--serif);
-  font-size:15px;letter-spacing:.08em;color:var(--muted);
-}
-.nextline b{color:var(--ink);font-weight:600;font-size:22px;font-variant-numeric:tabular-nums;margin:0 4px}
-
-/* ---------- ボタン ---------- */
-.btn{
-  display:flex;align-items:center;justify-content:center;gap:var(--s2);
-  width:100%;min-height:52px;border-radius:999px;border:1px solid transparent;
-  font-family:var(--sans);font-size:15px;font-weight:600;letter-spacing:.06em;
-  cursor:pointer;transition:transform .18s ease,background .18s ease,opacity .18s ease;
-}
-.btn:active{transform:scale(.985)}
-.btn-primary{background:var(--tomo);color:var(--tomo-ink)}
-.btn-quiet{background:transparent;color:var(--ink);border-color:var(--line)}
-.btn-ghost{background:transparent;color:var(--muted);border-color:transparent;min-height:44px;font-weight:400}
-.btn:focus-visible{outline:2px solid var(--tomo);outline-offset:3px}
-.done-note{
-  text-align:center;color:var(--faint);font-size:13px;padding:16px 0;letter-spacing:.06em;
-  font-family:var(--serif);
-}
-
-/* ---------- タブバー ---------- */
-.tabbar{
-  flex:none;display:grid;grid-template-columns:repeat(4,1fr);
-  border-top:1px solid var(--line);padding:6px 4px 14px;background:rgba(14,16,19,.9);
-}
-.tab{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  min-height:48px;background:none;border:0;color:var(--faint);font-size:9.5px;
-  letter-spacing:.02em;white-space:nowrap;cursor:pointer;font-family:var(--sans);
-}
-.tab svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
-.tab[aria-current="page"]{color:var(--tomo)}
-
-/* ---------- お参りの4動作 ---------- */
-.ritual{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s3);margin-top:var(--s6)}
-.offer{
-  position:relative;min-height:88px;border-radius:var(--r);border:1px solid var(--line);
-  background:var(--panel);color:var(--muted);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:6px;font-size:12px;letter-spacing:.1em;
-  cursor:pointer;font-family:var(--sans);transition:all .35s ease;
-}
-.offer .ic{display:block;opacity:.55;transition:opacity .35s ease}
-.offer .ic svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;display:block}
-.offer[data-state="next"]{border-color:var(--tomo-line);color:var(--ink);animation:waiting 2.6s ease-in-out infinite}
-.offer[data-state="done"]{background:var(--tomo-soft);border-color:var(--tomo-line);color:var(--tomo)}
-.offer[data-state="done"] .ic{opacity:1}
-.offer[data-state="done"]::after{
-  content:"✓";position:absolute;top:8px;right:10px;font-size:11px;color:var(--tomo)
-}
-.offer:disabled{cursor:default}
-@keyframes waiting{0%,100%{box-shadow:0 0 0 0 rgba(240,179,87,0)}50%{box-shadow:0 0 0 4px rgba(240,179,87,.07)}}
-.ritual-lead{text-align:center;font-family:var(--serif);font-size:14px;color:var(--muted);letter-spacing:.1em;margin:var(--s6) 0 0}
-
-/* ---------- カウントダウン一覧 ---------- */
-.screen-title{font-family:var(--serif);font-size:17px;letter-spacing:.1em;margin:var(--s3) 0 var(--s3);font-weight:600}
-.md-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s2)}
-.md{
-  display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
-  padding:9px var(--s4);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);
-}
-.md.lead{background:var(--tomo-soft);border-color:var(--tomo-line)}
-.md .lbl{font-family:var(--serif);font-size:14px;letter-spacing:.06em}
-.md .sub{display:block;font-family:var(--sans);font-size:10.5px;color:var(--faint);letter-spacing:.04em;margin-top:1px}
-.md .n{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-.md .n b{font-size:18px;color:var(--ink);font-weight:600;margin-right:2px}
-.md.lead .n b{color:var(--tomo)}
-
-/* ---------- アルバム ---------- */
-.chapters{display:flex;flex-direction:column;gap:var(--s3);overflow:hidden}
-.chapter{display:flex;gap:var(--s3);align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px;min-width:0}
-.chapter > div:not(.thumb){min-width:0;flex:1}
-.thumb{flex:none;width:52px;height:52px;border-radius:8px;background:radial-gradient(ellipse at 50% 35%,#2a2620,#14151a);display:grid;place-items:end center;overflow:hidden}
-.thumb svg{width:42px;height:42px;opacity:.8;margin-bottom:-3px}
-.chapter .t{font-family:var(--serif);font-size:13.5px;letter-spacing:.03em;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chapter .d{margin:2px 0 0;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chapter .more{margin-left:auto;color:var(--faint);font-size:17px;padding:0 4px;min-width:28px;min-height:44px;display:grid;place-items:center;background:none;border:0;cursor:pointer}
-
-/* ---------- 手紙 ---------- */
-.letter{
-  margin-top:var(--s6);background:linear-gradient(180deg,#191b21,#15171c);
-  border:1px solid var(--line);border-radius:var(--r);padding:var(--s6) var(--s3);
-  position:relative;
-}
-.letter .mark{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--bg);padding:0 10px;font-size:10px;letter-spacing:.2em;color:var(--tomo)}
-.letter p{
-  font-family:var(--serif);font-size:14px;line-height:2.1;letter-spacing:.01em;margin:0;color:var(--ink);
-}
-.letter .from{margin-top:var(--s4);text-align:right;font-size:12px;color:var(--muted);font-family:var(--serif)}
-.disclose{margin:var(--s3) 0 0;font-size:10.5px;color:var(--faint);text-align:center;letter-spacing:.04em}
-
-/* ---------- 命日の予告 ---------- */
-.notice{
-  background:var(--panel);border:1px solid var(--tomo-line);border-radius:var(--r);
-  padding:var(--s4) var(--s3) var(--s3);margin-top:var(--s3);
-}
-.notice h4{font-family:var(--serif);font-size:16px;letter-spacing:.1em;margin:0 0 var(--s3);text-align:center}
-.notice ul{margin:0 0 var(--s3);padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
-.notice li{font-size:12px;color:var(--muted);display:flex;gap:8px;line-height:1.7}
-.notice li::before{content:"—";color:var(--tomo);flex:none}
-.notice .pair{display:flex;flex-direction:column;gap:var(--s2)}
-
-/* ---------- 再会（6秒） ---------- */
-.reunion{position:absolute;inset:8px;border-radius:32px;background:#000;overflow:hidden;display:grid;place-items:center}
-.reunion .stage{position:relative;width:100%;height:100%;display:grid;place-items:center}
-.reunion .subject{
-  width:150px;height:150px;display:grid;place-items:end center;
-  transform:scale(.42) translateY(14px);opacity:.5;transition:none;
-}
-.reunion .subject svg{width:150px;height:150px;opacity:.95}
-.reunion.playing .subject{transform:scale(1) translateY(0);opacity:1;transition:transform 4s cubic-bezier(.33,.02,.2,1),opacity 1.6s ease}
-.reunion .floorlight{
-  position:absolute;bottom:0;left:0;right:0;height:46%;
-  background:radial-gradient(ellipse at 50% 100%,rgba(240,179,87,.16),transparent 70%);
-}
-.reunion .endline{
-  position:absolute;bottom:74px;left:0;right:0;text-align:center;font-family:var(--serif);
-  font-size:15px;letter-spacing:.16em;color:var(--ink);opacity:0;transition:opacity 1.4s ease;
-}
-.reunion .again{
-  position:absolute;bottom:30px;left:0;right:0;text-align:center;font-size:12px;
-  color:var(--faint);letter-spacing:.08em;opacity:0;transition:opacity 1.4s ease;
-}
-.reunion.ended .endline,.reunion.ended .again{opacity:1}
-.playbar{margin-top:var(--s3);display:flex;justify-content:center}
-.playbtn{
-  background:transparent;border:1px solid var(--tomo-line);color:var(--tomo);
-  border-radius:999px;min-height:40px;padding:0 18px;font-size:12.5px;letter-spacing:.08em;
-  cursor:pointer;font-family:var(--sans);
-}
-.playbtn:focus-visible{outline:2px solid var(--tomo);outline-offset:3px}
-
-/* ---------- 設定（逓減カーブ） ---------- */
-.curvebox{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--s3) var(--s4) var(--s4);margin-top:var(--s2)}
-.curvebox h4{margin:0 0 var(--s1);font-size:13.5px;font-weight:600;letter-spacing:.06em}
-.curvebox .cap{margin:0 0 var(--s2);font-size:11px;color:var(--faint);line-height:1.7}
-.curve{width:100%;height:60px;display:block}
-.curve-x{display:flex;justify-content:space-between;font-size:9.5px;color:var(--faint);margin-top:6px;letter-spacing:.04em}
-.nudge{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2);margin-top:var(--s3)}
-.nudge button{
-  min-height:44px;border-radius:var(--r-sm);border:1px solid var(--line);background:transparent;
-  color:var(--muted);font-size:10.5px;white-space:nowrap;min-width:0;overflow:hidden;cursor:pointer;font-family:var(--sans);letter-spacing:0;
-}
-.setrow{
-  display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
-  min-height:46px;padding:0 var(--s4);background:var(--panel);border:1px solid var(--line);
-  border-radius:var(--r-sm);margin-top:var(--s2);font-size:13px;white-space:nowrap;
-}
-.setrow .arw{color:var(--faint)}
-.setrow.accent{border-color:var(--tomo-line);color:var(--tomo)}
-
-/* ---------- おむかえ ---------- */
-.steps{display:flex;gap:6px;justify-content:center;margin-top:var(--s4)}
-.steps i{width:20px;height:2px;border-radius:1px;background:var(--line);display:block}
-.steps i.on{background:var(--tomo)}
-.field{margin-top:var(--s6)}
-.field label{display:block;font-size:11.5px;color:var(--faint);letter-spacing:.1em;margin-bottom:var(--s2)}
-.field .input{
-  min-height:54px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--panel);
-  display:flex;align-items:center;padding:0 var(--s4);font-family:var(--serif);font-size:20px;
-  letter-spacing:.14em;color:var(--ink);
-}
-.field .input.ph{color:var(--faint)}
-.onbo-lead{font-family:var(--serif);font-size:17px;line-height:1.9;letter-spacing:.08em;margin:var(--s8) 0 0;text-align:center}
-.onbo-sub{font-size:12px;color:var(--faint);text-align:center;margin:var(--s3) 0 0;line-height:1.8}
-
-/* ---------- トークン表 ---------- */
-.swatches{display:grid;gap:var(--s3);grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
-.sw{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--panel)}
-.sw .chip{height:56px}
-.sw .lb{padding:8px 10px 10px;font-size:11px;line-height:1.6}
-.sw .lb b{display:block;font-size:12px;font-weight:600;letter-spacing:.04em}
-.sw .lb span{color:var(--faint);font-variant-numeric:tabular-nums}
-
-table.spec{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:var(--s4)}
-table.spec th,table.spec td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.8}
-table.spec th{color:var(--faint);font-weight:500;font-size:12px;letter-spacing:.08em;white-space:nowrap}
-table.spec td:first-child{white-space:nowrap;font-weight:600}
-table.spec td b{color:var(--tomo);font-weight:600}
-.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-
-/* ---------- やらないUI ---------- */
-.never{display:grid;gap:var(--s3);grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.nv{background:var(--panel);border:1px solid var(--line);border-left:2px solid #8d4a44;border-radius:var(--r-sm);padding:var(--s4) var(--s6)}
-.nv h4{margin:0 0 var(--s2);font-size:14px;letter-spacing:.04em}
-.nv p{margin:0;font-size:13px;color:var(--muted);line-height:1.85}
-
-ol.open{padding-left:1.3em;margin:var(--s4) 0 0}
-ol.open li{margin-bottom:var(--s4);color:var(--muted);line-height:1.9}
-ol.open li b{color:var(--ink)}
-ol.open li::marker{color:var(--tomo)}
-
-footer.board-foot{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;line-height:1.9}
-footer.board-foot a{color:var(--muted)}
-
-@media (prefers-reduced-motion:reduce){
-  .flame,.glow,.offer[data-state="next"]{animation:none !important}
-  .reunion.playing .subject{transition:opacity .4s ease !important;transform:scale(1) !important}
-  *{scroll-behavior:auto !important}
-}
-</style>
+<meta name="theme-color" content="#0e1013">
+<title>ともしび</title>
+<link rel="icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="wrap">
 
-<header class="board-head">
-  <p class="eyebrow">わんずのともしび／ペット供養アプリ</p>
-  <h1><span class="flame-inline"><svg width="26" height="34" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.4 C 11 6.2 6.6 9.4 6.6 14.1 a5.4 5.4 0 0 0 10.8 0 C 17.4 9.6 13.2 6.6 12 1.4 Z" fill="#f0b357" opacity=".92"/><path d="M12 8.4 C 10.4 11.2 9.2 12.5 9.2 14.3 a2.8 2.8 0 0 0 5.6 0 C 14.8 12.5 13.6 11.2 12 8.4 Z" fill="#ffe9c2"/></svg></span>ともしび — UI案</h1>
-  <p class="lede">企画書 v2（2026年9月13日／一次検証済み）の設計思想を、そのまま触れる画面に落としたものです。
-  中核は「毎日ひらくお墓」「節目のカウントダウン」「命日の6秒」の3点。企画で<b>使わないと決めた手法</b>は、UIの側でも実装できない形にしています。</p>
-  <div class="meta-row">
-    <span>v1 / 2026-09-13</span>
-    <span>iOS・Android（React Native）想定</span>
-    <span>画面 11 点</span>
-    <span>◯印の枠は実際に動きます</span>
-  </div>
-</header>
+<!-- 使い回す図形。灯り・遺影のプレースホルダ・アイコン -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="flame-lit" viewBox="0 0 24 24">
+    <path d="M12 1.4 C 11 6.2 6.6 9.4 6.6 14.1 a5.4 5.4 0 0 0 10.8 0 C 17.4 9.6 13.2 6.6 12 1.4 Z" fill="#f0b357" opacity=".92"/>
+    <path d="M12 8.4 C 10.4 11.2 9.2 12.5 9.2 14.3 a2.8 2.8 0 0 0 5.6 0 C 14.8 12.5 13.6 11.2 12 8.4 Z" fill="#ffe9c2"/>
+  </symbol>
+  <symbol id="dog" viewBox="0 0 120 120">
+    <path d="M33 42 C22 46 18 62 22 78 C25 90 36 92 40 82 C43 70 42 52 33 42 Z" fill="#6e5c45"/>
+    <path d="M87 42 C98 46 102 62 98 78 C95 90 84 92 80 82 C77 70 78 52 87 42 Z" fill="#6e5c45"/>
+    <path d="M60 26 C78 26 90 40 90 58 C90 76 82 87 72 92 C80 98 84 108 85 120 L35 120 C36 108 40 98 48 92 C38 87 30 76 30 58 C30 40 42 26 60 26 Z" fill="#6e5c45"/>
+    <path d="M60 64 C70 64 77 71 77 79 C77 88 69 95 60 95 C51 95 43 88 43 79 C43 71 50 64 60 64 Z" fill="#57482f"/>
+  </symbol>
+  <symbol id="ic-flame" viewBox="0 0 24 24"><path d="M12 3 C 9 8 7 10.5 7 14 a5 5 0 0 0 10 0 C 17 10.5 15 8 12 3 Z"/></symbol>
+  <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/></symbol>
+  <symbol id="ic-album" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 15.5l4-4 3.5 3.5 3-3 5.5 5"/></symbol>
+  <symbol id="ic-letter" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></symbol>
+  <symbol id="ic-water" viewBox="0 0 24 24"><path d="M6.6 6.5h10.8l-1.3 11.6a2 2 0 0 1-2 1.8H9.9a2 2 0 0 1-2-1.8Z"/><path d="M7.2 11.6c1.4.9 2.8.9 4.2 0s2.8-.9 4.2 0"/></symbol>
+  <symbol id="ic-food" viewBox="0 0 24 24"><path d="M3.6 11h16.8a8.4 8.4 0 0 1-16.8 0Z"/><path d="M8.4 8.6C9.3 7 10.5 6.2 12 6.2s2.7.8 3.6 2.4"/></symbol>
+  <symbol id="ic-flower" viewBox="0 0 24 24"><path d="M12 3.8c2.1 0 3.1 1.9 2.3 3.5 1.7-.8 3.6.2 3.6 2.3s-1.9 3.1-3.6 2.3c.8 1.7-.2 3.5-2.3 3.5s-3.1-1.8-2.3-3.5c-1.7.8-3.6-.2-3.6-2.3s1.9-3.1 3.6-2.3C8.9 5.7 9.9 3.8 12 3.8Z"/><path d="M12 15.4V20"/></symbol>
+</defs></svg>
 
-<!-- ============ 1. 設計の前提 ============ -->
-<h2 class="sec"><span class="num">01</span>この画面を決めた3つの判断</h2>
-<p class="sec-note">見た目の好みではなく、弔いの文脈でUIが実際に人を傷つけた事例と、逆に機能した設計から決めています。</p>
-<div class="cases">
-  <div class="case">
-    <span class="tag ng">失敗事例</span>
-    <h3>Facebook「Year in Review」（2014）</h3>
-    <p>亡くなった娘の写真を、紙吹雪の装飾つきで「あなたの1年！」と本人の目の前に自動表示した。Eric Meyer 氏がこれを <b>Inadvertent Algorithmic Cruelty（意図せぬアルゴリズムの残酷さ）</b>と呼び、Facebookは謝罪した。<br>→ <b>思い出は、予告なく出さない。祝祭の装飾を弔いに混ぜない。</b>本案では再会ムービーに必ず予告画面を挟み、アプリ全体から紙吹雪・バッジ・歓喜のアニメーションを排除した。</p>
-  </div>
-  <div class="case">
-    <span class="tag ok">成功事例</span>
-    <h3>Google フォト／Apple「メモリー」の除外設定</h3>
-    <p>両者とも後年、<b>特定の人・ペット・日付をメモリーから出さない設定</b>を用意した（Googleは「ユーザーとペットを非表示」＋日付範囲指定、Appleは「おすすめに表示しない」）。自動提示は、除外できて初めて安全になる。<br>→ 本案ではアルバムの<b>全カードに「これは出さない」</b>を常設し、設定の奥に隠さない。</p>
-  </div>
-  <div class="case">
-    <span class="tag ok">原則</span>
-    <h3>Stripe の禁欲主義 ＋ 儀式効果</h3>
-    <p>信頼が要る製品ほど、色数と装飾を<b>減らす</b>ほうが効く（Stripe）。また Norton &amp; Gino (2014) の儀式効果は「毎回同じ手順であること」自体が悲嘆を和らげると示す。<br>→ 彩度のある色は<b>灯りの橙 1色だけ</b>。お参りの4動作は順序・動き・音を固定し、<b>この機能に限り「飽きさせない工夫」を禁止</b>する。</p>
-  </div>
-</div>
+<div id="app">
 
-<!-- ============ 2. 画面 ============ -->
-<h2 class="sec"><span class="num">02</span>画面</h2>
-<p class="sec-note">縦1本の導線です。おむかえ → お墓（毎日）→ 節目 → 命日の6秒。タブは4つだけで、以後増やしません。</p>
-
-<div class="flow-label">はじめる</div>
-<div class="board">
-
-  <!-- 01 おむかえ -->
-  <div class="slot">
-    <div class="phone"><div class="screen">
-      <div class="statusbar"><span>22:41</span><span class="sig">▮▮▮</span></div>
-      <div class="body">
+  <!-- ============ おむかえ ============ -->
+  <section class="view" id="view-onbo">
+    <div class="body foot">
+      <!-- 1. なまえ -->
+      <div class="step" data-step="0">
         <p class="onbo-lead">この子のことを、<br>3つだけ教えてください</p>
         <p class="onbo-sub">犬種も、性格も、思い出も、まだ書かなくていい。<br>あとから、少しずつで大丈夫です。</p>
         <div class="field">
-          <label>なまえ</label>
-          <div class="input">ももこ</div>
+          <label for="in-name">なまえ</label>
+          <input type="text" id="in-name" placeholder="ももこ" autocomplete="off" enterkeyhint="next">
+        </div>
+      </div>
+      <!-- 2. 写真 -->
+      <div class="step" data-step="1" hidden>
+        <p class="onbo-lead">お顔の写っている<br>写真を1枚</p>
+        <p class="onbo-sub">この端末の中だけに保存します。<br>どこにも送りません。あとで変えられます。</p>
+        <div class="field">
+          <button type="button" class="pickphoto" id="btn-pick">
+            <span class="portrait"><svg class="ph"><use href="#dog"></use></svg></span>
+            <span id="pick-label">写真をえらぶ</span>
+          </button>
+          <input type="file" id="in-photo" accept="image/*" hidden>
+        </div>
+      </div>
+      <!-- 3. 旅立った日 -->
+      <div class="step" data-step="2" hidden>
+        <p class="onbo-lead">旅立った日</p>
+        <p class="onbo-sub">四十九日や命日を、この日から数えます。<br>お誕生日は、覚えていれば。</p>
+        <div class="field">
+          <label for="in-death">旅立った日</label>
+          <input type="date" id="in-death">
         </div>
         <div class="field">
-          <label>旅立った日</label>
-          <div class="input ph">2026年 3月 9日</div>
+          <label for="in-birth">お誕生日（任意）</label>
+          <input type="date" id="in-birth">
         </div>
-        <div class="spacer"></div>
-        <button class="btn btn-primary" style="margin-bottom:10px">つぎへ</button>
-        <div class="steps"><i class="on"></i><i></i><i></i></div>
-        <div style="height:22px"></div>
       </div>
-    </div></div>
-    <div class="slot-cap">
-      <p class="no">01</p>
-      <h3>おむかえ</h3>
-      <p>入力は<b>なまえ・写真・旅立った日の3つだけ</b>。犬種も性格も聞かない。</p>
-      <p class="why"><b>根拠</b>／企画「サンクコストの積み上げをしない」。入力作業そのものが負担になる状態の人に、プロフィールを埋めさせない。3画面で必ずお墓に着く。</p>
-    </div>
-  </div>
 
-  <!-- 02 お墓（四十九日まで） -->
-  <div class="slot">
-    <div class="phone"><div class="screen">
-      <div class="statusbar"><span>22:41</span><span class="sig">▮▮▮</span></div>
-      <div class="body">
-        <div class="altar">
-          <div class="flamebox">
-            <span class="glow"></span>
-            <span class="flame"><svg viewBox="0 0 24 24" width="26" height="34" aria-hidden="true"><path d="M12 1.4 C 11 6.2 6.6 9.4 6.6 14.1 a5.4 5.4 0 0 0 10.8 0 C 17.4 9.6 13.2 6.6 12 1.4 Z" fill="#f0b357" opacity=".92"/><path d="M12 8.4 C 10.4 11.2 9.2 12.5 9.2 14.3 a2.8 2.8 0 0 0 5.6 0 C 14.8 12.5 13.6 11.2 12 8.4 Z" fill="#ffe9c2"/></svg></span>
-          </div>
-          <div class="portrait">
-            <svg viewBox="0 0 120 120" aria-hidden="true">
-              <path d="M33 42 C22 46 18 62 22 78 C25 90 36 92 40 82 C43 70 42 52 33 42 Z M87 42 C98 46 102 62 98 78 C95 90 84 92 80 82 C77 70 78 52 87 42 Z M60 26 C78 26 90 40 90 58 C90 76 82 87 72 92 C80 98 84 108 85 120 L35 120 C36 108 40 98 48 92 C38 87 30 76 30 58 C30 40 42 26 60 26 Z" fill="#6e5c45"/>
-              <path d="M60 64 C70 64 77 71 77 79 C77 88 69 95 60 95 C51 95 43 88 43 79 C43 71 50 64 60 64 Z" fill="#57482f"/>
-            </svg>
-          </div>
-          <h2 class="petname">ももこ</h2>
-          <p class="petdates">2011.4.2 — 2026.3.9</p>
+      <div class="spacer"></div>
+      <p class="disclose" id="onbo-err" hidden></p>
+      <button class="btn btn-primary" id="btn-next" style="margin-bottom:10px">つぎへ</button>
+      <button class="btn btn-ghost" id="btn-back" hidden>もどる</button>
+      <div class="steps"><i class="on"></i><i></i><i></i></div>
+    </div>
+  </section>
+
+  <!-- ============ お墓（ホーム） ============ -->
+  <section class="view" id="view-home">
+    <div class="body scroll">
+      <div class="altar">
+        <div class="flamebox">
+          <span class="glow"></span>
+          <span class="flame" id="home-flame"><svg><use href="#flame-lit"></use></svg></span>
         </div>
-        <p class="nextline">四十九日まで あと<b>35</b>日</p>
-        <div class="spacer"></div>
-        <button class="btn btn-primary" style="margin-bottom:14px">お参りする</button>
+        <div class="portrait" id="home-portrait"><svg class="ph"><use href="#dog"></use></svg></div>
+        <h1 class="petname" id="home-name">—</h1>
+        <p class="petdates" id="home-dates"></p>
       </div>
-      <nav class="tabbar">
-        <button class="tab" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 3 C 9 8 7 10.5 7 14 a5 5 0 0 0 10 0 C 17 10.5 15 8 12 3 Z"/></svg>お墓</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/></svg>あの日まで</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 15.5l4-4 3.5 3.5 3-3 5.5 5"/></svg>アルバム</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></svg>てがみ</button>
-      </nav>
-    </div></div>
-    <div class="slot-cap">
-      <p class="no">02 ★主画面</p>
-      <h3>お墓（0〜49日／毎日）</h3>
-      <p>画面で<b>いちばん明るいものが灯り</b>。押せるものは「お参りする」1つだけ。</p>
-      <p class="why"><b>根拠</b>／数字は<b>「四十九日まであと35日」の1行だけ</b>。「旅立って◯日目」のような後ろ向きの計測も、途切れうる連続記録も置かない。見せる数字は常に<b>前にある節目</b>に限る。</p>
-    </div>
-  </div>
 
-  <!-- 03 お参り中 -->
-  <div class="slot">
-    <div class="phone"><div class="screen">
-      <div class="statusbar"><span>22:41</span><span class="sig">▮▮▮</span></div>
-      <div class="body" id="ritualScreen">
-        <div class="altar" style="padding-top:16px">
-          <div class="flamebox">
-            <span class="glow"></span>
-            <span class="flame"><svg viewBox="0 0 24 24" width="26" height="34" aria-hidden="true"><path d="M12 1.4 C 11 6.2 6.6 9.4 6.6 14.1 a5.4 5.4 0 0 0 10.8 0 C 17.4 9.6 13.2 6.6 12 1.4 Z" fill="#f0b357" opacity=".92"/><path d="M12 8.4 C 10.4 11.2 9.2 12.5 9.2 14.3 a2.8 2.8 0 0 0 5.6 0 C 14.8 12.5 13.6 11.2 12 8.4 Z" fill="#ffe9c2"/></svg></span>
-          </div>
-          <div class="portrait sm">
-            <svg viewBox="0 0 120 120" aria-hidden="true">
-              <path d="M33 42 C22 46 18 62 22 78 C25 90 36 92 40 82 C43 70 42 52 33 42 Z M87 42 C98 46 102 62 98 78 C95 90 84 92 80 82 C77 70 78 52 87 42 Z M60 26 C78 26 90 40 90 58 C90 76 82 87 72 92 C80 98 84 108 85 120 L35 120 C36 108 40 98 48 92 C38 87 30 76 30 58 C30 40 42 26 60 26 Z" fill="#6e5c45"/>
-              <path d="M60 64 C70 64 77 71 77 79 C77 88 69 95 60 95 C51 95 43 88 43 79 C43 71 50 64 60 64 Z" fill="#57482f"/>
-            </svg>
-          </div>
-        </div>
-        <p class="ritual-lead" id="ritualLead">灯りを、ともします</p>
-        <div class="ritual" id="ritual">
-          <button class="offer" data-state="next" data-i="0"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3 C 9 8 7 10.5 7 14 a5 5 0 0 0 10 0 C 17 10.5 15 8 12 3 Z"/></svg></span>とうみょう</button>
-          <button class="offer" data-i="1" disabled><span class="ic"><svg viewBox="0 0 24 24"><path d="M6.6 6.5h10.8l-1.3 11.6a2 2 0 0 1-2 1.8H9.9a2 2 0 0 1-2-1.8Z"/><path d="M7.2 11.6c1.4.9 2.8.9 4.2 0s2.8-.9 4.2 0"/></svg></span>みず</button>
-          <button class="offer" data-i="2" disabled><span class="ic"><svg viewBox="0 0 24 24"><path d="M3.6 11h16.8a8.4 8.4 0 0 1-16.8 0Z"/><path d="M8.4 8.6C9.3 7 10.5 6.2 12 6.2s2.7.8 3.6 2.4"/></svg></span>ごはん</button>
-          <button class="offer" data-i="3" disabled><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3.8c2.1 0 3.1 1.9 2.3 3.5 1.7-.8 3.6.2 3.6 2.3s-1.9 3.1-3.6 2.3c.8 1.7-.2 3.5-2.3 3.5s-3.1-1.8-2.3-3.5c-1.7.8-3.6-.2-3.6-2.3s1.9-3.1 3.6-2.3C8.9 5.7 9.9 3.8 12 3.8Z"/><path d="M12 15.4V20"/></svg></span>はな</button>
-        </div>
-        <div class="spacer"></div>
-        <p class="done-note" id="ritualDone" hidden>今日はもう、灯しました</p>
-      </div>
-    </div></div>
-    <div class="slot-cap">
-      <p class="no">03 ◯動きます</p>
-      <h3>お参りの4動作</h3>
-      <p>灯明 → 水 → ごはん → 花。<b>順序固定・約8秒・スキップ不可</b>。並べ替えも追加もできません。</p>
-      <p class="why"><b>根拠</b>／儀式効果（Norton &amp; Gino, 2014）で効いているのは内容ではなく「自分で動かせる手順が毎回同じであること」。<b>飽きは想定内で、飽きさせない改修はこの画面に限り害</b>。自由度を与えたMySpaceの教訓とも同じ方向です。</p>
-    </div>
-  </div>
+      <p class="nextline" id="home-next"></p>
 
-  <!-- 04 お参りのあと -->
-  <div class="slot">
-    <div class="phone"><div class="screen">
-      <div class="statusbar"><span>22:42</span><span class="sig">▮▮▮</span></div>
-      <div class="body">
-        <div class="spacer"></div>
-        <div class="altar" style="padding-top:0">
-          <div class="flamebox">
-            <span class="glow" style="opacity:1"></span>
-            <span class="flame lg"><svg viewBox="0 0 24 24" width="34" height="44" aria-hidden="true"><path d="M12 1.4 C 11 6.2 6.6 9.4 6.6 14.1 a5.4 5.4 0 0 0 10.8 0 C 17.4 9.6 13.2 6.6 12 1.4 Z" fill="#f0b357" opacity=".92"/><path d="M12 8.4 C 10.4 11.2 9.2 12.5 9.2 14.3 a2.8 2.8 0 0 0 5.6 0 C 14.8 12.5 13.6 11.2 12 8.4 Z" fill="#ffe9c2"/></svg></span>
-          </div>
-        </div>
-        <p style="text-align:center;font-family:var(--serif);font-size:17px;letter-spacing:.12em;line-height:2;margin:28px 0 0">おつかれさま。<br>また明日、ここで。</p>
-        <div class="spacer"></div>
-        <button class="btn btn-ghost" style="margin-bottom:28px">とじる</button>
-      </div>
-    </div></div>
-    <div class="slot-cap">
-      <p class="no">04</p>
-      <h3>お参りのあと</h3>
-      <p>一言だけ。<b>達成率も、記録も、シェアボタンも出しません。</b></p>
-      <p class="why"><b>根拠</b>／Year in Review の教訓。ここで「7日連続達成！」を出した瞬間、弔いが実績管理に変わる。次に来る理由（また明日、ここで）だけを置いて終える。</p>
-    </div>
-  </div>
-</div>
-
-<div class="flow-label">時間とともに、会う回数が減る</div>
-<div class="board">
-
-  <!-- 05 お墓（月命日期） -->
-  <div class="slot">
-    <div class="phone"><div class="screen">
-      <div class="statusbar"><span>22:41</span><span class="sig">▮▮▮</span></div>
-      <div class="body">
-        <div class="altar">
-          <div class="flamebox">
-            <span class="glow" style="opacity:.6"></span>
-            <span class="flame"><svg viewBox="0 0 24 24" width="26" height="34" aria-hidden="true"><path d="M12 1.4 C 11 6.2 6.6 9.4 6.6 14.1 a5.4 5.4 0 0 0 10.8 0 C 17.4 9.6 13.2 6.6 12 1.4 Z" fill="#f0b357" opacity=".92"/><path d="M12 8.4 C 10.4 11.2 9.2 12.5 9.2 14.3 a2.8 2.8 0 0 0 5.6 0 C 14.8 12.5 13.6 11.2 12 8.4 Z" fill="#ffe9c2"/></svg></span>
-          </div>
-          <div class="portrait">
-            <svg viewBox="0 0 120 120" aria-hidden="true">
-              <path d="M33 42 C22 46 18 62 22 78 C25 90 36 92 40 82 C43 70 42 52 33 42 Z M87 42 C98 46 102 62 98 78 C95 90 84 92 80 82 C77 70 78 52 87 42 Z M60 26 C78 26 90 40 90 58 C90 76 82 87 72 92 C80 98 84 108 85 120 L35 120 C36 108 40 98 48 92 C38 87 30 76 30 58 C30 40 42 26 60 26 Z" fill="#6e5c45"/>
-              <path d="M60 64 C70 64 77 71 77 79 C77 88 69 95 60 95 C51 95 43 88 43 79 C43 71 50 64 60 64 Z" fill="#57482f"/>
-            </svg>
-          </div>
-          <h2 class="petname">ももこ</h2>
-          <p class="petdates">2011.4.2 — 2026.3.9</p>
-        </div>
-        <p class="nextline">次の月命日は <b>9</b>月<b>9</b>日</p>
-        <div class="spacer"></div>
-        <p class="done-note" style="padding-bottom:2px">お参りは、月命日にお知らせします</p>
-        <button class="btn btn-quiet" style="margin-bottom:14px">それでも、今日お参りする</button>
-      </div>
-      <nav class="tabbar">
-        <button class="tab" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 3 C 9 8 7 10.5 7 14 a5 5 0 0 0 10 0 C 17 10.5 15 8 12 3 Z"/></svg>お墓</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/></svg>あの日まで</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 15.5l4-4 3.5 3.5 3-3 5.5 5"/></svg>アルバム</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></svg>てがみ</button>
-      </nav>
-    </div></div>
-    <div class="slot-cap">
-      <p class="no">05</p>
-      <h3>お墓（50日〜半年／月命日）</h3>
-      <p>同じ画面のまま、<b>設定を触らせずに</b>通知が月命日だけに減ります。主ボタンは灯色をやめ、縁取りだけに。</p>
-      <p class="why"><b>根拠</b>／デフォルト効果。判断力が落ちている時期に「通知頻度はお好みで」を出すと、毎日のまま何年も固定される。<b>逓減を既定にして自動で進める</b>。寂しい人だけが「それでも、今日お参りする」を押せばいい。</p>
-    </div>
-  </div>
-
-  <!-- 06 あの日まで -->
-  <div class="slot">
-    <div class="phone"><div class="screen">
-      <div class="statusbar"><span>22:41</span><span class="sig">▮▮▮</span></div>
-      <div class="body pad">
-        <h2 class="screen-title">あの日まで</h2>
-        <ul class="md-list">
-          <li class="md lead"><span><span class="lbl">四十九日</span><span class="sub">2026年4月26日（日）</span></span><span class="n"><b>35</b>日</span></li>
-          <li class="md"><span><span class="lbl">月命日</span><span class="sub">毎月9日／次は9月9日</span></span><span class="n"><b>12</b>日</span></li>
-          <li class="md"><span><span class="lbl">お誕生日</span><span class="sub">2026年4月2日・15さい</span></span><span class="n"><b>11</b>日</span></li>
-          <li class="md"><span><span class="lbl">一周忌</span><span class="sub">2027年3月9日（火）</span></span><span class="n"><b>248</b>日</span></li>
-          <li class="md"><span><span class="lbl">三回忌</span><span class="sub">2028年3月9日（木）</span></span><span class="n"><b>613</b>日</span></li>
+      <!-- 命日にだけ出る予告。自動再生はしない -->
+      <div class="notice" id="home-notice" hidden>
+        <h4 id="notice-title">今日、会えます</h4>
+        <ul>
+          <li>6秒です</li>
+          <li id="notice-move">こちらへ近づいてきて、止まります</li>
+          <li>音はありません</li>
+          <li>今日でなくても、いつでも見られます</li>
         </ul>
-        <p class="disclose" style="margin-top:12px">仏式の暦です。変更・オフができます</p>
-        <div class="spacer"></div>
+        <div class="pair">
+          <button class="btn btn-primary" id="btn-reunion">見る</button>
+          <button class="btn btn-quiet" id="btn-reunion-skip">今日は、やめておく</button>
+        </div>
       </div>
-      <nav class="tabbar">
-        <button class="tab"><svg viewBox="0 0 24 24"><path d="M12 3 C 9 8 7 10.5 7 14 a5 5 0 0 0 10 0 C 17 10.5 15 8 12 3 Z"/></svg>お墓</button>
-        <button class="tab" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/></svg>あの日まで</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 15.5l4-4 3.5 3.5 3-3 5.5 5"/></svg>アルバム</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></svg>てがみ</button>
-      </nav>
-    </div></div>
-    <div class="slot-cap">
-      <p class="no">06</p>
-      <h3>あの日まで</h3>
-      <p>直近の1件だけ灯色。数字は<b>等幅数字</b>で桁が揺れません。宗派の切替とオフを画面内に明記。</p>
-      <p class="why"><b>根拠</b>／現在バイアス。364日先の再会はほぼゼロまで割り引かれて忘れられるため、<b>遠い報酬を手前に引き寄せる装置</b>としてカウントダウンを置く。ここが解約防止の実体でもあります。</p>
-    </div>
-  </div>
 
-  <!-- 07 アルバム -->
-  <div class="slot">
-    <div class="phone"><div class="screen">
-      <div class="statusbar"><span>22:41</span><span class="sig">▮▮▮</span></div>
-      <div class="body pad">
-        <h2 class="screen-title">アルバム</h2>
-        <div class="chapters">
-          <div class="chapter">
-            <div class="thumb"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M33 42 C22 46 18 62 22 78 C25 90 36 92 40 82 C43 70 42 52 33 42 Z M87 42 C98 46 102 62 98 78 C95 90 84 92 80 82 C77 70 78 52 87 42 Z M60 26 C78 26 90 40 90 58 C90 76 82 87 72 92 C80 98 84 108 85 120 L35 120 C36 108 40 98 48 92 C38 87 30 76 30 58 C30 40 42 26 60 26 Z" fill="#6e5c45"/><path d="M60 64 C70 64 77 71 77 79 C77 88 69 95 60 95 C51 95 43 88 43 79 C43 71 50 64 60 64 Z" fill="#57482f"/></svg></div>
-            <div><p class="t">はじめての海</p><p class="d">2011.8 — 2012.3 ・ 34枚</p></div>
-            <button class="more" aria-label="この章の設定">···</button>
-          </div>
-          <div class="chapter">
-            <div class="thumb"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M33 42 C22 46 18 62 22 78 C25 90 36 92 40 82 C43 70 42 52 33 42 Z M87 42 C98 46 102 62 98 78 C95 90 84 92 80 82 C77 70 78 52 87 42 Z M60 26 C78 26 90 40 90 58 C90 76 82 87 72 92 C80 98 84 108 85 120 L35 120 C36 108 40 98 48 92 C38 87 30 76 30 58 C30 40 42 26 60 26 Z" fill="#6e5c45"/><path d="M60 64 C70 64 77 71 77 79 C77 88 69 95 60 95 C51 95 43 88 43 79 C43 71 50 64 60 64 Z" fill="#57482f"/></svg></div>
-            <div><p class="t">毎朝の、あの角まで</p><p class="d">2013.4 — 2019.11 ・ 212枚</p></div>
-            <button class="more" aria-label="この章の設定">···</button>
-          </div>
-          <div class="chapter">
-            <div class="thumb"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M33 42 C22 46 18 62 22 78 C25 90 36 92 40 82 C43 70 42 52 33 42 Z M87 42 C98 46 102 62 98 78 C95 90 84 92 80 82 C77 70 78 52 87 42 Z M60 26 C78 26 90 40 90 58 C90 76 82 87 72 92 C80 98 84 108 85 120 L35 120 C36 108 40 98 48 92 C38 87 30 76 30 58 C30 40 42 26 60 26 Z" fill="#6e5c45"/><path d="M60 64 C70 64 77 71 77 79 C77 88 69 95 60 95 C51 95 43 88 43 79 C43 71 50 64 60 64 Z" fill="#57482f"/></svg></div>
-            <div><p class="t">ゆっくり歩いた頃</p><p class="d">2024.6 — 2025.10 ・ 88枚</p></div>
-            <button class="more" aria-label="この章の設定">···</button>
-          </div>
-          <div class="chapter" style="opacity:.55">
-            <div class="thumb" style="filter:grayscale(1)"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M33 42 C22 46 18 62 22 78 C25 90 36 92 40 82 C43 70 42 52 33 42 Z M87 42 C98 46 102 62 98 78 C95 90 84 92 80 82 C77 70 78 52 87 42 Z M60 26 C78 26 90 40 90 58 C90 76 82 87 72 92 C80 98 84 108 85 120 L35 120 C36 108 40 98 48 92 C38 87 30 76 30 58 C30 40 42 26 60 26 Z" fill="#6e5c45"/><path d="M60 64 C70 64 77 71 77 79 C77 88 69 95 60 95 C51 95 43 88 43 79 C43 71 50 64 60 64 Z" fill="#57482f"/></svg></div>
-            <div><p class="t">この期間は出しません</p><p class="d">2026.2 — 2026.3 ・ 非表示中</p></div>
-            <button class="more" aria-label="この章の設定">···</button>
-          </div>
+      <div class="spacer"></div>
+      <p class="done-note" id="home-note" hidden></p>
+      <button class="btn btn-primary" id="btn-visit" style="margin-bottom:10px">お参りする</button>
+      <button class="btn btn-ghost" id="btn-settings">設定</button>
+    </div>
+    <nav class="tabbar" data-tabs></nav>
+  </section>
+
+  <!-- ============ お参り ============ -->
+  <section class="view" id="view-ritual">
+    <div class="body foot">
+      <div class="altar" style="padding-top:8px">
+        <div class="flamebox">
+          <span class="glow"></span>
+          <span class="flame"><svg><use href="#flame-lit"></use></svg></span>
         </div>
-        <div class="spacer"></div>
+        <div class="portrait sm" id="ritual-portrait"><svg class="ph"><use href="#dog"></use></svg></div>
       </div>
-      <nav class="tabbar">
-        <button class="tab"><svg viewBox="0 0 24 24"><path d="M12 3 C 9 8 7 10.5 7 14 a5 5 0 0 0 10 0 C 17 10.5 15 8 12 3 Z"/></svg>お墓</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/></svg>あの日まで</button>
-        <button class="tab" aria-current="page"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 15.5l4-4 3.5 3.5 3-3 5.5 5"/></svg>アルバム</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></svg>てがみ</button>
-      </nav>
-    </div></div>
-    <div class="slot-cap">
-      <p class="no">07</p>
-      <h3>アルバム（AIの章立て）</h3>
-      <p>章題はAIが先に書き、直すだけ。全カードに<b>「···」＝この期間は出さない</b>を常設。最期の数週間は<b>既定で非表示</b>。</p>
-      <p class="why"><b>根拠</b>／Google フォト・Apple メモリーが後付けした除外設定を、最初から前面に置く。<b>自動提示は、除外できて初めて安全</b>。闘病期の写真が不意に出ることが、この製品で最も起きてはいけない事故です。</p>
-    </div>
-  </div>
-
-  <!-- 08 てがみ -->
-  <div class="slot">
-    <div class="phone"><div class="screen">
-      <div class="statusbar"><span>22:41</span><span class="sig">▮▮▮</span></div>
-      <div class="body pad">
-        <h2 class="screen-title">てがみ</h2>
-        <p style="font-size:12px;color:var(--faint);margin:0">四十九日に、一通とどきました</p>
-        <div class="letter">
-          <span class="mark">四十九日</span>
-          <p>きょうは、あたたかい日でした。<br>まどのところが、すきでした。<br>いま、そこにいます。</p>
-          <p class="from">ももこ</p>
-        </div>
-        <p class="disclose">この手紙はAIが書きました</p>
-        <div class="spacer"></div>
-        <button class="btn btn-ghost" style="margin-bottom:8px">これまでの手紙（3通）</button>
+      <p class="ritual-lead" id="ritual-lead">灯りを、ともします</p>
+      <div class="ritual" id="ritual">
+        <button class="offer" data-i="0"><span class="ic"><svg><use href="#ic-flame"></use></svg></span>とうみょう</button>
+        <button class="offer" data-i="1" disabled><span class="ic"><svg><use href="#ic-water"></use></svg></span>みず</button>
+        <button class="offer" data-i="2" disabled><span class="ic"><svg><use href="#ic-food"></use></svg></span>ごはん</button>
+        <button class="offer" data-i="3" disabled><span class="ic"><svg><use href="#ic-flower"></use></svg></span>はな</button>
       </div>
-      <nav class="tabbar">
-        <button class="tab"><svg viewBox="0 0 24 24"><path d="M12 3 C 9 8 7 10.5 7 14 a5 5 0 0 0 10 0 C 17 10.5 15 8 12 3 Z"/></svg>お墓</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/></svg>あの日まで</button>
-        <button class="tab"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 15.5l4-4 3.5 3.5 3-3 5.5 5"/></svg>アルバム</button>
-        <button class="tab" aria-current="page"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></svg>てがみ</button>
-      </nav>
-    </div></div>
-    <div class="slot-cap">
-      <p class="no">08</p>
-      <h3>てがみ</h3>
-      <p>節目に一通、<b>3行だけ</b>。届く日は決まっていて、ランダムに来ません。</p>
-      <p class="why"><b>根拠</b>／変動報酬を排し予告制にする（企画の方針）。加えて<b>「AIが書きました」を常時表示し、隠さない</b>。あの子が書いたと信じさせる設計は、Replika の依存事例と同じ危うさを持つため採りません。</p>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="btn-ritual-close">とじる</button>
     </div>
-  </div>
-</div>
+  </section>
 
-<div class="flow-label">一年後、命日の朝</div>
-<div class="board">
-
-  <!-- 09 命日の予告 -->
-  <div class="slot">
-    <div class="phone"><div class="screen">
-      <div class="statusbar"><span>07:12</span><span class="sig">▮▮▮</span></div>
-      <div class="body pad">
-        <div class="altar" style="padding-top:6px">
-          <div class="flamebox">
-            <span class="glow" style="opacity:1;transform:scale(1.15)"></span>
-            <span class="flame lg"><svg viewBox="0 0 24 24" width="34" height="44" aria-hidden="true"><path d="M12 1.4 C 11 6.2 6.6 9.4 6.6 14.1 a5.4 5.4 0 0 0 10.8 0 C 17.4 9.6 13.2 6.6 12 1.4 Z" fill="#f0b357" opacity=".92"/><path d="M12 8.4 C 10.4 11.2 9.2 12.5 9.2 14.3 a2.8 2.8 0 0 0 5.6 0 C 14.8 12.5 13.6 11.2 12 8.4 Z" fill="#ffe9c2"/></svg></span>
-          </div>
-          <h2 class="petname" style="margin-top:14px">一周忌</h2>
-          <p class="petdates">2027年3月9日</p>
+  <!-- ============ お参りのあと ============ -->
+  <section class="view" id="view-after">
+    <div class="body foot">
+      <div class="spacer"></div>
+      <div class="altar" style="padding-top:0">
+        <div class="flamebox">
+          <span class="glow" style="opacity:1"></span>
+          <span class="flame lg"><svg><use href="#flame-lit"></use></svg></span>
         </div>
-        <div class="notice">
-          <h4>今日、会えます</h4>
-          <ul>
-            <li>6秒の動画です</li>
-            <li>ももこが歩いてきて、止まって、見上げます</li>
-            <li>音はありません</li>
-            <li>今日でなくても、いつでも見られます</li>
-          </ul>
-          <div class="pair">
-            <button class="btn btn-primary">見る</button>
-            <button class="btn btn-quiet">今日は、やめておく</button>
-          </div>
-        </div>
-        <div class="spacer"></div>
       </div>
-    </div></div>
-    <div class="slot-cap">
-      <p class="no">09 ★最重要</p>
-      <h3>命日の予告</h3>
-      <p>自動再生しません。<b>何が起きるかを先に全部言う</b>。「やめておく」は灯色ボタンと<b>同じ大きさ</b>で並べます。</p>
-      <p class="why"><b>根拠</b>／Year in Review の直接の再発防止策。加えて、断る選択肢を小さな灰色リンクにすると<b>断ること自体が不義理に感じられる</b>ため、あえて同格に置きます。ここだけはダークパターンを一切使いません。</p>
+      <p class="after-line" id="after-line">おつかれさま。<br>また明日、ここで。</p>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="btn-after-close">とじる</button>
     </div>
-  </div>
+  </section>
 
-  <!-- 10 再会の6秒 -->
-  <div class="slot">
-    <div class="phone">
-      <div class="reunion" id="reunion">
-        <div class="stage">
-          <span class="floorlight"></span>
-          <div class="subject">
-            <svg viewBox="0 0 120 120" aria-hidden="true">
-              <path d="M33 42 C22 46 18 62 22 78 C25 90 36 92 40 82 C43 70 42 52 33 42 Z M87 42 C98 46 102 62 98 78 C95 90 84 92 80 82 C77 70 78 52 87 42 Z M60 26 C78 26 90 40 90 58 C90 76 82 87 72 92 C80 98 84 108 85 120 L35 120 C36 108 40 98 48 92 C38 87 30 76 30 58 C30 40 42 26 60 26 Z" fill="#7d684d"/>
-              <path d="M60 64 C70 64 77 71 77 79 C77 88 69 95 60 95 C51 95 43 88 43 79 C43 71 50 64 60 64 Z" fill="#63523a"/>
-            </svg>
-          </div>
-        </div>
-        <p class="endline">また来年、この日に。</p>
-        <p class="again">もう一度見る</p>
+  <!-- ============ あの日まで ============ -->
+  <section class="view" id="view-days">
+    <div class="body scroll">
+      <h2 class="screen-title">あの日まで</h2>
+      <ul class="md-list" id="days-list"></ul>
+      <p class="disclose" id="days-note"></p>
+      <div class="spacer"></div>
+    </div>
+    <nav class="tabbar" data-tabs></nav>
+  </section>
+
+  <!-- ============ アルバム ============ -->
+  <section class="view" id="view-album">
+    <div class="body scroll">
+      <h2 class="screen-title">アルバム</h2>
+      <div class="chapters" id="album-list"></div>
+      <p class="empty" id="album-empty" hidden>まだ写真がありません。<br>この端末の写真から、少しずつ。</p>
+      <div style="height:16px"></div>
+      <button class="btn btn-quiet" id="btn-add-photos">写真をくわえる</button>
+      <input type="file" id="in-photos" accept="image/*" multiple hidden>
+      <p class="disclose">写真はこの端末の中だけに保存され、どこにも送られません</p>
+      <div class="spacer"></div>
+    </div>
+    <nav class="tabbar" data-tabs></nav>
+  </section>
+
+  <!-- ============ てがみ ============ -->
+  <section class="view" id="view-letters">
+    <div class="body scroll">
+      <h2 class="screen-title">てがみ</h2>
+      <div id="letter-current"></div>
+      <div id="letter-past"></div>
+      <div class="spacer"></div>
+    </div>
+    <nav class="tabbar" data-tabs></nav>
+  </section>
+
+  <!-- ============ 再会の6秒 ============ -->
+  <section class="view" id="view-reunion">
+    <div class="body">
+      <div class="stage">
+        <span class="floorlight"></span>
+        <div class="subject" id="reunion-subject"><svg class="ph"><use href="#dog"></use></svg></div>
+      </div>
+      <p class="endline" id="reunion-end">また来年、この日に。</p>
+      <div class="endactions">
+        <button class="btn btn-quiet" id="btn-reunion-again">もう一度見る</button>
+        <button class="btn btn-quiet" id="btn-reunion-close">とじる</button>
       </div>
     </div>
-    <div class="playbar"><button class="playbtn" id="playBtn">▶ 6秒を再生する</button></div>
-    <div class="slot-cap">
-      <p class="no">10 ◯動きます</p>
-      <h3>再会の6秒</h3>
-      <p>UIが<b>一切ない</b>全面黒。進捗バーも閉じるボタンも出しません。終わったあと2秒おいて、一行だけ出ます。</p>
-      <p class="why"><b>根拠</b>／ピーク・エンドの法則。<b>終わりに何を置くかが記憶になる</b>ため、終端は「また来年、この日に」＝未来。進捗バーは残り秒数を数えさせる＝別れのカウントダウンになるので置きません。背を向ける画・走り去る画は生成側で棄却します。</p>
-    </div>
-  </div>
+  </section>
 
-  <!-- 11 設定 -->
-  <div class="slot">
-    <div class="phone"><div class="screen">
-      <div class="statusbar"><span>22:41</span><span class="sig">▮▮▮</span></div>
-      <div class="body pad" style="overflow:auto">
-        <h2 class="screen-title">設定</h2>
-        <div class="curvebox">
-          <h4>会う回数</h4>
-          <p class="cap">時間とともに、ひとりでに減っていきます</p>
-          <svg class="curve" viewBox="0 0 240 84" aria-hidden="true">
-            <line x1="8" y1="76" x2="232" y2="76" stroke="#262a32" stroke-width="1"/>
-            <path d="M8 14 C 60 14, 62 44, 96 50 C 130 56, 150 64, 190 68 C 210 70, 226 72, 232 74"
-                  fill="none" stroke="#f0b357" stroke-width="1.6" stroke-linecap="round" opacity=".75"/>
-            <circle cx="30" cy="17" r="4.5" fill="#f0b357"/>
-            <circle cx="30" cy="17" r="9" fill="none" stroke="#f0b357" stroke-width="1" opacity=".35"/>
-            <text x="30" y="36" fill="#9ba0a9" font-size="9" text-anchor="middle" font-family="sans-serif">いま</text>
-          </svg>
-          <div class="curve-x"><span>毎日</span><span>月命日</span><span>季節ごと</span><span>命日</span></div>
-          <div class="nudge">
-            <button>もう少し会いたい</button>
-            <button>もう少し間をあける</button>
-          </div>
+  <!-- ============ 設定 ============ -->
+  <section class="view" id="view-settings">
+    <div class="body scroll foot">
+      <h2 class="screen-title">設定</h2>
+
+      <div class="card">
+        <h4>会う回数</h4>
+        <p class="cap">時間とともに、ひとりでに減っていきます</p>
+        <svg class="curve" viewBox="0 0 240 64" aria-hidden="true">
+          <line x1="8" y1="56" x2="232" y2="56" stroke="currentColor" stroke-width="1" opacity=".15"/>
+          <path d="M8 12 C 60 12, 62 36, 96 41 C 130 46, 150 51, 190 54 C 210 55, 226 56, 232 57"
+                fill="none" stroke="#f0b357" stroke-width="1.6" stroke-linecap="round" opacity=".75"/>
+          <circle id="curve-dot" cx="30" cy="15" r="4.5" fill="#f0b357"/>
+          <circle id="curve-halo" cx="30" cy="15" r="9" fill="none" stroke="#f0b357" stroke-width="1" opacity=".35"/>
+        </svg>
+        <div class="curve-x" id="curve-x">
+          <span>毎日</span><span>月命日</span><span>季節ごと</span><span>命日</span>
         </div>
-        <div class="setrow accent"><span>すべて手元に持ち出す</span><span class="arw">›</span></div>
-        <p class="disclose" style="margin:7px 2px 12px;text-align:left;line-height:1.7">退会しても、写真・動画・記録はすべて手元に残ります</p>
-        <div class="setrow"><span>暦のスタイル</span><span class="arw">仏式 ›</span></div>
-        <div class="setrow"><span>出さない写真・期間</span><span class="arw">2件 ›</span></div>
-        <div class="setrow"><span>つらいときの相談先</span><span class="arw">›</span></div>
+        <div class="nudge">
+          <button id="btn-more">もう少し会いたい</button>
+          <button id="btn-less">もう少し間をあける</button>
+        </div>
       </div>
-    </div></div>
-    <div class="slot-cap">
-      <p class="no">11</p>
-      <h3>設定</h3>
-      <p>頻度は<b>ラジオボタンで選ばせない</b>。すでに引かれた曲線と現在地を見せ、押せるのは<b>「もう少し」2つだけ</b>。</p>
-      <p class="why"><b>根拠</b>／設定画面は、判断力が落ちている人に最も残酷なUI。また「すべて手元に持ち出す」を<b>最上段・灯色</b>に置くのは損失回避の反転で、<b>手放せる自由がある人だけが安心して留まれる</b>ため。引き止めUIは置きません。</p>
+
+      <button class="setrow accent" id="btn-export"><span>すべて手元に持ち出す</span><span class="arw">›</span></button>
+      <p class="disclose" style="margin:7px 2px 12px;text-align:left">退会しても、写真・記録はすべて手元に残ります</p>
+
+      <div class="card">
+        <h4>暦のスタイル</h4>
+        <p class="cap">四十九日や一周忌を出すかどうか</p>
+        <div class="seg" id="seg-cal">
+          <button data-v="buddhist">仏式</button>
+          <button data-v="none">なし</button>
+          <button data-v="western">洋風</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4>見た目</h4>
+        <p class="cap">灯りは暗いほうがよく見えます</p>
+        <div class="seg" id="seg-theme" style="grid-template-columns:repeat(2,1fr)">
+          <button data-v="dark">夜</button>
+          <button data-v="light">昼</button>
+        </div>
+      </div>
+
+      <button class="setrow" id="btn-hidden"><span>出さない写真・期間</span><span class="arw" id="hidden-count">0件 ›</span></button>
+      <button class="setrow" id="btn-profile"><span>なまえ・日付・写真</span><span class="arw">›</span></button>
+      <button class="setrow" id="btn-help"><span>つらいときの相談先</span><span class="arw">›</span></button>
+
+      <div class="card">
+        <h4>日付を仮に進めて確かめる</h4>
+        <p class="cap">節目や命日の画面を、待たずに確認するための項目です。<br>通常は 0 のままにしてください。</p>
+        <div class="seg" id="seg-offset" style="grid-template-columns:repeat(4,1fr)">
+          <button data-v="now">今日</button>
+          <button data-v="d49">四十九日</button>
+          <button data-v="y1">一周忌</button>
+          <button data-v="y3">三回忌</button>
+        </div>
+        <p class="cap" id="offset-now" style="margin-top:10px"></p>
+      </div>
+
+      <button class="setrow" id="btn-reset"><span>この端末のデータを消す</span><span class="arw">›</span></button>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="btn-settings-close">とじる</button>
     </div>
-  </div>
-</div>
-
-<!-- ============ 3. トークン ============ -->
-<h2 class="sec"><span class="num">03</span>デザイントークン</h2>
-<p class="sec-note">構成は既存アプリ（cashbook / 英単語）と同じ変数名で揃え、<b>値だけ</b>をこの製品に合わせています。彩度のある色は灯りの橙1色のみ。成功の緑・エラーの赤は、通常の導線には登場しません（この製品に「間違い」はないため）。</p>
-<div class="swatches">
-  <div class="sw"><div class="chip" style="background:#0e1013"></div><div class="lb"><b>--bg 夜</b><span>#0e1013</span></div></div>
-  <div class="sw"><div class="chip" style="background:#16191f"></div><div class="lb"><b>--panel 面</b><span>#16191F</span></div></div>
-  <div class="sw"><div class="chip" style="background:#262a32"></div><div class="lb"><b>--line 罫</b><span>#262A32</span></div></div>
-  <div class="sw"><div class="chip" style="background:#e9e6e0"></div><div class="lb"><b>--ink 文字</b><span>#E9E6E0・純白にしない</span></div></div>
-  <div class="sw"><div class="chip" style="background:#9ba0a9"></div><div class="lb"><b>--muted</b><span>#9BA0A9・7.0:1</span></div></div>
-  <div class="sw"><div class="chip" style="background:#f0b357"></div><div class="lb"><b>--tomo 灯</b><span>#F0B357・唯一の彩度</span></div></div>
-</div>
-
-<div class="tablewrap">
-<table class="spec">
-  <thead><tr><th>項目</th><th>決めごと</th><th>理由</th></tr></thead>
-  <tbody>
-    <tr><td>既定テーマ</td><td><b>ダークが既定</b>。ライトは選択式</td><td>灯りは暗闇でしか灯りに見えない。悲嘆は夜に強まり、お参りは就寝前の習慣になる。既存アプリ（明るいが既定）からの意図的な反転</td></tr>
-    <tr><td>書体</td><td>名前・日付・手紙は<b>明朝</b>／操作ラベルはゴシック</td><td>弔事の慣習に沿う。cashbook が帳簿に明朝を当てた前例と同じ使い分け</td></tr>
-    <tr><td>行間</td><td>UI 1.8／手紙 2.1</td><td>手紙だけ意図的に広げ、読む速度を落とす</td></tr>
-    <tr><td>数字</td><td><code>font-variant-numeric: tabular-nums</code></td><td>カウントダウンの桁が毎日ガタつかない</td></tr>
-    <tr><td>角丸</td><td>16px（カード）／999px（ボタン）</td><td>角のある四角を減らす。既存アプリの 12〜14px より気持ち大きく</td></tr>
-    <tr><td>余白</td><td>4/8pxスケール。1画面の要素数を<b>7つ以下</b></td><td>情報量を減らして見せる（Stripe）</td></tr>
-    <tr><td>動き</td><td>灯りは4.5秒周期の微揺れ。画面遷移は<b>400msのフェードのみ</b>、スライドなし</td><td>スライドは「アプリらしさ」を出すが、ここではページをめくる静けさを優先</td></tr>
-    <tr><td>音</td><td>お参り完了に<b>おりん一打</b>のみ。毎回同じ音</td><td>儀式効果は「同じであること」に宿る。BGMは入れない</td></tr>
-    <tr><td>タップ対象</td><td>44×44px以上（お供えは88px）</td><td>涙で視界がぼやける状況を前提にする</td></tr>
-    <tr><td><code>prefers-reduced-motion</code></td><td>灯りは静止した光に、再会は<b>フェードのみ</b>に</td><td>前庭障害への配慮。この製品では特に動きが感情に直結する</td></tr>
-  </tbody>
-</table>
-</div>
-
-<!-- ============ 4. やらないUI ============ -->
-<h2 class="sec"><span class="num">04</span>実装しないUI（この節が本体です）</h2>
-<p class="sec-note">いずれも継続率を確実に上げる実証済みの手法です。そのうえで採りません。<b>数字が伸び悩んだとき、この6つは必ず「手軽な解決策」として候補に挙がります。</b>そのときはUIの問題ではなく、製品が別のものに変わろうとしているサインです。</p>
-<div class="never">
-  <div class="nv"><h4>連続お参り記録（ストリーク）</h4><p>1日休んだ人に「途切れました」と告げるのは、故人への不義理を演出する行為。<b>悲嘆に罪悪感を接続しない。</b>Duolingo で効く仕掛けが、ここでは凶器になります。</p></div>
-  <div class="nv"><h4>達成バッジ・紙吹雪・称賛アニメ</h4><p>Year in Review が踏んだ地雷そのもの。お参り完了後に出るのは一言だけです。</p></div>
-  <div class="nv"><h4>ランダムに届く思い出</h4><p>変動報酬は反復視聴を加速させる。届く日は必ず予告し、抽選性を持たせません。</p></div>
-  <div class="nv"><h4>退会引き止めダイアログ</h4><p>「◯枚の思い出が消えます」型の損失回避は使わない。逆に、持ち出し導線を設定の最上段に置きます。</p></div>
-  <div class="nv"><h4>他人との比較・ランキング</h4><p>悲しみ方に優劣を持ち込まない。他人の数字は一切表示しません。コミュニティも作りません。</p></div>
-  <div class="nv"><h4>常時対話できるAIチャット</h4><p>最も依存を生み、最も失望される。会話では競合と戦わず、「お墓」と「6秒の再会」で棲み分けます。</p></div>
-</div>
-
-<!-- ============ 5. 次に決めること ============ -->
-<h2 class="sec"><span class="num">05</span>次に決めること</h2>
-<ol class="open">
-  <li><b>名前「わんず」を残すかどうか。</b>企画の市場は犬猫1,600万頭ですが、「わんず」は犬に限定して聞こえます。猫の飼い主が自分向けだと思えない可能性が高い。<b>製品名は「ともしび」単独</b>とし、わんずはプロジェクト内の呼称に留めるのが安全だと考えます。</li>
-  <li><b>「つらいときの相談先」の実体。</b>設定に枠だけ置きました。実在する窓口の確認が必要で、確認できるまでこの行は表に出せません（架空の窓口を出すことがこの製品で最悪の事故になります）。</li>
-  <li><b>最期の数週間の写真を、既定で非表示にするか。</b>本案は「既定で非表示、あとから出せる」にしました。ここは他者検証で必ず割れる論点なので、5〜10名のヒアリングで最初に聞く項目にすべきです。</li>
-  <li><b>四十九日の「一度だけの頻度選択」を、どの画面で出すか。</b>本案では設定に曲線として集約しましたが、企画の事前コミットメント（四十九日に一度だけ選ぶ）は専用の1画面にする案もあります。</li>
-  <li><b>お参りの4動作は、90日で飽きに耐えるか。</b>企画の検証仮説そのもの。ここが崩れたら「変えない」という前提ごと再設計が要ります。</li>
-</ol>
-
-<footer class="board-foot">
-  出典・根拠：Eric Meyer「Inadvertent Algorithmic Cruelty」(2014) ／ Google フォト・Apple メモリーの除外設定 ／ Norton &amp; Gino (2014) 儀式効果 ／ Kahneman ピーク・エンドの法則 ／ Loewenstein 予期効用。<br>
-  市場・競合・価格の数値は Notion 企画書 v2（2026-09-13 / 一次検証済み・被験者1名）に基づきます。犬のシルエットは写真のプレースホルダで、実装では利用者の写真が入ります。
-</footer>
+  </section>
 
 </div>
 
+<div id="sheet-root"></div>
+
+<script src="js/store.js"></script>
+<script src="js/app.js"></script>
 <script>
-(function(){
-  "use strict";
-
-  /* ---- お参りの4動作：順序固定。飛ばせない ---- */
-  var ritual = document.getElementById('ritual');
-  if (ritual) {
-    var leads = ['灯りを、ともします','お水を、そなえます','ごはんを、そなえます','お花を、そなえます'];
-    var offers = Array.prototype.slice.call(ritual.querySelectorAll('.offer'));
-    var lead = document.getElementById('ritualLead');
-    var doneNote = document.getElementById('ritualDone');
-    var step = 0;
-
-    function render(){
-      offers.forEach(function(b, i){
-        if (i < step) { b.setAttribute('data-state','done'); b.disabled = true; }
-        else if (i === step) { b.setAttribute('data-state','next'); b.disabled = false; }
-        else { b.removeAttribute('data-state'); b.disabled = true; }
-      });
-      if (step < offers.length) {
-        lead.textContent = leads[step];
-        doneNote.hidden = true;
-      } else {
-        lead.textContent = 'おつかれさま。また明日、ここで。';
-        doneNote.hidden = false;
-      }
-    }
-
-    ritual.addEventListener('click', function(e){
-      var btn = e.target.closest('.offer');
-      if (!btn || btn.disabled) return;
-      if (Number(btn.getAttribute('data-i')) !== step) return;
-      step++;
-      render();
-      /* 6秒静止したら、触って確かめられるよう最初から戻す（提案書用の挙動） */
-      if (step >= offers.length) {
-        setTimeout(function(){ step = 0; render(); }, 6000);
-      }
-    });
-
-    render();
-  }
-
-  /* ---- 再会の6秒：近づいて、止まって、終わる ---- */
-  var reunion = document.getElementById('reunion');
-  var playBtn = document.getElementById('playBtn');
-  if (reunion && playBtn) {
-    var timers = [];
-    function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
-
-    playBtn.addEventListener('click', function(){
-      clearTimers();
-      reunion.classList.remove('playing','ended');
-      playBtn.disabled = true;
-      playBtn.textContent = '再生中';
-      /* 一度リセットを描画させてから再生する */
-      void reunion.offsetWidth;
-      timers.push(setTimeout(function(){ reunion.classList.add('playing'); }, 60));
-      /* 4秒で近づき終わり、6秒まで止まって見上げる。そこから2秒おいて終端の一行 */
-      timers.push(setTimeout(function(){ reunion.classList.add('ended'); }, 8000));
-      timers.push(setTimeout(function(){
-        playBtn.disabled = false;
-        playBtn.textContent = '▶ もう一度再生する';
-      }, 9400));
-    });
-  }
-})();
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* 未対応でも動く */ });
+  });
+}
 </script>
 </body>
 </html>
