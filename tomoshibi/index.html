@@ -69,6 +69,7 @@
   <symbol id="t-niwa" viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.2"/><path d="M12 12.2V20"/><path d="M8.6 6.4 6 4.6M15.4 6.4 18 4.6M8.6 11.6 6 13.4M15.4 11.6 18 13.4"/></symbol>
   <symbol id="t-album" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="3"/><path d="M3.5 15.5 8 11l3.8 3.8 3.2-3.2 5.5 5.4"/></symbol>
   <symbol id="t-ugoku" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="M16 11.2 21 8.4v7.2L16 12.8Z"/></symbol>
+  <symbol id="t-jibun" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c0-3.6 3.2-5.8 7.2-5.8s7.2 2.2 7.2 5.8"/></symbol>
   <symbol id="art-env" viewBox="0 0 48 48">
     <rect x="4" y="12" width="40" height="27" rx="4" fill="#FBF0DA" stroke="#5A4A3A" stroke-width="2.4"/>
     <path d="M4.5 14.5 24 28 43.5 14.5" fill="none" stroke="#5A4A3A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -275,9 +276,9 @@
       </div>
       <p class="note">休んでも、花は枯れません。<br>数は減りません。</p>
 
-      <div class="selfask" id="self-ask">
+      <div class="selfask">
         <p class="q">いまの気分は、どうですか</p>
-        <div class="scale" id="self-scale">
+        <div class="scale" id="self-scale" data-self>
           <button data-v="1" aria-label="重い"><i></i></button>
           <button data-v="2"><i></i></button>
           <button data-v="3"><i></i></button>
@@ -309,16 +310,43 @@
       <div class="notebox">
         <p>連続記録はありません。何日あいても、花は枯れません。<br>ほかの人の数も出しません。ここにあるのは、あなたとこの子の数だけ。</p>
       </div>
+      <div style="margin-top:24px" id="niwa-days"></div>
+      <div class="spacer"></div>
+    </div>
+    <nav class="tabbar" data-tabs></nav>
+  </section>
+
+  <!-- ============ じぶん ============ -->
+  <section class="view" id="view-jibun">
+    <div class="body scroll">
+      <div class="head"><h1>じぶん</h1><p>上がったり下がったりしながら進みます。それがふつうです</p></div>
+
+      <div class="selfask">
+        <p class="q">いまの気分は、どうですか</p>
+        <div class="scale" data-self>
+          <button data-v="1" aria-label="重い"><i></i></button>
+          <button data-v="2"><i></i></button>
+          <button data-v="3"><i></i></button>
+          <button data-v="4"><i></i></button>
+          <button data-v="5" aria-label="前を向けた"><i></i></button>
+        </div>
+        <p class="scale-ends"><span>重い</span><span>前を向けた</span></p>
+        <p class="qs">答えなくても大丈夫です。良し悪しはありません。</p>
+      </div>
+
       <div style="margin-top:24px">
-        <p style="margin:0 0 4px;font-family:var(--round);font-weight:700;font-size:var(--fs-4)">いまの気分</p>
-        <p style="margin:0 0 10px;font-size:var(--fs-2);color:var(--muted);line-height:1.8">
-          上がったり下がったりしながら進みます。それがふつうです。</p>
+        <p class="sec-h">この30日</p>
         <div class="chartbox" id="self-chart"></div>
         <p class="chart-cap" id="self-cap"></p>
         <div id="self-help"></div>
       </div>
 
-      <div style="margin-top:24px" id="niwa-days"></div>
+      <div class="stats" id="self-stats"></div>
+
+      <div class="notebox">
+        <p>良し悪しはつけません。平均も目標も出しません。<br>
+        おもい日が続いたときだけ、相談できるところをお知らせします。</p>
+      </div>
       <div class="spacer"></div>
     </div>
     <nav class="tabbar" data-tabs></nav>

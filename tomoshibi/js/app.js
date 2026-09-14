@@ -31,9 +31,13 @@
   function freeURL(id) { if (urlCache[id]) { URL.revokeObjectURL(urlCache[id]); delete urlCache[id]; } }
 
   /* ============ 画面 ============ */
+  /* 5つ並ぶと、狭い端末では1列60pxしか取れない。
+     「おまいりの庭」は収まらないので、タブでは「にわ」と短く呼ぶ。
+     画面の見出しは「おまいりの庭」のままにしてある。 */
   var TABS = [
     { id: 'home', label: 'おうち', icon: 't-home' },
-    { id: 'niwa', label: 'おまいりの庭', icon: 't-niwa' },
+    { id: 'niwa', label: 'にわ', icon: 't-niwa' },
+    { id: 'jibun', label: 'じぶん', icon: 't-jibun' },
     { id: 'album', label: 'アルバム', icon: 't-album' },
     { id: 'ugoku', label: 'うごく', icon: 't-ugoku' }
   ];
@@ -55,6 +59,7 @@
     if (name !== 'player') stopPlayer();
     if (name === 'home') renderHome();
     if (name === 'niwa') renderNiwa();
+    if (name === 'jibun') renderJibun();
     if (name === 'album') renderAlbum();
     if (name === 'ugoku') renderVideos();
     if (name === 'settings') renderSettings();
@@ -396,12 +401,32 @@
   /* いまの気分。1〜5。答えなくてもいい。 */
   function renderSelfAsk() {
     var t = S.today(), v = S.selfOn(t);
-    $$('#self-scale button').forEach(function (b) {
+    // 目盛りはおまいりのあとと、じぶんの画面の2か所にある。まとめて揃える。
+    $$('[data-self] button').forEach(function (b) {
       b.setAttribute('aria-pressed', String(+b.dataset.v === v));
     });
-    var box = $('#self-ask');
-    box.classList.toggle('done', !!v);
-    box.querySelector('.q').textContent = v ? '記録しました' : 'いまの気分は、どうですか';
+    $$('.selfask').forEach(function (box) {
+      box.classList.toggle('done', !!v);
+      box.querySelector('.q').textContent = v ? '記録しました' : 'いまの気分は、どうですか';
+    });
+  }
+
+  /* じぶんの画面。この子の画面（にわ）と分けた。
+     悲嘆は、失った相手に向き合う時間と、自分の生活を建て直す時間を
+     行き来しながら進む（Dual Process Model）。画面を分けたのはその形に合わせたもの。 */
+  function renderJibun() {
+    renderSelfAsk();
+    renderSelfChart();
+    var all = S.selfSeries(0);
+    // 数えるのは日数と、はじめた日だけ。良し悪しになる数は出さない。
+    // おもい日が続いていることは、下の相談先の知らせで伝える。
+    var first = all.length ? new Date(all[0].day.replace(/-/g, '/')) : null;
+    $('#self-stats').innerHTML = all.length
+      ? '<div class="stat"><p class="n" style="color:var(--amber-ink)">' + all.length +
+        '</p><p class="l">記録した日</p></div>' +
+        '<div class="stat"><p class="n" style="color:var(--grass-ink);font-size:var(--fs-6)">' +
+        (first.getMonth() + 1) + '/' + first.getDate() + '</p><p class="l">はじめた日</p></div>'
+      : '';
   }
 
   /* 波のグラフ。1本だけなので凡例はいらない。
@@ -1258,10 +1283,12 @@
     };
     $('#btn-help').onclick = showHelp;
 
-    $('#self-scale').addEventListener('click', function (e) {
+    document.addEventListener('click', function (e) {
+      var g = e.target.closest('[data-self]'); if (!g) return;
       var b = e.target.closest('[data-v]'); if (!b) return;
       S.putSelf(S.today(), +b.dataset.v);
       renderSelfAsk();
+      if ($('#view-jibun').classList.contains('on')) renderJibun();
     });
 
     $('#btn-reset').onclick = function () {
