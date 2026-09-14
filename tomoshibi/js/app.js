@@ -228,12 +228,22 @@
     $('#home-name').textContent = st.pet.name || '—';
 
     var death = S.parseISO(st.pet.deathISO), birth = S.parseISO(st.pet.birthISO);
+    // 上の行は享年と命日。この子が何年生きて、いつ旅立ったか。
     var meta = [];
-    if (birth && death) meta.push(S.formatShort(birth) + ' — ' + S.formatShort(death));
-    else if (death) meta.push(S.formatShort(death));
-    var tg = S.daysTogether();
-    if (tg) meta.push('いっしょに ' + tg.toLocaleString('ja-JP') + '日');
+    var age = S.ageAtDeath();
+    if (age) meta.push('享年 ' + (age.years != null ? age.years + '歳' : age.months + 'か月'));
+    if (death) meta.push((death.getMonth() + 1) + '月' + death.getDate() + '日 没');
     $('#home-meta').textContent = meta.join(' ・ ');
+    // 下の行は生まれた日といっしょにいた日数。控えめに添える。
+    var sub = [];
+    if (birth) sub.push(S.formatShort(birth) + ' 生');
+    var tg = S.daysTogether();
+    if (tg) sub.push('いっしょに ' + tg.toLocaleString('ja-JP') + '日');
+    $('#home-meta2').textContent = sub.join(' ・ ');
+
+    var km = S.kaimyo();
+    $('#home-kaimyo').hidden = !km;
+    $('#home-kaimyo').firstElementChild.textContent = km;
 
     var n = S.visitCount(), done = S.visitedOn(t);
     $('#omairi-label').textContent = done ? 'もう一度おまいりする' : 'おまいりする';
@@ -847,6 +857,42 @@
     $('#store-state').textContent =
       (si.embedded ? '試し用（消えます）' : si.durable ? 'この端末の中・保護あり' : si.idb ? 'この端末の中' : '写真のみ') + ' ›';
     $('#warn-ephemeral').hidden = !si.embedded;
+    renderKaimyo();
+  }
+
+  /* 戒名の欄。どの字がどこから来たかを開いて見せる。
+     由来の分からない名を押しつけるのは、贈りものではなく押しつけになる。 */
+  function renderKaimyo() {
+    var own = (st.pet.kaimyo || '').trim();
+    var off = !!st.pet.kaimyoOff;
+    var shown = off ? '' : (own || S.kaimyoAuto());
+    var box = $('#set-kaimyo');
+    box.classList.toggle('off', off || !shown);
+    box.firstElementChild.textContent = off ? '出していません'
+      : shown || '（なまえと命日を入れると決まります）';
+
+    var why = $('#set-kaimyo-why');
+    var k = (!off && !own) ? S.kaimyoParts() : null;
+    why.innerHTML = k
+      ? '<div class="whylist">' +
+        '<div class="whyrow"><b>' + esc(k.michi) + '</b><span>' + esc(k.michiWhy) + '</span></div>' +
+        '<div class="whyrow"><b>' + esc(k.head) + '</b><span>' + esc(k.headWhy) + '</span></div>' +
+        '<div class="whyrow"><b>' + esc(k.sue) + '</b><span>' + esc(k.sueWhy) + '</span></div>' +
+        '<div class="whyrow"><b>' + esc(k.kurai) + '</b><span>ペットの供養で広く使われる結び</span></div>' +
+        '</div>'
+      : own && !off ? '<p class="cap" style="margin:10px 0 0">あなたが書いた名です。</p>' : '';
+
+    $('#btn-kaimyo-auto').hidden = !own;
+    $('#kaimyo-off-label').textContent = off ? '出す' : '出さない';
+  }
+
+  function editKaimyo() {
+    var now = (st.pet.kaimyo || '').trim() || S.kaimyoAuto();
+    var v = window.prompt('戒名', now);
+    if (v === null) return;
+    // アプリが選んだ名と同じなら、書いたことにしない。以後も生年月日にあわせて変わる。
+    S.setKaimyo(v.trim() === S.kaimyoAuto() ? '' : v);
+    renderKaimyo();
   }
 
   function exportAll() {
@@ -1159,6 +1205,18 @@
       $('#in-fave').value = '';
       renderOnbo(); show('onbo');
     };
+    $('#btn-kaimyo-edit').onclick = editKaimyo;
+    $('#btn-kaimyo-auto').onclick = function () {
+      sheet('アプリの名にもどす', '書いた戒名は消えます。', [
+        { label: 'もどす', primary: true, on: function () { S.setKaimyo(''); renderKaimyo(); } },
+        { label: 'やめる' }
+      ]);
+    };
+    $('#btn-kaimyo-off').onclick = function () {
+      S.setKaimyoOff(!st.pet.kaimyoOff);
+      renderKaimyo();
+    };
+
     $('#btn-store').onclick = function () {
       var i = S.storeInfo();
       var body = '写真も動画も記録も、<b>この端末の中だけ</b>に保存しています。' +

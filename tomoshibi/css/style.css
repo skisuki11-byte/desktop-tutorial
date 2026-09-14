@@ -84,8 +84,34 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 
 .card{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .homecard{overflow:hidden;padding-bottom:18px}
-.petname{margin:16px 0 2px;font-family:var(--round);font-weight:700;font-size:27px;letter-spacing:.08em;text-align:center;line-height:1.4}
-.petmeta{margin:0;font-size:12px;color:var(--muted);text-align:center;letter-spacing:.03em;font-variant-numeric:tabular-nums}
+.petname{margin:10px 0 4px;font-family:var(--round);font-weight:700;font-size:27px;letter-spacing:.08em;text-align:center;line-height:1.4}
+.petmeta{margin:0;font-size:12.5px;color:var(--ink);text-align:center;letter-spacing:.03em;font-variant-numeric:tabular-nums}
+.petmeta.sub{margin-top:3px;font-size:11px;color:var(--faint)}
+
+/* ---------- 戒名 ----------
+   この一行だけ明朝にする。アプリの他の文字はすべて丸ゴシックと角ゴシックなので、
+   書体が変わること自体が「ここは格が違う」という合図になる。
+   端末に入っている書体だけを使うので、読み込むものは増やさない。
+   字間を広くとるのは、位牌の書きかたにならったもの。 */
+.kaimyo{
+  display:flex;align-items:center;gap:11px;margin:16px 0 0;
+  font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Times New Roman",serif;
+  font-size:13.5px;color:var(--amber-ink);line-height:1.6;
+}
+.kaimyo::before,.kaimyo::after{content:"";flex:1;height:1px;background:var(--line-2);opacity:.7}
+/* 字間を空けると最後の1字のうしろにも隙間が残り、中央からずれて見える。
+   同じぶんだけ先頭に足して打ち消す。 */
+.kaimyo span{letter-spacing:.24em;text-indent:.24em}
+.kaimyo.set{margin-top:12px}
+.kaimyo.off{color:var(--faint)}
+.kaimyo.off span{letter-spacing:.06em;text-indent:0;font-style:normal}
+/* どの字がどこから来たか */
+.whylist{margin:12px 0 0;display:flex;flex-direction:column;gap:7px}
+.whyrow{display:flex;align-items:baseline;gap:10px;font-size:11.5px;color:var(--muted);line-height:1.7}
+.whyrow b{
+  flex:none;min-width:2.6em;text-align:center;color:var(--amber-ink);font-size:15px;font-weight:400;
+  font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Times New Roman",serif;
+}
 
 /* ---------- ボタン ---------- */
 .btn{

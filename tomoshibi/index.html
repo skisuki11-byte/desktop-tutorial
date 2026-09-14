@@ -198,8 +198,10 @@
           </svg>
           <div class="face face-lg" id="home-face"><svg class="art"><use href="#art-dog"></use></svg></div>
         </div>
+        <p class="kaimyo" id="home-kaimyo" hidden><span></span></p>
         <h1 class="petname" id="home-name">—</h1>
         <p class="petmeta" id="home-meta"></p>
+        <p class="petmeta sub" id="home-meta2"></p>
       </div>
 
       <div style="margin-top:20px">
@@ -472,6 +474,17 @@
         <button class="setrow" id="btn-export" style="margin-top:10px"><span style="color:var(--amber-ink);font-weight:700">バックアップを書き出す</span><span class="arw">›</span></button>
         <button class="setrow" id="btn-import"><span>バックアップから戻す</span><span class="arw">›</span></button>
         <input type="file" id="in-backup" accept="application/json,.json" hidden>
+      </div>
+
+      <div class="cardbox" id="box-kaimyo">
+        <h4>戒名</h4>
+        <p class="cap">このアプリがこの子のために選んだ名です。<b>お寺が授けたものではありません。</b><br>
+        お寺からいただいた戒名があれば、そちらに書きかえてください。</p>
+        <p class="kaimyo set" id="set-kaimyo"><span>—</span></p>
+        <div id="set-kaimyo-why"></div>
+        <button class="setrow" id="btn-kaimyo-edit" style="margin-top:10px"><span>書きかえる</span><span class="arw">›</span></button>
+        <button class="setrow" id="btn-kaimyo-auto" hidden><span>選びなおす（アプリの名にもどす）</span><span class="arw">›</span></button>
+        <button class="setrow" id="btn-kaimyo-off"><span id="kaimyo-off-label">出さない</span><span class="arw">›</span></button>
       </div>
 
       <div class="cardbox">
