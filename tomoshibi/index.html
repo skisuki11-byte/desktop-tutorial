@@ -132,7 +132,7 @@
         <div class="tip tip-warn" id="onbo-warn" hidden>
           <svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>
           <p><b>この画面は試し用です。</b>閉じると消えることがあります。<br>
-          共有ボタンから<b>「ホーム画面に追加」</b>して、そちらで開いてください。</p>
+          <span id="hint-onbo"></span></p>
         </div>
       </div>
 
@@ -179,7 +179,7 @@
       <div class="tip tip-warn" id="home-warn" hidden>
         <svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>
         <p><b>この画面は試し用です。</b>閉じると、入れた写真や動画が消えることがあります。<br>
-        共有ボタンから<b>「ホーム画面に追加」</b>して、そちらで開いてください。</p>
+        <span id="hint-home"></span></p>
       </div>
 
       <div class="card homecard">
@@ -497,7 +497,7 @@
       <div class="tip tip-warn" id="warn-ephemeral" hidden style="margin-top:4px">
         <svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>
         <p><b>いまの開きかたは試し用です。</b>閉じると、入れた写真や動画が消えることがあります。<br>
-        ずっと残すには、共有ボタンから<b>「ホーム画面に追加」</b>して、そちらで開いてください。</p>
+        ずっと残すには、<span id="hint-settings"></span></p>
       </div>
 
       <button class="setrow" id="btn-profile"><span>なまえ・写真・日づけ</span><span class="arw">›</span></button>
@@ -506,8 +506,10 @@
         <h4>バックアップ</h4>
         <p class="cap">写真も動画も記録も、この端末の中だけにあります。<br>
         端末を変えるときは、書き出して、新しい端末で読み込ませてください。</p>
-        <button class="setrow" id="btn-export" style="margin-top:10px"><span style="color:var(--amber-ink);font-weight:700">バックアップを書き出す</span><span class="arw">›</span></button>
-        <button class="setrow" id="btn-import"><span>バックアップから戻す</span><span class="arw">›</span></button>
+        <!-- 見出し「バックアップ」がすぐ上にあるので、ボタンの中で繰り返さない。
+             320px幅だと「バックアップを書き出す」がぎりぎり1行に収まらず折り返していた。 -->
+        <button class="setrow" id="btn-export" style="margin-top:10px"><span style="color:var(--amber-ink);font-weight:700">書き出す</span><span class="arw">›</span></button>
+        <button class="setrow" id="btn-import"><span>読み込む</span><span class="arw">›</span></button>
         <input type="file" id="in-backup" accept="application/json,.json" hidden>
       </div>
 
