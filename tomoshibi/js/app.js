@@ -21,6 +21,7 @@
   /* 作った objectURL は必ず覚えて、作り直すときに解放する */
   var urlCache = {};
   function mediaURL(rec) {
+    if (rec.url) return rec.url;          // assets に置いたものは、そのまま参照できる
     if (!urlCache[rec.id]) urlCache[rec.id] = URL.createObjectURL(rec.blob);
     return urlCache[rec.id];
   }
@@ -63,8 +64,9 @@
   var faceURL = null;
   function loadFace() {
     return S.getMedia('portrait').then(function (rec) {
-      if (faceURL) { URL.revokeObjectURL(faceURL); faceURL = null; }
-      if (rec && rec.blob) faceURL = URL.createObjectURL(rec.blob);
+      if (faceURL && faceURL.indexOf('blob:') === 0) URL.revokeObjectURL(faceURL);
+      faceURL = null;
+      if (rec) faceURL = rec.url || URL.createObjectURL(rec.blob);
       paintFaces();
       return !!faceURL;
     }).catch(function () { paintFaces(); return false; });
@@ -117,7 +119,9 @@
     'quota': 'この端末の保存領域がいっぱいです。アルバムの写真を減らすと入ります。',
     'too-large': 'この写真は大きすぎて、いまの保存先に入りませんでした。',
     'no-store': 'このブラウザでは保存先が使えませんでした。アプリをホーム画面に追加してから開くと入ります。',
-    'no-store-video': 'いまの開きかたでは動画を保存できません。ホーム画面に追加してから開くか、Safari/Chromeで直接開いてください。',
+    'video-format': 'この動画の形式は保存できませんでした。いまの画面では mp4 と webm だけが入ります。iPhoneの .mov はそのままでは入らないので、写真アプリで「ビデオを書き出す」か、アプリをホーム画面に追加してから開くと、そのまま入ります。',
+    'video-too-large': 'この動画は大きすぎました。いまの画面では1本20MBまでです。短く切り出すか、アプリをホーム画面に追加してから開くと、大きいままでも入ります。',
+    'rate': '短い時間に何本も入れたため、いったん止められました。少し待ってからもう一度おためしください。',
     'unreadable': 'ファイルを読み取れませんでした。',
     'unknown': '保存できませんでした。'
   };
@@ -433,17 +437,41 @@
         return tileHTML(v, vs.length === 1 || (i === 0 && vs.length % 2 === 1)).replace('<span class="cap">',
           '<button class="menu" data-vmenu="' + esc(v.id) + '" aria-label="この動画の設定">···</button><span class="cap">');
       }).join('');
-      $('#vid-warn').innerHTML = S.idbAvailable() ? '' :
-        '<div class="tip tip-warn"><svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>' +
-        '<p>いまの開きかたでは動画を保存できません。ホーム画面に追加してから開くか、SafariやChromeで直接開いてください。</p></div>';
+      var info = S.storeInfo();
+      $('#vid-warn').innerHTML =
+        info.idb ? ''
+        : info.assets
+          ? '<div class="tip tip-amber"><svg width="19" height="19" style="color:var(--amber-ink)"><use href="#ic-info"></use></svg>' +
+            '<p>いまの画面では、mp4とwebmの動画を1本20MBまで保存できます。<br>' +
+            'iPhoneの .mov や大きい動画も入れたいときは、ホーム画面に追加してから開いてください。</p></div>'
+          : '<div class="tip tip-warn"><svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>' +
+            '<p>いまの開きかたでは動画を保存できません。ホーム画面に追加してから開くか、SafariやChromeで直接開いてください。</p></div>';
+    });
+  }
+
+  /* このブラウザで開けるかを先に確かめる。開けないものを保存しても、
+     あとで真っ黒な動画が残るだけなので。 */
+  function canPlay(file) {
+    return new Promise(function (res) {
+      var v = document.createElement('video'), u = URL.createObjectURL(file), done = false;
+      var end = function (ok) { if (done) return; done = true; clearTimeout(t); URL.revokeObjectURL(u); res(ok); };
+      var t = setTimeout(function () { end(false); }, 9000);
+      v.onloadedmetadata = function () { end(v.videoWidth > 0 || v.duration > 0); };
+      v.onerror = function () { end(false); };
+      v.preload = 'metadata';
+      v.muted = true;
+      v.src = u;
     });
   }
 
   function addVideos(files) {
     var list = Array.prototype.slice.call(files);
     if (!list.length) return;
-    if (!S.idbAvailable()) {
-      sheet('動画を保存できません', esc(reasonText('no-store-video')), [{ label: 'わかりました', primary: true }]);
+    if (!S.storeInfo().video) {
+      sheet('動画を保存できません',
+        'いまの開きかたでは、動画の置き場所がありません。<br><br>' +
+        'アプリをホーム画面に追加してから開くか、SafariやChromeで直接開くと保存できます。',
+        [{ label: 'わかりました', primary: true }]);
       return;
     }
     var btn = $('#btn-add-vids'), orig = btn.innerHTML;
@@ -454,8 +482,12 @@
       p = p.then(function () {
         btn.innerHTML = '<span class="busy"></span> ' + (i + 1) + ' / ' + list.length;
         var id = S.newId('v');
-        return S.putMedia({ id: id, blob: f, at: f.lastModified || Date.now(), kind: 'video' })
+        return canPlay(f).then(function (playable) {
+          if (!playable) { fails['video-format'] = (fails['video-format'] || 0) + 1; return null; }
+          return S.putMedia({ id: id, blob: f, at: f.lastModified || Date.now(), kind: 'video', playable: true });
+        })
           .then(function (r) {
+            if (!r) return;
             if (r.ok) {
               st.videoTitles[id] = (f.name || '').replace(/\.[^.]+$/, '').slice(0, 24) || 'うごくすがた';
               S.save();
@@ -514,7 +546,8 @@
       if (j) { b.textContent = j.label; b.setAttribute('aria-pressed', String(j.offset === st.dateOffset)); }
     });
     $('#offset-now').textContent = '表示中の日づけ：' + S.formatJP(S.today(), true);
-    $('#store-state').textContent = (S.idbAvailable() ? '写真・動画とも保存できます' : '写真のみ') + ' ›';
+    var si = S.storeInfo();
+    $('#store-state').textContent = (si.idb ? 'この端末の中' : si.assets ? 'アプリの保管場所' : '写真のみ') + ' ›';
   }
 
   function exportAll() {
@@ -527,28 +560,47 @@
     S.allMedia().then(function (all) {
       return all.reduce(function (p, rec) {
         return p.then(function (acc) {
-          return new Promise(function (res) {
-            var r = new FileReader();
-            r.onload = function () { acc.push({ id: rec.id, at: rec.at, kind: rec.kind, dataURL: r.result }); res(acc); };
-            r.onerror = function () { res(acc); };
-            r.readAsDataURL(rec.blob);
-          });
+          // assets に置いたものは手元に blob がないので、取り直してから書き出す
+          var get = rec.blob ? Promise.resolve(rec.blob)
+                             : fetch(rec.url).then(function (r) { return r.blob(); });
+          return get.then(function (b) {
+            return new Promise(function (res) {
+              var r = new FileReader();
+              r.onload = function () { acc.push({ id: rec.id, at: rec.at, kind: rec.kind, dataURL: r.result }); res(acc); };
+              r.onerror = function () { res(acc); };
+              r.readAsDataURL(b);
+            });
+          }).catch(function () { return acc; });
         });
       }, Promise.resolve([]));
     }).then(function (media) {
       var out = { app: 'ともしび', exportedAt: new Date().toISOString(), data: st, media: media };
       var text = JSON.stringify(out);
+      closeSheet();
+      var name = 'tomoshibi-' + S.ymd(new Date()) + '.json';
+      var blob = new Blob([text], { type: 'application/json' });
+      var okMsg = function () {
+        sheet('書き出しました', media.length + '件の写真・動画をふくむファイルを保存しました。', [{ label: 'とじる', primary: true }]);
+      };
+
+      // claude.ai の画面ではブラウザのダウンロードが効かないので、用意された保存口を使う
+      var dl = S.downloader();
+      if (dl) {
+        dl.save({ filename: name, data: blob }).then(okMsg).catch(function (e) {
+          if (e && e.code === 'declined') return;
+          copyOut(text, media.length);
+        });
+        return;
+      }
       var embedded = false;
       try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
-      closeSheet();
       if (embedded) { copyOut(text, media.length); return; }
-      var blob = new Blob([text], { type: 'application/json' });
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'tomoshibi-' + S.ymd(new Date()) + '.json';
+      a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
-      sheet('書き出しました', esc(media.length) + '件の写真・動画をふくむファイルを保存しました。', [{ label: 'とじる', primary: true }]);
+      okMsg();
     });
   }
   /* 埋め込みで開かれているとダウンロードが働かない。
@@ -684,11 +736,16 @@
       renderOnbo(); show('onbo');
     };
     $('#btn-store').onclick = function () {
-      sheet('保存のようす',
-        S.idbAvailable()
-          ? 'この端末では、写真も動画もそのまま保存できます。<br><br>すべて端末の中だけに残り、どこにも送られません。'
-          : 'いまの開きかたでは、大きな保存先が使えません。<br><br>写真は1枚だけ小さくして保存できますが、アルバムと動画は保存できません。<br><br>ホーム画面に追加してから開くか、SafariやChromeで直接開くと、すべて使えるようになります。',
-        [{ label: 'とじる', primary: true }]);
+      var i = S.storeInfo();
+      var body = i.idb
+        ? 'この端末の中に、写真も動画もそのまま保存しています。<br>どこにも送られません。'
+        : i.assets
+          ? 'いまの画面では、この端末の大きな保存先が使えないため、写真と動画をこのアプリの保管場所に置いています。<br><br>' +
+            '動画は mp4・webm で1本20MBまでです。<br><br>' +
+            'ホーム画面に追加してから開くと、端末の中だけに、形式や大きさの制限なく保存できます。'
+          : 'いまの開きかたでは、写真しか保存できません（1枚ぶん）。<br><br>' +
+            'ホーム画面に追加してから開くか、SafariやChromeで直接開くと、すべて使えるようになります。';
+      sheet('保存のようす', body, [{ label: 'とじる', primary: true }]);
     };
     $('#btn-help').onclick = function () {
       sheet('つらいときの相談先',

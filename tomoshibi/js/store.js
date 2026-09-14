@@ -167,16 +167,48 @@
   function putSeasonal(d) { state.seasonal[ym(d)] = true; save(); }
 
   /* ============ 写真と動画 ============
-     IndexedDB を第一に、使えないときは写真だけ localStorage に逃がす。
-     どちらも駄目なら理由を返す。呼ぶ側はそれを画面に出すこと。 */
-  var DB = 'tomoshibi-media', STORE = 'media', dbp = null, idbState = 'unknown';
+     保存先が3つある。環境によって使えるものが違うので、順に試す。
 
+       assets … このアプリを claude.ai のページとして開いたときだけ使える。
+                埋め込み(iframe)では IndexedDB が塞がれるので、動画はここにしか置けない。
+                mp4 / webm のみ・1本20MiBまで。
+       IndexedDB … ホーム画面に追加した場合やブラウザで直接開いた場合。容量が大きい。
+       localStorage … 最後の砦。写真1〜数枚ぶん。
+
+     どこに何があるかは索引(index)に持つ。索引がないと、assets に上げた動画を
+     次に開いたとき見つけられない。 */
+
+  var DB = 'tomoshibi-media', STORE = 'media', dbp = null;
+  var INDEX_KEY = 'tomoshibi.index.v1';
+  var back = { assets: false, idb: false };
+  var assetsNS = null, dbNS = null, dlNS = null;
+
+  function getIndex() {
+    try { return JSON.parse(localStorage.getItem(INDEX_KEY)) || []; } catch (e) { return []; }
+  }
+  function setIndex(a) {
+    try { localStorage.setItem(INDEX_KEY, JSON.stringify(a)); } catch (e) {}
+    if (dbNS) { try { dbNS.doc('media/index').set({ items: a }); } catch (e) {} }
+  }
+  function indexPut(entry) {
+    var a = getIndex().filter(function (x) { return x.id !== entry.id; });
+    a.push(entry); a.sort(function (x, y) { return (x.at || 0) - (y.at || 0); });
+    setIndex(a);
+  }
+  function indexDel(id) { setIndex(getIndex().filter(function (x) { return x.id !== id; })); }
+  function indexGet(id) {
+    var a = getIndex();
+    for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i];
+    return null;
+  }
+
+  /* ---- IndexedDB ---- */
   function openDB() {
     if (dbp) return dbp;
     dbp = new Promise(function (res, rej) {
       var idb = null;
       try { idb = global.indexedDB; } catch (e) { idb = null; }
-      if (!idb) { rej(new Error('no-indexeddb')); return; }
+      if (!idb) { rej(new Error('no-store')); return; }
       var r;
       try { r = idb.open(DB, 1); } catch (e) { rej(e); return; }
       r.onupgradeneeded = function () {
@@ -185,27 +217,11 @@
       };
       r.onsuccess = function () { res(r.result); };
       r.onerror = function () { rej(r.error || new Error('idb-error')); };
-      r.onblocked = function () { rej(new Error('idb-blocked')); };
-      setTimeout(function () { rej(new Error('idb-timeout')); }, 6000);
+      r.onblocked = function () { rej(new Error('no-store')); };
+      setTimeout(function () { rej(new Error('no-store')); }, 6000);
     });
     return dbp;
   }
-
-  /* 起動時に1度だけ、本当に読み書きできるか試す。
-     open が通っても書き込みで落ちる環境があるため、書いて消すところまでやる。 */
-  function probe() {
-    return openDB().then(function (d) {
-      return new Promise(function (res, rej) {
-        var t = d.transaction(STORE, 'readwrite'), s = t.objectStore(STORE);
-        var r = s.put({ id: '__probe__', blob: new Blob(['x']), at: Date.now() });
-        r.onsuccess = function () { s.delete('__probe__'); res(true); };
-        r.onerror = function () { rej(r.error || new Error('probe-failed')); };
-      });
-    }).then(function () { idbState = 'ok'; return true; })
-      .catch(function () { idbState = 'unavailable'; return false; });
-  }
-  function idbAvailable() { return idbState === 'ok'; }
-
   function tx(mode) { return openDB().then(function (d) { return d.transaction(STORE, mode).objectStore(STORE); }); }
   function wrap(req) {
     return new Promise(function (res, rej) {
@@ -214,14 +230,14 @@
     });
   }
 
+  /* ---- localStorage ---- */
   var LS_PREFIX = 'tomoshibi.media.';
-  var LS_LIMIT = 1400000;  // localStorage は数MBで頭打ち。遺影1枚ぶんに限る
-
+  var LS_LIMIT = 1400000;
   function blobToDataURL(b) {
     return new Promise(function (res, rej) {
       var r = new FileReader();
       r.onload = function () { res(r.result); };
-      r.onerror = function () { rej(r.error || new Error('read-failed')); };
+      r.onerror = function () { rej(new Error('unreadable')); };
       r.readAsDataURL(b);
     });
   }
@@ -235,85 +251,202 @@
     } catch (e) { return null; }
   }
 
-  /* 保存。必ず解決する。失敗は {ok:false, reason} で返す。 */
-  function putMedia(rec) {
-    if (idbAvailable()) {
-      return tx('readwrite').then(function (s) { return wrap(s.put(rec)); })
-        .then(function () { return { ok: true, where: 'idb' }; })
-        .catch(function (e) {
-          // 容量超過はここで出る。写真なら localStorage に逃がす
-          if (rec.kind === 'photo') return putToLS(rec);
-          return { ok: false, reason: reasonOf(e) };
-        });
-    }
-    if (rec.kind === 'photo') return putToLS(rec);
-    return Promise.resolve({ ok: false, reason: 'no-store-video' });
+  /* ---- 起動時のしらべ ----
+     open が通っても書き込みで落ちる環境があるので、実際に書いて消すところまでやる。 */
+  function probe() {
+    var jobs = [];
+
+    jobs.push(openDB().then(function (d) {
+      return new Promise(function (res, rej) {
+        var t = d.transaction(STORE, 'readwrite'), s = t.objectStore(STORE);
+        var r = s.put({ id: '__probe__', blob: new Blob(['x']), at: Date.now() });
+        r.onsuccess = function () { s.delete('__probe__'); res(); };
+        r.onerror = function () { rej(r.error || new Error('probe')); };
+      });
+    }).then(function () { back.idb = true; }).catch(function () { back.idb = false; }));
+
+    // claude.use は後から解決する。返らない環境もあるので上限をつける。
+    jobs.push(new Promise(function (res) {
+      if (!(global.claude && typeof global.claude.use === 'function')) { res(); return; }
+      var settled = false;
+      var done = function () { if (!settled) { settled = true; res(); } };
+      setTimeout(done, 5000);
+      Promise.all([
+        global.claude.use('assets').catch(function () { return null; }),
+        global.claude.use('db').catch(function () { return null; }),
+        global.claude.use('downloads').catch(function () { return null; })
+      ]).then(function (r) {
+        assetsNS = r[0] || null; dbNS = r[1] || null; dlNS = r[2] || null;
+        back.assets = !!assetsNS;
+        done();
+      }, done);
+    }));
+
+    return Promise.all(jobs).then(migrate).then(mergeRemoteIndex);
   }
 
-  function putToLS(rec) {
-    return blobToDataURL(rec.blob).then(function (u) {
-      if (u.length > LS_LIMIT) return { ok: false, reason: 'too-large' };
-      try {
-        localStorage.setItem(LS_PREFIX + rec.id, JSON.stringify({ u: u, at: rec.at || Date.now(), kind: rec.kind }));
-        return { ok: true, where: 'ls' };
-      } catch (e) { return { ok: false, reason: 'quota' }; }
-    }).catch(function (e) { return { ok: false, reason: reasonOf(e) }; });
-  }
-
-  function reasonOf(e) {
-    var n = (e && (e.name || e.message)) || '';
-    if (/Quota|quota/.test(n)) return 'quota';
-    if (/no-indexeddb|idb-timeout|idb-blocked/.test(n)) return 'no-store';
-    if (/read-failed/.test(n)) return 'unreadable';
-    return 'unknown';
-  }
-
-  function getMedia(id) {
-    var fromLS = function () {
-      try {
-        var raw = localStorage.getItem(LS_PREFIX + id);
-        if (!raw) return null;
-        var o = JSON.parse(raw), b = dataURLToBlob(o.u);
-        return b ? { id: id, blob: b, at: o.at, kind: o.kind } : null;
-      } catch (e) { return null; }
-    };
-    if (!idbAvailable()) return Promise.resolve(fromLS());
-    return tx('readonly').then(function (s) { return wrap(s.get(id)); })
-      .then(function (r) { return r || fromLS(); })
-      .catch(function () { return fromLS(); });
-  }
-
-  function allMedia(kind) {
-    var lsList = [];
+  /* 索引を入れる前に保存したものを拾う。すでに入れた写真を見失わないため。 */
+  function migrate() {
+    if (getIndex().length) return;
+    var found = [];
     try {
       for (var i = 0; i < localStorage.length; i++) {
         var k = localStorage.key(i);
         if (k && k.indexOf(LS_PREFIX) === 0) {
           var o = JSON.parse(localStorage.getItem(k));
-          if (!kind || o.kind === kind) {
-            var b = dataURLToBlob(o.u);
-            if (b) lsList.push({ id: k.slice(LS_PREFIX.length), blob: b, at: o.at, kind: o.kind });
-          }
+          found.push({ id: k.slice(LS_PREFIX.length), kind: o.kind || 'photo', at: o.at || 0, store: 'ls' });
         }
       }
-    } catch (e) { /* 読めないものは飛ばす */ }
-    if (!idbAvailable()) return Promise.resolve(sortMedia(lsList));
-    return tx('readonly').then(function (s) { return wrap(s.getAll()); })
-      .then(function (list) {
-        var all = (list || []).filter(function (r) { return r.id !== '__probe__' && (!kind || r.kind === kind); });
-        return sortMedia(all.concat(lsList));
-      })
-      .catch(function () { return sortMedia(lsList); });
+    } catch (e) {}
+    var p = back.idb
+      ? tx('readonly').then(function (s) { return wrap(s.getAll()); }).catch(function () { return []; })
+      : Promise.resolve([]);
+    return p.then(function (list) {
+      (list || []).forEach(function (r) {
+        if (r.id === '__probe__') return;
+        found.push({ id: r.id, kind: r.kind || 'photo', at: r.at || 0, store: 'idb' });
+      });
+      if (found.length) setIndex(found);
+    });
   }
-  function sortMedia(l) {
-    var seen = {};
-    return l.filter(function (r) { if (seen[r.id]) return false; seen[r.id] = 1; return true; })
-            .sort(function (a, b) { return (a.at || 0) - (b.at || 0); });
+
+  /* localStorage が消えても、db に控えがあれば拾い直す */
+  function mergeRemoteIndex() {
+    if (!dbNS) return;
+    return dbNS.doc('media/index').get().then(function (d) {
+      var remote = (d && d.data && d.data.items) || [];
+      if (!remote.length) return;
+      var local = getIndex(), seen = {};
+      local.forEach(function (x) { seen[x.id] = 1; });
+      var merged = local.concat(remote.filter(function (x) { return !seen[x.id]; }));
+      merged.sort(function (x, y) { return (x.at || 0) - (y.at || 0); });
+      try { localStorage.setItem(INDEX_KEY, JSON.stringify(merged)); } catch (e) {}
+    }).catch(function () {});
+  }
+
+  function idbAvailable() { return back.idb; }
+  function downloader() { return dlNS; }
+  function assetsAvailable() { return back.assets; }
+  /* どこに保存できるかを、画面で説明するために返す */
+  function storeInfo() {
+    return { idb: back.idb, assets: back.assets,
+             video: back.idb || back.assets, photo: true };
+  }
+
+  var VIDEO_OK = { 'video/mp4': 1, 'video/webm': 1 };
+  var ASSET_MAX = 20 * 1024 * 1024;
+
+  /* 保存。必ず解決する。失敗は {ok:false, reason} で返す。 */
+  function putMedia(rec) {
+    var order = rec.kind === 'video' ? ['idb', 'assets'] : ['idb', 'assets', 'ls'];
+    // 同じidに上書きするとき（遺影の撮り直しなど）、前の実体を残さない
+    var prev = indexGet(rec.id);
+    return tryStores(rec, order, 0, null).then(function (r) {
+      if (r.ok && prev && prev.store === 'assets' && assetsNS) {
+        var now = indexGet(rec.id);
+        if (!now || now.assetId !== prev.assetId) assetsNS.delete(prev.assetId).catch(function () {});
+      }
+      return r;
+    });
+  }
+
+  function tryStores(rec, order, i, lastReason) {
+    if (i >= order.length) return Promise.resolve({ ok: false, reason: lastReason || 'no-store' });
+    var next = function (reason) { return tryStores(rec, order, i + 1, reason || lastReason); };
+    var w = order[i];
+
+    if (w === 'idb') {
+      if (!back.idb) return next(null);
+      return tx('readwrite').then(function (s) {
+        return wrap(s.put({ id: rec.id, blob: rec.blob, at: rec.at, kind: rec.kind }));
+      }).then(function () {
+        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, store: 'idb' });
+        return { ok: true, where: 'idb' };
+      }).catch(function (e) { return next(reasonOf(e)); });
+    }
+
+    if (w === 'assets') {
+      if (!assetsNS) return next(null);
+      var type = rec.blob.type || '';
+      if (rec.kind === 'video') {
+        // iPhone の .mov(video/quicktime) は中身が mp4 と同じ ISO-BMFF のことが多い。
+        // このブラウザで再生できると確かめたものだけ、mp4 と申告して通す。
+        if (!VIDEO_OK[type] && rec.playable) type = 'video/mp4';
+        if (!VIDEO_OK[type]) return next('video-format');
+        if (rec.blob.size > ASSET_MAX) return next('video-too-large');
+      }
+      return assetsNS.upload(rec.blob, type ? { type: type } : undefined).then(function (r) {
+        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, store: 'assets', assetId: r.id });
+        return { ok: true, where: 'assets' };
+      }).catch(function (e) { return next(assetReason(e)); });
+    }
+
+    return blobToDataURL(rec.blob).then(function (u) {
+      if (u.length > LS_LIMIT) return next('too-large');
+      try {
+        localStorage.setItem(LS_PREFIX + rec.id, JSON.stringify({ u: u, at: rec.at, kind: rec.kind }));
+        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, store: 'ls' });
+        return { ok: true, where: 'ls' };
+      } catch (e) { return next('quota'); }
+    }).catch(function (e) { return next(reasonOf(e)); });
+  }
+
+  function assetReason(e) {
+    var c = (e && e.code) || '';
+    if (c === 'too_large') return 'video-too-large';
+    if (c === 'unsupported_type') return 'video-format';
+    if (c === 'quota_or_state') return 'quota';
+    if (c === 'rate_limited') return 'rate';
+    if (c === 'not_granted' || c === 'capability_disabled' || c === 'capability_removed') return 'no-store';
+    return 'unknown';
+  }
+  function reasonOf(e) {
+    var n = (e && (e.name || e.message)) || '';
+    if (/Quota|quota/.test(n)) return 'quota';
+    if (/no-store/.test(n)) return 'no-store';
+    if (/unreadable/.test(n)) return 'unreadable';
+    return 'unknown';
+  }
+
+  /* 読み出し。assets のものは url を、ほかは blob を返す。 */
+  function loadEntry(e) {
+    if (!e) return Promise.resolve(null);
+    if (e.store === 'assets') {
+      return Promise.resolve({ id: e.id, kind: e.kind, at: e.at, url: '/_blob/' + e.assetId });
+    }
+    if (e.store === 'ls') {
+      try {
+        var raw = localStorage.getItem(LS_PREFIX + e.id);
+        if (!raw) return Promise.resolve(null);
+        var o = JSON.parse(raw), b = dataURLToBlob(o.u);
+        return Promise.resolve(b ? { id: e.id, kind: e.kind, at: e.at, blob: b } : null);
+      } catch (x) { return Promise.resolve(null); }
+    }
+    if (!back.idb) return Promise.resolve(null);
+    return tx('readonly').then(function (s) { return wrap(s.get(e.id)); })
+      .then(function (r) { return r ? { id: e.id, kind: e.kind, at: e.at, blob: r.blob } : null; })
+      .catch(function () { return null; });
+  }
+
+  function getMedia(id) { return loadEntry(indexGet(id)); }
+
+  function allMedia(kind) {
+    var entries = getIndex().filter(function (e) { return !kind || e.kind === kind; });
+    return Promise.all(entries.map(loadEntry)).then(function (list) {
+      return list.filter(Boolean).sort(function (a, b) { return (a.at || 0) - (b.at || 0); });
+    });
   }
 
   function deleteMedia(id) {
-    try { localStorage.removeItem(LS_PREFIX + id); } catch (e) {}
-    if (!idbAvailable()) return Promise.resolve();
+    var e = indexGet(id);
+    indexDel(id);
+    if (!e) return Promise.resolve();
+    if (e.store === 'ls') { try { localStorage.removeItem(LS_PREFIX + id); } catch (x) {} return Promise.resolve(); }
+    if (e.store === 'assets') {
+      if (!assetsNS) return Promise.resolve();
+      return assetsNS.delete(e.assetId).catch(function () {});
+    }
+    if (!back.idb) return Promise.resolve();
     return tx('readwrite').then(function (s) { return wrap(s.delete(id)); }).catch(function () {});
   }
 
@@ -342,7 +475,8 @@
   }
 
   global.Store = {
-    state: state, save: save, probe: probe, idbAvailable: idbAvailable,
+    state: state, save: save, probe: probe,
+    idbAvailable: idbAvailable, assetsAvailable: assetsAvailable, storeInfo: storeInfo, downloader: downloader,
     reset: function () { state = blank(); save(); },
     ymd: ymd, parseISO: parseISO, addDays: addDays, addYears: addYears, diffDays: diffDays,
     today: today, formatJP: formatJP, formatMD: formatMD, formatShort: formatShort,
