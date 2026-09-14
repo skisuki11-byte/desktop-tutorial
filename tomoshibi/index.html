@@ -64,6 +64,7 @@
   <symbol id="of-flower" viewBox="0 0 24 24"><g fill="#F0B6C4" stroke="#5A4A3A" stroke-width="1.5"><ellipse cx="12" cy="6.4" rx="3.4" ry="4.2"/><ellipse cx="17" cy="10" rx="4.2" ry="3.4"/><ellipse cx="15.1" cy="16" rx="3.4" ry="4.2"/><ellipse cx="8.9" cy="16" rx="3.4" ry="4.2"/><ellipse cx="7" cy="10" rx="4.2" ry="3.4"/></g><circle cx="12" cy="12" r="3.2" fill="#FFF6E2" stroke="#5A4A3A" stroke-width="1.5"/></symbol>
   <symbol id="ic-check" viewBox="0 0 24 24"><path d="M5 12.5 10 17 19 7" fill="none" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="ic-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#FFFFFF" opacity=".93"/><path d="M10 8 L16.4 12 L10 16 Z" fill="#33708F"/></symbol>
+  <symbol id="ic-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#FFFFFF" opacity=".93"/><rect x="8.6" y="7.6" width="2.6" height="8.8" rx="1" fill="#33708F"/><rect x="12.8" y="7.6" width="2.6" height="8.8" rx="1" fill="#33708F"/></symbol>
   <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
   <symbol id="t-home" viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10.5V20h11v-9.5"/></symbol>
   <symbol id="t-niwa" viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.2"/><path d="M12 12.2V20"/><path d="M8.6 6.4 6 4.6M15.4 6.4 18 4.6M8.6 11.6 6 13.4M15.4 11.6 18 13.4"/></symbol>
@@ -447,7 +448,8 @@
   <!-- ============ 再生 ============ -->
   <section class="view" id="view-player">
     <div class="body">
-      <video id="player" playsinline controls></video>
+      <video id="player" playsinline></video>
+      <svg class="player-flash" id="player-flash" aria-hidden="true"><use href="#ic-play"></use></svg>
       <div class="player-bar">
         <b id="player-title"></b>
         <button id="btn-player-close">とじる</button>

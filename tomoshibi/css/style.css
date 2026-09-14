@@ -415,13 +415,27 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 #view-photo .player-bar button{min-height:46px;padding:0 16px}
 
 /* ---------- 再生 ---------- */
+/* 以前は <video controls> のブラウザ既定のUIをそのまま使っていた。機種によって
+   見た目が違い、再生ボタン・10秒送り・音量・展開など要素が多く、実機では
+   黒い帯（ブラウザの持つ余白）と一緒に出て乱雑に見えていた。既定のUIを消し、
+   画面をタップで再生／一時停止するだけの、自前の最小限の操作にする。 */
 #view-player{background:#000}
 #view-player .body{padding:0;position:relative}
 #view-player video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+/* タップした瞬間だけ、押した動作（再生／一時停止）を中央にごく短く見せる。
+   「触れたら反応した」という手がかりだけを与え、常設のボタンは置かない。 */
+.player-flash{position:absolute;top:50%;left:50%;width:64px;height:64px;
+  transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;
+  filter:drop-shadow(0 4px 14px rgba(0,0,0,.35));transition:opacity .5s ease,transform .5s ease}
+.player-flash.show{opacity:1;transform:translate(-50%,-50%) scale(1);transition:none}
+@media (prefers-reduced-motion:reduce){
+  .player-flash{transition:opacity .01s linear}
+}
 .player-bar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;
   padding:16px 20px calc(env(safe-area-inset-bottom,0px) + 20px);
   background:linear-gradient(180deg,transparent,rgba(0,0,0,.62))}
-.player-bar b{flex:1;color:#fff;font-size:var(--fs-4);font-weight:700}
+.player-bar b{flex:1;color:#fff;font-size:var(--fs-4);font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player-bar button{border:0;background:rgba(255,255,255,.18);color:#fff;min-height:46px;padding:0 18px;
   border-radius:999px;font-size:var(--fs-3);font-weight:700;cursor:pointer}
 
