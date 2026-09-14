@@ -159,6 +159,13 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   pointer-events:none;
 }
 .kaimyo-v i{display:block;font-style:normal;line-height:1.16;font-feature-settings:"vert" 1}
+/* 「戒名」の注記は毛筆の本文とは別物。地の書体・固定の小ささで出す。
+   本文の字を大きくしても、この注記までつられて大きくならないように em ではなく px で固定する。 */
+.kaimyo-label{
+  display:block;margin:0 0 5px;font-family:var(--sans);font-weight:700;
+  font-size:10px;letter-spacing:.1em;color:var(--muted);
+}
+.kaimyo-box .kaimyo-label{display:none}  /* 設定には見出し「戒名」がもう出ているので重ねない */
 .kaimyo-v.off{
   display:block;font-family:var(--sans);font-size:var(--fs-2);line-height:1.7;
   color:var(--faint);text-shadow:none;
