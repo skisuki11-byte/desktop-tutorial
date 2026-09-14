@@ -380,7 +380,7 @@
     show('after');
   }
 
-  /* きょうの自分。1〜5。答えなくてもいい。 */
+  /* いまの気分。1〜5。答えなくてもいい。 */
   function renderSelfAsk() {
     var t = S.today(), v = S.selfOn(t);
     $$('#self-scale button').forEach(function (b) {
@@ -388,7 +388,7 @@
     });
     var box = $('#self-ask');
     box.classList.toggle('done', !!v);
-    box.querySelector('.q').textContent = v ? '記録しました' : 'きょうの自分は、どうでしたか';
+    box.querySelector('.q').textContent = v ? '記録しました' : 'いまの気分は、どうですか';
   }
 
   /* 波のグラフ。1本だけなので凡例はいらない。
@@ -397,24 +397,25 @@
     var data = S.selfSeries(30);
     var box = $('#self-chart'), cap = $('#self-cap');
     if (data.length < 2) {
-      box.innerHTML = '<p class="chart-empty">おまいりのあとに、きょうの自分を<br>記録できます。' +
+      box.innerHTML = '<p class="chart-empty">おまいりのあとに、いまの気分を<br>記録できます。' +
         (data.length ? '<br>2回めから、波が見えてきます。' : '') + '</p>';
       cap.textContent = '';
       return;
     }
-    var W = 320, H = 132, L = 40, R = 12, T = 14, B = 26;
+    // 左の余白は軸の文字にあわせる。「前を向けた」は5文字あり、40pxでは収まらない。
+    var W = 320, H = 132, L = 62, R = 12, T = 14, B = 26;
     var iw = W - L - R, ih = H - T - B;
     var x = function (i) { return L + (data.length === 1 ? iw / 2 : iw * i / (data.length - 1)); };
     var y = function (v) { return T + ih - (v - 1) / 4 * ih; };
 
-    var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="きょうの自分の記録">'];
+    var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="いまの気分の記録">'];
     // 目盛りは控えめに。5段のうち上下だけ名前をつける
     for (var g = 1; g <= 5; g++) {
       o.push('<line x1="' + L + '" y1="' + y(g) + '" x2="' + (W - R) + '" y2="' + y(g) +
         '" stroke="currentColor" stroke-width="1" opacity="' + (g === 1 || g === 5 ? '.18' : '.08') + '"/>');
     }
-    o.push('<text x="' + (L - 8) + '" y="' + (y(5) + 4) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".55">かるい</text>');
-    o.push('<text x="' + (L - 8) + '" y="' + (y(1) + 4) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".55">おもい</text>');
+    o.push('<text x="' + (L - 8) + '" y="' + (y(5) + 4) + '" text-anchor="end" font-size="9.5" fill="currentColor" opacity=".55">前を向けた</text>');
+    o.push('<text x="' + (L - 8) + '" y="' + (y(1) + 4) + '" text-anchor="end" font-size="9.5" fill="currentColor" opacity=".55">重い</text>');
 
     var pts = data.map(function (d, i) { return x(i).toFixed(1) + ',' + y(d.v).toFixed(1); }).join(' ');
     o.push('<polyline points="' + pts + '" fill="none" stroke="#4B8340" stroke-width="2" ' +
@@ -435,7 +436,7 @@
     box.innerHTML = o.join('');
     box.style.color = 'var(--muted)';
 
-    var LV = ['', 'おもかった', 'すこし おもかった', 'ふつう', 'すこし かるかった', 'かるかった'];
+    var LV = ['', '重かった', 'すこし 重かった', 'ふつう', 'すこし 前を向けた', '前を向けた'];
     var say = function (i) {
       var d = data[i], dd = new Date(d.day.replace(/-/g, '/'));
       cap.textContent = (dd.getMonth() + 1) + '月' + dd.getDate() + '日 ・ ' + LV[d.v];
@@ -451,7 +452,7 @@
     $('#self-help').innerHTML = run >= 5
       ? '<div class="tip tip-amber" style="margin-top:14px">' +
         '<svg width="19" height="19" style="color:var(--amber-ink)"><use href="#ic-info"></use></svg>' +
-        '<p>おもい日が' + run + '日つづいています。<br>' +
+        '<p>重い日が' + run + '日つづいています。<br>' +
         '<button id="btn-self-help" style="margin-top:8px;min-height:40px;padding:0 14px;border-radius:999px;' +
         'border:2px solid var(--tomo-line,var(--line));background:transparent;color:var(--amber-ink);' +
         'font-size:12.5px;font-weight:700;cursor:pointer">相談できるところを見る</button></p></div>'

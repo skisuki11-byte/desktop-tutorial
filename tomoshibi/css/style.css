@@ -402,7 +402,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   font-size:20px;letter-spacing:.08em;
 }
 
-/* ---------- きょうの自分 ----------
+/* ---------- いまの気分 ----------
    点数ではなく、波を見るための記録。目標も平均も出さない。 */
 .selfask{
   position:relative;margin-top:22px;width:100%;
@@ -413,9 +413,15 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .selfask .qs{margin:12px 0 0;font-size:11px;color:var(--faint);text-align:center;line-height:1.7}
 .scale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .scale button{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-  min-height:62px;border-radius:14px;border:2px solid var(--line);background:transparent;
-  color:var(--faint);font-size:10.5px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  min-height:52px;border-radius:14px;border:2px solid var(--line);background:transparent;
+  color:var(--faint);cursor:pointer;
+}
+/* 目盛りの両端の文字は、ボタンの外に置く。
+   「前を向けた」は狭い端末だと1マスに収まらず、中に入れると折り返す。 */
+.scale-ends{
+  display:flex;justify-content:space-between;margin:7px 2px 0;
+  font-size:11px;font-weight:700;color:var(--faint);letter-spacing:.02em;
 }
 .scale button i{
   display:block;width:16px;height:16px;border-radius:50%;
