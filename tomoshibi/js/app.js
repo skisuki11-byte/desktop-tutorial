@@ -16,6 +16,24 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+
+  /* 「ホーム画面に追加」の手順は、iOSとAndroidでボタンの場所が違う。
+     iOS Safariは下の共有ボタン（□↑）から。Androidのブラウザに共有ボタンの列はなく、
+     右上の「⋮」メニューから追加する。「共有ボタンから」と決め打ちすると、
+     Androidの人には存在しないボタンを探させてしまう。実機の文言をここで出し分ける。 */
+  function isIOS() {
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) return true;
+    // iPadOS はデスクトップ名で名乗るので、タッチ対応の Mac として見分ける
+    return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  }
+  function homeHint() {
+    if (isIOS()) return '共有ボタン（<span aria-hidden="true">⬆️</span>）から<b>「ホーム画面に追加」</b>して、そちらで開いてください。';
+    if (/Android/.test(navigator.userAgent)) return '右上の「⋮」メニューから<b>「ホーム画面に追加」</b>して、そちらで開いてください。';
+    return 'ブラウザのメニューから<b>「ホーム画面に追加」</b>して、そちらで開いてください。';
+  }
+  function fillHomeHints() {
+    $$('#hint-onbo, #hint-home, #hint-settings').forEach(function (el) { el.innerHTML = homeHint(); });
+  }
   function artRef() {
     return st.pet.kind === 'cat' ? '#art-cat'
          : st.pet.kind === 'other' ? '#art-paw' : '#art-dog';
@@ -227,7 +245,6 @@
     $('#home-warn').hidden = !S.storeInfo().embedded;
     var t = S.today();
     $('#home-date').textContent = S.formatMD(t);
-    $('#home-title').textContent = (st.pet.name || 'あの子') + 'のおうち';
     $('#home-name').textContent = st.pet.name || '—';
 
     var death = S.parseISO(st.pet.deathISO), birth = S.parseISO(st.pet.birthISO);
@@ -875,9 +892,16 @@
 
   /* ============ 設定 ============ */
   function applyTheme() {
-    document.documentElement.setAttribute('data-theme', st.theme === 'night' ? 'night' : 'day');
+    var night = st.theme === 'night';
+    document.documentElement.setAttribute('data-theme', night ? 'night' : 'day');
     var m = document.querySelector('meta[name=theme-color]');
-    if (m) m.setAttribute('content', st.theme === 'night' ? '#1B1A18' : '#FDFAF2');
+    if (m) m.setAttribute('content', night ? '#1B1A18' : '#FDFAF2');
+    // color-scheme を明示しないと、Androidの「ウェブサイトを自動的に暗くする」機能が
+    // 宣言のないページをヒューリスティックに反転させ、このクリーム地が意図せず
+    // 黒っぽく壊れることがある。iOSにはこの挙動がなく気づきにくい。
+    // 設定の昼/夜どちらかを必ず明示して、その勝手な色替えを止める。
+    // ついでにフォーム部品（日付選択・スクロールバーなど）の既定色も画面のテーマに揃う。
+    document.documentElement.style.colorScheme = night ? 'dark' : 'light';
   }
   function offsetJumps() {
     var real = new Date(); real = new Date(real.getFullYear(), real.getMonth(), real.getDate());
@@ -1354,6 +1378,7 @@
   buildTabs();
   wire();
   applyTheme();
+  fillHomeHints();
   S.probe().then(function () {
     return loadFace();
   }).then(function () {
