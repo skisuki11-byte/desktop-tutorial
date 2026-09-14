@@ -16,7 +16,9 @@
   function blank() {
     return {
       onboarded: false,
-      pet: { name: '', kind: 'dog', deathISO: '', birthISO: '' },
+      pet: { name: '', kind: 'dog', deathISO: '', birthISO: '', faves: [] },
+      letters: [],         // 飼い主からあの子へ書いた手紙 [{at, text}]
+      faveDone: {},        // { "2026-09-14": ["さつまいも"] } その日そなえたもの
       visits: [],          // お参りした日 "YYYY-MM-DD"。通算回数はこの長さ
       seasonal: {},        // { "2026-09": true } 季節のおそなえを置いた月
       videoTitles: {},     // { mediaId: "走ってるところ" }
@@ -163,6 +165,24 @@
     { m: 11, name: 'もみじ', c: '#EBA97E' }, { m: 12, name: 'みかん', c: '#FFC16B' }
   ];
   function seasonalFor(d) { return SEASONAL[d.getMonth()]; }
+
+  /* この子の好きだったもの。おまいりのときにそなえる。 */
+  function faveDoneOn(d, name) {
+    var k = ymd(d);
+    return !!(state.faveDone[k] && state.faveDone[k].indexOf(name) >= 0);
+  }
+  function putFave(d, name) {
+    var k = ymd(d);
+    if (!state.faveDone[k]) state.faveDone[k] = [];
+    if (state.faveDone[k].indexOf(name) < 0) state.faveDone[k].push(name);
+    save();
+  }
+
+  /* 手紙。新しいものが先に来るように入れる。 */
+  function addLetter(text) {
+    state.letters.unshift({ at: Date.now(), text: String(text).slice(0, 2000) });
+    save();
+  }
   function seasonalDone(d) { return !!state.seasonal[ym(d)]; }
   function putSeasonal(d) { state.seasonal[ym(d)] = true; save(); }
 
@@ -174,7 +194,12 @@
        IndexedDB   … 本命。写真も動画も、形式・大きさの制限なく入る
        localStorage … IndexedDB が使えないときの保険。写真1枚ぶん
 
-     どこに何があるかは索引(index)に持つ。 */
+     どこに何があるかは索引(index)に持つ。
+
+     【重要】IndexedDB には Blob をそのまま入れない。
+     iOS Safari は Blob を一時ファイルへの参照として持つため、アプリを閉じると
+     実体だけが消え、記録は残るのに中身が空になる。実際にそれが起きた。
+     中身は ArrayBuffer で持ち、読むときに Blob へ組み直す。 */
 
   var DB = 'tomoshibi-media', STORE = 'media', dbp = null;
   var INDEX_KEY = 'tomoshibi.index.v1';
@@ -236,6 +261,17 @@
   /* ---- localStorage ---- */
   var LS_PREFIX = 'tomoshibi.media.';
   var LS_LIMIT = 1400000;
+  /* Blob のまま入れると iOS で中身が失われるので、生のバイト列にしてから入れる */
+  function blobToBuf(b) {
+    if (b.arrayBuffer) return b.arrayBuffer();
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () { res(r.result); };
+      r.onerror = function () { rej(new Error('unreadable')); };
+      r.readAsArrayBuffer(b);
+    });
+  }
+
   function blobToDataURL(b) {
     return new Promise(function (res, rej) {
       var r = new FileReader();
@@ -262,7 +298,7 @@
     jobs.push(openDB().then(function (d) {
       return new Promise(function (res, rej) {
         var t = d.transaction(STORE, 'readwrite'), s = t.objectStore(STORE);
-        var r = s.put({ id: '__probe__', blob: new Blob(['x']), at: Date.now() });
+        var r = s.put({ id: '__probe__', buf: new ArrayBuffer(4), type: 'text/plain', at: Date.now() });
         r.onsuccess = function () { s.delete('__probe__'); res(); };
         r.onerror = function () { rej(r.error || new Error('probe')); };
       });
@@ -315,8 +351,18 @@
         if (r.id === '__probe__') return;
         found.push({ id: r.id, kind: r.kind || 'photo', at: r.at || 0, store: 'idb' });
       });
+      found.sort(function (x, y) { return (x.at || 0) - (y.at || 0); });
       if (found.length) setIndex(found);
     });
+  }
+
+  /* 記録は残っているのに中身が失われたもの。画面で知らせるために数える。 */
+  var lost = {};
+  function lostCount() { return Object.keys(lost).length; }
+  function clearLost() {
+    var ids = Object.keys(lost);
+    ids.forEach(function (id) { indexDel(id); delete lost[id]; });
+    return ids.length;
   }
 
   function idbAvailable() { return back.idb; }
@@ -341,8 +387,11 @@
 
     if (w === 'idb') {
       if (!back.idb) return next(null);
-      return tx('readwrite').then(function (s) {
-        return wrap(s.put({ id: rec.id, blob: rec.blob, at: rec.at, kind: rec.kind }));
+      return blobToBuf(rec.blob).then(function (buf) {
+        return tx('readwrite').then(function (s) {
+          return wrap(s.put({ id: rec.id, buf: buf, type: rec.blob.type || '',
+                             size: rec.blob.size, at: rec.at, kind: rec.kind }));
+        });
       }).then(function () {
         indexPut({ id: rec.id, kind: rec.kind, at: rec.at, store: 'idb' });
         return { ok: true, where: 'idb' };
@@ -380,8 +429,14 @@
     }
     if (!back.idb) return Promise.resolve(null);
     return tx('readonly').then(function (s) { return wrap(s.get(e.id)); })
-      .then(function (r) { return r ? { id: e.id, kind: e.kind, at: e.at, blob: r.blob } : null; })
-      .catch(function () { return null; });
+      .then(function (r) {
+        if (!r) { lost[e.id] = 1; return null; }
+        // 新しい形（buf）と、古い形（blob）の両方を受ける
+        var b = r.buf ? new Blob([r.buf], { type: r.type || '' }) : r.blob;
+        if (!b || !b.size) { lost[e.id] = 1; return null; }   // 中身だけ失われている
+        return { id: e.id, kind: e.kind, at: e.at, blob: b };
+      })
+      .catch(function () { lost[e.id] = 1; return null; });
   }
 
   function getMedia(id) { return loadEntry(indexGet(id)); }
@@ -460,12 +515,14 @@
   global.Store = {
     state: state, save: save, probe: probe,
     idbAvailable: idbAvailable, storeInfo: storeInfo, downloader: downloader, restoreAll: restoreAll,
+    lostCount: lostCount, clearLost: clearLost,
     reset: function () { state = blank(); save(); },
     ymd: ymd, parseISO: parseISO, addDays: addDays, addYears: addYears, diffDays: diffDays,
     today: today, formatJP: formatJP, formatMD: formatMD, formatShort: formatShort,
     milestones: milestones, daysTogether: daysTogether,
     visitCount: visitCount, visitedOn: visitedOn, recordVisit: recordVisit,
     seasonalFor: seasonalFor, seasonalDone: seasonalDone, putSeasonal: putSeasonal,
+    faveDoneOn: faveDoneOn, putFave: putFave, addLetter: addLetter,
     putMedia: putMedia, getMedia: getMedia, allMedia: allMedia, deleteMedia: deleteMedia, newId: newId,
     chapters: chapters, toggleHidden: toggleHidden
   };
