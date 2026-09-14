@@ -39,6 +39,23 @@
          : st.pet.kind === 'other' ? '#art-paw' : '#art-dog';
   }
 
+  /* トップの絵の配色。図形は共通、色だけをCSS変数で差し替える（css/style.css の
+     [data-scene="…"]）。ここでは選択肢の一覧と、選ぶボタンのHTMLだけを持つ。
+     将来、有料版で動く背景を足すときもこの配列に足すだけでよいようにしてある。 */
+  var SCENES = [
+    { id: 'garden', label: '庭' },
+    { id: 'sunset', label: '夕空' },
+    { id: 'sakura', label: '桜' },
+    { id: 'snow', label: '雪' }
+  ];
+  function sceneOf() { return st.pet.scene || 'garden'; }
+  function scenePickHTML(cur) {
+    return SCENES.map(function (s) {
+      return '<button type="button" data-scene="' + s.id + '" aria-pressed="' + (s.id === cur) + '">' +
+        '<span class="sw" data-scene="' + s.id + '"></span>' + s.label + '</button>';
+    }).join('');
+  }
+
   /* 作った objectURL は必ず覚えて、作り直すときに解放する */
   var urlCache = {};
   function mediaURL(rec) {
@@ -163,8 +180,9 @@
     $$('#onbo-steps i').forEach(function (el, i) { el.classList.toggle('on', i <= step); });
     $('#btn-back').hidden = step === 0;
     $('#btn-skip').hidden = step !== 2;
-    $('#btn-next').textContent = step === 4 ? 'はじめる' : 'つぎへ';
+    $('#btn-next').textContent = step === 5 ? 'はじめる' : 'つぎへ';
     if (step === 4) renderFaveEdit();
+    if (step === 5) $('#scenepick-onbo').innerHTML = scenePickHTML(sceneOf());
     $('#onbo-err').hidden = true;
     var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
     var ow = $('#onbo-warn'); if (ow) ow.hidden = !S.storeInfo().embedded;
@@ -190,6 +208,8 @@
     }
     if (step === 4) {
       addFave($('#in-fave').value);      // 入力途中のものも拾う
+    }
+    if (step === 5) {
       st.onboarded = true; S.save(); show('home'); return;
     }
     step++; S.save(); renderOnbo();
@@ -246,6 +266,7 @@
     var t = S.today();
     $('#home-date').textContent = S.formatMD(t);
     $('#home-name').textContent = st.pet.name || '—';
+    $('#home-scene').dataset.scene = sceneOf();
 
     var death = S.parseISO(st.pet.deathISO), birth = S.parseISO(st.pet.birthISO);
     // 上の行は享年と命日。この子が何年生きて、いつ旅立ったか。
@@ -623,7 +644,10 @@
       var photos = all.filter(function (p) { return p.id !== 'portrait'; });
       var chs = S.chapters(photos);
       $('#album-empty').hidden = chs.length > 0;
-      $('#album-sub').textContent = photos.length ? photos.length + '枚 ・ ' + chs.length + 'つの章' : '写真をくわえてください';
+      var tg = S.daysTogether();
+      $('#album-sub').textContent = photos.length
+        ? photos.length + '枚 ・ ' + chs.length + 'つの章' + (tg ? ' ・ いっしょだった' + tg.toLocaleString('ja-JP') + '日' : '')
+        : (tg ? 'いっしょだった' + tg.toLocaleString('ja-JP') + '日' : '写真をくわえてください');
       $('#album-list').innerHTML = chs.map(function (c) {
         var range = S.formatShort(new Date(c.from)) + ' — ' + S.formatShort(new Date(c.to));
         return '<div class="chapter">' +
@@ -927,6 +951,7 @@
     $('#store-state').textContent =
       (si.embedded ? '試し用（消えます）' : si.durable ? 'この端末の中・保護あり' : si.idb ? 'この端末の中' : '写真のみ') + ' ›';
     $('#warn-ephemeral').hidden = !si.embedded;
+    $('#scenepick-set').innerHTML = scenePickHTML(sceneOf());
     renderKaimyo();
   }
 
@@ -1106,6 +1131,12 @@
       paintFaces();
       var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
     });
+    $('#scenepick-onbo').addEventListener('click', function (e) {
+      // .sw（丸い見本）にも data-scene があるため、closest は button に絞る
+      var b = e.target.closest('button[data-scene]'); if (!b) return;
+      st.pet.scene = b.dataset.scene; S.save();
+      $$('#scenepick-onbo button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    });
     $('#in-fave').addEventListener('keydown', function (e) {
       if (e.key !== 'Enter') return;
       e.preventDefault();
@@ -1251,6 +1282,10 @@
       var b = e.target.closest('[data-v]'); if (!b) return;
       var j = offsetJumps()[b.dataset.v]; if (!j) return;
       st.dateOffset = j.offset; S.save(); renderSettings();
+    });
+    $('#scenepick-set').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-scene]'); if (!b) return;
+      st.pet.scene = b.dataset.scene; S.save(); renderSettings();
     });
     $('#btn-export').onclick = exportAll;
     $('#btn-import').onclick = function () {

@@ -15,6 +15,13 @@
   --rose:#E8A0A0; --outline:#5A4A3A;
   --sumi:#3B3228; --sumi-halo:rgba(255,255,255,.6);   /* 戒名の墨と、地から浮かせる薄い縁 */
   --brush:"Yuji Syuku","Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
+
+  /* トップの絵（.scene）の配色。既定は「庭」。ほかの3種は [data-scene="…"] で
+     この変数だけを差し替える。図形そのものは1つのまま、色だけが変わる。 */
+  --scene-sky1:#EAF3F8; --scene-sky2:#E4F0DA; --scene-cloud:#FFFFFF;
+  --scene-ground:#CFE6BC; --scene-stem:#8FB878;
+  --scene-fa:#E8A0A0; --scene-fa-c:#FBF0DA; --scene-fb:#E8A33D; --scene-fb-c:#FFF7E6;
+
   --r:22px; --r-sm:16px;
   --shadow:0 4px 14px rgba(90,74,58,.07);
   --shadow-lg:0 8px 22px rgba(90,74,58,.14);
@@ -120,14 +127,41 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    「おまいりする」が下に押し出されるため。この操作がこのアプリの中心なので、
    できるだけ最初の画面に残す。 */
 .scene{--scene-h:clamp(176px,26vh,224px);position:relative;height:var(--scene-h);border-radius:var(--r) var(--r) 0 0;overflow:hidden;
-  background:linear-gradient(180deg,#EAF3F8 0%,#EAF3F8 62%,#EAF5E4 62%,#E4F0DA 100%)}
+  background:linear-gradient(180deg,var(--scene-sky1) 0%,var(--scene-sky1) 62%,var(--scene-sky2) 62%,var(--scene-sky2) 100%)}
 :root[data-theme="night"] .scene{background:linear-gradient(180deg,#232A31 0%,#232A31 62%,#26301F 62%,#222B1C 100%)}
-/* 絵の色が塗りの属性で直に書いてあるため、夜にしても地面だけ明るい緑のまま残っていた。
-   戒名はこの面の上に立つので、薄墨の最後の字が読めなくなる。夜の色に合わせる。 */
-:root[data-theme="night"] .scene svg.bg > path{fill:#27301E}
-:root[data-theme="night"] .scene svg.bg > ellipse{fill:#3C444E}
-:root[data-theme="night"] .scene svg.bg [stroke="#8FB878"]{stroke:#516A42}
+/* 図形の色は変数(--scene-*)経由。夜は花以外を落ち着いた色に差し替える。
+   戒名はこの面の上に立つので、薄墨の最後の字が読めなくなる。夜の色に合わせる。
+   花（--scene-fa/fb）だけはここで触らない。昼夜で色が変わらない、という
+   「花は枯れない」の演出をそのまま保つ。 */
+:root[data-theme="night"] .scene{--scene-cloud:#3C444E;--scene-ground:#27301E;--scene-stem:#516A42}
 .scene svg.bg{position:absolute;inset:0;width:100%;height:100%}
+.scene .s-cloud{fill:var(--scene-cloud)}
+.scene .s-ground{fill:var(--scene-ground)}
+.scene .s-stem{stroke:var(--scene-stem)}
+.scene .s-fa{fill:var(--scene-fa)}
+.scene .s-fa-c{fill:var(--scene-fa-c)}
+.scene .s-fb{fill:var(--scene-fb)}
+.scene .s-fb-c{fill:var(--scene-fb-c)}
+
+/* 背景の柄。図形は1つのまま、色だけを差し替える3種。
+   Stripe型の禁欲主義（色数を増やすほど信頼感が下がる）にならい、図形そのものは
+   増やさず、変えるのは色調だけにとどめた。花の色は据え置き、空・雲・地面だけ変える。 */
+[data-scene="sunset"]{--scene-sky1:#FCE4D6;--scene-sky2:#F3D9C4;--scene-cloud:#FFF1E4;
+  --scene-ground:#E6C79A;--scene-stem:#B99A66;--scene-fa:#E58B6D;--scene-fa-c:#FFF3E6}
+[data-scene="sakura"]{--scene-sky1:#FBEAF0;--scene-sky2:#F3E1E8;--scene-cloud:#FBD9E4}
+[data-scene="snow"]{--scene-sky1:#EDF3F6;--scene-sky2:#E7EEF2;--scene-cloud:#FFFFFF;
+  --scene-ground:#E3EDF2;--scene-stem:#9CA9A0;--scene-fa:#C65C4B;--scene-fa-c:#FFF7EC}
+
+/* 背景えらび（おむかえ・設定 共通）。.kindpick と同じ構え（2×2・枠+選択色）で、
+   すでに覚えた操作感をそのまま流用する。 */
+.scenepick{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.scenepick button{display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border:2.5px solid var(--line);border-radius:var(--r-sm);background:var(--panel);cursor:pointer;
+  font-family:var(--round);font-weight:700;font-size:var(--fs-3);color:var(--muted)}
+.scenepick button[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-soft);color:var(--amber-ink)}
+.scenepick .sw{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid rgba(0,0,0,.08);
+  background:linear-gradient(180deg,var(--scene-sky1) 0%,var(--scene-sky1) 55%,var(--scene-ground) 55%,var(--scene-ground) 100%)}
+
 /* 遺影の円も絵の高さに連れて縮める。固定のままだと、絵が低い端末ではみ出す。
    戒名を右に立てたぶん、わずかに左へ寄せて釣り合いをとる。
    中央のままだと、右だけ字で詰まって見える。 */
@@ -141,7 +175,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .homecard{overflow:hidden;padding-bottom:18px}
 .petname{margin:16px 0 4px;font-family:var(--round);font-weight:700;font-size:var(--fs-8);letter-spacing:.08em;text-align:center;line-height:1.4}
 .petmeta{margin:0;font-size:var(--fs-4);color:var(--ink);text-align:center;letter-spacing:.03em;font-variant-numeric:tabular-nums}
-.petmeta.sub{margin-top:3px;font-size:var(--fs-1);color:var(--faint)}
+/* 生年月日・いっしょにいた日数。以前は注記サイズ(--fs-1・12.5px)だったが、
+   実機で「見えない」と報告があった。--faint の淡い色と組み合わさると特に読みにくい。
+   1段階だけ上の --fs-3 にし、色も --muted に上げて視認性を確保する。
+   上の享年・命日の行（--fs-4）より小さいままにして、序列は保つ。 */
+.petmeta.sub{margin-top:4px;font-size:var(--fs-3);color:var(--muted)}
 
 /* ---------- 戒名 ----------
    縦書きの毛筆で、遺影の右に立てる。位牌と同じ構えにした。
@@ -335,7 +373,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    タップハイライトを消した意味がなくなり、Androidでは何も光らなくなる。 */
 .setrow:active,.btn-line:active,.btn-ghost:active,.btn-dash:active,.tab:active,
 .offer:not([disabled]):active,.seg button:active,.kindpick button:active,
-.scale button:active,.letter-card:active,.seasonal:active,
+.scale button:active,.letter-card:active,.seasonal:active,.scenepick button:active,
 .starters button:active,.pnav:active,.player-bar button:active,.menu:active{
   opacity:.6;
 }
