@@ -1,38 +1,67 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="dark">
+<html lang="ja" data-theme="day">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0e1013">
+<meta name="theme-color" content="#FDFAF2">
 <title>ともしび</title>
 <link rel="icon" href="icons/icon-192.png">
-<link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- 使い回す図形。灯り・遺影のプレースホルダ・アイコン -->
+<!-- 使い回す絵。犬と猫は写真が入るまでの代役で、写真が入れば消える -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
-  <symbol id="flame-lit" viewBox="0 0 24 24">
-    <path d="M12 1.4 C 11 6.2 6.6 9.4 6.6 14.1 a5.4 5.4 0 0 0 10.8 0 C 17.4 9.6 13.2 6.6 12 1.4 Z" fill="#f0b357" opacity=".92"/>
-    <path d="M12 8.4 C 10.4 11.2 9.2 12.5 9.2 14.3 a2.8 2.8 0 0 0 5.6 0 C 14.8 12.5 13.6 11.2 12 8.4 Z" fill="#ffe9c2"/>
+  <symbol id="art-dog" viewBox="0 0 120 120">
+    <path d="M40 110 C33 94 35 72 48 62 C58 54 72 54 82 62 C95 72 97 94 90 110 Z" fill="#E3C49B" stroke="#5A4A3A" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M88 96 C101 93 106 80 101 70" stroke="#5A4A3A" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+    <path d="M46 32 C36 26 30 36 35 48 C38 55 46 55 49 47 Z" fill="#C9A87E" stroke="#5A4A3A" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M84 32 C94 26 100 36 95 48 C92 55 84 55 81 47 Z" fill="#C9A87E" stroke="#5A4A3A" stroke-width="2.6" stroke-linejoin="round"/>
+    <circle cx="65" cy="46" r="23" fill="#E3C49B" stroke="#5A4A3A" stroke-width="2.6"/>
+    <ellipse cx="65" cy="56" rx="12" ry="9" fill="#F2E2CB" stroke="#5A4A3A" stroke-width="2.2"/>
+    <ellipse cx="65" cy="51" rx="3.8" ry="2.8" fill="#5A4A3A"/>
+    <path d="M65 54 v3" stroke="#5A4A3A" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M61 59 C63 61 67 61 69 59" stroke="#5A4A3A" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <circle cx="56" cy="41" r="2.8" fill="#5A4A3A"/><circle cx="74" cy="41" r="2.8" fill="#5A4A3A"/>
+    <circle cx="57" cy="40" r="1" fill="#FFFFFF"/><circle cx="75" cy="40" r="1" fill="#FFFFFF"/>
+    <circle cx="47" cy="52" r="3.4" fill="#EFB3AE" opacity=".6"/><circle cx="83" cy="52" r="3.4" fill="#EFB3AE" opacity=".6"/>
   </symbol>
-  <symbol id="dog" viewBox="0 0 120 120">
-    <path d="M33 42 C22 46 18 62 22 78 C25 90 36 92 40 82 C43 70 42 52 33 42 Z" fill="#6e5c45"/>
-    <path d="M87 42 C98 46 102 62 98 78 C95 90 84 92 80 82 C77 70 78 52 87 42 Z" fill="#6e5c45"/>
-    <path d="M60 26 C78 26 90 40 90 58 C90 76 82 87 72 92 C80 98 84 108 85 120 L35 120 C36 108 40 98 48 92 C38 87 30 76 30 58 C30 40 42 26 60 26 Z" fill="#6e5c45"/>
-    <path d="M60 64 C70 64 77 71 77 79 C77 88 69 95 60 95 C51 95 43 88 43 79 C43 71 50 64 60 64 Z" fill="#57482f"/>
+  <symbol id="art-cat" viewBox="0 0 120 120">
+    <path d="M41 110 C35 95 37 74 49 65 C58 58 72 58 81 65 C93 74 95 95 89 110 Z" fill="#B9B3AA" stroke="#5A4A3A" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M89 100 C103 100 110 88 105 76 C103 71 98 71 97 76" stroke="#5A4A3A" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+    <path d="M45 34 L41 13 L60 25 Z" fill="#B9B3AA" stroke="#5A4A3A" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M85 34 L89 13 L70 25 Z" fill="#B9B3AA" stroke="#5A4A3A" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M48 30 L46 20 L55 26 Z" fill="#EFB3AE"/><path d="M82 30 L84 20 L75 26 Z" fill="#EFB3AE"/>
+    <circle cx="65" cy="46" r="23" fill="#CFC9C0" stroke="#5A4A3A" stroke-width="2.6"/>
+    <circle cx="56" cy="42" r="2.9" fill="#5A4A3A"/><circle cx="74" cy="42" r="2.9" fill="#5A4A3A"/>
+    <circle cx="57" cy="41" r="1" fill="#FFFFFF"/><circle cx="75" cy="41" r="1" fill="#FFFFFF"/>
+    <path d="M62 52 L65 55 L68 52 Z" fill="#E88F8F" stroke="#5A4A3A" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M65 55 v3" stroke="#5A4A3A" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M65 58 C63 61 59 61 58 58" stroke="#5A4A3A" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <path d="M65 58 C67 61 71 61 72 58" stroke="#5A4A3A" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <g stroke="#5A4A3A" stroke-width="1.6" stroke-linecap="round">
+      <path d="M46 50 L34 47"/><path d="M46 54 L34 55"/><path d="M84 50 L96 47"/><path d="M84 54 L96 55"/>
+    </g>
   </symbol>
-  <symbol id="ic-flame" viewBox="0 0 24 24"><path d="M12 3 C 9 8 7 10.5 7 14 a5 5 0 0 0 10 0 C 17 10.5 15 8 12 3 Z"/></symbol>
-  <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/></symbol>
-  <symbol id="ic-album" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 15.5l4-4 3.5 3.5 3-3 5.5 5"/></symbol>
-  <symbol id="ic-letter" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></symbol>
-  <symbol id="ic-water" viewBox="0 0 24 24"><path d="M6.6 6.5h10.8l-1.3 11.6a2 2 0 0 1-2 1.8H9.9a2 2 0 0 1-2-1.8Z"/><path d="M7.2 11.6c1.4.9 2.8.9 4.2 0s2.8-.9 4.2 0"/></symbol>
-  <symbol id="ic-food" viewBox="0 0 24 24"><path d="M3.6 11h16.8a8.4 8.4 0 0 1-16.8 0Z"/><path d="M8.4 8.6C9.3 7 10.5 6.2 12 6.2s2.7.8 3.6 2.4"/></symbol>
-  <symbol id="ic-flower" viewBox="0 0 24 24"><path d="M12 3.8c2.1 0 3.1 1.9 2.3 3.5 1.7-.8 3.6.2 3.6 2.3s-1.9 3.1-3.6 2.3c.8 1.7-.2 3.5-2.3 3.5s-3.1-1.8-2.3-3.5c-1.7.8-3.6-.2-3.6-2.3s1.9-3.1 3.6-2.3C8.9 5.7 9.9 3.8 12 3.8Z"/><path d="M12 15.4V20"/></symbol>
+  <symbol id="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#E8A33D"/><g stroke="#E8A33D" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2"/><path d="M12 19.5v2"/><path d="M2.5 12h2"/><path d="M19.5 12h2"/><path d="M5.2 5.2l1.4 1.4"/><path d="M17.4 17.4l1.4 1.4"/><path d="M18.8 5.2l-1.4 1.4"/><path d="M6.6 17.4l-1.4 1.4"/></g></symbol>
+  <symbol id="of-light" viewBox="0 0 24 24"><path d="M12 4 C10.6 8.4 7.6 10.4 7.6 14 a4.4 4.4 0 0 0 8.8 0 C16.4 10.4 13.4 8.4 12 4 Z" fill="#FFD98A" stroke="#9A6A1B" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="of-water" viewBox="0 0 24 24"><path d="M6.5 6.5h11l-1.3 12a2.2 2.2 0 0 1-2.2 2h-4a2.2 2.2 0 0 1-2.2-2Z" fill="#BEDCEA" stroke="#33708F" stroke-width="2" stroke-linejoin="round"/><path d="M7.6 12.2c1.5.9 3 .9 4.4 0s2.9-.9 4.4 0" stroke="#33708F" stroke-width="1.8" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="of-food" viewBox="0 0 24 24"><path d="M3.4 11.4h17.2a8.6 8.6 0 0 1-17.2 0Z" fill="#F0DCBB" stroke="#9A6A1B" stroke-width="2" stroke-linejoin="round"/><path d="M8.2 8.6C9.2 6.8 10.5 6 12 6s2.8.8 3.8 2.6" stroke="#9A6A1B" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="of-flower" viewBox="0 0 24 24"><g fill="#F0B6C4" stroke="#5A4A3A" stroke-width="1.5"><ellipse cx="12" cy="6.4" rx="3.4" ry="4.2"/><ellipse cx="17" cy="10" rx="4.2" ry="3.4"/><ellipse cx="15.1" cy="16" rx="3.4" ry="4.2"/><ellipse cx="8.9" cy="16" rx="3.4" ry="4.2"/><ellipse cx="7" cy="10" rx="4.2" ry="3.4"/></g><circle cx="12" cy="12" r="3.2" fill="#FFF6E2" stroke="#5A4A3A" stroke-width="1.5"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24"><path d="M5 12.5 10 17 19 7" fill="none" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#FFFFFF" opacity=".93"/><path d="M10 8 L16.4 12 L10 16 Z" fill="#33708F"/></symbol>
+  <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="t-home" viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10.5V20h11v-9.5"/></symbol>
+  <symbol id="t-niwa" viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.2"/><path d="M12 12.2V20"/><path d="M8.6 6.4 6 4.6M15.4 6.4 18 4.6M8.6 11.6 6 13.4M15.4 11.6 18 13.4"/></symbol>
+  <symbol id="t-album" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="3"/><path d="M3.5 15.5 8 11l3.8 3.8 3.2-3.2 5.5 5.4"/></symbol>
+  <symbol id="t-ugoku" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="M16 11.2 21 8.4v7.2L16 12.8Z"/></symbol>
+  <symbol id="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 </defs></svg>
 
 <div id="app">
@@ -40,31 +69,51 @@
   <!-- ============ おむかえ ============ -->
   <section class="view" id="view-onbo">
     <div class="body foot">
-      <!-- 1. なまえ -->
+      <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i></div>
+
       <div class="step" data-step="0">
-        <p class="onbo-lead">この子のことを、<br>3つだけ教えてください</p>
-        <p class="onbo-sub">犬種も、性格も、思い出も、まだ書かなくていい。<br>あとから、少しずつで大丈夫です。</p>
+        <p class="onbo-lead">この子のことを、<br>すこしだけ教えてください</p>
+        <p class="onbo-sub">あとから、いつでも変えられます。</p>
         <div class="field">
           <label for="in-name">なまえ</label>
           <input type="text" id="in-name" placeholder="ももこ" autocomplete="off" enterkeyhint="next">
         </div>
       </div>
-      <!-- 2. 写真 -->
+
       <div class="step" data-step="1" hidden>
-        <p class="onbo-lead">お顔の写っている<br>写真を1枚</p>
-        <p class="onbo-sub">この端末の中だけに保存します。<br>どこにも送りません。あとで変えられます。</p>
+        <p class="onbo-lead">どちらですか</p>
+        <p class="onbo-sub">写真が入るまでのあいだ、この絵が代わりに出ます。</p>
         <div class="field">
-          <button type="button" class="pickphoto" id="btn-pick">
-            <span class="portrait"><svg class="ph"><use href="#dog"></use></svg></span>
-            <span id="pick-label">写真をえらぶ</span>
-          </button>
-          <input type="file" id="in-photo" accept="image/*" hidden>
+          <div class="kindpick" id="kindpick">
+            <button type="button" data-kind="dog" aria-pressed="true"><svg><use href="#art-dog"></use></svg>いぬ</button>
+            <button type="button" data-kind="cat" aria-pressed="false"><svg><use href="#art-cat"></use></svg>ねこ</button>
+          </div>
         </div>
       </div>
-      <!-- 3. 旅立った日 -->
+
       <div class="step" data-step="2" hidden>
-        <p class="onbo-lead">旅立った日</p>
-        <p class="onbo-sub">四十九日や命日を、この日から数えます。<br>お誕生日は、覚えていれば。</p>
+        <p class="onbo-lead">お顔の写真を<br>1枚えらんでください</p>
+        <p class="onbo-sub">カメラロールから選ぶだけ。<br>この端末の中にだけ残り、どこにも送られません。</p>
+        <div class="field">
+          <div class="pickwrap">
+            <div class="face face-lg" id="pick-face" style="position:relative">
+              <svg class="art" id="pick-art"><use href="#art-dog"></use></svg>
+              <span class="badge-ok" id="pick-ok" hidden><svg width="16" height="16"><use href="#ic-check"></use></svg></span>
+            </div>
+            <p id="pick-msg" style="margin:0;font-size:13.5px;font-weight:700;color:var(--muted)">まだ写真はありません</p>
+            <button type="button" class="btn btn-line" style="width:auto;padding:0 24px;border-radius:999px" id="btn-pick">写真をえらぶ</button>
+            <input type="file" id="in-photo" accept="image/*" hidden>
+          </div>
+        </div>
+        <div class="tip tip-amber">
+          <svg width="19" height="19" style="color:var(--amber-ink)"><use href="#ic-info"></use></svg>
+          <p>うまく取りこめないときは、その場で理由を出します。<br>黙って止まることはありません。</p>
+        </div>
+      </div>
+
+      <div class="step" data-step="3" hidden>
+        <p class="onbo-lead">日づけ</p>
+        <p class="onbo-sub">節目のお知らせに使います。<br>わからなければ、あとからでも大丈夫です。</p>
         <div class="field">
           <label for="in-death">旅立った日</label>
           <input type="date" id="in-death">
@@ -76,95 +125,122 @@
       </div>
 
       <div class="spacer"></div>
-      <p class="disclose" id="onbo-err" hidden></p>
-      <button class="btn btn-primary" id="btn-next" style="margin-bottom:10px">つぎへ</button>
+      <p id="onbo-err" class="tip tip-warn" hidden><span></span></p>
+      <button class="btn btn-amber btn-lg" id="btn-next" style="margin-bottom:10px">つぎへ</button>
       <button class="btn btn-ghost" id="btn-back" hidden>もどる</button>
-      <div class="steps"><i class="on"></i><i></i><i></i></div>
+      <button class="btn btn-ghost" id="btn-skip" hidden>あとで えらぶ</button>
     </div>
   </section>
 
-  <!-- ============ お墓（ホーム） ============ -->
+  <!-- ============ おうち ============ -->
   <section class="view" id="view-home">
     <div class="body scroll">
-      <div class="altar">
-        <div class="flamebox">
-          <span class="glow"></span>
-          <span class="flame" id="home-flame"><svg><use href="#flame-lit"></use></svg></span>
+      <div class="daybar">
+        <span class="d"><svg width="22" height="22"><use href="#ic-sun"></use></svg><span id="home-date">—</span></span>
+        <span class="greet" id="home-greet">おはよう</span>
+      </div>
+
+      <div class="card homecard">
+        <div class="scene">
+          <svg class="bg" viewBox="0 0 390 212" preserveAspectRatio="none" aria-hidden="true">
+            <ellipse cx="52" cy="42" rx="26" ry="14" fill="#FFFFFF" opacity=".85"/>
+            <ellipse cx="74" cy="36" rx="18" ry="12" fill="#FFFFFF" opacity=".85"/>
+            <ellipse cx="320" cy="58" rx="22" ry="12" fill="#FFFFFF" opacity=".7"/>
+            <path d="M0 134 C60 124 110 142 170 134 C230 126 280 144 390 132 L390 212 L0 212 Z" fill="#CFE6BC"/>
+            <g stroke="#8FB878" stroke-width="2.4" stroke-linecap="round" fill="none">
+              <path d="M28 178 C26 168 30 162 34 158"/><path d="M40 182 C40 172 37 166 33 161"/>
+              <path d="M352 174 C350 164 354 158 358 154"/><path d="M364 178 C364 168 361 162 357 157"/>
+            </g>
+            <g><circle cx="60" cy="152" r="5.5" fill="#E8A0A0"/><circle cx="60" cy="152" r="2.2" fill="#FBF0DA"/><path d="M60 158 v12" stroke="#8FB878" stroke-width="2.4" stroke-linecap="round"/></g>
+            <g><circle cx="332" cy="148" r="5" fill="#E8A33D"/><circle cx="332" cy="148" r="2" fill="#FFF7E6"/><path d="M332 153 v12" stroke="#8FB878" stroke-width="2.4" stroke-linecap="round"/></g>
+          </svg>
+          <div class="face face-lg" id="home-face"><svg class="art"><use href="#art-dog"></use></svg></div>
         </div>
-        <div class="portrait" id="home-portrait"><svg class="ph"><use href="#dog"></use></svg></div>
         <h1 class="petname" id="home-name">—</h1>
-        <p class="petdates" id="home-dates"></p>
+        <p class="petmeta" id="home-meta"></p>
       </div>
 
-      <p class="nextline" id="home-next"></p>
-
-      <!-- 命日にだけ出る予告。自動再生はしない -->
-      <div class="notice" id="home-notice" hidden>
-        <h4 id="notice-title">今日、会えます</h4>
-        <ul>
-          <li>6秒です</li>
-          <li id="notice-move">こちらへ近づいてきて、止まります</li>
-          <li>音はありません</li>
-          <li>今日でなくても、いつでも見られます</li>
-        </ul>
-        <div class="pair">
-          <button class="btn btn-primary" id="btn-reunion">見る</button>
-          <button class="btn btn-quiet" id="btn-reunion-skip">今日は、やめておく</button>
-        </div>
+      <div style="margin-top:20px">
+        <button class="btn btn-amber btn-lg" id="btn-omairi">
+          <svg width="24" height="24"><use href="#of-light"></use></svg><span id="omairi-label">おまいりする</span>
+        </button>
+        <p class="count-line" id="home-count"></p>
       </div>
+
+      <div style="margin-top:20px" id="home-vids"></div>
 
       <div class="spacer"></div>
-      <p class="done-note" id="home-note" hidden></p>
-      <button class="btn btn-primary" id="btn-visit" style="margin-bottom:10px">お参りする</button>
-      <button class="btn btn-ghost" id="btn-settings">設定</button>
+      <button class="btn btn-ghost" id="btn-settings" style="margin-bottom:6px">設定</button>
     </div>
     <nav class="tabbar" data-tabs></nav>
   </section>
 
-  <!-- ============ お参り ============ -->
-  <section class="view" id="view-ritual">
+  <!-- ============ おまいり ============ -->
+  <section class="view" id="view-omairi">
     <div class="body foot">
-      <div class="altar" style="padding-top:8px">
-        <div class="flamebox">
-          <span class="glow"></span>
-          <span class="flame"><svg><use href="#flame-lit"></use></svg></span>
-        </div>
-        <div class="portrait sm" id="ritual-portrait"><svg class="ph"><use href="#dog"></use></svg></div>
+      <div class="daybar">
+        <span class="d">おまいり</span>
+        <span class="step-pill" id="ritual-pill">0 / 4</span>
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:6px">
+        <div class="face face-md" id="omairi-face"><svg class="art"><use href="#art-dog"></use></svg></div>
       </div>
       <p class="ritual-lead" id="ritual-lead">灯りを、ともします</p>
+      <p class="ritual-sub">じゅんばんに、4つ</p>
       <div class="ritual" id="ritual">
-        <button class="offer" data-i="0"><span class="ic"><svg><use href="#ic-flame"></use></svg></span>とうみょう</button>
-        <button class="offer" data-i="1" disabled><span class="ic"><svg><use href="#ic-water"></use></svg></span>みず</button>
-        <button class="offer" data-i="2" disabled><span class="ic"><svg><use href="#ic-food"></use></svg></span>ごはん</button>
-        <button class="offer" data-i="3" disabled><span class="ic"><svg><use href="#ic-flower"></use></svg></span>はな</button>
+        <button class="offer" data-i="0"><span class="ic"><svg><use href="#of-light"></use></svg></span>とうみょう<span class="chk"><svg width="12" height="12"><use href="#ic-check"></use></svg></span><span class="nx">つぎ</span></button>
+        <button class="offer" data-i="1" disabled><span class="ic"><svg><use href="#of-water"></use></svg></span>みず<span class="chk"><svg width="12" height="12"><use href="#ic-check"></use></svg></span><span class="nx">つぎ</span></button>
+        <button class="offer" data-i="2" disabled><span class="ic"><svg><use href="#of-food"></use></svg></span>ごはん<span class="chk"><svg width="12" height="12"><use href="#ic-check"></use></svg></span><span class="nx">つぎ</span></button>
+        <button class="offer" data-i="3" disabled><span class="ic"><svg><use href="#of-flower"></use></svg></span>はな<span class="chk"><svg width="12" height="12"><use href="#ic-check"></use></svg></span><span class="nx">つぎ</span></button>
       </div>
+      <button class="seasonal" id="seasonal" type="button">
+        <svg width="28" height="28"><use href="#of-flower"></use></svg>
+        <span style="flex:1"><span class="t" id="seasonal-t">おそなえ</span><span class="s" id="seasonal-s">月がわり。置いても置かなくても、いい</span></span>
+        <span class="plus" id="seasonal-p">+</span>
+      </button>
       <div class="spacer"></div>
-      <button class="btn btn-ghost" id="btn-ritual-close">とじる</button>
+      <button class="btn btn-line" id="btn-omairi-close">また、あとで</button>
     </div>
   </section>
 
-  <!-- ============ お参りのあと ============ -->
+  <!-- ============ おまいりのあと ============ -->
   <section class="view" id="view-after">
-    <div class="body foot">
-      <div class="spacer"></div>
-      <div class="altar" style="padding-top:0">
-        <div class="flamebox">
-          <span class="glow" style="opacity:1"></span>
-          <span class="flame lg"><svg><use href="#flame-lit"></use></svg></span>
+    <div class="after">
+      <svg class="petals" id="petals" width="340" height="360" viewBox="0 0 340 360" aria-hidden="true"></svg>
+      <div class="face face-xl" id="after-face"><svg class="art"><use href="#art-dog"></use></svg></div>
+      <p class="line" id="after-line">ありがとう。<br>またね。</p>
+      <div class="tally">
+        <div><p class="n" id="after-count">1</p><p class="nl">回目のおまいり</p></div>
+        <div class="sep"></div>
+        <div class="g">
+          <svg width="26" height="26"><use href="#of-flower"></use></svg>
+          <p>庭に<br><b style="color:var(--grass-ink)">花が1つ</b> ふえました</p>
         </div>
       </div>
-      <p class="after-line" id="after-line">おつかれさま。<br>また明日、ここで。</p>
-      <div class="spacer"></div>
-      <button class="btn btn-ghost" id="btn-after-close">とじる</button>
+      <p class="note">休んでも、花は枯れません。<br>数は減りません。</p>
+    </div>
+    <div style="padding:0 20px calc(env(safe-area-inset-bottom,0px) + 24px);display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-sky" id="btn-after-vid" hidden>
+        <svg width="21" height="21" stroke="#fff" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#t-ugoku"></use></svg>
+        <span id="after-vid-label">うごくあの子を見る</span>
+      </button>
+      <button class="btn btn-ghost" id="btn-after-close">おうちにもどる</button>
     </div>
   </section>
 
-  <!-- ============ あの日まで ============ -->
-  <section class="view" id="view-days">
+  <!-- ============ おまいりの庭 ============ -->
+  <section class="view" id="view-niwa">
     <div class="body scroll">
-      <h2 class="screen-title">あの日まで</h2>
-      <ul class="md-list" id="days-list"></ul>
-      <p class="disclose" id="days-note"></p>
+      <div class="head"><h1>おまいりの庭</h1><p>おまいりするたび、花が1つ</p></div>
+      <div class="garden" id="garden"></div>
+      <div class="stats">
+        <div class="stat"><p class="n" id="stat-flowers" style="color:var(--amber-ink)">0</p><p class="l">咲いた花</p></div>
+        <div class="stat"><p class="n" id="stat-days" style="color:var(--grass-ink)">—</p><p class="l">いっしょにいた日</p></div>
+      </div>
+      <div class="notebox">
+        <p>連続記録はありません。何日あいても、花は枯れません。<br>ほかの人の数も出しません。ここにあるのは、あなたとこの子の数だけ。</p>
+      </div>
+      <div style="margin-top:20px" id="niwa-days"></div>
       <div class="spacer"></div>
     </div>
     <nav class="tabbar" data-tabs></nav>
@@ -173,40 +249,47 @@
   <!-- ============ アルバム ============ -->
   <section class="view" id="view-album">
     <div class="body scroll">
-      <h2 class="screen-title">アルバム</h2>
+      <div class="head"><h1>アルバム</h1><p id="album-sub">写真をくわえてください</p></div>
       <div class="chapters" id="album-list"></div>
       <p class="empty" id="album-empty" hidden>まだ写真がありません。<br>この端末の写真から、少しずつ。</p>
-      <div style="height:16px"></div>
-      <button class="btn btn-quiet" id="btn-add-photos">写真をくわえる</button>
+      <button class="btn btn-dash" id="btn-add-photos" style="margin-top:16px">
+        <svg width="21" height="21"><use href="#ic-plus"></use></svg>この端末から写真をくわえる
+      </button>
       <input type="file" id="in-photos" accept="image/*" multiple hidden>
-      <p class="disclose">写真はこの端末の中だけに保存され、どこにも送られません</p>
-      <div class="spacer"></div>
-    </div>
-    <nav class="tabbar" data-tabs></nav>
-  </section>
-
-  <!-- ============ てがみ ============ -->
-  <section class="view" id="view-letters">
-    <div class="body scroll">
-      <h2 class="screen-title">てがみ</h2>
-      <div id="letter-current"></div>
-      <div id="letter-past"></div>
-      <div class="spacer"></div>
-    </div>
-    <nav class="tabbar" data-tabs></nav>
-  </section>
-
-  <!-- ============ 再会の6秒 ============ -->
-  <section class="view" id="view-reunion">
-    <div class="body">
-      <div class="stage">
-        <span class="floorlight"></span>
-        <div class="subject" id="reunion-subject"><svg class="ph"><use href="#dog"></use></svg></div>
+      <div class="tip tip-grass">
+        <svg width="20" height="20" fill="none" stroke="var(--grass-ink)" stroke-width="2" stroke-linecap="round"><path d="M3 3l16 16"/><path d="M9.4 4.6A8.6 8.6 0 0 1 11 4.5c4.4 0 8 4 8 6.2 0 .8-.5 1.9-1.4 2.9"/><path d="M5.6 6.5C3.6 7.8 2.8 9.6 2.8 10.7c0 2.2 3.6 6.2 8 6.2 1.3 0 2.5-.3 3.6-.9"/></svg>
+        <p>つらい時期の写真は、章ごと「出さない」にできます。<br>あとからいつでも戻せます。</p>
       </div>
-      <p class="endline" id="reunion-end">また来年、この日に。</p>
-      <div class="endactions">
-        <button class="btn btn-quiet" id="btn-reunion-again">もう一度見る</button>
-        <button class="btn btn-quiet" id="btn-reunion-close">とじる</button>
+      <div class="spacer"></div>
+    </div>
+    <nav class="tabbar" data-tabs></nav>
+  </section>
+
+  <!-- ============ うごくあの子 ============ -->
+  <section class="view" id="view-ugoku">
+    <div class="body scroll">
+      <div class="head"><h1 id="ugoku-h">うごくあの子</h1><p id="ugoku-sub">いつでも、なんども</p></div>
+      <div class="grid2" id="vid-list"></div>
+      <p class="empty" id="vid-empty" hidden>まだ動画がありません。<br>短いものが1本あるだけで、ずいぶん違います。</p>
+      <button class="btn btn-dash" id="btn-add-vids" style="margin-top:16px">
+        <svg width="21" height="21"><use href="#ic-plus"></use></svg>この端末から動画をくわえる
+      </button>
+      <input type="file" id="in-vids" accept="video/*" multiple hidden>
+      <p style="margin:10px 2px 0;font-size:11.5px;color:var(--faint);line-height:1.9;text-align:center">
+        カメラロールから選ぶだけ。<br>どこにも送られず、この端末の中にだけ残ります。</p>
+      <div id="vid-warn"></div>
+      <div class="spacer"></div>
+    </div>
+    <nav class="tabbar" data-tabs></nav>
+  </section>
+
+  <!-- ============ 再生 ============ -->
+  <section class="view" id="view-player">
+    <div class="body">
+      <video id="player" playsinline controls></video>
+      <div class="player-bar">
+        <b id="player-title"></b>
+        <button id="btn-player-close">とじる</button>
       </div>
     </div>
   </section>
@@ -214,65 +297,30 @@
   <!-- ============ 設定 ============ -->
   <section class="view" id="view-settings">
     <div class="body scroll foot">
-      <h2 class="screen-title">設定</h2>
+      <div class="head"><h1>設定</h1></div>
+      <button class="setrow" id="btn-profile"><span>なまえ・写真・日づけ</span><span class="arw">›</span></button>
+      <button class="setrow" id="btn-export"><span style="color:var(--amber-ink);font-weight:700">すべて手元に持ち出す</span><span class="arw">›</span></button>
+      <p style="margin:7px 2px 14px;font-size:11.5px;color:var(--faint);line-height:1.8">やめても、写真・動画・記録はすべて手元に残ります</p>
 
-      <div class="card">
-        <h4>会う回数</h4>
-        <p class="cap">時間とともに、ひとりでに減っていきます</p>
-        <svg class="curve" viewBox="0 0 240 64" aria-hidden="true">
-          <line x1="8" y1="56" x2="232" y2="56" stroke="currentColor" stroke-width="1" opacity=".15"/>
-          <path d="M8 12 C 60 12, 62 36, 96 41 C 130 46, 150 51, 190 54 C 210 55, 226 56, 232 57"
-                fill="none" stroke="#f0b357" stroke-width="1.6" stroke-linecap="round" opacity=".75"/>
-          <circle id="curve-dot" cx="30" cy="15" r="4.5" fill="#f0b357"/>
-          <circle id="curve-halo" cx="30" cy="15" r="9" fill="none" stroke="#f0b357" stroke-width="1" opacity=".35"/>
-        </svg>
-        <div class="curve-x" id="curve-x">
-          <span>毎日</span><span>月命日</span><span>季節ごと</span><span>命日</span>
-        </div>
-        <div class="nudge">
-          <button id="btn-more">もう少し会いたい</button>
-          <button id="btn-less">もう少し間をあける</button>
-        </div>
-      </div>
-
-      <button class="setrow accent" id="btn-export"><span>すべて手元に持ち出す</span><span class="arw">›</span></button>
-      <p class="disclose" style="margin:7px 2px 12px;text-align:left">退会しても、写真・記録はすべて手元に残ります</p>
-
-      <div class="card">
-        <h4>暦のスタイル</h4>
-        <p class="cap">四十九日や一周忌を出すかどうか</p>
-        <div class="seg" id="seg-cal">
-          <button data-v="buddhist">仏式</button>
-          <button data-v="none">なし</button>
-          <button data-v="western">洋風</button>
-        </div>
-      </div>
-
-      <div class="card">
+      <div class="cardbox">
         <h4>見た目</h4>
-        <p class="cap">灯りは暗いほうがよく見えます</p>
-        <div class="seg" id="seg-theme" style="grid-template-columns:repeat(2,1fr)">
-          <button data-v="dark">夜</button>
-          <button data-v="light">昼</button>
+        <p class="cap">夜のほうが落ち着く人のために</p>
+        <div class="seg" id="seg-theme" style="grid-template-columns:1fr 1fr">
+          <button data-v="day">昼</button><button data-v="night">夜</button>
         </div>
       </div>
 
-      <button class="setrow" id="btn-hidden"><span>出さない写真・期間</span><span class="arw" id="hidden-count">0件 ›</span></button>
-      <button class="setrow" id="btn-profile"><span>なまえ・日付・写真</span><span class="arw">›</span></button>
+      <div class="cardbox">
+        <h4>日づけを仮に進めて確かめる</h4>
+        <p class="cap">節目の画面を待たずに見るための項目です。通常は「今日」のまま。</p>
+        <div class="seg" id="seg-offset" style="grid-template-columns:repeat(3,1fr)">
+          <button data-v="now">今日</button><button data-v="d49">四十九日</button><button data-v="y1">一周忌</button>
+        </div>
+        <p class="cap" id="offset-now" style="margin:10px 0 0"></p>
+      </div>
+
+      <button class="setrow" id="btn-store"><span>保存のようす</span><span class="arw" id="store-state">—</span></button>
       <button class="setrow" id="btn-help"><span>つらいときの相談先</span><span class="arw">›</span></button>
-
-      <div class="card">
-        <h4>日付を仮に進めて確かめる</h4>
-        <p class="cap">節目や命日の画面を、待たずに確認するための項目です。<br>通常は 0 のままにしてください。</p>
-        <div class="seg" id="seg-offset" style="grid-template-columns:repeat(4,1fr)">
-          <button data-v="now">今日</button>
-          <button data-v="d49">四十九日</button>
-          <button data-v="y1">一周忌</button>
-          <button data-v="y3">三回忌</button>
-        </div>
-        <p class="cap" id="offset-now" style="margin-top:10px"></p>
-      </div>
-
       <button class="setrow" id="btn-reset"><span>この端末のデータを消す</span><span class="arw">›</span></button>
       <div class="spacer"></div>
       <button class="btn btn-ghost" id="btn-settings-close">とじる</button>

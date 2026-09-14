@@ -1,244 +1,317 @@
 /* app.js — 画面の組み立て。
  *
- * 設計の約束（docs/UI設計.md）で、ここに書いてはいけないものがある:
- *   連続お参り記録、達成バッジ、紙吹雪、退会引き止め、他人との比較。
- *   継続率は上がるが、悲嘆に罪悪感を接続するため入れない。
- *   足したくなったら、まず docs/UI設計.md を読むこと。
+ * ここに書いてはいけないもの（docs/UI設計.md）:
+ *   連続記録（ストリーク）／達成バッジ・紙吹雪／ランダム配信／
+ *   退会引き止め／他人との比較／常時対話AI。
+ *   数えるのは「通算」だけ。減らず、途切れず、休んでも何も失われない。
  */
 (function () {
   'use strict';
 
-  var S = window.Store;
-  var st = S.state;
+  var S = window.Store, st = S.state;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function artRef() { return st.pet.kind === 'cat' ? '#art-cat' : '#art-dog'; }
 
-  var urls = [];   // 作った objectURL。作り直すたびに解放する
-  function freeUrls() { urls.forEach(URL.revokeObjectURL); urls = []; }
-  function url(blob) { var u = URL.createObjectURL(blob); urls.push(u); return u; }
+  /* 作った objectURL は必ず覚えて、作り直すときに解放する */
+  var urlCache = {};
+  function mediaURL(rec) {
+    if (!urlCache[rec.id]) urlCache[rec.id] = URL.createObjectURL(rec.blob);
+    return urlCache[rec.id];
+  }
+  function freeURL(id) { if (urlCache[id]) { URL.revokeObjectURL(urlCache[id]); delete urlCache[id]; } }
 
-  /* ============ 画面の切り替え ============ */
+  /* ============ 画面 ============ */
   var TABS = [
-    { id: 'home', label: 'お墓', icon: 'ic-flame' },
-    { id: 'days', label: 'あの日まで', icon: 'ic-clock' },
-    { id: 'album', label: 'アルバム', icon: 'ic-album' },
-    { id: 'letters', label: 'てがみ', icon: 'ic-letter' }
+    { id: 'home', label: 'おうち', icon: 't-home' },
+    { id: 'niwa', label: 'おまいりの庭', icon: 't-niwa' },
+    { id: 'album', label: 'アルバム', icon: 't-album' },
+    { id: 'ugoku', label: 'うごく', icon: 't-ugoku' }
   ];
-
   function buildTabs() {
     $$('[data-tabs]').forEach(function (nav) {
       nav.innerHTML = TABS.map(function (t) {
-        return '<button class="tab" data-go="' + t.id + '">' +
-          '<svg aria-hidden="true"><use href="#' + t.icon + '"></use></svg>' + t.label + '</button>';
+        return '<button class="tab" data-go="' + t.id + '"><svg aria-hidden="true"><use href="#' + t.icon + '"></use></svg>' + t.label + '</button>';
       }).join('');
     });
   }
-
-  var current = '';
   function show(name) {
-    current = name;
     $$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + name); });
     $$('[data-tabs] .tab').forEach(function (b) {
-      if (b.dataset.go === name) b.setAttribute('aria-current', 'page');
-      else b.removeAttribute('aria-current');
+      if (b.dataset.go === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
-    var b = $('#view-' + name + ' .body');
-    if (b) b.scrollTop = 0;
+    var b = $('#view-' + name + ' .body'); if (b) b.scrollTop = 0;
+    if (name !== 'player') stopPlayer();
     if (name === 'home') renderHome();
-    if (name === 'days') renderDays();
+    if (name === 'niwa') renderNiwa();
     if (name === 'album') renderAlbum();
-    if (name === 'letters') renderLetters();
+    if (name === 'ugoku') renderVideos();
     if (name === 'settings') renderSettings();
   }
-
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-go]');
     if (t) show(t.dataset.go);
   });
 
-  /* ============ 遺影 ============ */
-  var portraitUrl = null;
-  function loadPortrait() {
-    return S.getPhoto('portrait').then(function (rec) {
-      if (portraitUrl) { URL.revokeObjectURL(portraitUrl); portraitUrl = null; }
-      if (rec && rec.blob) portraitUrl = URL.createObjectURL(rec.blob);
-      paintPortraits();
-    }).catch(function () { paintPortraits(); });
+  /* ============ 遺影 ============
+     写真が入ればイラストは消える。イラストは代役。 */
+  var faceURL = null;
+  function loadFace() {
+    return S.getMedia('portrait').then(function (rec) {
+      if (faceURL) { URL.revokeObjectURL(faceURL); faceURL = null; }
+      if (rec && rec.blob) faceURL = URL.createObjectURL(rec.blob);
+      paintFaces();
+      return !!faceURL;
+    }).catch(function () { paintFaces(); return false; });
   }
-  function paintPortraits() {
-    $$('#home-portrait, #ritual-portrait, #reunion-subject, #btn-pick .portrait').forEach(function (el) {
-      el.innerHTML = portraitUrl
-        ? '<img src="' + portraitUrl + '" alt="">'
-        : '<svg class="ph" aria-hidden="true"><use href="#dog"></use></svg>';
+  function paintFaces() {
+    var html = faceURL ? '<img src="' + faceURL + '" alt="">'
+                       : '<svg class="art" aria-hidden="true"><use href="' + artRef() + '"></use></svg>';
+    ['#home-face', '#omairi-face', '#after-face'].forEach(function (sel) {
+      var el = $(sel); if (el) el.innerHTML = html;
     });
+    var pf = $('#pick-face');
+    if (pf) {
+      pf.innerHTML = html + '<span class="badge-ok" id="pick-ok"' + (faceURL ? '' : ' hidden') +
+        '><svg width="16" height="16"><use href="#ic-check"></use></svg></span>';
+    }
   }
 
-  /* 長辺を縮めてから保存する。端末の写真をそのまま入れると
-     数十MBになり、IndexedDB も描画も重くなるため。 */
-  function shrink(file, max) {
-    return new Promise(function (res) {
-      var img = new Image();
-      var u = URL.createObjectURL(file);
+  /* 端末の写真はそのままだと数十MBある。長辺を縮めてから保存する。 */
+  function shrink(file, max, quality) {
+    return new Promise(function (res, rej) {
+      var img = new Image(), u = URL.createObjectURL(file), done = false;
+      var t = setTimeout(function () { if (!done) { done = true; URL.revokeObjectURL(u); rej(new Error('decode-timeout')); } }, 12000);
       img.onload = function () {
-        var w = img.naturalWidth, h = img.naturalHeight;
-        var s = Math.min(1, max / Math.max(w, h));
-        var c = document.createElement('canvas');
-        c.width = Math.round(w * s); c.height = Math.round(h * s);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(u);
-        c.toBlob(function (b) { res(b || file); }, 'image/jpeg', 0.86);
+        if (done) return; done = true; clearTimeout(t);
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          if (!w || !h) throw new Error('decode-failed');
+          var s = Math.min(1, max / Math.max(w, h));
+          var c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          URL.revokeObjectURL(u);
+          c.toBlob(function (b) { b ? res(b) : rej(new Error('encode-failed')); }, 'image/jpeg', quality || 0.85);
+        } catch (e) { URL.revokeObjectURL(u); rej(e); }
       };
-      img.onerror = function () { URL.revokeObjectURL(u); res(file); };
+      img.onerror = function () {
+        if (done) return; done = true; clearTimeout(t);
+        URL.revokeObjectURL(u);
+        rej(new Error('decode-failed'));   // HEIC など、この端末で開けない形式
+      };
       img.src = u;
     });
   }
 
-  /* ============ おむかえ ============ */
-  var step = 0, pickedPhoto = null;
+  /* 保存できなかった理由を、そのまま人の言葉にする。黙って止めない。 */
+  var REASON = {
+    'decode-failed': 'この写真の形式は、この端末では開けませんでした。iPhoneの設定でHEICになっている場合は「互換性優先」で撮り直すか、一度スクリーンショットを撮ると入ります。',
+    'decode-timeout': '写真の読み込みに時間がかかりすぎました。もう一度おためしください。',
+    'encode-failed': '写真を変換できませんでした。別の写真でおためしください。',
+    'quota': 'この端末の保存領域がいっぱいです。アルバムの写真を減らすと入ります。',
+    'too-large': 'この写真は大きすぎて、いまの保存先に入りませんでした。',
+    'no-store': 'このブラウザでは保存先が使えませんでした。アプリをホーム画面に追加してから開くと入ります。',
+    'no-store-video': 'いまの開きかたでは動画を保存できません。ホーム画面に追加してから開くか、Safari/Chromeで直接開いてください。',
+    'unreadable': 'ファイルを読み取れませんでした。',
+    'unknown': '保存できませんでした。'
+  };
+  function reasonText(r) { return REASON[r] || REASON.unknown; }
 
+  /* ============ おむかえ ============ */
+  var step = 0;
   function renderOnbo() {
     $$('#view-onbo .step').forEach(function (el) { el.hidden = +el.dataset.step !== step; });
-    $$('.steps i').forEach(function (el, i) { el.classList.toggle('on', i <= step); });
+    $$('#onbo-steps i').forEach(function (el, i) { el.classList.toggle('on', i <= step); });
     $('#btn-back').hidden = step === 0;
-    $('#btn-next').textContent = step === 2 ? 'はじめる' : 'つぎへ';
+    $('#btn-skip').hidden = step !== 2;
+    $('#btn-next').textContent = step === 3 ? 'はじめる' : 'つぎへ';
     $('#onbo-err').hidden = true;
+    var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
+    if (step === 2) paintFaces();
   }
-
+  function onboErr(msg) {
+    var e = $('#onbo-err');
+    e.innerHTML = '<svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg><p>' + esc(msg) + '</p>';
+    e.hidden = false;
+  }
   function onboNext() {
-    var err = $('#onbo-err');
     if (step === 0) {
       var n = $('#in-name').value.trim();
-      if (!n) { err.textContent = 'なまえを入れてください'; err.hidden = false; return; }
+      if (!n) { onboErr('なまえを入れてください'); return; }
       st.pet.name = n;
     }
-    if (step === 2) {
+    if (step === 3) {
       var d = $('#in-death').value;
-      if (!d) { err.textContent = '旅立った日を入れてください'; err.hidden = false; return; }
-      if (S.diffDays(S.parseISO(d), S.today()) < 0) {
-        err.textContent = 'これから先の日付は選べません'; err.hidden = false; return;
-      }
-      st.pet.deathISO = d;
+      if (d && S.diffDays(S.parseISO(d), S.today()) < 0) { onboErr('これから先の日づけは選べません'); return; }
+      st.pet.deathISO = d || '';
       st.pet.birthISO = $('#in-birth').value || '';
-      st.onboarded = true;
-      S.save();
-      show('home');
-      return;
+      st.onboarded = true; S.save(); show('home'); return;
     }
     step++; S.save(); renderOnbo();
   }
 
-  /* ============ お墓（ホーム） ============ */
-  function renderHome() {
-    var t = S.today();
-    var pet = st.pet;
-    $('#home-name').textContent = pet.name || '—';
-    var death = S.parseISO(pet.deathISO);
-    var birth = S.parseISO(pet.birthISO);
-    $('#home-dates').textContent = death
-      ? (birth ? S.formatShort(birth) + ' — ' : '') + S.formatShort(death) : '';
-
-    // 見せる数字は、いつも「次に来る節目」ひとつだけ
-    var ms = S.milestones(t);
-    var next = ms[0];
-    var line = $('#home-next');
-    if (!next) line.textContent = '';
-    else if (next.days === 0) line.innerHTML = '今日は ' + esc(next.label);
-    else line.innerHTML = esc(next.label) + 'まで あと<b>' + next.days + '</b>日';
-
-    var visited = S.visitedOn(t);
-    var isDay = S.isVisitDay(t);
-    var phase = S.phase(t);
-    var btn = $('#btn-visit'), note = $('#home-note');
-
-    if (visited) {
-      btn.hidden = true;
-      note.hidden = false;
-      note.textContent = '今日はもう、灯しました';
-    } else if (isDay) {
-      btn.hidden = false;
-      btn.className = 'btn btn-primary';
-      btn.textContent = 'お参りする';
-      btn.style.marginBottom = '10px';
-      note.hidden = true;
-    } else {
-      // お参りの日ではない。押せなくはしないが、前には出さない
-      btn.hidden = false;
-      btn.className = 'btn btn-quiet';
-      btn.textContent = 'それでも、今日お参りする';
-      note.hidden = false;
-      note.textContent = 'お参りは、' + S.PHASE_LABEL[phase] + 'にお知らせします';
-    }
-
-    // 命日の予告。自動再生はしない
-    var isR = S.isReunionDay(t);
-    var year = t.getFullYear();
-    var notice = $('#home-notice');
-    notice.hidden = !isR || st.reunionSeen.indexOf(year) >= 0;
-    if (!notice.hidden) {
-      var n = year - S.parseISO(pet.deathISO).getFullYear();
-      $('#notice-title').textContent = '今日、会えます';
-      $('#notice-move').textContent = (pet.name || 'あの子') + 'が、こちらへ近づいてきて、止まります';
-    }
-    $('#home-flame').className = isR ? 'flame lg' : 'flame';
+  function pickPortrait(file) {
+    if (!file) return;
+    $('#pick-msg').innerHTML = '<span class="busy"></span> 取りこんでいます…';
+    shrink(file, 1200, 0.85)
+      .then(function (blob) {
+        return S.putMedia({ id: 'portrait', blob: blob, at: file.lastModified || Date.now(), kind: 'photo' });
+      })
+      .then(function (r) {
+        if (!r.ok) { $('#pick-msg').textContent = ''; onboErr(reasonText(r.reason)); return; }
+        return loadFace().then(function () {
+          $('#pick-msg').innerHTML = '<span style="color:var(--grass-ink)">とりこみました</span>';
+          $('#btn-pick').textContent = 'えらびなおす';
+          $('#onbo-err').hidden = true;
+        });
+      })
+      .catch(function (e) {
+        $('#pick-msg').textContent = '';
+        onboErr(reasonText((e && e.message) || 'unknown'));
+      });
   }
 
-  /* ============ お参りの4動作 ============
+  /* ============ おうち ============ */
+  function greeting(h) { return h < 4 ? 'こんばんは' : h < 11 ? 'おはよう' : h < 17 ? 'こんにちは' : 'こんばんは'; }
+
+  function renderHome() {
+    var t = S.today();
+    $('#home-date').textContent = S.formatMD(t);
+    $('#home-greet').textContent = greeting(new Date().getHours());
+    $('#home-name').textContent = st.pet.name || '—';
+
+    var death = S.parseISO(st.pet.deathISO), birth = S.parseISO(st.pet.birthISO);
+    var meta = [];
+    if (birth && death) meta.push(S.formatShort(birth) + ' — ' + S.formatShort(death));
+    else if (death) meta.push(S.formatShort(death));
+    var tg = S.daysTogether();
+    if (tg) meta.push('いっしょに ' + tg.toLocaleString('ja-JP') + '日');
+    $('#home-meta').textContent = meta.join(' ・ ');
+
+    var n = S.visitCount(), done = S.visitedOn(t);
+    $('#omairi-label').textContent = done ? 'もう一度おまいりする' : 'おまいりする';
+    $('#home-count').innerHTML = done
+      ? '今日はもう灯しました ・ 通算 <b>' + n + '</b> 回'
+      : 'きょうで <b>' + (n + 1) + '</b> 回目';
+
+    renderHomeVideos();
+  }
+
+  function renderHomeVideos() {
+    S.allMedia('video').then(function (vs) {
+      var box = $('#home-vids');
+      box.hidden = false;
+      if (!vs.length) {
+        // 動画がまだ無いときは空けたままにしない。ここがこの製品の中心なので誘う。
+        box.innerHTML = '<button class="btn btn-dash" data-go="ugoku" style="min-height:86px;flex-direction:column;gap:6px">' +
+          '<span style="display:flex;align-items:center;gap:9px"><svg width="20" height="20"><use href="#ic-plus"></use></svg>' +
+          'うごくすがたを入れる</span>' +
+          '<span style="font-size:11.5px;font-weight:400;color:var(--muted)">1本あるだけで、いつでも会えます</span></button>';
+        return;
+      }
+      box.innerHTML = '<div style="display:flex;align-items:baseline;justify-content:space-between">' +
+        '<p style="margin:0;font-family:var(--round);font-weight:700;font-size:15px">うごく' + esc(st.pet.name || 'あの子') + '</p>' +
+        '<button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:12px;font-weight:700;color:var(--sky-ink)" data-go="ugoku">ぜんぶ見る</button></div>' +
+        '<div class="grid2" id="home-vid-list" style="margin-top:8px"></div>';
+      var latest = vs.slice(-2);
+      $('#home-vid-list').innerHTML = latest.map(function (v) {
+        return tileHTML(v, latest.length === 1);
+      }).join('');
+    });
+  }
+
+  function tileHTML(v, big) {
+    var title = st.videoTitles[v.id] || 'うごくすがた';
+    var d = v.at ? S.formatShort(new Date(v.at)) : '';
+    return '<div class="tile' + (big ? ' big' : '') + '" data-vid="' + esc(v.id) + '">' +
+      '<video src="' + mediaURL(v) + '" muted playsinline preload="metadata"></video>' +
+      '<svg class="play" viewBox="0 0 24 24"><use href="#ic-play"></use></svg>' +
+      '<span class="cap"><b>' + esc(title) + '</b><span>' + esc(d) + '</span></span>' +
+      '</div>';
+  }
+
+  /* ============ おまいりの4動作 ============
      順序固定・スキップ不可。毎回まったく同じ手順であることが効いている。 */
   var LEADS = ['灯りを、ともします', 'お水を、そなえます', 'ごはんを、そなえます', 'お花を、そなえます'];
   var rstep = 0;
-
   function renderRitual() {
     $$('#ritual .offer').forEach(function (b, i) {
       if (i < rstep) { b.dataset.state = 'done'; b.disabled = true; }
       else if (i === rstep) { b.dataset.state = 'next'; b.disabled = false; }
       else { delete b.dataset.state; b.disabled = true; }
     });
-    $('#ritual-lead').textContent = rstep < 4 ? LEADS[rstep] : '';
+    $('#ritual-lead').textContent = rstep < 4 ? LEADS[rstep] : 'ありがとう';
+    $('#ritual-pill').textContent = rstep + ' / 4';
+    var t = S.today(), sea = S.seasonalFor(t), done = S.seasonalDone(t);
+    $('#seasonal-t').textContent = (t.getMonth() + 1) + '月のおそなえ ・ ' + sea.name;
+    $('#seasonal-s').textContent = done ? 'そなえました' : '月がわり。置いても置かなくても、いい';
+    $('#seasonal').dataset.done = done ? '1' : '0';
+    $('#seasonal-p').textContent = done ? '✓' : '+';
   }
-
-  function startRitual() {
-    rstep = 0; renderRitual(); show('ritual');
-  }
-
+  function startRitual() { rstep = 0; renderRitual(); show('omairi'); }
   function tapOffer(i) {
     if (i !== rstep) return;
-    rstep++;
-    renderRitual();
+    rstep++; renderRitual();
     if (rstep === 4) {
       rin();
-      S.recordVisit(S.today());
-      setTimeout(function () {
-        $('#after-line').innerHTML = afterLine();
-        show('after');
-      }, 900);
+      var t = S.today();
+      var counted = S.recordVisit(t);
+      setTimeout(function () { showAfter(counted); }, 850);
     }
   }
 
-  function afterLine() {
-    var t = S.today();
-    var p = S.phase(t);
-    var again = p === 0 ? 'また明日、ここで。'
-      : p === 1 ? 'また来月、ここで。'
-      : p === 2 ? 'またこの季節に、ここで。'
-      : 'また来年、ここで。';
-    return 'おつかれさま。<br>' + again;
+  function showAfter(counted) {
+    var name = st.pet.name || 'あの子';
+    $('#after-line').innerHTML = 'ありがとう。<br>またね。';
+    $('#after-count').textContent = S.visitCount();
+    var tally = $('.tally .g');
+    tally.innerHTML = counted
+      ? '<svg width="26" height="26"><use href="#of-flower"></use></svg>' +
+        '<p>庭に<br><b style="color:var(--grass-ink)">花が1つ</b> ふえました</p>'
+      : '<svg width="26" height="26"><use href="#of-flower"></use></svg>' +
+        '<p>今日の花は<br><b style="color:var(--grass-ink)">もう咲いています</b></p>';
+    drawPetals();
+    S.allMedia('video').then(function (vs) {
+      var b = $('#btn-after-vid');
+      b.hidden = !vs.length;
+      if (vs.length) {
+        $('#after-vid-label').textContent = 'うごく' + name + 'を見る';
+        b.onclick = function () { playVideo(vs[vs.length - 1]); };
+      }
+    });
+    show('after');
   }
 
-  /* おりん。毎回まったく同じ音であることが儀式として効くので、
-     鳴らし分けや音の変化はつけない。 */
+  function drawPetals() {
+    var P = [[26, 54, 20, '#F0B6C4'], [284, 86, 17, '#FFD98A'], [50, 266, 15, '#CFE6BC'],
+             [270, 234, 19, '#F0B6C4'], [156, 22, 14, '#FFD98A']];
+    $('#petals').innerHTML = P.map(function (p) {
+      return '<g transform="translate(' + p[0] + ' ' + p[1] + ')"><svg width="' + p[2] + '" height="' + p[2] +
+        '" viewBox="0 0 24 24"><g fill="' + p[3] + '" stroke="#5A4A3A" stroke-width="1.5">' +
+        '<ellipse cx="12" cy="6.4" rx="3.4" ry="4.2"/><ellipse cx="17" cy="10" rx="4.2" ry="3.4"/>' +
+        '<ellipse cx="15.1" cy="16" rx="3.4" ry="4.2"/><ellipse cx="8.9" cy="16" rx="3.4" ry="4.2"/>' +
+        '<ellipse cx="7" cy="10" rx="4.2" ry="3.4"/></g>' +
+        '<circle cx="12" cy="12" r="3.2" fill="#FFF6E2" stroke="#5A4A3A" stroke-width="1.5"/></svg></g>';
+    }).join('');
+  }
+
+  /* おりん。毎回まったく同じ音であることが儀式として効くので、鳴らし分けない。 */
   var actx = null;
   function rin() {
     try {
-      var C = window.AudioContext || window.webkitAudioContext;
-      if (!C) return;
+      var C = window.AudioContext || window.webkitAudioContext; if (!C) return;
       actx = actx || new C();
       if (actx.state === 'suspended') actx.resume();
-      var now = actx.currentTime;
-      var base = 1046.5;
+      var now = actx.currentTime, base = 1046.5;
       [[1, 0.45, 3.6], [2.74, 0.18, 2.2], [5.12, 0.07, 1.4]].forEach(function (p) {
         var o = actx.createOscillator(), g = actx.createGain();
-        o.type = 'sine';
-        o.frequency.value = base * p[0];
+        o.type = 'sine'; o.frequency.value = base * p[0];
         g.gain.setValueAtTime(0.0001, now);
         g.gain.exponentialRampToValueAtTime(p[1], now + 0.012);
         g.gain.exponentialRampToValueAtTime(0.0001, now + p[2]);
@@ -248,407 +321,386 @@
     } catch (e) { /* 音が出せない端末でも進む */ }
   }
 
-  /* ============ あの日まで ============ */
-  function renderDays() {
-    var t = S.today();
-    var ms = S.milestones(t);
-    var ul = $('#days-list');
-    if (!ms.length) {
-      ul.innerHTML = '<li class="empty">暦をオフにしています</li>';
-    } else {
-      ul.innerHTML = ms.map(function (m, i) {
-        return '<li class="md' + (i === 0 ? ' lead' : '') + '">' +
-          '<span><span class="lbl">' + esc(m.label) + '</span>' +
-          '<span class="sub">' + esc(m.note) + '</span></span>' +
-          '<span class="n">' + (m.days === 0 ? '<b>今日</b>' : '<b>' + m.days + '</b>日') + '</span></li>';
-      }).join('');
+  /* ============ おまいりの庭 ============
+     花は枯れない・減らない・他人と比べない。 */
+  var FCOL = ['#F0B6C4', '#FFD98A', '#CFE6BC', '#BEDCEA', '#E8A0A0', '#F5C98C'];
+  function renderNiwa() {
+    var n = S.visitCount();
+    $('#stat-flowers').textContent = n;
+    var tg = S.daysTogether();
+    $('#stat-days').textContent = tg ? tg.toLocaleString('ja-JP') : '—';
+
+    var perRow = 11, shown = Math.min(n, 600);
+    var rows = Math.max(2, Math.ceil(shown / perRow));
+    var W = 350, H = 30 + rows * 32 + 34;
+    var out = ['<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">',
+      '<path d="M0 ' + (H - 52) + ' C70 ' + (H - 62) + ' 120 ' + (H - 44) + ' 190 ' + (H - 52) +
+      ' C250 ' + (H - 59) + ' 300 ' + (H - 42) + ' ' + W + ' ' + (H - 52) + ' L' + W + ' ' + H + ' L0 ' + H + ' Z" fill="#CFE6BC"/>'];
+    for (var k = 0; k < shown; k++) {
+      var r = Math.floor(k / perRow), c = k % perRow;
+      var inRow = Math.min(perRow, shown - r * perRow);
+      var startX = (W - inRow * 30) / 2 + 15;   // 端数の行も中央に寄せる
+      var x = startX + c * 30, y = 30 + r * 32;
+      var kk = (1.05 + (k % 3) * 0.11).toFixed(2), col = FCOL[k % FCOL.length];
+      // 他の画面と同じ花びらの形。丸を2つ重ねただけだと、花ではなく輪に見える
+      out.push('<g transform="translate(' + x.toFixed(1) + ' ' + y + ') scale(' + kk + ')">' +
+        '<g fill="' + col + '" stroke="#5A4A3A" stroke-width="1.3">' +
+        '<ellipse cy="-5.6" rx="3.4" ry="4.2"/><ellipse cx="5" cy="-2" rx="4.2" ry="3.4"/>' +
+        '<ellipse cx="3.1" cy="4" rx="3.4" ry="4.2"/><ellipse cx="-3.1" cy="4" rx="3.4" ry="4.2"/>' +
+        '<ellipse cx="-5" cy="-2" rx="4.2" ry="3.4"/></g>' +
+        '<circle r="3" fill="#FFF6E2" stroke="#5A4A3A" stroke-width="1.2"/></g>');
     }
-    $('#days-note').textContent = st.pet.calendar === 'buddhist'
-      ? '仏式の暦です。設定で変更・オフができます'
-      : '設定で暦のスタイルを変えられます';
+    if (!n) out.push('<text x="' + (W / 2) + '" y="' + (H / 2) + '" text-anchor="middle" fill="#7E9B6C" font-size="13">' +
+      'はじめてのおまいりで、花が1つ咲きます</text>');
+    out.push('</svg>');
+    $('#garden').innerHTML = out.join('');
+
+    var ms = S.milestones(S.today());
+    $('#niwa-days').innerHTML = ms.length
+      ? '<p style="margin:0 0 10px;font-family:var(--round);font-weight:700;font-size:15px">あの日まで</p>' +
+        '<div style="display:flex;flex-direction:column;gap:8px">' + ms.slice(0, 4).map(function (m, i) {
+          return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;' +
+            'background:' + (i === 0 ? 'var(--amber-soft)' : 'var(--panel)') + ';border:2px solid ' +
+            (i === 0 ? 'var(--amber)' : 'var(--line)') + ';border-radius:16px">' +
+            '<span><span style="font-family:var(--round);font-weight:700;font-size:14.5px">' + esc(m.label) + '</span>' +
+            '<span style="display:block;font-size:10.5px;color:var(--muted)">' + esc(m.note) + '</span></span>' +
+            '<span style="font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums">' +
+            (m.days === 0 ? '<b style="font-size:17px;color:var(--amber-ink)">今日</b>'
+                          : '<b style="font-family:var(--round);font-size:18px;color:var(--ink)">' + m.days + '</b>日') +
+            '</span></div>';
+        }).join('') + '</div>'
+      : '';
   }
 
   /* ============ アルバム ============ */
   function renderAlbum() {
-    freeUrls();
-    return S.allPhotos().then(function (photos) {
+    return S.allMedia('photo').then(function (all) {
+      var photos = all.filter(function (p) { return p.id !== 'portrait'; });
       var chs = S.chapters(photos);
       $('#album-empty').hidden = chs.length > 0;
+      $('#album-sub').textContent = photos.length ? photos.length + '枚 ・ ' + chs.length + 'つの章' : '写真をくわえてください';
       $('#album-list').innerHTML = chs.map(function (c) {
         var range = S.formatShort(new Date(c.from)) + ' — ' + S.formatShort(new Date(c.to));
-        return '<div class="chapter' + (c.hidden ? ' is-hidden' : '') + '" data-ch="' + esc(c.id) + '">' +
-          '<span class="thumb"><img src="' + url(c.photos[0].blob) + '" alt=""></span>' +
-          '<span class="meta">' +
-            '<p class="t">' + esc(c.title || range) + '</p>' +
-            '<p class="d">' + (c.title ? range + ' ・ ' : '') + c.photos.length + '枚' +
-              (c.hidden ? ' ・ 非表示中' : '') + '</p>' +
-          '</span>' +
-          '<button class="more" data-ch-menu="' + esc(c.id) + '" aria-label="この期間の設定">···</button>' +
-          '</div>';
+        return '<div class="chapter' + (c.hidden ? ' is-hidden' : '') + '">' +
+          '<span class="th"><img src="' + mediaURL(c.photos[0]) + '" alt=""></span>' +
+          '<span class="meta"><p class="t">' + esc(c.title || range) + '</p>' +
+          '<p class="d">' + (c.title ? range + ' ・ ' : '') + c.photos.length + '枚' + (c.hidden ? ' ・ 非表示中' : '') + '</p></span>' +
+          '<button class="more" data-ch="' + esc(c.id) + '" aria-label="この期間の設定">···</button></div>';
       }).join('');
     });
   }
 
+  /* 1枚ずつ順に入れる。1枚失敗しても残りは入れ、最後にまとめて理由を出す。 */
   function addPhotos(files) {
     var list = Array.prototype.slice.call(files);
-    if (!list.length) return Promise.resolve();
-    return list.reduce(function (p, f) {
-      return p.then(function () {
-        return shrink(f, 1600).then(function (blob) {
-          return S.putPhoto({
-            id: 'p' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
-            blob: blob,
-            takenAt: f.lastModified || Date.now()
-          });
-        });
+    if (!list.length) return;
+    var btn = $('#btn-add-photos'), orig = btn.innerHTML;
+    btn.disabled = true;
+    var okCount = 0, fails = {};
+    var p = Promise.resolve();
+    list.forEach(function (f, i) {
+      p = p.then(function () {
+        btn.innerHTML = '<span class="busy"></span> ' + (i + 1) + ' / ' + list.length;
+        return shrink(f, 1600, 0.84)
+          .then(function (blob) {
+            return S.putMedia({ id: S.newId('p'), blob: blob, at: f.lastModified || Date.now(), kind: 'photo' });
+          })
+          .then(function (r) { if (r.ok) okCount++; else fails[r.reason] = (fails[r.reason] || 0) + 1; })
+          .catch(function (e) { var k = (e && e.message) || 'unknown'; fails[k] = (fails[k] || 0) + 1; });
       });
-    }, Promise.resolve()).then(renderAlbum);
+    });
+    p.then(function () {
+      btn.disabled = false; btn.innerHTML = orig;
+      return renderAlbum();
+    }).then(function () {
+      var keys = Object.keys(fails);
+      if (!keys.length) return;
+      sheet('入らなかった写真があります',
+        keys.map(function (k) { return '<b>' + fails[k] + '枚</b>：' + esc(reasonText(k)); }).join('<br><br>') +
+        (okCount ? '<br><br>' + okCount + '枚は入りました。' : ''),
+        [{ label: 'わかりました', primary: true }]);
+    });
   }
 
-  /* ============ てがみ ============
-     製品版ではAIが写真と記録から書く。この端末だけで動く版では
-     節目と季節から定型文を組む。だからその旨を必ず画面に出す。 */
-  var SEASON = ['さむい日が、つづいていますね。', 'さむい日が、つづいていますね。',
-    'あたたかい風が、ふくようになりましたね。', 'あたたかい風が、ふくようになりましたね。',
-    'あたたかい風が、ふくようになりましたね。', 'ひざしが、つよくなりましたね。',
-    'ひざしが、つよくなりましたね。', 'ひざしが、つよくなりましたね。',
-    '風が、すずしくなりましたね。', '風が、すずしくなりましたね。',
-    '風が、すずしくなりましたね。', 'さむい日が、つづいていますね。'];
-
-  var BODY = {
-    d7: ['まだ、このへやにいます。', 'いつもの、まどのところに。'],
-    d49: ['きょうまで、ずっとそばにいました。', 'これからは、すこし高いところから。'],
-    d100: ['あなたの一日が、また動きはじめたのが見えます。', 'わたしは、ここにいます。'],
-    y1: ['一年、たちましたね。', 'きょうは、会いにきました。'],
-    y3: ['おぼえていてくれて、うれしい。', 'ゆっくりで、いいです。'],
-    y7: ['あなたの毎日の、どこかにいます。', 'さがさなくても、います。']
-  };
-
-  function letterPoints() {
-    var death = S.parseISO(st.pet.deathISO);
-    if (!death) return [];
-    var bud = st.pet.calendar === 'buddhist';
-    return [
-      { key: 'd7', label: bud ? '初七日' : '七日目', date: S.addDays(death, 6) },
-      { key: 'd49', label: bud ? '四十九日' : '四十九日目', date: S.addDays(death, 48) },
-      { key: 'd100', label: bud ? '百か日' : '百日目', date: S.addDays(death, 99) },
-      { key: 'y1', label: bud ? '一周忌' : '一年', date: S.addYears(death, 1) },
-      { key: 'y3', label: bud ? '三回忌' : '二年', date: S.addYears(death, 2) },
-      { key: 'y7', label: bud ? '七回忌' : '六年', date: S.addYears(death, 6) }
-    ];
+  /* ============ うごくあの子 ============ */
+  function renderVideos() {
+    var name = st.pet.name || 'あの子';
+    $('#ugoku-h').textContent = 'うごく' + name;
+    return S.allMedia('video').then(function (vs) {
+      $('#vid-empty').hidden = vs.length > 0;
+      $('#ugoku-sub').textContent = vs.length ? vs.length + '本 ・ いつでも、なんども' : 'いつでも、なんども';
+      $('#vid-list').innerHTML = vs.map(function (v, i) {
+        return tileHTML(v, vs.length === 1 || (i === 0 && vs.length % 2 === 1)).replace('<span class="cap">',
+          '<button class="menu" data-vmenu="' + esc(v.id) + '" aria-label="この動画の設定">···</button><span class="cap">');
+      }).join('');
+      $('#vid-warn').innerHTML = S.idbAvailable() ? '' :
+        '<div class="tip tip-warn"><svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>' +
+        '<p>いまの開きかたでは動画を保存できません。ホーム画面に追加してから開くか、SafariやChromeで直接開いてください。</p></div>';
+    });
   }
 
-  function letterText(p) {
-    var b = BODY[p.key];
-    return SEASON[p.date.getMonth()] + '\n' + b[0] + '\n' + b[1];
-  }
-
-  function letterHTML(p) {
-    return '<div class="letter"><span class="mark">' + esc(p.label) + '</span>' +
-      '<p>' + esc(letterText(p)) + '</p>' +
-      '<p class="from">' + esc(st.pet.name || '') + '</p></div>';
-  }
-
-  function renderLetters() {
-    var t = S.today();
-    var past = letterPoints().filter(function (p) { return S.diffDays(p.date, t) >= 0; });
-    var cur = $('#letter-current'), rest = $('#letter-past');
-    if (!past.length) {
-      var nextP = letterPoints()[0];
-      cur.innerHTML = '<p class="empty">最初のお手紙は ' +
-        (nextP ? esc(nextP.label) + '（' + S.formatJP(nextP.date) + '）' : '節目') +
-        ' にとどきます。<br>その日は、前もってお知らせします。</p>';
-      rest.innerHTML = '';
+  function addVideos(files) {
+    var list = Array.prototype.slice.call(files);
+    if (!list.length) return;
+    if (!S.idbAvailable()) {
+      sheet('動画を保存できません', esc(reasonText('no-store-video')), [{ label: 'わかりました', primary: true }]);
       return;
     }
-    var last = past[past.length - 1];
-    cur.innerHTML = '<p style="font-size:12px;color:var(--faint);margin:0">' +
-        esc(last.label) + 'に、一通とどきました</p>' +
-      letterHTML(last) +
-      '<p class="disclose">この手紙は、節目と季節からこの端末の中で組み立てた文章です</p>';
-    var older = past.slice(0, -1).reverse();
-    rest.innerHTML = older.length
-      ? '<h2 class="screen-title" style="margin-top:32px">これまでの手紙（' + older.length + '通）</h2>' +
-        older.map(letterHTML).join('')
-      : '';
+    var btn = $('#btn-add-vids'), orig = btn.innerHTML;
+    btn.disabled = true;
+    var fails = {};
+    var p = Promise.resolve();
+    list.forEach(function (f, i) {
+      p = p.then(function () {
+        btn.innerHTML = '<span class="busy"></span> ' + (i + 1) + ' / ' + list.length;
+        var id = S.newId('v');
+        return S.putMedia({ id: id, blob: f, at: f.lastModified || Date.now(), kind: 'video' })
+          .then(function (r) {
+            if (r.ok) {
+              st.videoTitles[id] = (f.name || '').replace(/\.[^.]+$/, '').slice(0, 24) || 'うごくすがた';
+              S.save();
+            } else fails[r.reason] = (fails[r.reason] || 0) + 1;
+          });
+      });
+    });
+    p.then(function () {
+      btn.disabled = false; btn.innerHTML = orig;
+      return renderVideos();
+    }).then(function () {
+      var keys = Object.keys(fails);
+      if (!keys.length) return;
+      sheet('入らなかった動画があります',
+        keys.map(function (k) { return '<b>' + fails[k] + '本</b>：' + esc(reasonText(k)); }).join('<br><br>'),
+        [{ label: 'わかりました', primary: true }]);
+    });
   }
 
-  /* ============ 再会の6秒 ============
-     終わりに何を置くかが記憶になる。だから終端は「また来年」。
-     進捗バーは置かない（残り秒数を数えさせない）。 */
-  var rtimers = [];
-  function playReunion() {
-    rtimers.forEach(clearTimeout); rtimers = [];
-    var v = $('#view-reunion');
-    v.classList.remove('playing', 'ended');
-    show('reunion');
-    void v.offsetWidth;
-    rtimers.push(setTimeout(function () { v.classList.add('playing'); }, 60));
-    // 4秒で近づき終え、6秒まで止まって見上げる。そこから2秒おいて終端の一行
-    rtimers.push(setTimeout(function () { v.classList.add('ended'); }, 8000));
-    var y = S.today().getFullYear();
-    if (st.reunionSeen.indexOf(y) < 0) { st.reunionSeen.push(y); S.save(); }
+  function playVideo(v) {
+    var p = $('#player');
+    p.src = mediaURL(v);
+    $('#player-title').textContent = st.videoTitles[v.id] || 'うごくすがた';
+    show('player');
+    var pr = p.play();
+    if (pr && pr.catch) pr.catch(function () { /* 自動再生できなければ操作で */ });
+  }
+  function stopPlayer() {
+    var p = $('#player');
+    if (p && !p.paused) { try { p.pause(); } catch (e) {} }
   }
 
   /* ============ 設定 ============ */
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', st.theme === 'night' ? 'night' : 'day');
+    var m = document.querySelector('meta[name=theme-color]');
+    if (m) m.setAttribute('content', st.theme === 'night' ? '#1B1A18' : '#FDFAF2');
+  }
+  function offsetJumps() {
+    var real = new Date(); real = new Date(real.getFullYear(), real.getMonth(), real.getDate());
+    var death = S.parseISO(st.pet.deathISO);
+    var map = { now: { label: '今日', offset: 0 } };
+    if (!death) return map;
+    [['d49', '四十九日', S.addDays(death, 48)], ['y1', '一周忌', S.addYears(death, 1)]].forEach(function (j) {
+      var n = S.diffDays(real, j[2]);
+      if (n > 0) map[j[0]] = { label: j[1], offset: n };
+    });
+    return map;
+  }
   function renderSettings() {
-    var t = S.today();
-    var p = S.phase(t);
-    var xs = [30, 96, 170, 226], ys = [15, 41, 52, 56];
-    $('#curve-dot').setAttribute('cx', xs[p]); $('#curve-dot').setAttribute('cy', ys[p]);
-    $('#curve-halo').setAttribute('cx', xs[p]); $('#curve-halo').setAttribute('cy', ys[p]);
-    $$('#curve-x span').forEach(function (s, i) { s.dataset.now = i === p ? '1' : '0'; });
-    $('#btn-more').disabled = st.freqNudge >= 1 || p === 0;
-    $('#btn-less').disabled = st.freqNudge <= -1 || p === 3;
-
-    $$('#seg-cal button').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.dataset.v === st.pet.calendar));
-    });
-    $$('#seg-theme button').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.dataset.v === st.theme));
-    });
+    $$('#seg-theme button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.theme === 'night' ? 'night' : 'day'))); });
     var jumps = offsetJumps();
     $$('#seg-offset button').forEach(function (b) {
       var j = jumps[b.dataset.v];
       b.hidden = !j;
-      if (j) {
-        b.textContent = j.label;
-        b.setAttribute('aria-pressed', String(j.offset === st.dateOffset));
-      }
+      if (j) { b.textContent = j.label; b.setAttribute('aria-pressed', String(j.offset === st.dateOffset)); }
     });
-    $('#offset-now').textContent = '表示中の日付：' + S.formatJP(t, true) +
-      '（' + S.PHASE_LABEL[p] + '）';
-    $('#hidden-count').textContent = st.hiddenChapters.length + '件 ›';
+    $('#offset-now').textContent = '表示中の日づけ：' + S.formatJP(S.today(), true);
+    $('#store-state').textContent = (S.idbAvailable() ? '写真・動画とも保存できます' : '写真のみ') + ' ›';
   }
 
-  /* 確認用の日付送り。日数を足すだけでは命日にぴったり当たらないので、
-     節目そのものへ飛ばす。 */
-  function offsetJumps() {
-    var real = new Date();
-    real = new Date(real.getFullYear(), real.getMonth(), real.getDate());
-    var death = S.parseISO(st.pet.deathISO);
-    var map = { now: { label: '今日', offset: 0 } };
-    if (!death) return map;
-    function jump(k, label, date) {
-      var n = S.diffDays(real, date);
-      if (n > 0) map[k] = { label: label, offset: n };
-    }
-    jump('d49', '四十九日', S.addDays(death, 48));
-    jump('y1', '一周忌', S.addYears(death, 1));
-    jump('y3', '三回忌', S.addYears(death, 2));
-    return map;
-  }
-
-  function applyTheme() {
-    document.documentElement.setAttribute('data-theme', st.theme);
-    var m = document.querySelector('meta[name=theme-color]');
-    if (m) m.setAttribute('content', st.theme === 'light' ? '#f6f4f0' : '#0e1013');
-  }
-
-  /* 持ち出し。引き止めないと最初に決めたので、いつでも全部出せる。 */
   function exportAll() {
-    sheet('すべて手元に持ち出す', '写真と記録をまとめた1つのファイルを保存します。少し時間がかかります。', [
-      { label: '保存する', primary: true, on: doExport },
-      { label: 'やめる' }
-    ]);
+    sheet('すべて手元に持ち出す',
+      '写真・動画・記録をまとめた1つのファイルにします。動画があると大きくなるので、少し時間がかかります。',
+      [{ label: '書き出す', primary: true, on: doExport }, { label: 'やめる' }]);
   }
-
   function doExport() {
-    S.allPhotos().then(function (photos) {
-      return S.getPhoto('portrait').then(function (por) {
-        var all = photos.slice();
-        if (por) all.push(por);
-        return all.reduce(function (p, rec) {
-          return p.then(function (acc) {
-            return blobToDataURL(rec.blob).then(function (d) {
-              acc.push({ id: rec.id, takenAt: rec.takenAt || null, dataURL: d });
-              return acc;
-            });
+    sheet('書き出しています', '<span class="busy"></span> しばらくお待ちください', []);
+    S.allMedia().then(function (all) {
+      return all.reduce(function (p, rec) {
+        return p.then(function (acc) {
+          return new Promise(function (res) {
+            var r = new FileReader();
+            r.onload = function () { acc.push({ id: rec.id, at: rec.at, kind: rec.kind, dataURL: r.result }); res(acc); };
+            r.onerror = function () { res(acc); };
+            r.readAsDataURL(rec.blob);
           });
-        }, Promise.resolve([]));
-      });
-    }).then(function (photos) {
-      var out = { app: 'ともしび', exportedAt: new Date().toISOString(), data: st, photos: photos };
+        });
+      }, Promise.resolve([]));
+    }).then(function (media) {
+      var out = { app: 'ともしび', exportedAt: new Date().toISOString(), data: st, media: media };
       var text = JSON.stringify(out);
-      var blob = new Blob([text], { type: 'application/json' });
-
-      // 埋め込み（iframe）で開かれているとダウンロードが働かない。
-      // 持ち出せると約束した以上、黙って失敗させずコピーの道を出す。
       var embedded = false;
       try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
-      if (embedded) { copyOut(text, photos.length); return; }
-
+      closeSheet();
+      if (embedded) { copyOut(text, media.length); return; }
+      var blob = new Blob([text], { type: 'application/json' });
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'tomoshibi-' + S.ymd(new Date()) + '.json';
       document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+      sheet('書き出しました', esc(media.length) + '件の写真・動画をふくむファイルを保存しました。', [{ label: 'とじる', primary: true }]);
     });
   }
-
+  /* 埋め込みで開かれているとダウンロードが働かない。
+     持ち出せると約束した以上、黙って失敗させずコピーの道を出す。 */
   function copyOut(text, n) {
     var mb = (text.length / 1048576).toFixed(1);
     sheet('すべて手元に持ち出す',
       'いまの開きかたではファイルを保存できないため、中身をそのままお渡しします。' +
-      '写真' + n + '枚をふくむ ' + mb + 'MB です。<br><br>' +
-      '<textarea id="export-text" readonly rows="4" style="width:100%;font-size:11px;' +
-      'background:var(--panel-2);color:var(--muted);border:1px solid var(--line);' +
-      'border-radius:10px;padding:10px"></textarea>',
-      [{ label: 'コピーする', primary: true, on: function () {} }]);
-    var ta = document.getElementById('export-text');
-    if (ta) ta.value = text;
-    var btn = document.querySelector('#sheet-root [data-act="0"]');
-    if (btn) {
-      btn.onclick = function () {
-        var t = document.getElementById('export-text');
-        t.select(); t.setSelectionRange(0, t.value.length);
-        var ok = false;
-        try { ok = document.execCommand('copy'); } catch (e) {}
-        if (!ok && navigator.clipboard) navigator.clipboard.writeText(t.value).catch(function () {});
-        btn.textContent = 'コピーしました';
-      };
-    }
-  }
-
-  function blobToDataURL(b) {
-    return new Promise(function (res) {
-      var r = new FileReader();
-      r.onload = function () { res(r.result); };
-      r.onerror = function () { res(''); };
-      r.readAsDataURL(b);
-    });
+      n + '件をふくむ ' + mb + 'MB です。<br><br>' +
+      '<textarea id="export-text" readonly rows="4" style="width:100%;font-size:11px;background:var(--bg);' +
+      'color:var(--muted);border:2px solid var(--line);border-radius:12px;padding:10px"></textarea>',
+      [{ label: 'コピーする', primary: true, keep: true, on: function () {} }]);
+    var ta = $('#export-text'); if (ta) ta.value = text;
+    var btn = $('#sheet-root [data-act="0"]');
+    if (btn) btn.onclick = function () {
+      var t = $('#export-text');
+      t.select(); t.setSelectionRange(0, t.value.length);
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      if (!ok && navigator.clipboard) navigator.clipboard.writeText(t.value).catch(function () {});
+      btn.textContent = 'コピーしました';
+    };
   }
 
   /* ============ シート ============ */
-  function sheet(title, text, actions) {
+  function sheet(title, html, actions) {
     var root = $('#sheet-root');
-    root.innerHTML =
-      '<div class="sheet"><button class="veil" aria-label="とじる"></button><div class="panel" role="dialog" aria-modal="true">' +
-      '<h3>' + esc(title) + '</h3>' + (text ? '<p>' + text + '</p>' : '') +
-      '<div class="pair" style="display:flex;flex-direction:column;gap:8px">' +
+    root.innerHTML = '<div class="sheet"><button class="veil" aria-label="とじる"></button>' +
+      '<div class="panel" role="dialog" aria-modal="true"><h3>' + esc(title) + '</h3>' +
+      (html ? '<p>' + html + '</p>' : '') + '<div class="acts">' +
       actions.map(function (a, i) {
-        return '<button class="btn ' + (a.primary ? 'btn-primary' : 'btn-quiet') + '" data-act="' + i + '">' + esc(a.label) + '</button>';
-      }).join('') +
-      '</div></div></div>';
+        return '<button class="btn ' + (a.primary ? 'btn-amber' : 'btn-line') + '" data-act="' + i + '">' + esc(a.label) + '</button>';
+      }).join('') + '</div></div></div>';
     root.querySelector('.veil').onclick = closeSheet;
     actions.forEach(function (a, i) {
-      root.querySelector('[data-act="' + i + '"]').onclick = function () {
-        closeSheet();
-        if (a.on) a.on();
-      };
+      var b = root.querySelector('[data-act="' + i + '"]');
+      if (!b) return;
+      b.onclick = function () { if (!a.keep) closeSheet(); if (a.on) a.on(); };
     });
-    var first = root.querySelector('.panel .btn');
-    if (first) first.focus();
+    var f = root.querySelector('.panel .btn'); if (f) f.focus();
   }
   function closeSheet() { $('#sheet-root').innerHTML = ''; }
-
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
 
   /* ============ 配線 ============ */
   function wire() {
     $('#btn-next').onclick = onboNext;
     $('#btn-back').onclick = function () { if (step > 0) { step--; renderOnbo(); } };
+    $('#btn-skip').onclick = function () { step++; renderOnbo(); };
     $('#in-name').addEventListener('keydown', function (e) { if (e.key === 'Enter') onboNext(); });
-
+    $('#kindpick').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-kind]'); if (!b) return;
+      st.pet.kind = b.dataset.kind; S.save();
+      $$('#kindpick button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      paintFaces();
+      var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
+    });
     $('#btn-pick').onclick = function () { $('#in-photo').click(); };
-    $('#in-photo').onchange = function (e) {
-      var f = e.target.files && e.target.files[0];
-      if (!f) return;
-      $('#pick-label').textContent = '取り込んでいます…';
-      shrink(f, 1200).then(function (blob) {
-        return S.putPhoto({ id: 'portrait', blob: blob, takenAt: f.lastModified || Date.now() });
-      }).then(loadPortrait).then(function () {
-        $('#pick-label').textContent = '写真をえらびなおす';
-      });
-    };
+    $('#in-photo').onchange = function (e) { pickPortrait(e.target.files && e.target.files[0]); e.target.value = ''; };
 
-    $('#btn-visit').onclick = startRitual;
+    $('#btn-omairi').onclick = startRitual;
     $('#ritual').addEventListener('click', function (e) {
       var b = e.target.closest('.offer');
       if (b && !b.disabled) tapOffer(+b.dataset.i);
     });
-    $('#btn-ritual-close').onclick = function () { show('home'); };
-    $('#btn-after-close').onclick = function () { show('home'); };
-
-    $('#btn-reunion').onclick = playReunion;
-    $('#btn-reunion-skip').onclick = function () {
-      var y = S.today().getFullYear();
-      if (st.reunionSeen.indexOf(y) < 0) { st.reunionSeen.push(y); S.save(); }
-      renderHome();
+    $('#seasonal').onclick = function () {
+      var t = S.today();
+      if (S.seasonalDone(t)) return;
+      S.putSeasonal(t); renderRitual();
     };
-    $('#btn-reunion-again').onclick = playReunion;
-    $('#btn-reunion-close').onclick = function () { show('home'); };
+    $('#btn-omairi-close').onclick = function () { show('home'); };
+    $('#btn-after-close').onclick = function () { show('home'); };
 
     $('#btn-add-photos').onclick = function () { $('#in-photos').click(); };
     $('#in-photos').onchange = function (e) { addPhotos(e.target.files); e.target.value = ''; };
+    $('#btn-add-vids').onclick = function () { $('#in-vids').click(); };
+    $('#in-vids').onchange = function (e) { addVideos(e.target.files); e.target.value = ''; };
 
     $('#album-list').addEventListener('click', function (e) {
-      var m = e.target.closest('[data-ch-menu]');
-      if (!m) return;
-      var id = m.dataset.chMenu;
-      var hidden = st.hiddenChapters.indexOf(id) >= 0;
-      sheet('この期間', 'アルバムに出すかどうかを選べます。出さない期間は、再会や季節の一枚にも使われません。', [
+      var m = e.target.closest('[data-ch]'); if (!m) return;
+      var id = m.dataset.ch, hidden = st.photoHidden.indexOf(id) >= 0;
+      sheet('この期間', 'アルバムに出すかどうかを選べます。あとからいつでも戻せます。', [
         { label: hidden ? 'また出す' : 'この期間は出さない', on: function () { S.toggleHidden(id); renderAlbum(); } },
         { label: '名前をつける', on: function () { renameChapter(id); } },
         { label: 'とじる' }
       ]);
     });
 
+    document.addEventListener('click', function (e) {
+      var menu = e.target.closest('[data-vmenu]');
+      if (menu) {
+        e.stopPropagation();
+        var id = menu.dataset.vmenu;
+        sheet('この動画', '', [
+          { label: '名前をつける', on: function () { renameVideo(id); } },
+          { label: '消す', on: function () {
+              sheet('この動画を消す', '取り消せません。', [
+                { label: '消す', primary: true, on: function () {
+                    freeURL(id); delete st.videoTitles[id]; S.save();
+                    S.deleteMedia(id).then(renderVideos).then(renderHomeVideos);
+                  } },
+                { label: 'やめる' }
+              ]);
+            } },
+          { label: 'とじる' }
+        ]);
+        return;
+      }
+      var tile = e.target.closest('[data-vid]');
+      if (tile) S.getMedia(tile.dataset.vid).then(function (v) { if (v) playVideo(v); });
+    });
+    $('#btn-player-close').onclick = function () { show(lastTab); };
+
     $('#btn-settings').onclick = function () { show('settings'); };
     $('#btn-settings-close').onclick = function () { show('home'); };
-    $('#btn-more').onclick = function () { st.freqNudge = 1; S.save(); renderSettings(); };
-    $('#btn-less').onclick = function () { st.freqNudge = -1; S.save(); renderSettings(); };
-    $('#btn-export').onclick = exportAll;
-
-    $('#seg-cal').addEventListener('click', function (e) {
-      var b = e.target.closest('[data-v]'); if (!b) return;
-      st.pet.calendar = b.dataset.v; S.save(); renderSettings();
-    });
     $('#seg-theme').addEventListener('click', function (e) {
       var b = e.target.closest('[data-v]'); if (!b) return;
       st.theme = b.dataset.v; S.save(); applyTheme(); renderSettings();
     });
     $('#seg-offset').addEventListener('click', function (e) {
       var b = e.target.closest('[data-v]'); if (!b) return;
-      var j = offsetJumps()[b.dataset.v];
-      if (!j) return;
+      var j = offsetJumps()[b.dataset.v]; if (!j) return;
       st.dateOffset = j.offset; S.save(); renderSettings();
     });
-
-    $('#btn-hidden').onclick = function () {
-      if (!st.hiddenChapters.length) {
-        sheet('出さない写真・期間', 'いまは1件もありません。アルバムの「···」から、出さない期間を選べます。', [{ label: 'とじる' }]);
-        return;
-      }
-      sheet('出さない写真・期間', st.hiddenChapters.length + '件あります。アルバムの「···」から戻せます。', [{ label: 'とじる' }]);
-    };
-
+    $('#btn-export').onclick = exportAll;
     $('#btn-profile').onclick = function () {
-      step = 0; pickedPhoto = null;
+      step = 0;
       $('#in-name').value = st.pet.name;
       $('#in-death').value = st.pet.deathISO;
       $('#in-birth').value = st.pet.birthISO;
-      $('#pick-label').textContent = portraitUrl ? '写真をえらびなおす' : '写真をえらぶ';
+      $$('#kindpick button').forEach(function (x) { x.setAttribute('aria-pressed', String(x.dataset.kind === st.pet.kind)); });
+      $('#btn-pick').textContent = faceURL ? 'えらびなおす' : '写真をえらぶ';
+      $('#pick-msg').textContent = faceURL ? '' : 'まだ写真はありません';
       renderOnbo(); show('onbo');
     };
-
+    $('#btn-store').onclick = function () {
+      sheet('保存のようす',
+        S.idbAvailable()
+          ? 'この端末では、写真も動画もそのまま保存できます。<br><br>すべて端末の中だけに残り、どこにも送られません。'
+          : 'いまの開きかたでは、大きな保存先が使えません。<br><br>写真は1枚だけ小さくして保存できますが、アルバムと動画は保存できません。<br><br>ホーム画面に追加してから開くか、SafariやChromeで直接開くと、すべて使えるようになります。',
+        [{ label: 'とじる', primary: true }]);
+    };
     $('#btn-help').onclick = function () {
       sheet('つらいときの相談先',
         'ひとりで抱えなくて大丈夫です。まずは、こういうところがあります。<br><br>' +
-        '・かかりつけだった動物病院<br>' +
-        '・お住まいの自治体の こころの健康相談窓口<br>' +
-        '・ペットロスの相談を受けている カウンセリング機関<br><br>' +
-        '<span style="color:var(--faint);font-size:12px">※ 具体的な窓口名と連絡先は、実在と受付状況を確認できしだいここに載せます。確認できていないものは載せません。</span>',
-        [{ label: 'とじる' }]);
+        '・かかりつけだった動物病院<br>・お住まいの自治体の こころの健康相談窓口<br>' +
+        '・ペットロスの相談を受けているカウンセリング機関<br><br>' +
+        '<span style="font-size:12px;color:var(--faint)">※ 具体的な窓口名と連絡先は、実在と受付状況を確認できしだいここに載せます。確認できていないものは載せません。</span>',
+        [{ label: 'とじる', primary: true }]);
     };
-
     $('#btn-reset').onclick = function () {
       sheet('この端末のデータを消す',
-        'なまえ・日付・お参りの記録・写真を、この端末から消します。取り消せません。<br><br>先に「すべて手元に持ち出す」で保存しておけます。',
+        'なまえ・日づけ・おまいりの記録・写真・動画を、この端末から消します。取り消せません。<br><br>先に「すべて手元に持ち出す」で保存しておけます。',
         [{ label: '消す', on: hardReset }, { label: 'やめる', primary: true }]);
     };
   }
@@ -656,29 +708,40 @@
   function renameChapter(id) {
     var name = window.prompt('この期間の名前', st.chapterTitles[id] || '');
     if (name === null) return;
-    if (name.trim()) st.chapterTitles[id] = name.trim();
-    else delete st.chapterTitles[id];
+    if (name.trim()) st.chapterTitles[id] = name.trim().slice(0, 24); else delete st.chapterTitles[id];
     S.save(); renderAlbum();
   }
-
+  function renameVideo(id) {
+    var name = window.prompt('この動画の名前', st.videoTitles[id] || '');
+    if (name === null) return;
+    st.videoTitles[id] = (name.trim() || 'うごくすがた').slice(0, 24);
+    S.save(); renderVideos(); renderHomeVideos();
+  }
   function hardReset() {
-    S.allPhotos().then(function (ps) {
-      return Promise.all(ps.map(function (p) { return S.deletePhoto(p.id); }))
-        .then(function () { return S.deletePhoto('portrait'); });
+    S.allMedia().then(function (all) {
+      return Promise.all(all.map(function (m) { return S.deleteMedia(m.id); }));
     }).catch(function () {}).then(function () {
       S.reset();
+      try { localStorage.removeItem('tomoshibi.media.portrait'); } catch (e) {}
       location.reload();
     });
   }
+
+  /* 再生からもどる先を覚えておく */
+  var lastTab = 'home';
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-go]');
+    if (t && t.dataset.go !== 'player') lastTab = t.dataset.go;
+  }, true);
 
   /* ============ 起動 ============ */
   buildTabs();
   wire();
   applyTheme();
-  loadPortrait();
-  if (st.onboarded && st.pet.deathISO) {
-    show('home');
-  } else {
-    step = 0; renderOnbo(); show('onbo');
-  }
+  S.probe().then(function () {
+    return loadFace();
+  }).then(function () {
+    if (st.onboarded) show('home');
+    else { step = 0; renderOnbo(); show('onbo'); }
+  });
 })();
