@@ -394,27 +394,73 @@
       $('#home-vid-list').innerHTML = latest.map(function (v) {
         return tileHTML(v, latest.length === 1);
       }).join('');
-      primeTileThumbs($('#home-vid-list'));
+      ensureVideoThumbs(latest);
     });
   }
 
-  /* preload="metadata" だけでは絵が出ず、多くのブラウザで真っ黒のまま止まる。
-     メタデータが読めた時点でごくわずかな時間へ実際にシークさせ、動画の最初の
-     ひとコマを静止画として描かせる（0そのものだと「シークなし」と判断されて
-     絵が出ないことがあるため、ごく小さな正の時間にずらす）。 */
-  function primeTileThumbs(root) {
-    $$('video', root).forEach(function (v) {
-      var seek = function () { try { v.currentTime = 0.05; } catch (e) {} };
-      if (v.readyState >= 1) seek();
-      else v.addEventListener('loadedmetadata', seek, { once: true });
+  /* 動画の最初のコマを、一度だけ静止画（JPEG・dataURL）にして保存しておく。
+     <video preload="metadata"> をタイルにそのまま並べてコマを描かせる方式を
+     最初に試したが、実機（特にiOS Safari）では metadata だけ読んだ状態から
+     currentTime を動かしても実際のコマが描かれず、黒いままのことがあった。
+     一度だけ確実にコマを取り出し、以後はふつうの<img>として出せば、
+     ブラウザやOSの「動画をどこまで読み込むか」の違いに左右されない。 */
+  function grabFirstFrame(url) {
+    return new Promise(function (resolve, reject) {
+      var v = document.createElement('video');
+      v.muted = true; v.playsInline = true; v.preload = 'auto';
+      var done = false;
+      var t = setTimeout(function () { if (!done) { done = true; reject(new Error('timeout')); } }, 8000);
+      function finish(ok) {
+        if (done) return; done = true; clearTimeout(t);
+        if (!ok) { reject(new Error('decode-failed')); return; }
+        try {
+          var w = v.videoWidth, h = v.videoHeight;
+          if (!w || !h) { reject(new Error('decode-failed')); return; }
+          var s = Math.min(1, 360 / Math.max(w, h));
+          var c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
+          c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+          resolve(c.toDataURL('image/jpeg', 0.75));
+        } catch (e) { reject(e); }
+      }
+      // loadeddata＝最初のコマのデータが実際にそろった合図。そこから
+      // ごくわずかに先へシークして確定させる（0のままだと「動いていない」と
+      // 見なされ、seeked が来ない実装があるため）。
+      v.addEventListener('loadeddata', function () {
+        try { v.currentTime = 0.05; } catch (e) { finish(true); }
+      });
+      v.addEventListener('seeked', function () { finish(true); });
+      v.addEventListener('error', function () { finish(false); });
+      v.src = url;
+    });
+  }
+  /* サムネイルをまだ持たない動画があれば裏で作る。1本失敗しても他は続け、
+     できたぶんから保存して、home・うごく一覧を作り直す。 */
+  function ensureVideoThumbs(vs) {
+    var missing = vs.filter(function (v) { return !st.videoThumbs[v.id]; });
+    if (!missing.length) return;
+    var p = Promise.resolve();
+    missing.forEach(function (v) {
+      p = p.then(function () {
+        return grabFirstFrame(mediaURL(v)).then(function (dataURL) {
+          st.videoThumbs[v.id] = dataURL; S.save();
+        }).catch(function () { /* この1本はあきらめる。タイルは動画のまま残る */ });
+      });
+    });
+    p.then(function () {
+      renderHomeVideos();
+      if ($('#view-ugoku').classList.contains('on')) renderVideos();
     });
   }
 
   function tileHTML(v, big) {
     var title = st.videoTitles[v.id] || 'うごくすがた';
     var d = v.at ? S.formatShort(new Date(v.at)) : '';
+    var thumb = st.videoThumbs[v.id];
+    var pic = thumb ? '<img src="' + thumb + '" alt="">'
+                    : '<video src="' + mediaURL(v) + '" muted playsinline preload="metadata"></video>';
     return '<div class="tile' + (big ? ' big' : '') + '" data-vid="' + esc(v.id) + '">' +
-      '<video src="' + mediaURL(v) + '" muted playsinline preload="metadata"></video>' +
+      pic +
       '<svg class="play" viewBox="0 0 24 24"><use href="#ic-play"></use></svg>' +
       '<span class="cap"><b>' + esc(title) + '</b><span>' + esc(d) + '</span></span>' +
       '</div>';
@@ -860,7 +906,7 @@
         return tileHTML(v, vs.length === 1 || (i === 0 && vs.length % 2 === 1)).replace('<span class="cap">',
           '<button class="menu" data-vmenu="' + esc(v.id) + '" aria-label="この動画の設定">···</button><span class="cap">');
       }).join('');
-      primeTileThumbs($('#vid-list'));
+      ensureVideoThumbs(vs);
       $('#vid-warn').innerHTML = S.storeInfo().idb ? '' :
         '<div class="tip tip-warn"><svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>' +
         '<p>いまの開きかたでは動画を保存できません。ホーム画面に追加してから開くか、SafariやChromeで直接開いてください。</p></div>';
@@ -1371,7 +1417,7 @@
           { label: '消す', on: function () {
               sheet('この動画を消す', '取り消せません。', [
                 { label: '消す', primary: true, on: function () {
-                    freeURL(id); delete st.videoTitles[id]; S.save();
+                    freeURL(id); delete st.videoTitles[id]; delete st.videoThumbs[id]; S.save();
                     S.deleteMedia(id).then(renderVideos).then(renderHomeVideos);
                   } },
                 { label: 'やめる' }
