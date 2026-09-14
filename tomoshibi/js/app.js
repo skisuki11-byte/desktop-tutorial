@@ -651,7 +651,7 @@
           .then(function (r) {
             if (!r) return;
             if (r.ok) {
-              st.videoTitles[id] = (f.name || '').replace(/\.[^.]+$/, '').slice(0, 24) || 'うごくすがた';
+              st.videoTitles[id] = videoName(f);
               S.save();
             } else fails[r.reason] = (fails[r.reason] || 0) + 1;
           });
@@ -667,6 +667,16 @@
         keys.map(function (k) { return '<b>' + fails[k] + '本</b>：' + esc(reasonText(k)); }).join('<br><br>'),
         [{ label: 'わかりました', primary: true }]);
     });
+  }
+
+  /* iPhone はカメラロールの動画に "_users_0484f8d0-…" のようなパスを付けてくる。
+     そのまま見出しにすると意味がないので、読めない名前は既定名にする。 */
+  function videoName(f) {
+    var n = String(f && f.name || '').split(/[\\/]/).pop().replace(/\.[^.]+$/, '').trim();
+    if (!n || n.length > 40 || /^_?users?[_-]/i.test(n) || /^[0-9a-f]{8}-[0-9a-f]{4}/i.test(n)) {
+      return 'うごくすがた';
+    }
+    return n.slice(0, 24);
   }
 
   function playVideo(v) {

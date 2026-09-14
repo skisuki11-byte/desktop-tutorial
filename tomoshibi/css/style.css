@@ -51,7 +51,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .body{flex:1;display:flex;flex-direction:column;min-height:0;padding:calc(env(safe-area-inset-top,0px) + 18px) 20px 0}
 .body.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch}
-.spacer{flex:1;min-height:var(--s4)}
+/* #app を画面の高さに固定したぶん、中身が入りきらないと flex が子要素を
+   縮めてしまう。遺影のカードが押しつぶされて名前ごと切れたのがこれ。
+   スクロールさせたいのであって、潰したいのではないので縮小を止める。 */
+.body > *{flex-shrink:0}
+.spacer{flex:1 1 auto;min-height:var(--s4)}
 .foot{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 22px)}
 
 /* ---------- 上の日付 ---------- */
@@ -155,14 +159,25 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .seasonal[data-done="1"] .plus{font-size:18px}
 
 /* ---------- おまいりのあと ---------- */
-.after{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 26px}
+.after{
+  position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;
+  padding:var(--s4) 26px;
+}
+.after > *{flex-shrink:0}
+/* 縦の中央ぞろえを justify-content でやると、画面の小さい端末で中身が
+   はみ出したとき、上にあふれたぶんがスクロールで戻せなくなる。
+   上下に伸び縮みする余白を置けば、余裕があるときだけ中央にそろう。 */
+.after::before,.after::after{content:"";flex:1 1 auto;min-height:0}
 .after .line{position:relative;margin:22px 0 0;font-family:var(--round);font-weight:700;font-size:23px;
   letter-spacing:.08em;line-height:1.8;text-align:center}
 .tally{position:relative;margin-top:26px;display:flex;align-items:center;gap:14px;background:var(--panel);
-  border:2px solid var(--line);border-radius:24px;padding:16px 20px;box-shadow:var(--shadow)}
+  border:2px solid var(--line);border-radius:24px;padding:16px 18px;box-shadow:var(--shadow)}
 .tally .n{font-family:var(--round);font-weight:700;font-size:38px;line-height:1;color:var(--amber-ink);
   font-variant-numeric:tabular-nums;margin:0;text-align:center}
-.tally .nl{margin:4px 0 0;font-size:11.5px;color:var(--muted);letter-spacing:.06em;text-align:center}
+/* 「回目のおまいり」は狭い端末でも折り返させない。ここが2行になると
+   カードだけ背が伸びて、数字とのつり合いが崩れる。 */
+.tally .nl{margin:4px 0 0;font-size:11.5px;color:var(--muted);letter-spacing:.06em;text-align:center;white-space:nowrap}
 .tally .sep{width:2px;height:44px;background:var(--line)}
 .tally .g{display:flex;align-items:center;gap:9px}
 .tally .g p{margin:0;font-size:12.5px;line-height:1.7}
