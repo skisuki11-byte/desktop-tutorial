@@ -17,6 +17,7 @@
     return {
       onboarded: false,
       pet: { name: '', kind: 'dog', deathISO: '', birthISO: '', faves: [] },
+      selfLog: {},         // { "2026-09-14": 3 } その日の自分。1〜5
       letters: [],         // 飼い主からあの子へ書いた手紙 [{at, text}]
       faveDone: {},        // { "2026-09-14": ["さつまいも"] } その日そなえたもの
       visits: [],          // お参りした日 "YYYY-MM-DD"。通算回数はこの長さ
@@ -176,6 +177,29 @@
     if (!state.faveDone[k]) state.faveDone[k] = [];
     if (state.faveDone[k].indexOf(name) < 0) state.faveDone[k].push(name);
     save();
+  }
+
+  /* きょうの自分。1〜5。点数ではなく、波を見るための記録。
+     死別への対処は行ったり来たりしながら進む（Dual Process Model,
+     Stroebe & Schut 1999）。上がり続けるのが正常なのではない。
+     だから平均も目標も出さないし、良し悪しの判定もしない。 */
+  function selfOn(d) { return state.selfLog[ymd(d)] || 0; }
+  function putSelf(d, v) {
+    v = Math.max(1, Math.min(5, v | 0));
+    state.selfLog[ymd(d)] = v; save();
+  }
+  /* 古い順に並べて返す。直近 n 件。 */
+  function selfSeries(n) {
+    var keys = Object.keys(state.selfLog).sort();
+    if (n && keys.length > n) keys = keys.slice(keys.length - n);
+    return keys.map(function (k) { return { day: k, v: state.selfLog[k] }; });
+  }
+  /* いちばん重い記録が続いているか。相談先をそっと出すかの判断にだけ使う。
+     診断ではないので、それ以外には使わない。 */
+  function heavyRun() {
+    var a = selfSeries(0), n = 0;
+    for (var i = a.length - 1; i >= 0; i--) { if (a[i].v <= 1) n++; else break; }
+    return n;
   }
 
   /* 手紙。新しいものが先に来るように入れる。 */
@@ -523,6 +547,7 @@
     visitCount: visitCount, visitedOn: visitedOn, recordVisit: recordVisit,
     seasonalFor: seasonalFor, seasonalDone: seasonalDone, putSeasonal: putSeasonal,
     faveDoneOn: faveDoneOn, putFave: putFave, addLetter: addLetter,
+    selfOn: selfOn, putSelf: putSelf, selfSeries: selfSeries, heavyRun: heavyRun,
     putMedia: putMedia, getMedia: getMedia, allMedia: allMedia, deleteMedia: deleteMedia, newId: newId,
     chapters: chapters, toggleHidden: toggleHidden
   };

@@ -16,7 +16,10 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
-  function artRef() { return st.pet.kind === 'cat' ? '#art-cat' : '#art-dog'; }
+  function artRef() {
+    return st.pet.kind === 'cat' ? '#art-cat'
+         : st.pet.kind === 'other' ? '#art-paw' : '#art-dog';
+  }
 
   /* 作った objectURL は必ず覚えて、作り直すときに解放する */
   var urlCache = {};
@@ -219,6 +222,7 @@
     var t = S.today();
     $('#home-date').textContent = S.formatMD(t);
     $('#home-greet').textContent = greeting(new Date().getHours());
+    $('#home-title').textContent = (st.pet.name || 'あの子') + 'のおうち';
     $('#home-name').textContent = st.pet.name || '—';
 
     var death = S.parseISO(st.pet.deathISO), birth = S.parseISO(st.pet.birthISO);
@@ -297,15 +301,31 @@
   /* ============ おまいりの4動作 ============
      順序固定・スキップ不可。毎回まったく同じ手順であることが効いている。 */
   var LEADS = ['灯りを、ともします', 'お水を、そなえます', 'ごはんを、そなえます', 'お花を、そなえます'];
-  var rstep = 0;
+  var rstep = 0, rcounted = false;
   function renderRitual() {
     $$('#ritual .offer').forEach(function (b, i) {
       if (i < rstep) { b.dataset.state = 'done'; b.disabled = true; }
       else if (i === rstep) { b.dataset.state = 'next'; b.disabled = false; }
       else { delete b.dataset.state; b.disabled = true; }
     });
-    $('#ritual-lead').textContent = rstep < 4 ? LEADS[rstep] : 'ありがとう';
+    var faves = st.pet.faves || [];
+    $('#ritual-lead').textContent = rstep < 4
+      ? LEADS[rstep]
+      : (faves.length ? 'ほかにも、どうぞ' : 'そなえました');
+    $('#ritual-sub').textContent = rstep < 4
+      ? 'じゅんばんに、4つ'
+      : '終わったら、下のボタンで';
     $('#ritual-pill').textContent = rstep + ' / 4';
+
+    // 4つ終わるまでは「また、あとで」、終わったら「おまいりを終える」
+    var b = $('#btn-omairi-close');
+    if (rstep < 4) {
+      b.className = 'btn btn-line';
+      b.textContent = 'また、あとで';
+    } else {
+      b.className = 'btn btn-amber btn-lg';
+      b.textContent = 'おまいりを終える';
+    }
     var t = S.today(), sea = S.seasonalFor(t), done = S.seasonalDone(t);
     $('#seasonal-t').textContent = (t.getMonth() + 1) + '月のおそなえ ・ ' + sea.name;
     $('#seasonal-s').textContent = done ? 'そなえました' : '月がわり。置いても置かなくても、いい';
@@ -322,16 +342,17 @@
           (f.length ? '足す' : '好きだったものを足す') + '</button>'
         : '');
   }
-  function startRitual() { rstep = 0; renderRitual(); show('omairi'); }
+  function startRitual() { rstep = 0; rcounted = false; renderRitual(); show('omairi'); }
   function tapOffer(i) {
     if (i !== rstep) return;
-    rstep++; renderRitual();
+    rstep++;
     if (rstep === 4) {
+      // 4つそろった時点でおまいりは成立。数えるのはここ。
+      // ただし画面は終わらせない。好きだったものをそなえる余地を残す。
       rin();
-      var t = S.today();
-      var counted = S.recordVisit(t);
-      setTimeout(function () { showAfter(counted); }, 850);
+      rcounted = S.recordVisit(S.today());
     }
+    renderRitual();
   }
 
   function showAfter(counted) {
@@ -345,6 +366,7 @@
       : '<svg width="26" height="26"><use href="#of-flower"></use></svg>' +
         '<p>今日の花は<br><b style="color:var(--grass-ink)">もう咲いています</b></p>';
     drawPetals();
+    renderSelfAsk();
     S.allMedia('video').then(function (vs) {
       var b = $('#btn-after-vid');
       b.hidden = !vs.length;
@@ -354,6 +376,86 @@
       }
     });
     show('after');
+  }
+
+  /* きょうの自分。1〜5。答えなくてもいい。 */
+  function renderSelfAsk() {
+    var t = S.today(), v = S.selfOn(t);
+    $$('#self-scale button').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(+b.dataset.v === v));
+    });
+    var box = $('#self-ask');
+    box.classList.toggle('done', !!v);
+    box.querySelector('.q').textContent = v ? '記録しました' : 'きょうの自分は、どうでしたか';
+  }
+
+  /* 波のグラフ。1本だけなので凡例はいらない。
+     平均も目標線も出さない。出すと「上がるべきもの」に見えてしまう。 */
+  function renderSelfChart() {
+    var data = S.selfSeries(30);
+    var box = $('#self-chart'), cap = $('#self-cap');
+    if (data.length < 2) {
+      box.innerHTML = '<p class="chart-empty">おまいりのあとに、きょうの自分を<br>記録できます。' +
+        (data.length ? '<br>2回めから、波が見えてきます。' : '') + '</p>';
+      cap.textContent = '';
+      return;
+    }
+    var W = 320, H = 132, L = 40, R = 12, T = 14, B = 26;
+    var iw = W - L - R, ih = H - T - B;
+    var x = function (i) { return L + (data.length === 1 ? iw / 2 : iw * i / (data.length - 1)); };
+    var y = function (v) { return T + ih - (v - 1) / 4 * ih; };
+
+    var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="きょうの自分の記録">'];
+    // 目盛りは控えめに。5段のうち上下だけ名前をつける
+    for (var g = 1; g <= 5; g++) {
+      o.push('<line x1="' + L + '" y1="' + y(g) + '" x2="' + (W - R) + '" y2="' + y(g) +
+        '" stroke="currentColor" stroke-width="1" opacity="' + (g === 1 || g === 5 ? '.18' : '.08') + '"/>');
+    }
+    o.push('<text x="' + (L - 8) + '" y="' + (y(5) + 4) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".55">かるい</text>');
+    o.push('<text x="' + (L - 8) + '" y="' + (y(1) + 4) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".55">おもい</text>');
+
+    var pts = data.map(function (d, i) { return x(i).toFixed(1) + ',' + y(d.v).toFixed(1); }).join(' ');
+    o.push('<polyline points="' + pts + '" fill="none" stroke="#4B8340" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>');
+    data.forEach(function (d, i) {
+      o.push('<circle class="pt" data-i="' + i + '" cx="' + x(i).toFixed(1) + '" cy="' + y(d.v).toFixed(1) +
+        '" r="4.5" fill="#4B8340" stroke="var(--panel)" stroke-width="2"/>');
+      // 触りやすいように、見えない当たり判定を重ねる
+      o.push('<circle class="hit" data-i="' + i + '" cx="' + x(i).toFixed(1) + '" cy="' + y(d.v).toFixed(1) +
+        '" r="16" fill="transparent"/>');
+    });
+    var f = new Date(data[0].day.replace(/-/g, '/')), l = new Date(data[data.length - 1].day.replace(/-/g, '/'));
+    o.push('<text x="' + L + '" y="' + (H - 8) + '" font-size="10" fill="currentColor" opacity=".55">' +
+      (f.getMonth() + 1) + '/' + f.getDate() + '</text>');
+    o.push('<text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".55">' +
+      (l.getMonth() + 1) + '/' + l.getDate() + '</text>');
+    o.push('</svg>');
+    box.innerHTML = o.join('');
+    box.style.color = 'var(--muted)';
+
+    var LV = ['', 'おもかった', 'すこし おもかった', 'ふつう', 'すこし かるかった', 'かるかった'];
+    var say = function (i) {
+      var d = data[i], dd = new Date(d.day.replace(/-/g, '/'));
+      cap.textContent = (dd.getMonth() + 1) + '月' + dd.getDate() + '日 ・ ' + LV[d.v];
+    };
+    say(data.length - 1);
+    box.onclick = function (e) {
+      var c = e.target.closest('[data-i]'); if (!c) return;
+      say(+c.dataset.i);
+    };
+
+    // 重い記録が続いているときだけ、そっと相談先を出す。判定はしない。
+    var run = S.heavyRun();
+    $('#self-help').innerHTML = run >= 5
+      ? '<div class="tip tip-amber" style="margin-top:14px">' +
+        '<svg width="19" height="19" style="color:var(--amber-ink)"><use href="#ic-info"></use></svg>' +
+        '<p>おもい日が' + run + '日つづいています。<br>' +
+        '<button id="btn-self-help" style="margin-top:8px;min-height:40px;padding:0 14px;border-radius:999px;' +
+        'border:2px solid var(--tomo-line,var(--line));background:transparent;color:var(--amber-ink);' +
+        'font-size:12.5px;font-weight:700;cursor:pointer">相談できるところを見る</button></p></div>'
+      : '';
+    var hb = $('#btn-self-help');
+    if (hb) hb.onclick = showHelp;
   }
 
   function drawPetals() {
@@ -424,6 +526,8 @@
     $('#garden').innerHTML = out.join('');
 
     var ms = S.milestones(S.today());
+    renderSelfChart();
+
     $('#niwa-days').innerHTML = ms.length
       ? '<p style="margin:0 0 10px;font-family:var(--round);font-weight:700;font-size:15px">あの日まで</p>' +
         '<div style="display:flex;flex-direction:column;gap:8px">' + ms.slice(0, 4).map(function (m, i) {
@@ -724,6 +828,18 @@
     };
   }
 
+  /* 相談先。実在と受付状況を確認できた窓口だけを載せる。
+     確認できていないものは絶対に載せない。 */
+  function showHelp() {
+    sheet('つらいときの相談先',
+      'ひとりで抱えなくて大丈夫です。まずは、こういうところがあります。<br><br>' +
+      '・かかりつけだった動物病院<br>' +
+      '・お住まいの自治体の こころの健康相談窓口<br>' +
+      '・ペットロスの相談を受けているカウンセリング機関<br><br>' +
+      '<span style="font-size:12px;color:var(--faint)">※ 具体的な窓口名と連絡先は、実在と受付状況を確認できしだいここに載せます。確認できていないものは載せません。</span>',
+      [{ label: 'とじる', primary: true }]);
+  }
+
   /* ============ シート ============ */
   function sheet(title, html, actions) {
     var root = $('#sheet-root');
@@ -792,7 +908,9 @@
       if (S.faveDoneOn(t, n2)) return;
       S.putFave(t, n2); renderRitual();
     });
-    $('#btn-omairi-close').onclick = function () { show('home'); };
+    $('#btn-omairi-close').onclick = function () {
+      if (rstep >= 4) showAfter(rcounted); else show('home');
+    };
     $('#btn-after-close').onclick = function () { show('home'); };
 
     $('#btn-add-photos').onclick = function () { $('#in-photos').click(); };
@@ -932,14 +1050,14 @@
       body += '<br><br>端末を変えるときは、設定の「バックアップを書き出す」で持ち出して、新しい端末で読み込ませてください。';
       sheet('保存のようす', body, [{ label: 'とじる', primary: true }]);
     };
-    $('#btn-help').onclick = function () {
-      sheet('つらいときの相談先',
-        'ひとりで抱えなくて大丈夫です。まずは、こういうところがあります。<br><br>' +
-        '・かかりつけだった動物病院<br>・お住まいの自治体の こころの健康相談窓口<br>' +
-        '・ペットロスの相談を受けているカウンセリング機関<br><br>' +
-        '<span style="font-size:12px;color:var(--faint)">※ 具体的な窓口名と連絡先は、実在と受付状況を確認できしだいここに載せます。確認できていないものは載せません。</span>',
-        [{ label: 'とじる', primary: true }]);
-    };
+    $('#btn-help').onclick = showHelp;
+
+    $('#self-scale').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-v]'); if (!b) return;
+      S.putSelf(S.today(), +b.dataset.v);
+      renderSelfAsk();
+    });
+
     $('#btn-reset').onclick = function () {
       sheet('この端末のデータを消す',
         'なまえ・日づけ・おまいりの記録・写真・動画を、この端末から消します。取り消せません。<br><br>先に「すべて手元に持ち出す」で保存しておけます。',
