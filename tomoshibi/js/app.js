@@ -398,7 +398,8 @@
     show('after');
   }
 
-  /* いまの気分。1〜5。答えなくてもいい。 */
+  /* いまの気分。1〜5。1日に1つで、押しなおせば上書きされる。
+     この記録がこのアプリの要になる。控えめに扱わない。 */
   function renderSelfAsk() {
     var t = S.today(), v = S.selfOn(t);
     // 目盛りはおまいりのあとと、じぶんの画面の2か所にある。まとめて揃える。
@@ -407,7 +408,12 @@
     });
     $$('.selfask').forEach(function (box) {
       box.classList.toggle('done', !!v);
-      box.querySelector('.q').textContent = v ? '記録しました' : 'いまの気分は、どうですか';
+      // 「記録しました」だけだと、いつの記録か分からない。1日に1つなので、その日のこととして言う。
+      box.querySelector('.q').textContent = v ? 'きょうは 記録しました' : 'いまの気分は、どうですか';
+      var qs = box.querySelector('.qs');
+      // 同じ日をもう一度押せば、後から押したほうで上書きされる。それを先に伝える。
+      if (qs) qs.textContent = v ? '押しなおせば、あとから変えられます。'
+                                 : '良し悪しはありません。いまの感じに近いものを。';
     });
   }
 
