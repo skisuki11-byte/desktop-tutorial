@@ -119,9 +119,8 @@
     'quota': 'この端末の保存領域がいっぱいです。アルバムの写真を減らすと入ります。',
     'too-large': 'この写真は大きすぎて、いまの保存先に入りませんでした。',
     'no-store': 'このブラウザでは保存先が使えませんでした。アプリをホーム画面に追加してから開くと入ります。',
-    'video-format': 'この動画の形式は保存できませんでした。いまの画面では mp4 と webm だけが入ります。iPhoneの .mov はそのままでは入らないので、写真アプリで「ビデオを書き出す」か、アプリをホーム画面に追加してから開くと、そのまま入ります。',
-    'video-too-large': 'この動画は大きすぎました。いまの画面では1本20MBまでです。短く切り出すか、アプリをホーム画面に追加してから開くと、大きいままでも入ります。',
-    'rate': '短い時間に何本も入れたため、いったん止められました。少し待ってからもう一度おためしください。',
+    'video-format': 'この動画は、この端末では開けませんでした。写真アプリで書き出し直すと入ることがあります。',
+    'video-too-large': 'この動画を入れるだけの空きが端末にありませんでした。',
     'unreadable': 'ファイルを読み取れませんでした。',
     'unknown': '保存できませんでした。'
   };
@@ -137,6 +136,7 @@
     $('#btn-next').textContent = step === 3 ? 'はじめる' : 'つぎへ';
     $('#onbo-err').hidden = true;
     var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
+    var ow = $('#onbo-warn'); if (ow) ow.hidden = !S.storeInfo().embedded;
     if (step === 2) paintFaces();
   }
   function onboErr(msg) {
@@ -185,6 +185,8 @@
   function greeting(h) { return h < 4 ? 'こんばんは' : h < 11 ? 'おはよう' : h < 17 ? 'こんにちは' : 'こんばんは'; }
 
   function renderHome() {
+    // 消える環境なら、写真を入れる前に知らせる。あとから「消えました」では遅い。
+    $('#home-warn').hidden = !S.storeInfo().embedded;
     var t = S.today();
     $('#home-date').textContent = S.formatMD(t);
     $('#home-greet').textContent = greeting(new Date().getHours());
@@ -437,15 +439,9 @@
         return tileHTML(v, vs.length === 1 || (i === 0 && vs.length % 2 === 1)).replace('<span class="cap">',
           '<button class="menu" data-vmenu="' + esc(v.id) + '" aria-label="この動画の設定">···</button><span class="cap">');
       }).join('');
-      var info = S.storeInfo();
-      $('#vid-warn').innerHTML =
-        info.idb ? ''
-        : info.assets
-          ? '<div class="tip tip-amber"><svg width="19" height="19" style="color:var(--amber-ink)"><use href="#ic-info"></use></svg>' +
-            '<p>いまの画面では、mp4とwebmの動画を1本20MBまで保存できます。<br>' +
-            'iPhoneの .mov や大きい動画も入れたいときは、ホーム画面に追加してから開いてください。</p></div>'
-          : '<div class="tip tip-warn"><svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>' +
-            '<p>いまの開きかたでは動画を保存できません。ホーム画面に追加してから開くか、SafariやChromeで直接開いてください。</p></div>';
+      $('#vid-warn').innerHTML = S.storeInfo().idb ? '' :
+        '<div class="tip tip-warn"><svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>' +
+        '<p>いまの開きかたでは動画を保存できません。ホーム画面に追加してから開くか、SafariやChromeで直接開いてください。</p></div>';
     });
   }
 
@@ -547,12 +543,15 @@
     });
     $('#offset-now').textContent = '表示中の日づけ：' + S.formatJP(S.today(), true);
     var si = S.storeInfo();
-    $('#store-state').textContent = (si.idb ? 'この端末の中' : si.assets ? 'アプリの保管場所' : '写真のみ') + ' ›';
+    $('#store-state').textContent =
+      (si.embedded ? '試し用（消えます）' : si.durable ? 'この端末の中・保護あり' : si.idb ? 'この端末の中' : '写真のみ') + ' ›';
+    $('#warn-ephemeral').hidden = !si.embedded;
   }
 
   function exportAll() {
-    sheet('すべて手元に持ち出す',
-      '写真・動画・記録をまとめた1つのファイルにします。動画があると大きくなるので、少し時間がかかります。',
+    sheet('バックアップを書き出す',
+      '写真・動画・記録をまとめた1つのファイルにします。動画があると大きくなるので、少し時間がかかります。<br><br>' +
+      '端末を変えるときは、このファイルを新しい端末で読み込ませてください。',
       [{ label: '書き出す', primary: true, on: doExport }, { label: 'やめる' }]);
   }
   function doExport() {
@@ -580,7 +579,10 @@
       var name = 'tomoshibi-' + S.ymd(new Date()) + '.json';
       var blob = new Blob([text], { type: 'application/json' });
       var okMsg = function () {
-        sheet('書き出しました', media.length + '件の写真・動画をふくむファイルを保存しました。', [{ label: 'とじる', primary: true }]);
+        sheet('書き出しました',
+          media.length + '件の写真・動画をふくむファイルを保存しました。<br><br>' +
+          '新しい端末では、設定の<b>「バックアップから戻す」</b>でこのファイルを読み込ませてください。',
+          [{ label: 'とじる', primary: true }]);
       };
 
       // claude.ai の画面ではブラウザのダウンロードが効かないので、用意された保存口を使う
@@ -607,7 +609,7 @@
      持ち出せると約束した以上、黙って失敗させずコピーの道を出す。 */
   function copyOut(text, n) {
     var mb = (text.length / 1048576).toFixed(1);
-    sheet('すべて手元に持ち出す',
+    sheet('バックアップを書き出す',
       'いまの開きかたではファイルを保存できないため、中身をそのままお渡しします。' +
       n + '件をふくむ ' + mb + 'MB です。<br><br>' +
       '<textarea id="export-text" readonly rows="4" style="width:100%;font-size:11px;background:var(--bg);' +
@@ -725,6 +727,38 @@
       st.dateOffset = j.offset; S.save(); renderSettings();
     });
     $('#btn-export').onclick = exportAll;
+    $('#btn-import').onclick = function () {
+      sheet('バックアップから戻す',
+        'いま入っているものは、いったん全部消してから入れ直します。<br><br>' +
+        '先に「バックアップを書き出す」で、いまの中身を保存しておけます。',
+        [{ label: 'ファイルをえらぶ', primary: true, on: function () { $('#in-backup').click(); } },
+         { label: 'やめる' }]);
+    };
+    $('#in-backup').onchange = function (e) {
+      var f = e.target.files && e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      sheet('戻しています', '<span class="busy"></span> 写真や動画の数だけ時間がかかります', []);
+      var r = new FileReader();
+      r.onload = function () {
+        var pack = null;
+        try { pack = JSON.parse(r.result); } catch (x) {}
+        if (!pack) { closeSheet(); sheet('戻せませんでした', 'このファイルは読み取れませんでした。', [{ label: 'とじる', primary: true }]); return; }
+        S.restoreAll(pack).then(function (res) {
+          closeSheet();
+          if (!res.ok) {
+            sheet('戻せませんでした', 'このファイルは、ともしびのバックアップではないようです。', [{ label: 'とじる', primary: true }]);
+            return;
+          }
+          sheet('戻しました',
+            res.restored + '件の写真・動画を入れ直しました。' +
+            (res.failed ? '<br><br>' + res.failed + '件は入りませんでした（端末の空きが足りないか、開けない形式でした）。' : ''),
+            [{ label: 'はじめる', primary: true, on: function () { location.reload(); } }]);
+        });
+      };
+      r.onerror = function () { closeSheet(); sheet('戻せませんでした', 'ファイルを読み取れませんでした。', [{ label: 'とじる', primary: true }]); };
+      r.readAsText(f);
+    };
     $('#btn-profile').onclick = function () {
       step = 0;
       $('#in-name').value = st.pet.name;
@@ -737,14 +771,22 @@
     };
     $('#btn-store').onclick = function () {
       var i = S.storeInfo();
-      var body = i.idb
-        ? 'この端末の中に、写真も動画もそのまま保存しています。<br>どこにも送られません。'
-        : i.assets
-          ? 'いまの画面では、この端末の大きな保存先が使えないため、写真と動画をこのアプリの保管場所に置いています。<br><br>' +
-            '動画は mp4・webm で1本20MBまでです。<br><br>' +
-            'ホーム画面に追加してから開くと、端末の中だけに、形式や大きさの制限なく保存できます。'
-          : 'いまの開きかたでは、写真しか保存できません（1枚ぶん）。<br><br>' +
-            'ホーム画面に追加してから開くか、SafariやChromeで直接開くと、すべて使えるようになります。';
+      var body = '写真も動画も記録も、<b>この端末の中だけ</b>に保存しています。' +
+        'どこにも送っていないので、外に漏れることはありません。<br><br>';
+      if (i.embedded) {
+        body += '<b>ただし、いまの開きかたは試し用です。</b>アプリを閉じると、入れたものが消えることがあります。' +
+          '（この画面は別のページの中に埋め込まれていて、そこでの保存は一時的なものとして扱われるためです）<br><br>' +
+          'ずっと残したいときは、<b>ホーム画面に追加してから開いてください。</b>';
+      } else if (!i.idb) {
+        body += 'いまの開きかたでは、写真1枚ぶんしか保存できません。<br>' +
+          'ホーム画面に追加してから開くか、SafariやChromeで直接開いてください。';
+      } else if (i.durable) {
+        body += '<b>消されない保存になっています。</b>ブラウザが自動で消すことはありません。';
+      } else {
+        body += '長いあいだ開かないと、ブラウザが自動で消すことがあります。<br>' +
+          '<b>ホーム画面に追加しておく</b>と、消されにくくなります。';
+      }
+      body += '<br><br>端末を変えるときは、設定の「バックアップを書き出す」で持ち出して、新しい端末で読み込ませてください。';
       sheet('保存のようす', body, [{ label: 'とじる', primary: true }]);
     };
     $('#btn-help').onclick = function () {
