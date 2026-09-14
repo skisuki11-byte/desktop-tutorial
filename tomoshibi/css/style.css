@@ -79,12 +79,17 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    「やめる」「とじる」「もどる」は逃げ道であって、押し間違えると困る操作ではない。
    なのに23pxしかなく、画面の上端＝片手で最も指が届きにくい場所にあった。
    逃げ道こそ押しやすくする。指の最小44pxを満たす。 */
-.bar-btn{
+/* .btn（このあと定義）と同じ詳細度の単一クラスだと、あとに書かれた側が勝つ。
+   .btn の width:100% と min-height:60px が全部ここへ流れ込み、
+   「やめる」が横幅いっぱいに広がって隣の見出しを潰していた。実際に潰れていた。
+   .btn.bar-btn まで詳細度を上げて、ファイル内の順番に関係なく必ず勝たせる。 */
+.btn.bar-btn{
   width:auto;min-height:44px;padding:0 14px;margin-right:-14px;
   font-size:var(--fs-3);border-radius:var(--r-sm);
 }
-/* 画面の下に置く、控えめな入口。主役のボタンと同じ重さにしない。 */
-.sub-link{
+/* 画面の下に置く、控えめな入口。主役のボタンと同じ重さにしない。
+   同じ理由で .btn.sub-link まで詳細度を上げてある。 */
+.btn.sub-link{
   width:100%;min-height:46px;margin-top:10px;
   font-family:var(--sans);letter-spacing:.02em;
   font-size:var(--fs-3);color:var(--amber-ink);font-weight:700;
