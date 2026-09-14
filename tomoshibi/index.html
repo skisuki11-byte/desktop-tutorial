@@ -49,6 +49,14 @@
       <path d="M46 50 L34 47"/><path d="M46 54 L34 55"/><path d="M84 50 L96 47"/><path d="M84 54 L96 55"/>
     </g>
   </symbol>
+  <symbol id="art-paw" viewBox="0 0 120 120">
+    <path d="M60 60 C77 60 90 73 90 87 C90 101 77 108 60 108 C43 108 30 101 30 87 C30 73 43 60 60 60 Z"
+          fill="#E3C49B" stroke="#5A4A3A" stroke-width="2.6" stroke-linejoin="round"/>
+    <ellipse cx="33" cy="50" rx="10" ry="13" transform="rotate(-18 33 50)" fill="#C9A87E" stroke="#5A4A3A" stroke-width="2.6"/>
+    <ellipse cx="51" cy="36" rx="10" ry="14" transform="rotate(-7 51 36)" fill="#C9A87E" stroke="#5A4A3A" stroke-width="2.6"/>
+    <ellipse cx="70" cy="36" rx="10" ry="14" transform="rotate(7 70 36)" fill="#C9A87E" stroke="#5A4A3A" stroke-width="2.6"/>
+    <ellipse cx="88" cy="50" rx="10" ry="13" transform="rotate(18 88 50)" fill="#C9A87E" stroke="#5A4A3A" stroke-width="2.6"/>
+  </symbol>
   <symbol id="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#E8A33D"/><g stroke="#E8A33D" stroke-width="2" stroke-linecap="round"><path d="M12 2.5v2"/><path d="M12 19.5v2"/><path d="M2.5 12h2"/><path d="M19.5 12h2"/><path d="M5.2 5.2l1.4 1.4"/><path d="M17.4 17.4l1.4 1.4"/><path d="M18.8 5.2l-1.4 1.4"/><path d="M6.6 17.4l-1.4 1.4"/></g></symbol>
   <symbol id="of-light" viewBox="0 0 24 24"><path d="M12 4 C10.6 8.4 7.6 10.4 7.6 14 a4.4 4.4 0 0 0 8.8 0 C16.4 10.4 13.4 8.4 12 4 Z" fill="#FFD98A" stroke="#9A6A1B" stroke-width="2" stroke-linejoin="round"/></symbol>
   <symbol id="of-water" viewBox="0 0 24 24"><path d="M6.5 6.5h11l-1.3 12a2.2 2.2 0 0 1-2.2 2h-4a2.2 2.2 0 0 1-2.2-2Z" fill="#BEDCEA" stroke="#33708F" stroke-width="2" stroke-linejoin="round"/><path d="M7.6 12.2c1.5.9 3 .9 4.4 0s2.9-.9 4.4 0" stroke="#33708F" stroke-width="1.8" stroke-linecap="round" fill="none"/></symbol>
@@ -97,6 +105,7 @@
           <div class="kindpick" id="kindpick">
             <button type="button" data-kind="dog" aria-pressed="true"><svg><use href="#art-dog"></use></svg>いぬ</button>
             <button type="button" data-kind="cat" aria-pressed="false"><svg><use href="#art-cat"></use></svg>ねこ</button>
+            <button type="button" data-kind="other" aria-pressed="false" style="grid-column:span 2"><svg><use href="#art-paw"></use></svg>そのほか</button>
           </div>
         </div>
       </div>
@@ -165,6 +174,7 @@
         <span class="d"><svg width="22" height="22"><use href="#ic-sun"></use></svg><span id="home-date">—</span></span>
         <span class="greet" id="home-greet">おはよう</span>
       </div>
+      <h1 class="home-title" id="home-title">おうち</h1>
 
       <div class="tip tip-warn" id="home-warn" hidden>
         <svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>
@@ -263,6 +273,18 @@
         </div>
       </div>
       <p class="note">休んでも、花は枯れません。<br>数は減りません。</p>
+
+      <div class="selfask" id="self-ask">
+        <p class="q">きょうの自分は、どうでしたか</p>
+        <div class="scale" id="self-scale">
+          <button data-v="1"><i></i>おもい</button>
+          <button data-v="2"><i></i></button>
+          <button data-v="3"><i></i></button>
+          <button data-v="4"><i></i></button>
+          <button data-v="5"><i></i>かるい</button>
+        </div>
+        <p class="qs">答えなくても大丈夫です。良し悪しはありません。</p>
+      </div>
     </div>
     <div style="padding:0 20px calc(env(safe-area-inset-bottom,0px) + 24px);display:flex;flex-direction:column;gap:10px">
       <button class="btn btn-sky" id="btn-after-vid" hidden>
@@ -285,7 +307,16 @@
       <div class="notebox">
         <p>連続記録はありません。何日あいても、花は枯れません。<br>ほかの人の数も出しません。ここにあるのは、あなたとこの子の数だけ。</p>
       </div>
-      <div style="margin-top:20px" id="niwa-days"></div>
+      <div style="margin-top:24px">
+        <p style="margin:0 0 4px;font-family:var(--round);font-weight:700;font-size:15px">じぶんの記録</p>
+        <p style="margin:0 0 10px;font-size:12px;color:var(--muted);line-height:1.8">
+          上がったり下がったりしながら進みます。それがふつうです。</p>
+        <div class="chartbox" id="self-chart"></div>
+        <p class="chart-cap" id="self-cap"></p>
+        <div id="self-help"></div>
+      </div>
+
+      <div style="margin-top:24px" id="niwa-days"></div>
       <div class="spacer"></div>
     </div>
     <nav class="tabbar" data-tabs></nav>

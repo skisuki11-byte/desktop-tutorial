@@ -356,3 +356,44 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   .fly{animation:none;opacity:0}
   .sent-line{animation:none;opacity:1}
 }
+
+/* ---------- おうちの見出し ---------- */
+.home-title{
+  margin:2px 0 12px;font-family:var(--round);font-weight:700;
+  font-size:20px;letter-spacing:.08em;
+}
+
+/* ---------- きょうの自分 ----------
+   点数ではなく、波を見るための記録。目標も平均も出さない。 */
+.selfask{
+  position:relative;margin-top:22px;width:100%;
+  background:var(--panel);border:2px solid var(--line);border-radius:var(--r);
+  padding:16px 16px 14px;box-shadow:var(--shadow);
+}
+.selfask .q{margin:0 0 12px;font-size:13.5px;font-weight:700;text-align:center}
+.selfask .qs{margin:12px 0 0;font-size:11px;color:var(--faint);text-align:center;line-height:1.7}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.scale button{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  min-height:62px;border-radius:14px;border:2px solid var(--line);background:transparent;
+  color:var(--faint);font-size:10.5px;font-weight:700;cursor:pointer;
+}
+.scale button i{
+  display:block;width:16px;height:16px;border-radius:50%;
+  border:2px solid var(--line-2);background:transparent;
+}
+.scale button[aria-pressed="true"]{border-color:var(--grass-ink);color:var(--grass-ink)}
+.scale button[aria-pressed="true"] i{background:var(--grass-ink);border-color:var(--grass-ink)}
+.selfask.done .q{color:var(--grass-ink)}
+
+/* ---------- 波のグラフ ---------- */
+.chartbox{
+  background:var(--panel);border:2px solid var(--line);border-radius:var(--r);
+  padding:14px 12px 10px;box-shadow:var(--shadow);
+}
+.chartbox svg{display:block;width:100%;height:auto}
+.chart-cap{
+  margin:10px 2px 0;font-size:11.5px;color:var(--muted);text-align:center;
+  font-variant-numeric:tabular-nums;min-height:1.6em;
+}
+.chart-empty{padding:18px 8px;text-align:center;font-size:12.5px;color:var(--faint);line-height:2}
