@@ -216,14 +216,12 @@
   }
 
   /* ============ おうち ============ */
-  function greeting(h) { return h < 4 ? 'こんばんは' : h < 11 ? 'おはよう' : h < 17 ? 'こんにちは' : 'こんばんは'; }
 
   function renderHome() {
     // 消える環境なら、写真を入れる前に知らせる。あとから「消えました」では遅い。
     $('#home-warn').hidden = !S.storeInfo().embedded;
     var t = S.today();
     $('#home-date').textContent = S.formatMD(t);
-    $('#home-greet').textContent = greeting(new Date().getHours());
     $('#home-title').textContent = (st.pet.name || 'あの子') + 'のおうち';
     $('#home-name').textContent = st.pet.name || '—';
 
@@ -271,7 +269,7 @@
         '<p><b>' + lost + '件の写真・動画が読めなくなっていました。</b>記録だけが残り、中身が失われています。' +
         'iPhoneが保存領域を整理したときに起きます。<br>' +
         '<button id="btn-lost-clear" style="margin-top:8px;min-height:40px;padding:0 14px;border-radius:999px;' +
-        'border:2px solid #F2CFC4;background:transparent;color:#9A4A2E;font-size:12.5px;font-weight:700;cursor:pointer">' +
+        'border:2px solid #F2CFC4;background:transparent;color:#9A4A2E;font-size:var(--fs-2);font-weight:700;cursor:pointer">' +
         '読めない記録を消す</button></p></div>'
       : '';
     var lb = $('#btn-lost-clear');
@@ -291,12 +289,12 @@
         box.innerHTML = '<button class="btn btn-dash" data-go="ugoku" style="min-height:86px;flex-direction:column;gap:6px">' +
           '<span style="display:flex;align-items:center;gap:9px"><svg width="20" height="20"><use href="#ic-plus"></use></svg>' +
           'うごくすがたを入れる</span>' +
-          '<span style="font-size:11.5px;font-weight:400;color:var(--muted)">1本あるだけで、いつでも会えます</span></button>';
+          '<span style="font-size:var(--fs-2);font-weight:400;color:var(--muted)">1本あるだけで、いつでも会えます</span></button>';
         return;
       }
       box.innerHTML = '<div style="display:flex;align-items:baseline;justify-content:space-between">' +
-        '<p style="margin:0;font-family:var(--round);font-weight:700;font-size:15px">うごく' + esc(st.pet.name || 'あの子') + '</p>' +
-        '<button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:12px;font-weight:700;color:var(--sky-ink)" data-go="ugoku">ぜんぶ見る</button></div>' +
+        '<p style="margin:0;font-family:var(--round);font-weight:700;font-size:var(--fs-4)">うごく' + esc(st.pet.name || 'あの子') + '</p>' +
+        '<button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:var(--fs-2);font-weight:700;color:var(--sky-ink)" data-go="ugoku">ぜんぶ見る</button></div>' +
         '<div class="grid2" id="home-vid-list" style="margin-top:8px"></div>';
       var latest = vs.slice(-2);
       $('#home-vid-list').innerHTML = latest.map(function (v) {
@@ -418,7 +416,7 @@
       return;
     }
     // 左の余白は軸の文字にあわせる。「前を向けた」は5文字あり、40pxでは収まらない。
-    var W = 320, H = 132, L = 62, R = 12, T = 14, B = 26;
+    var W = 320, H = 138, L = 70, R = 12, T = 14, B = 28;
     var iw = W - L - R, ih = H - T - B;
     var x = function (i) { return L + (data.length === 1 ? iw / 2 : iw * i / (data.length - 1)); };
     var y = function (v) { return T + ih - (v - 1) / 4 * ih; };
@@ -429,8 +427,8 @@
       o.push('<line x1="' + L + '" y1="' + y(g) + '" x2="' + (W - R) + '" y2="' + y(g) +
         '" stroke="currentColor" stroke-width="1" opacity="' + (g === 1 || g === 5 ? '.18' : '.08') + '"/>');
     }
-    o.push('<text x="' + (L - 8) + '" y="' + (y(5) + 4) + '" text-anchor="end" font-size="9.5" fill="currentColor" opacity=".55">前を向けた</text>');
-    o.push('<text x="' + (L - 8) + '" y="' + (y(1) + 4) + '" text-anchor="end" font-size="9.5" fill="currentColor" opacity=".55">重い</text>');
+    o.push('<text x="' + (L - 8) + '" y="' + (y(5) + 4) + '" text-anchor="end" font-size="11" fill="currentColor" opacity=".55">前を向けた</text>');
+    o.push('<text x="' + (L - 8) + '" y="' + (y(1) + 4) + '" text-anchor="end" font-size="11" fill="currentColor" opacity=".55">重い</text>');
 
     var pts = data.map(function (d, i) { return x(i).toFixed(1) + ',' + y(d.v).toFixed(1); }).join(' ');
     o.push('<polyline points="' + pts + '" fill="none" stroke="#4B8340" stroke-width="2" ' +
@@ -443,9 +441,9 @@
         '" r="16" fill="transparent"/>');
     });
     var f = new Date(data[0].day.replace(/-/g, '/')), l = new Date(data[data.length - 1].day.replace(/-/g, '/'));
-    o.push('<text x="' + L + '" y="' + (H - 8) + '" font-size="10" fill="currentColor" opacity=".55">' +
+    o.push('<text x="' + L + '" y="' + (H - 8) + '" font-size="11" fill="currentColor" opacity=".55">' +
       (f.getMonth() + 1) + '/' + f.getDate() + '</text>');
-    o.push('<text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".55">' +
+    o.push('<text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end" font-size="11" fill="currentColor" opacity=".55">' +
       (l.getMonth() + 1) + '/' + l.getDate() + '</text>');
     o.push('</svg>');
     box.innerHTML = o.join('');
@@ -470,7 +468,7 @@
         '<p>重い日が' + run + '日つづいています。<br>' +
         '<button id="btn-self-help" style="margin-top:8px;min-height:40px;padding:0 14px;border-radius:999px;' +
         'border:2px solid var(--tomo-line,var(--line));background:transparent;color:var(--amber-ink);' +
-        'font-size:12.5px;font-weight:700;cursor:pointer">相談できるところを見る</button></p></div>'
+        'font-size:var(--fs-2);font-weight:700;cursor:pointer">相談できるところを見る</button></p></div>'
       : '';
     var hb = $('#btn-self-help');
     if (hb) hb.onclick = showHelp;
@@ -547,16 +545,16 @@
     renderSelfChart();
 
     $('#niwa-days').innerHTML = ms.length
-      ? '<p style="margin:0 0 10px;font-family:var(--round);font-weight:700;font-size:15px">あの日まで</p>' +
+      ? '<p style="margin:0 0 10px;font-family:var(--round);font-weight:700;font-size:var(--fs-4)">あの日まで</p>' +
         '<div style="display:flex;flex-direction:column;gap:8px">' + ms.slice(0, 4).map(function (m, i) {
           return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;' +
             'background:' + (i === 0 ? 'var(--amber-soft)' : 'var(--panel)') + ';border:2px solid ' +
             (i === 0 ? 'var(--amber)' : 'var(--line)') + ';border-radius:16px">' +
-            '<span><span style="font-family:var(--round);font-weight:700;font-size:14.5px">' + esc(m.label) + '</span>' +
-            '<span style="display:block;font-size:10.5px;color:var(--muted)">' + esc(m.note) + '</span></span>' +
-            '<span style="font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums">' +
-            (m.days === 0 ? '<b style="font-size:17px;color:var(--amber-ink)">今日</b>'
-                          : '<b style="font-family:var(--round);font-size:18px;color:var(--ink)">' + m.days + '</b>日') +
+            '<span><span style="font-family:var(--round);font-weight:700;font-size:var(--fs-4)">' + esc(m.label) + '</span>' +
+            '<span style="display:block;font-size:var(--fs-1);color:var(--muted)">' + esc(m.note) + '</span></span>' +
+            '<span style="font-size:var(--fs-2);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums">' +
+            (m.days === 0 ? '<b style="font-size:var(--fs-5);color:var(--amber-ink)">今日</b>'
+                          : '<b style="font-family:var(--round);font-size:var(--fs-6);color:var(--ink)">' + m.days + '</b>日') +
             '</span></div>';
         }).join('') + '</div>'
       : '';
@@ -871,10 +869,13 @@
       return '<i>' + esc(c) + '</i>';
     }).join('');
   }
-  /* 遺影の絵は高さ212px。上下に22pxずつ残した168pxに字数ぶんを収める。
-     1字の高さは字の大きさの1.16倍（.kaimyo-v i の行送り）。 */
+  /* 絵の高さは端末によって変わるので、決め打ちにせず実際に測る。
+     上下に22pxずつ残したぶんに字数を収める。1字の高さは字の大きさの1.16倍
+     （.kaimyo-v i の行送り）。 */
   function fitBrush(len) {
-    return Math.max(9, Math.min(19, Math.floor(168 / (Math.max(1, len) * 1.16))));
+    var sc = $('#view-home .scene');
+    var h = (sc && sc.clientHeight ? sc.clientHeight : 224) - 44;
+    return Math.max(9, Math.min(21, Math.floor(h / (Math.max(1, len) * 1.16))));
   }
 
   /* 戒名の欄。どの字がどこから来たかを開いて見せる。
@@ -977,7 +978,7 @@
     sheet('バックアップを書き出す',
       'いまの開きかたではファイルを保存できないため、中身をそのままお渡しします。' +
       n + '件をふくむ ' + mb + 'MB です。<br><br>' +
-      '<textarea id="export-text" readonly rows="4" style="width:100%;font-size:11px;background:var(--bg);' +
+      '<textarea id="export-text" readonly rows="4" style="width:100%;font-size:var(--fs-1);background:var(--bg);' +
       'color:var(--muted);border:2px solid var(--line);border-radius:12px;padding:10px"></textarea>',
       [{ label: 'コピーする', primary: true, keep: true, on: function () {} }]);
     var ta = $('#export-text'); if (ta) ta.value = text;
@@ -1000,7 +1001,7 @@
       '・かかりつけだった動物病院<br>' +
       '・お住まいの自治体の こころの健康相談窓口<br>' +
       '・ペットロスの相談を受けているカウンセリング機関<br><br>' +
-      '<span style="font-size:12px;color:var(--faint)">※ 具体的な窓口名と連絡先は、実在と受付状況を確認できしだいここに載せます。確認できていないものは載せません。</span>',
+      '<span style="font-size:var(--fs-2);color:var(--faint)">※ 具体的な窓口名と連絡先は、実在と受付状況を確認できしだいここに載せます。確認できていないものは載せません。</span>',
       [{ label: 'とじる', primary: true }]);
   }
 

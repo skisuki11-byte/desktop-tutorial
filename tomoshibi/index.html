@@ -119,7 +119,7 @@
               <svg class="art" id="pick-art"><use href="#art-dog"></use></svg>
               <span class="badge-ok" id="pick-ok" hidden><svg width="16" height="16"><use href="#ic-check"></use></svg></span>
             </div>
-            <p id="pick-msg" style="margin:0;font-size:13.5px;font-weight:700;color:var(--muted)">まだ写真はありません</p>
+            <p id="pick-msg" style="margin:0;font-size:var(--fs-3);font-weight:700;color:var(--muted)">まだ写真はありません</p>
             <button type="button" class="btn btn-line" style="width:auto;padding:0 24px;border-radius:999px" id="btn-pick">写真をえらぶ</button>
             <input type="file" id="in-photo" accept="image/*" hidden>
           </div>
@@ -172,7 +172,6 @@
     <div class="body scroll">
       <div class="daybar">
         <span class="d"><svg width="22" height="22"><use href="#ic-sun"></use></svg><span id="home-date">—</span></span>
-        <span class="greet" id="home-greet">おはよう</span>
       </div>
       <h1 class="home-title" id="home-title">おうち</h1>
 
@@ -250,7 +249,7 @@
       </div>
       <button class="seasonal" id="seasonal" type="button">
         <svg width="28" height="28"><use href="#of-flower"></use></svg>
-        <span style="flex:1"><span class="t" id="seasonal-t">おそなえ</span><span class="s" id="seasonal-s">月がわり。置いても置かなくても、いい</span></span>
+        <span style="flex:1"><span class="t" id="seasonal-t">おそなえ</span><span class="s" id="seasonal-s">月がわり。置いても置かなくてもいい</span></span>
         <span class="plus" id="seasonal-p">+</span>
       </button>
       <p class="faves-h" id="faves-h" hidden>好きだったもの</p>
@@ -311,8 +310,8 @@
         <p>連続記録はありません。何日あいても、花は枯れません。<br>ほかの人の数も出しません。ここにあるのは、あなたとこの子の数だけ。</p>
       </div>
       <div style="margin-top:24px">
-        <p style="margin:0 0 4px;font-family:var(--round);font-weight:700;font-size:15px">いまの気分</p>
-        <p style="margin:0 0 10px;font-size:12px;color:var(--muted);line-height:1.8">
+        <p style="margin:0 0 4px;font-family:var(--round);font-weight:700;font-size:var(--fs-4)">いまの気分</p>
+        <p style="margin:0 0 10px;font-size:var(--fs-2);color:var(--muted);line-height:1.8">
           上がったり下がったりしながら進みます。それがふつうです。</p>
         <div class="chartbox" id="self-chart"></div>
         <p class="chart-cap" id="self-cap"></p>
@@ -335,7 +334,7 @@
         <svg width="21" height="21"><use href="#ic-plus"></use></svg>この端末から写真をくわえる
       </button>
       <input type="file" id="in-photos" accept="image/*" multiple hidden>
-      <p style="margin:10px 2px 0;font-size:11.5px;color:var(--faint);line-height:1.9;text-align:center">
+      <p style="margin:10px 2px 0;font-size:var(--fs-2);color:var(--faint);line-height:1.9;text-align:center">
         カメラロールから選ぶだけ。<br>どこにも送られず、この端末の中にだけ残ります。</p>
       <div class="spacer"></div>
     </div>
@@ -347,7 +346,7 @@
     <div class="body scroll foot">
       <div class="daybar">
         <span class="d" id="ch-title">—</span>
-        <button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:13px" data-go="album">もどる</button>
+        <button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:var(--fs-3)" data-go="album">もどる</button>
       </div>
       <p class="head-sub" id="ch-sub"></p>
       <div class="pgrid" id="ch-grid"></div>
@@ -384,7 +383,7 @@
         <svg width="21" height="21"><use href="#ic-plus"></use></svg>この端末から動画をくわえる
       </button>
       <input type="file" id="in-vids" accept="video/*" multiple hidden>
-      <p style="margin:10px 2px 0;font-size:11.5px;color:var(--faint);line-height:1.9;text-align:center">
+      <p style="margin:10px 2px 0;font-size:var(--fs-2);color:var(--faint);line-height:1.9;text-align:center">
         カメラロールから選ぶだけ。<br>どこにも送られず、この端末の中にだけ残ります。</p>
       <div id="vid-warn"></div>
       <div class="spacer"></div>
@@ -408,7 +407,7 @@
     <div class="body scroll foot">
       <div class="daybar">
         <span class="d">てがみ</span>
-        <button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:13px" id="btn-write-close">やめる</button>
+        <button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:var(--fs-3)" id="btn-write-close">やめる</button>
       </div>
       <div class="paper">
         <p class="to" id="write-to">—— へ</p>
@@ -424,7 +423,7 @@
       </div>
       <div class="spacer"></div>
       <button class="btn btn-amber btn-lg" id="btn-send" disabled>とどける</button>
-      <p style="margin:10px 2px 0;font-size:11.5px;color:var(--faint);text-align:center;line-height:1.8">
+      <p style="margin:10px 2px 0;font-size:var(--fs-2);color:var(--faint);text-align:center;line-height:1.8">
         書いた手紙は、この端末の中に残ります</p>
     </div>
   </section>
@@ -445,7 +444,7 @@
     <div class="body scroll foot">
       <div class="daybar">
         <span class="d">これまでのてがみ</span>
-        <button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:13px" id="btn-mails-close">とじる</button>
+        <button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:var(--fs-3)" id="btn-mails-close">とじる</button>
       </div>
       <div id="mail-list"></div>
       <div style="height:16px"></div>
