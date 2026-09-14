@@ -245,7 +245,6 @@
     $('#home-warn').hidden = !S.storeInfo().embedded;
     var t = S.today();
     $('#home-date').textContent = S.formatMD(t);
-    $('#home-title').textContent = (st.pet.name || 'あの子') + 'のおうち';
     $('#home-name').textContent = st.pet.name || '—';
 
     var death = S.parseISO(st.pet.deathISO), birth = S.parseISO(st.pet.birthISO);
