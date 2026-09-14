@@ -187,7 +187,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 /* ---------- タブ ---------- */
 .tabbar{
   flex:none;position:relative;z-index:5;
-  display:grid;grid-template-columns:repeat(4,1fr);
+  display:grid;grid-template-columns:repeat(5,1fr);
   border-top:2px solid var(--line);background:var(--panel);
   padding:9px 4px calc(env(safe-area-inset-bottom,0px) + 14px);
 }
@@ -510,6 +510,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .scale button[aria-pressed="true"]{border-color:var(--grass-ink);color:var(--grass-ink)}
 .scale button[aria-pressed="true"] i{background:var(--grass-ink);border-color:var(--grass-ink)}
 .selfask.done .q{color:var(--grass-ink)}
+
+/* ---------- じぶん ---------- */
+.sec-h{margin:0 0 10px;font-family:var(--round);font-weight:700;font-size:var(--fs-4)}
+#view-jibun .selfask{margin-top:var(--s4)}
+#view-jibun .stats{margin-top:var(--s4)}
 
 /* ---------- 波のグラフ ---------- */
 .chartbox{
