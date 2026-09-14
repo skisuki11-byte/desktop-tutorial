@@ -265,7 +265,11 @@
     var nm = st.pet.name || 'あの子';
     var n2 = (st.letters || []).length;
     $('#write-t').textContent = nm + 'へ てがみを書く';
-    $('#write-s').textContent = n2 ? 'これまで ' + n2 + '通 ・ いま伝えたいことを' : 'いま伝えたいことを、そのまま';
+    $('#write-s').textContent = 'いま伝えたいことを、そのまま';
+    // 過去の手紙は、書く画面の中から開く。カードに2つの意味を重ねない。
+    var mb = $('#btn-mails');
+    mb.hidden = !n2;
+    $('#mails-n').textContent = n2;
 
     // 中身が失われたものがあれば、黙って見せずに知らせる
     var lost = S.lostCount();
@@ -832,6 +836,9 @@
   function renderWrite() {
     var nm = st.pet.name || 'あの子';
     $('#write-to').textContent = nm + ' へ';
+    var n = (st.letters || []).length;
+    $('#btn-mails2').hidden = !n;
+    $('#mails-n2').textContent = n;
     var ta = $('#write-text');
     $('#write-count').textContent = ta.value.length;
     $('#btn-send').disabled = !ta.value.trim();
@@ -1178,10 +1185,13 @@
     });
     $('#btn-player-close').onclick = function () { show(lastTab); };
 
-    $('#btn-write').onclick = function () {
-      if ((st.letters || []).length) show('mails'); else show('write');
-    };
+    // 「てがみを書く」は、いつ押しても書く画面へ。
+    // 以前は1通でもあると一覧が開いていた。押した言葉と起きることが違っていた。
+    $('#btn-write').onclick = function () { show('write'); };
+    $('#btn-mails').onclick = function () { show('mails'); };
     $('#btn-write2').onclick = function () { show('write'); };
+    $('#btn-mails2').onclick = function () { show('mails'); };
+    $('#btn-mails-close2').onclick = function () { show('home'); };
     $('#btn-write-close').onclick = function () { $('#write-text').value = ''; show('home'); };
     $('#btn-mails-close').onclick = function () { show('home'); };
     $('#btn-sent-close').onclick = function () { show('home'); };
