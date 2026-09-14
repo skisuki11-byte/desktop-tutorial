@@ -364,6 +364,11 @@
     state.letters.unshift({ at: Date.now(), text: String(text).slice(0, 2000) });
     save();
   }
+  function deleteLetter(i) {
+    if (!state.letters[i]) return false;
+    state.letters.splice(i, 1);
+    save(); return true;
+  }
   function seasonalDone(d) { return !!state.seasonal[ym(d)]; }
   function putSeasonal(d) { state.seasonal[ym(d)] = true; save(); }
 
@@ -700,6 +705,7 @@
     visitCount: visitCount, visitedOn: visitedOn, recordVisit: recordVisit,
     seasonalFor: seasonalFor, seasonalDone: seasonalDone, putSeasonal: putSeasonal,
     faveDoneOn: faveDoneOn, putFave: putFave, addLetter: addLetter,
+    deleteLetter: deleteLetter,
     selfOn: selfOn, putSelf: putSelf, selfSeries: selfSeries, heavyRun: heavyRun,
     putMedia: putMedia, getMedia: getMedia, allMedia: allMedia, deleteMedia: deleteMedia, newId: newId,
     chapters: chapters

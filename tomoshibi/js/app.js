@@ -936,7 +936,9 @@
 
   /* ============ てがみ（飼い主 → あの子） ============
      お別れの挨拶を、自分の言葉で渡せるようにする。
-     書き出しの候補は出すが、何を書くべきかは指定しない。 */
+     書き出しの候補は出すが、何を書くべきかは指定しない。
+     すでに「とどけた」ものを書きなおす機能は持たない。届いたあとの手紙を
+     直すのは筋が通らないため（消すことだけはできる）。 */
   function renderWrite() {
     var nm = st.pet.name || 'あの子';
     $('#write-to').textContent = nm + ' へ';
@@ -951,9 +953,11 @@
   function renderMails() {
     var list = st.letters || [];
     $('#mail-list').innerHTML = list.length
-      ? list.map(function (m) {
+      ? list.map(function (m, i) {
           var d = new Date(m.at);
-          return '<div class="mail"><p class="d">' + S.formatJP(d, true) + '</p><p>' + esc(m.text) + '</p></div>';
+          return '<div class="mail"><div class="mail-head"><p class="d">' + S.formatJP(d, true) + '</p>' +
+            '<button class="more" data-mail="' + i + '" aria-label="この手紙を消す">···</button></div>' +
+            '<p>' + esc(m.text) + '</p></div>';
         }).join('')
       : '<p class="empty">まだ一通もありません。</p>';
   }
@@ -1367,6 +1371,14 @@
     $('#btn-mails-close2').onclick = function () { show('home'); };
     $('#btn-write-close').onclick = function () { $('#write-text').value = ''; show('home'); };
     $('#btn-mails-close').onclick = function () { show('home'); };
+    $('#mail-list').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-mail]'); if (!b) return;
+      var i = +b.dataset.mail;
+      sheet('この手紙を消す', '取り消せません。', [
+        { label: '消す', primary: true, on: function () { S.deleteLetter(i); renderMails(); } },
+        { label: 'やめる' }
+      ]);
+    });
     $('#btn-sent-close').onclick = function () { show('home'); };
     $('#write-text').addEventListener('input', function () {
       $('#write-count').textContent = this.value.length;
