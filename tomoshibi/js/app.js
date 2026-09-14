@@ -46,8 +46,10 @@
   }
   function show(name) {
     $$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + name); });
+    // 章のなかみはアルバムの一部。タブはアルバムを選んだままにする。
+    var tabName = name === 'chapter' ? 'album' : name;
     $$('[data-tabs] .tab').forEach(function (b) {
-      if (b.dataset.go === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+      if (b.dataset.go === tabName) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     var b = $('#view-' + name + ' .body'); if (b) b.scrollTop = 0;
     if (name !== 'player') stopPlayer();
@@ -553,13 +555,100 @@
       $('#album-sub').textContent = photos.length ? photos.length + '枚 ・ ' + chs.length + 'つの章' : '写真をくわえてください';
       $('#album-list').innerHTML = chs.map(function (c) {
         var range = S.formatShort(new Date(c.from)) + ' — ' + S.formatShort(new Date(c.to));
-        return '<div class="chapter' + (c.hidden ? ' is-hidden' : '') + '">' +
-          '<span class="th"><img src="' + mediaURL(c.photos[0]) + '" alt=""></span>' +
-          '<span class="meta"><p class="t">' + esc(c.title || range) + '</p>' +
-          '<p class="d">' + (c.title ? range + ' ・ ' : '') + c.photos.length + '枚' + (c.hidden ? ' ・ 非表示中' : '') + '</p></span>' +
+        return '<div class="chapter">' +
+          '<button class="open" data-open="' + esc(c.id) + '">' +
+            '<span class="th"><img src="' + mediaURL(c.photos[0]) + '" alt=""></span>' +
+            '<span class="meta"><span class="t">' + esc(c.title || range) + '</span>' +
+            '<span class="d">' + (c.title ? range + ' ・ ' : '') + c.photos.length + '枚</span></span>' +
+            '<span class="go" aria-hidden="true">›</span>' +
+          '</button>' +
           '<button class="more" data-ch="' + esc(c.id) + '" aria-label="この期間の設定">···</button></div>';
       }).join('');
     });
+  }
+
+  /* ============ 章のなかみ・写真を大きく ============
+     入れた写真は、いつでも自由に見られること。
+     アルバムは仕舞い込むためではなく、開くためにある。 */
+  var chOpen = null;     // いま開いている章
+  var chPhotos = [];     // その章の写真
+  var pIndex = 0;        // 大きく見ている写真の位置
+
+  function allPhotos() {
+    return S.allMedia('photo').then(function (all) {
+      return all.filter(function (p) { return p.id !== 'portrait'; });
+    });
+  }
+  function fillChapter(c) {
+    chOpen = c; chPhotos = c.photos;
+    var range = S.formatShort(new Date(c.from)) + ' — ' + S.formatShort(new Date(c.to));
+    $('#ch-title').textContent = c.title || range;
+    $('#ch-sub').textContent = (c.title ? range + ' ・ ' : '') + c.photos.length + '枚';
+    $('#ch-grid').innerHTML = c.photos.map(function (ph, i) {
+      return '<button class="pcell" data-i="' + i + '">' +
+        '<img src="' + mediaURL(ph) + '" alt="' + S.formatShort(new Date(ph.at)) + '" loading="lazy"></button>';
+    }).join('');
+  }
+  function openChapter(id) {
+    return allPhotos().then(function (photos) {
+      var c = S.chapters(photos).filter(function (x) { return x.id === id; })[0];
+      if (!c) return show('album');
+      fillChapter(c);
+      show('chapter');
+    });
+  }
+  /* 1枚を手がかりに、その写真が入っている章を開き直す。
+     章のidは期間から作るので、端の写真を消すとidのほうが変わってしまう。
+     消したあとにidで探すと章を見失う。実際に見失った。 */
+  function reopenAt(photoId) {
+    return allPhotos().then(function (photos) {
+      var found = null, at = 0;
+      S.chapters(photos).forEach(function (c) {
+        c.photos.forEach(function (ph, i) { if (ph.id === photoId) { found = c; at = i; } });
+      });
+      if (!found) return show('album');
+      fillChapter(found);
+      openPhoto(at);
+    });
+  }
+
+  function openPhoto(i) {
+    if (!chPhotos.length) return;
+    if (!$('#view-photo').classList.contains('on')) chScroll = $('#view-chapter .body').scrollTop;
+    pIndex = Math.max(0, Math.min(chPhotos.length - 1, i));
+    var ph = chPhotos[pIndex];
+    $('#photo-big').src = mediaURL(ph);
+    $('#photo-cap').textContent = S.formatShort(new Date(ph.at)) + '  ' + (pIndex + 1) + ' / ' + chPhotos.length;
+    // 端では矢印を消す。押せないものを出しておくのは不親切。
+    $('#btn-photo-prev').hidden = pIndex === 0;
+    $('#btn-photo-next').hidden = pIndex === chPhotos.length - 1;
+    show('photo');
+  }
+  function stepPhoto(d) { openPhoto(pIndex + d); }
+
+  /* 写真をとじたら、一覧の見ていた位置に戻す。
+     30枚目を見たあとで先頭に戻されると、探し直しになる。 */
+  var chScroll = 0;
+  function backToChapter() {
+    show('chapter');
+    $('#view-chapter .body').scrollTop = chScroll;
+  }
+
+  function deletePhoto() {
+    var ph = chPhotos[pIndex];
+    if (!ph) return;
+    // 消したあとに戻る先は、隣の写真そのもの。位置ではなく写真で覚えておく。
+    var near = chPhotos[pIndex + 1] || chPhotos[pIndex - 1];
+    sheet('この写真を消す', '取り消せません。', [
+      { label: '消す', primary: true, on: function () {
+          S.deleteMedia(ph.id).then(function () {
+            freeURL(ph.id);
+            if (!near) return show('album');   // 章ごと空になった
+            return reopenAt(near.id);
+          });
+        } },
+      { label: 'やめる' }
+    ]);
   }
 
   /* 1枚ずつ順に入れる。1枚失敗しても残りは入れ、最後にまとめて理由を出す。 */
@@ -929,13 +1018,42 @@
     $('#in-vids').onchange = function (e) { addVideos(e.target.files); e.target.value = ''; };
 
     $('#album-list').addEventListener('click', function (e) {
+      var o = e.target.closest('[data-open]');
+      if (o) return openChapter(o.dataset.open);
       var m = e.target.closest('[data-ch]'); if (!m) return;
-      var id = m.dataset.ch, hidden = st.photoHidden.indexOf(id) >= 0;
-      sheet('この期間', 'アルバムに出すかどうかを選べます。あとからいつでも戻せます。', [
-        { label: hidden ? 'また出す' : 'この期間は出さない', on: function () { S.toggleHidden(id); renderAlbum(); } },
-        { label: '名前をつける', on: function () { renameChapter(id); } },
+      sheet('この期間', '', [
+        { label: '写真を見る', primary: true, on: function () { openChapter(m.dataset.ch); } },
+        { label: '名前をつける', on: function () { renameChapter(m.dataset.ch); } },
         { label: 'とじる' }
       ]);
+    });
+
+    $('#ch-grid').addEventListener('click', function (e) {
+      var c = e.target.closest('[data-i]'); if (!c) return;
+      openPhoto(parseInt(c.dataset.i, 10));
+    });
+    $('#btn-photo-prev').onclick = function () { stepPhoto(-1); };
+    $('#btn-photo-next').onclick = function () { stepPhoto(1); };
+    $('#btn-photo-close').onclick = function () { backToChapter(); };
+    $('#btn-photo-menu').onclick = function () {
+      sheet('この写真', '', [
+        { label: '消す', on: deletePhoto },
+        { label: 'とじる' }
+      ]);
+    };
+    // 指では左右に払って送り、パソコンでは矢印と矢印キーで送る。
+    var tx = null;
+    $('#photo-big').addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+    $('#photo-big').addEventListener('touchend', function (e) {
+      if (tx === null) return;
+      var dx = e.changedTouches[0].clientX - tx; tx = null;
+      if (Math.abs(dx) > 45) stepPhoto(dx < 0 ? 1 : -1);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (!$('#view-photo').classList.contains('on')) return;
+      if (e.key === 'ArrowLeft') stepPhoto(-1);
+      if (e.key === 'ArrowRight') stepPhoto(1);
+      if (e.key === 'Escape') backToChapter();
     });
 
     document.addEventListener('click', function (e) {

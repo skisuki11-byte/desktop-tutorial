@@ -332,13 +332,43 @@
         <svg width="21" height="21"><use href="#ic-plus"></use></svg>この端末から写真をくわえる
       </button>
       <input type="file" id="in-photos" accept="image/*" multiple hidden>
-      <div class="tip tip-grass">
-        <svg width="20" height="20" fill="none" stroke="var(--grass-ink)" stroke-width="2" stroke-linecap="round"><path d="M3 3l16 16"/><path d="M9.4 4.6A8.6 8.6 0 0 1 11 4.5c4.4 0 8 4 8 6.2 0 .8-.5 1.9-1.4 2.9"/><path d="M5.6 6.5C3.6 7.8 2.8 9.6 2.8 10.7c0 2.2 3.6 6.2 8 6.2 1.3 0 2.5-.3 3.6-.9"/></svg>
-        <p>つらい時期の写真は、章ごと「出さない」にできます。<br>あとからいつでも戻せます。</p>
-      </div>
+      <p style="margin:10px 2px 0;font-size:11.5px;color:var(--faint);line-height:1.9;text-align:center">
+        カメラロールから選ぶだけ。<br>どこにも送られず、この端末の中にだけ残ります。</p>
       <div class="spacer"></div>
     </div>
     <nav class="tabbar" data-tabs></nav>
+  </section>
+
+  <!-- ============ 章のなかみ ============ -->
+  <section class="view" id="view-chapter">
+    <div class="body scroll foot">
+      <div class="daybar">
+        <span class="d" id="ch-title">—</span>
+        <button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:13px" data-go="album">もどる</button>
+      </div>
+      <p class="head-sub" id="ch-sub"></p>
+      <div class="pgrid" id="ch-grid"></div>
+      <div class="spacer"></div>
+    </div>
+    <nav class="tabbar" data-tabs></nav>
+  </section>
+
+  <!-- ============ 写真を大きく ============ -->
+  <section class="view" id="view-photo">
+    <div class="body">
+      <img id="photo-big" alt="">
+      <button class="pnav prev" id="btn-photo-prev" aria-label="まえの写真">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>
+      </button>
+      <button class="pnav next" id="btn-photo-next" aria-label="つぎの写真">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <div class="player-bar">
+        <b id="photo-cap"></b>
+        <button id="btn-photo-menu" aria-label="この写真の設定">···</button>
+        <button id="btn-photo-close">とじる</button>
+      </div>
+    </div>
   </section>
 
   <!-- ============ うごくあの子 ============ -->

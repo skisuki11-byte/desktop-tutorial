@@ -23,20 +23,24 @@
       visits: [],          // お参りした日 "YYYY-MM-DD"。通算回数はこの長さ
       seasonal: {},        // { "2026-09": true } 季節のおそなえを置いた月
       videoTitles: {},     // { mediaId: "走ってるところ" }
-      photoHidden: [],     // 出さない章のid
       chapterTitles: {},
       theme: 'light',
       dateOffset: 0        // 確認用。通常0
     };
   }
 
+  var stale = false;       // 古い設定を落としたら、その場で書き戻す
   var state = load();
+  if (stale) save();
 
   function load() {
     try {
       var raw = localStorage.getItem(KEY);
       if (!raw) return blank();
       var v = JSON.parse(raw), base = blank();
+      // 章ごとに隠す機能はやめた。古い保存に残っていても、もう見ない。
+      // 消して書き戻さないと、バックアップに死んだ設定が混ざり続ける。
+      if ('photoHidden' in v) { delete v.photoHidden; stale = true; }
       Object.keys(base).forEach(function (k) { if (!(k in v)) v[k] = base[k]; });
       Object.keys(base.pet).forEach(function (k) { if (!(k in v.pet)) v.pet[k] = base.pet[k]; });
       return v;
@@ -526,14 +530,8 @@
     return out.map(function (c) {
       c.id = c.from + '|' + c.to;
       c.title = state.chapterTitles[c.id] || '';
-      c.hidden = state.photoHidden.indexOf(c.id) >= 0;
       return c;
     });
-  }
-  function toggleHidden(id) {
-    var i = state.photoHidden.indexOf(id);
-    if (i >= 0) state.photoHidden.splice(i, 1); else state.photoHidden.push(id);
-    save();
   }
 
   global.Store = {
@@ -549,6 +547,6 @@
     faveDoneOn: faveDoneOn, putFave: putFave, addLetter: addLetter,
     selfOn: selfOn, putSelf: putSelf, selfSeries: selfSeries, heavyRun: heavyRun,
     putMedia: putMedia, getMedia: getMedia, allMedia: allMedia, deleteMedia: deleteMedia, newId: newId,
-    chapters: chapters, toggleHidden: toggleHidden
+    chapters: chapters
   };
 })(window);
