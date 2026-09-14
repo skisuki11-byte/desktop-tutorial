@@ -53,6 +53,8 @@
     if (name === 'album') renderAlbum();
     if (name === 'ugoku') renderVideos();
     if (name === 'settings') renderSettings();
+    if (name === 'write') renderWrite();
+    if (name === 'mails') renderMails();
   }
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-go]');
@@ -133,7 +135,8 @@
     $$('#onbo-steps i').forEach(function (el, i) { el.classList.toggle('on', i <= step); });
     $('#btn-back').hidden = step === 0;
     $('#btn-skip').hidden = step !== 2;
-    $('#btn-next').textContent = step === 3 ? 'はじめる' : 'つぎへ';
+    $('#btn-next').textContent = step === 4 ? 'はじめる' : 'つぎへ';
+    if (step === 4) renderFaveEdit();
     $('#onbo-err').hidden = true;
     var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
     var ow = $('#onbo-warn'); if (ow) ow.hidden = !S.storeInfo().embedded;
@@ -155,9 +158,35 @@
       if (d && S.diffDays(S.parseISO(d), S.today()) < 0) { onboErr('これから先の日づけは選べません'); return; }
       st.pet.deathISO = d || '';
       st.pet.birthISO = $('#in-birth').value || '';
+      S.save();
+    }
+    if (step === 4) {
+      addFave($('#in-fave').value);      // 入力途中のものも拾う
       st.onboarded = true; S.save(); show('home'); return;
     }
     step++; S.save(); renderOnbo();
+  }
+
+  /* 好きだったもの。3つまで。 */
+  function addFave(name) {
+    name = String(name || '').trim().slice(0, 12);
+    if (!name) return false;
+    if (!st.pet.faves) st.pet.faves = [];
+    if (st.pet.faves.length >= 3 || st.pet.faves.indexOf(name) >= 0) return false;
+    st.pet.faves.push(name); S.save();
+    return true;
+  }
+  function faveChip(name, opts) {
+    return '<button class="fave"' + (opts && opts.done ? ' data-done="1"' : '') +
+      (opts && opts.act ? ' data-fave="' + esc(name) + '"' : ' data-favedel="' + esc(name) + '"') +
+      '><svg aria-hidden="true"><use href="#of-dish"></use></svg>' + esc(name) +
+      (opts && opts.act ? '' : ' <span style="color:var(--faint);font-weight:400">×</span>') + '</button>';
+  }
+  function renderFaveEdit() {
+    var f = st.pet.faves || [];
+    $('#fave-list').innerHTML = f.map(function (n) { return faveChip(n, {}); }).join('');
+    $('#in-fave').disabled = f.length >= 3;
+    $('#in-fave').placeholder = f.length >= 3 ? '3つまでです' : 'さつまいも';
   }
 
   function pickPortrait(file) {
@@ -207,6 +236,29 @@
       : 'きょうで <b>' + (n + 1) + '</b> 回目';
 
     renderHomeVideos();
+
+    // 手紙カード
+    var nm = st.pet.name || 'あの子';
+    var n2 = (st.letters || []).length;
+    $('#write-t').textContent = nm + 'へ てがみを書く';
+    $('#write-s').textContent = n2 ? 'これまで ' + n2 + '通 ・ いま伝えたいことを' : 'いま伝えたいことを、そのまま';
+
+    // 中身が失われたものがあれば、黙って見せずに知らせる
+    var lost = S.lostCount();
+    $('#lost-note').innerHTML = lost
+      ? '<div class="tip tip-warn"><svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>' +
+        '<p><b>' + lost + '件の写真・動画が読めなくなっていました。</b>記録だけが残り、中身が失われています。' +
+        'iPhoneが保存領域を整理したときに起きます。<br>' +
+        '<button id="btn-lost-clear" style="margin-top:8px;min-height:40px;padding:0 14px;border-radius:999px;' +
+        'border:2px solid #F2CFC4;background:transparent;color:#9A4A2E;font-size:12.5px;font-weight:700;cursor:pointer">' +
+        '読めない記録を消す</button></p></div>'
+      : '';
+    var lb = $('#btn-lost-clear');
+    if (lb) lb.onclick = function () {
+      var n = S.clearLost();
+      sheet('消しました', n + '件の読めない記録を消しました。<br><br>お手数ですが、写真と動画を入れ直してください。',
+        [{ label: 'わかりました', primary: true, on: function () { renderHome(); } }]);
+    };
   }
 
   function renderHomeVideos() {
@@ -259,6 +311,16 @@
     $('#seasonal-s').textContent = done ? 'そなえました' : '月がわり。置いても置かなくても、いい';
     $('#seasonal').dataset.done = done ? '1' : '0';
     $('#seasonal-p').textContent = done ? '✓' : '+';
+
+    var f = st.pet.faves || [];
+    $('#faves-h').hidden = false;
+    $('#faves-h').textContent = f.length ? (st.pet.name || 'あの子') + 'の好きだったもの' : '';
+    $('#omairi-faves').innerHTML =
+      f.map(function (n) { return faveChip(n, { act: true, done: S.faveDoneOn(t, n) }); }).join('') +
+      (f.length < 3
+        ? '<button class="fave add" id="btn-fave-add"><svg aria-hidden="true"><use href="#ic-plus"></use></svg>' +
+          (f.length ? '足す' : '好きだったものを足す') + '</button>'
+        : '');
   }
   function startRitual() { rstep = 0; renderRitual(); show('omairi'); }
   function tapOffer(i) {
@@ -516,6 +578,41 @@
     if (p && !p.paused) { try { p.pause(); } catch (e) {} }
   }
 
+  /* ============ てがみ（飼い主 → あの子） ============
+     お別れの挨拶を、自分の言葉で渡せるようにする。
+     書き出しの候補は出すが、何を書くべきかは指定しない。 */
+  function renderWrite() {
+    var nm = st.pet.name || 'あの子';
+    $('#write-to').textContent = nm + ' へ';
+    var ta = $('#write-text');
+    $('#write-count').textContent = ta.value.length;
+    $('#btn-send').disabled = !ta.value.trim();
+  }
+
+  function renderMails() {
+    var list = st.letters || [];
+    $('#mail-list').innerHTML = list.length
+      ? list.map(function (m) {
+          var d = new Date(m.at);
+          return '<div class="mail"><p class="d">' + S.formatJP(d, true) + '</p><p>' + esc(m.text) + '</p></div>';
+        }).join('')
+      : '<p class="empty">まだ一通もありません。</p>';
+  }
+
+  function sendLetter() {
+    var ta = $('#write-text'), text = ta.value.trim();
+    if (!text) return;
+    S.addLetter(text);
+    ta.value = '';
+    $('#sent-line').textContent = (st.pet.name || 'あの子') + 'に、とどきました。';
+    show('sent');
+    // 演出をやり直せるよう、入るたびに掛け直す
+    var env = $('#fly-env'), line = $('#sent-line');
+    [env, line].forEach(function (el) {
+      el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+    });
+  }
+
   /* ============ 設定 ============ */
   function applyTheme() {
     document.documentElement.setAttribute('data-theme', st.theme === 'night' ? 'night' : 'day');
@@ -659,6 +756,18 @@
       paintFaces();
       var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
     });
+    $('#in-fave').addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      if (addFave(this.value)) { this.value = ''; renderFaveEdit(); }
+    });
+    $('#fave-list').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-favedel]'); if (!b) return;
+      var n = b.dataset.favedel;
+      st.pet.faves = (st.pet.faves || []).filter(function (x) { return x !== n; });
+      S.save(); renderFaveEdit();
+    });
+
     $('#btn-pick').onclick = function () { $('#in-photo').click(); };
     $('#in-photo').onchange = function (e) { pickPortrait(e.target.files && e.target.files[0]); e.target.value = ''; };
 
@@ -672,6 +781,17 @@
       if (S.seasonalDone(t)) return;
       S.putSeasonal(t); renderRitual();
     };
+    $('#omairi-faves').addEventListener('click', function (e) {
+      if (e.target.closest('#btn-fave-add')) {
+        var n = window.prompt('好きだったもの', '');
+        if (n && addFave(n)) renderRitual();
+        return;
+      }
+      var b = e.target.closest('[data-fave]'); if (!b) return;
+      var t = S.today(), n2 = b.dataset.fave;
+      if (S.faveDoneOn(t, n2)) return;
+      S.putFave(t, n2); renderRitual();
+    });
     $('#btn-omairi-close').onclick = function () { show('home'); };
     $('#btn-after-close').onclick = function () { show('home'); };
 
@@ -714,6 +834,28 @@
       if (tile) S.getMedia(tile.dataset.vid).then(function (v) { if (v) playVideo(v); });
     });
     $('#btn-player-close').onclick = function () { show(lastTab); };
+
+    $('#btn-write').onclick = function () {
+      if ((st.letters || []).length) show('mails'); else show('write');
+    };
+    $('#btn-write2').onclick = function () { show('write'); };
+    $('#btn-write-close').onclick = function () { $('#write-text').value = ''; show('home'); };
+    $('#btn-mails-close').onclick = function () { show('home'); };
+    $('#btn-sent-close').onclick = function () { show('home'); };
+    $('#write-text').addEventListener('input', function () {
+      $('#write-count').textContent = this.value.length;
+      $('#btn-send').disabled = !this.value.trim();
+    });
+    $('#starters').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-t]'); if (!b) return;
+      var ta = $('#write-text');
+      ta.value = ta.value ? ta.value.replace(/\s*$/, '') + '\n' + b.dataset.t : b.dataset.t;
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+      $('#write-count').textContent = ta.value.length;
+      $('#btn-send').disabled = false;
+    });
+    $('#btn-send').onclick = sendLetter;
 
     $('#btn-settings').onclick = function () { show('settings'); };
     $('#btn-settings-close').onclick = function () { show('home'); };
@@ -767,6 +909,7 @@
       $$('#kindpick button').forEach(function (x) { x.setAttribute('aria-pressed', String(x.dataset.kind === st.pet.kind)); });
       $('#btn-pick').textContent = faceURL ? 'えらびなおす' : '写真をえらぶ';
       $('#pick-msg').textContent = faceURL ? '' : 'まだ写真はありません';
+      $('#in-fave').value = '';
       renderOnbo(); show('onbo');
     };
     $('#btn-store').onclick = function () {

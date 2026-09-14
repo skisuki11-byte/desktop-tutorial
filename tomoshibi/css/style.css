@@ -40,7 +40,12 @@ body{
 button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:6px}
 
-#app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:520px;margin:0 auto}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+#app{
+  position:fixed;top:0;bottom:0;left:0;right:0;
+  max-width:520px;margin:0 auto;
+  display:flex;flex-direction:column;
+}
 .view{display:none;flex:1;flex-direction:column;min-height:0}
 .view.on{display:flex;animation:fade .32s ease}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
@@ -99,8 +104,12 @@ button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit
 .count-line b{font-family:var(--round);font-size:20px;color:var(--amber-ink);font-variant-numeric:tabular-nums;margin:0 3px}
 
 /* ---------- タブ ---------- */
-.tabbar{flex:none;display:grid;grid-template-columns:repeat(4,1fr);border-top:2px solid var(--line);
-  background:var(--panel);padding:9px 4px calc(env(safe-area-inset-bottom,0px) + 14px)}
+.tabbar{
+  flex:none;position:relative;z-index:5;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:2px solid var(--line);background:var(--panel);
+  padding:9px 4px calc(env(safe-area-inset-bottom,0px) + 14px);
+}
 .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:50px;
   background:none;border:0;color:var(--faint);font-size:10px;font-weight:500;white-space:nowrap;cursor:pointer}
 .tab svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -138,8 +147,9 @@ button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit
 /* 季節のおそなえ */
 .seasonal{display:flex;align-items:center;gap:12px;background:var(--grass-soft);border:2px solid var(--grass-line);
   border-radius:20px;padding:13px 16px;margin-top:var(--s4);width:100%;text-align:left;cursor:pointer}
-.seasonal .t{margin:0;font-size:13.5px;font-weight:700}
-.seasonal .s{margin:2px 0 0;font-size:11.5px;color:var(--muted)}
+/* span なので、block にしないと見出しと説明が続いてしまう */
+.seasonal .t{display:block;margin:0;font-size:13.5px;font-weight:700;line-height:1.6}
+.seasonal .s{display:block;margin:2px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
 .seasonal .plus{margin-left:auto;font-size:24px;color:var(--grass-ink);line-height:1;font-family:var(--round)}
 .seasonal[data-done="1"]{opacity:.72}
 .seasonal[data-done="1"] .plus{font-size:18px}
@@ -277,4 +287,72 @@ button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit
   .view.on{animation:none}
   .busy{animation-duration:2s}
   *{scroll-behavior:auto !important}
+}
+
+/* ---------- お供え：この子の好きだったもの ---------- */
+.faves{display:flex;flex-wrap:wrap;gap:9px;margin-top:var(--s3)}
+.fave{
+  display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;
+  border-radius:999px;border:2px solid var(--line);background:var(--panel);
+  color:var(--muted);font-size:13.5px;font-weight:700;cursor:pointer;
+}
+.fave svg{width:20px;height:20px;flex:none}
+.fave[data-done="1"]{border-color:var(--grass-ink);background:var(--grass-soft);color:var(--grass-ink)}
+.fave.add{border-style:dashed;border-color:var(--line-2);color:var(--amber-ink)}
+.faves-h{margin:var(--s6) 0 0;font-size:12.5px;color:var(--faint);font-weight:700;letter-spacing:.06em}
+
+/* ---------- てがみ（飼い主 → あの子） ---------- */
+.letter-card{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
+  background:var(--panel);border:2px solid var(--line);border-radius:var(--r);
+  padding:14px 16px;margin-top:20px;box-shadow:var(--shadow);
+}
+.letter-card .env{flex:none;width:48px;height:48px}
+.letter-card .t{margin:0;font-family:var(--round);font-weight:700;font-size:15px}
+.letter-card .s{margin:3px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
+.letter-card .arw{margin-left:auto;color:var(--faint)}
+
+.paper{
+  background:linear-gradient(180deg,#FFFDF6,#FFFBF0);
+  border:2px solid var(--line);border-radius:var(--r);padding:var(--s6) var(--s4);
+  margin-top:var(--s4);box-shadow:var(--shadow);
+}
+:root[data-theme="night"] .paper{background:linear-gradient(180deg,#2A2722,#24211D)}
+.paper .to{margin:0 0 var(--s3);font-family:var(--round);font-weight:700;font-size:16px;letter-spacing:.08em}
+.paper textarea{
+  width:100%;min-height:200px;border:0;background:transparent;resize:none;
+  font-family:var(--round);font-size:16px;line-height:2.1;letter-spacing:.02em;color:var(--ink);
+  outline:none;
+}
+.paper textarea::placeholder{color:var(--faint);font-weight:400}
+.paper .count{text-align:right;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.starters{display:flex;flex-wrap:wrap;gap:8px;margin-top:var(--s3)}
+.starters button{
+  min-height:40px;padding:0 14px;border-radius:999px;border:2px solid var(--line);
+  background:transparent;color:var(--muted);font-size:12.5px;cursor:pointer;
+}
+.starters-h{margin:var(--s4) 0 0;font-size:11.5px;color:var(--faint)}
+
+/* 届けたあとの間 */
+#view-sent .body{align-items:center;justify-content:center;text-align:center}
+.fly{animation:fly 2.4s ease-in-out forwards}
+@keyframes fly{
+  0%{transform:translateY(0) rotate(0);opacity:1}
+  35%{transform:translateY(-18px) rotate(-6deg);opacity:1}
+  100%{transform:translateY(-150px) rotate(8deg);opacity:0}
+}
+.sent-line{font-family:var(--round);font-weight:700;font-size:22px;letter-spacing:.1em;line-height:1.9;margin:0;opacity:0;animation:appear .9s ease 1.6s forwards}
+@keyframes appear{to{opacity:1}}
+
+/* 書いた手紙の一覧 */
+.mail{background:var(--panel);border:2px solid var(--line);border-radius:var(--r-sm);padding:var(--s4);margin-top:var(--s3)}
+.mail .d{margin:0 0 6px;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.mail p{margin:0;font-family:var(--round);font-size:14.5px;line-height:2;white-space:pre-line}
+
+/* ---------- 失われたものの知らせ ---------- */
+#lost-note{margin-top:var(--s4)}
+
+@media (prefers-reduced-motion:reduce){
+  .fly{animation:none;opacity:0}
+  .sent-line{animation:none;opacity:1}
 }

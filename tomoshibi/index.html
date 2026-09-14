@@ -61,6 +61,16 @@
   <symbol id="t-niwa" viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.2"/><path d="M12 12.2V20"/><path d="M8.6 6.4 6 4.6M15.4 6.4 18 4.6M8.6 11.6 6 13.4M15.4 11.6 18 13.4"/></symbol>
   <symbol id="t-album" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="3"/><path d="M3.5 15.5 8 11l3.8 3.8 3.2-3.2 5.5 5.4"/></symbol>
   <symbol id="t-ugoku" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="M16 11.2 21 8.4v7.2L16 12.8Z"/></symbol>
+  <symbol id="art-env" viewBox="0 0 48 48">
+    <rect x="4" y="12" width="40" height="27" rx="4" fill="#FBF0DA" stroke="#5A4A3A" stroke-width="2.4"/>
+    <path d="M4.5 14.5 24 28 43.5 14.5" fill="none" stroke="#5A4A3A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M4.5 37 17 26M43.5 37 31 26" fill="none" stroke="#5A4A3A" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="38" cy="15" r="6" fill="#E8A0A0" stroke="#5A4A3A" stroke-width="2"/>
+  </symbol>
+  <symbol id="of-dish" viewBox="0 0 24 24">
+    <ellipse cx="12" cy="15" rx="9" ry="4.4" fill="#F2E2CB" stroke="#5A4A3A" stroke-width="1.8"/>
+    <path d="M5.6 12.6C6.8 10 9.2 8.6 12 8.6s5.2 1.4 6.4 4" fill="#EBA97E" stroke="#5A4A3A" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
   <symbol id="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 </defs></svg>
 
@@ -69,7 +79,7 @@
   <!-- ============ おむかえ ============ -->
   <section class="view" id="view-onbo">
     <div class="body foot">
-      <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i></div>
+      <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i><i></i></div>
 
       <div class="step" data-step="0">
         <p class="onbo-lead">この子のことを、<br>すこしだけ教えてください</p>
@@ -129,6 +139,17 @@
         </div>
       </div>
 
+      <div class="step" data-step="4" hidden>
+        <p class="onbo-lead">好きだったもの</p>
+        <p class="onbo-sub">おまいりのとき、そなえられるようにします。<br>
+        さつまいも、ボール、まくらの角。なんでも。</p>
+        <div class="field">
+          <label for="in-fave">ひとつずつ（3つまで・あとから足せます）</label>
+          <input type="text" id="in-fave" placeholder="さつまいも" autocomplete="off" enterkeyhint="done" maxlength="12">
+        </div>
+        <div class="faves" id="fave-list"></div>
+      </div>
+
       <div class="spacer"></div>
       <p id="onbo-err" class="tip tip-warn" hidden><span></span></p>
       <button class="btn btn-amber btn-lg" id="btn-next" style="margin-bottom:10px">つぎへ</button>
@@ -178,6 +199,17 @@
         <p class="count-line" id="home-count"></p>
       </div>
 
+      <button class="letter-card" id="btn-write">
+        <svg class="env" aria-hidden="true"><use href="#art-env"></use></svg>
+        <span style="flex:1">
+          <span class="t" id="write-t">てがみを書く</span>
+          <span class="s" id="write-s">いま伝えたいことを、そのまま</span>
+        </span>
+        <span class="arw">›</span>
+      </button>
+
+      <div id="lost-note"></div>
+
       <div style="margin-top:20px" id="home-vids"></div>
 
       <div class="spacer"></div>
@@ -209,6 +241,8 @@
         <span style="flex:1"><span class="t" id="seasonal-t">おそなえ</span><span class="s" id="seasonal-s">月がわり。置いても置かなくても、いい</span></span>
         <span class="plus" id="seasonal-p">+</span>
       </button>
+      <p class="faves-h" id="faves-h" hidden>好きだったもの</p>
+      <div class="faves" id="omairi-faves"></div>
       <div class="spacer"></div>
       <button class="btn btn-line" id="btn-omairi-close">また、あとで</button>
     </div>
@@ -302,6 +336,57 @@
         <b id="player-title"></b>
         <button id="btn-player-close">とじる</button>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ てがみを書く ============ -->
+  <section class="view" id="view-write">
+    <div class="body scroll foot">
+      <div class="daybar">
+        <span class="d">てがみ</span>
+        <button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:13px" id="btn-write-close">やめる</button>
+      </div>
+      <div class="paper">
+        <p class="to" id="write-to">—— へ</p>
+        <textarea id="write-text" placeholder="ここに書いてください" maxlength="2000"></textarea>
+        <p class="count"><span id="write-count">0</span> 文字</p>
+      </div>
+      <p class="starters-h">書き出しに迷ったら</p>
+      <div class="starters" id="starters">
+        <button data-t="ありがとう。">ありがとう</button>
+        <button data-t="ごめんね。">ごめんね</button>
+        <button data-t="きょうは、">きょうのこと</button>
+        <button data-t="あれから、">あれから</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn btn-amber btn-lg" id="btn-send" disabled>とどける</button>
+      <p style="margin:10px 2px 0;font-size:11.5px;color:var(--faint);text-align:center;line-height:1.8">
+        書いた手紙は、この端末の中に残ります</p>
+    </div>
+  </section>
+
+  <!-- ============ とどけたあと ============ -->
+  <section class="view" id="view-sent">
+    <div class="body foot">
+      <div class="spacer"></div>
+      <svg width="86" height="86" class="fly" id="fly-env" aria-hidden="true" style="margin:0 auto"><use href="#art-env"></use></svg>
+      <p class="sent-line" id="sent-line">とどきました。</p>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="btn-sent-close">おうちにもどる</button>
+    </div>
+  </section>
+
+  <!-- ============ これまでのてがみ ============ -->
+  <section class="view" id="view-mails">
+    <div class="body scroll foot">
+      <div class="daybar">
+        <span class="d">これまでのてがみ</span>
+        <button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:13px" id="btn-mails-close">とじる</button>
+      </div>
+      <div id="mail-list"></div>
+      <div style="height:16px"></div>
+      <button class="btn btn-amber" id="btn-write2">あたらしく書く</button>
+      <div class="spacer"></div>
     </div>
   </section>
 
