@@ -248,7 +248,9 @@
     var kb = $('#home-kaimyo');
     kb.hidden = !km;
     if (km) {
-      kb.innerHTML = brushHTML(km);
+      // 縦書きの毛筆だけだと、はじめて見た人には何の文字か分からない。
+      // 「戒名」の2字はUIの注記であって本文ではないので、毛筆ではなく地の書体で小さく出す。
+      kb.innerHTML = '<b class="kaimyo-label">戒名</b>' + brushHTML(km);
       // 縦に立てるので、字数が増えるほど下へ伸びる。絵からはみ出さない大きさに合わせる。
       kb.style.fontSize = fitBrush(Array.from(km).length) + 'px';
     }
@@ -915,7 +917,9 @@
      （.kaimyo-v i の行送り）。 */
   function fitBrush(len) {
     var sc = $('#view-home .scene');
-    var h = (sc && sc.clientHeight ? sc.clientHeight : 224) - 44;
+    // 「戒名」の注記（10px + 下の余白5px）ぶんも、絵の高さの予算から先に差し引く。
+    // ここを引かないと、注記を足した高さで本文の字がはみ出しうる。
+    var h = (sc && sc.clientHeight ? sc.clientHeight : 224) - 44 - 15;
     return Math.max(9, Math.min(21, Math.floor(h / (Math.max(1, len) * 1.16))));
   }
 
