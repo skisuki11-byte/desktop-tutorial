@@ -85,6 +85,8 @@
   }
   function show(name) {
     $$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + name); });
+    // 表示された瞬間に、遺影の位置をもう一度計算しなおす（非表示中は幅0で測れないため）。
+    facePlacers.forEach(function (f) { f(); });
     // 章のなかみはアルバムの一部。タブはアルバムを選んだままにする。
     var tabName = name === 'chapter' ? 'album' : name;
     $$('[data-tabs] .tab').forEach(function (b) {
@@ -118,18 +120,57 @@
       return !!faceURL;
     }).catch(function () { paintFaces(); return false; });
   }
+  /* 1枚の遺影を、home/おまいり/おまいりのあと/写真えらび の4つの丸枠すべてに出す。
+     枠の大きさが場所ごとに違う（154px・124px・168px、しかも home は端末の高さで
+     可変）ため、object-fit の位置指定だけでは合わせにくい。枠の実寸を測って
+     width/height/left/top を自前で計算し、どこでも同じ縮尺・同じ位置に見えるようにする。
+     x/y は0〜1（0＝写真の左端／上端が見える、1＝右端／下端が見える）、
+     zoom は1が「枠にぴったり収まる最小倍率」。 */
+  function placeFaceImg(img) {
+    var box = img.parentElement;
+    function place() {
+      var nw = img.naturalWidth, nh = img.naturalHeight, bw = box.clientWidth, bh = box.clientHeight;
+      if (!nw || !nh || !bw || !bh) return;
+      var x = st.pet.faceX != null ? st.pet.faceX : 0.5;
+      var y = st.pet.faceY != null ? st.pet.faceY : 0.5;
+      var z = st.pet.faceZoom || 1;
+      var scale = Math.max(bw / nw, bh / nh) * z;
+      var rw = nw * scale, rh = nh * scale;
+      var maxX = Math.max(0, rw - bw), maxY = Math.max(0, rh - bh);
+      img.style.position = 'absolute';
+      img.style.width = rw + 'px'; img.style.height = rh + 'px';
+      img.style.left = (-maxX * x) + 'px'; img.style.top = (-maxY * y) + 'px';
+    }
+    if (img.complete && img.naturalWidth) place(); else img.onload = place;
+    return place;
+  }
+  var pickPlace = null;    // 写真えらび画面のimgの再配置関数。ドラッグ中はこれだけ呼ぶ
+  var facePlacers = [];    // home/おまいり/おまいりのあと の再配置関数。
+                           // 非表示（display:none）の画面は幅が測れず配置できないため、
+                           // その画面を開く瞬間（show()）にもう一度呼び直す。
   function paintFaces() {
     var html = faceURL ? '<img src="' + faceURL + '" alt="">'
                        : '<svg class="art" aria-hidden="true"><use href="' + artRef() + '"></use></svg>';
+    facePlacers = [];
     ['#home-face', '#omairi-face', '#after-face'].forEach(function (sel) {
-      var el = $(sel); if (el) el.innerHTML = html;
+      var el = $(sel); if (!el) return;
+      el.innerHTML = html;
+      if (faceURL) facePlacers.push(placeFaceImg(el.querySelector('img')));
     });
     var pf = $('#pick-face');
     if (pf) {
       pf.innerHTML = html + '<span class="badge-ok" id="pick-ok"' + (faceURL ? '' : ' hidden') +
         '><svg width="16" height="16"><use href="#ic-check"></use></svg></span>';
+      pickPlace = faceURL ? placeFaceImg(pf.querySelector('img')) : null;
     }
+    var pc = $('#pick-crop');
+    if (pc) { pc.hidden = !faceURL; $('#in-facezoom').value = Math.round((st.pet.faceZoom || 1) * 100); }
   }
+  var faceResizeT = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(faceResizeT);
+    faceResizeT = setTimeout(function () { if (faceURL) paintFaces(); }, 150);
+  });
 
   /* 端末の写真はそのままだと数十MBある。長辺を縮めてから保存する。 */
   function shrink(file, max, quality) {
@@ -248,6 +289,8 @@
       })
       .then(function (r) {
         if (!r.ok) { $('#pick-msg').textContent = ''; onboErr(reasonText(r.reason)); return; }
+        // 前の写真の切り抜き位置は、新しい写真には合わない。中央・そのままに戻す。
+        st.pet.faceX = 0.5; st.pet.faceY = 0.5; st.pet.faceZoom = 1; S.save();
         return loadFace().then(function () {
           $('#pick-msg').innerHTML = '<span style="color:var(--grass-ink)">とりこみました</span>';
           $('#btn-pick').textContent = 'えらびなおす';
@@ -1166,6 +1209,49 @@
 
     $('#btn-pick').onclick = function () { $('#in-photo').click(); };
     $('#in-photo').onchange = function (e) { pickPortrait(e.target.files && e.target.files[0]); e.target.value = ''; };
+
+    /* 写真の位置あわせ。指（マウス）でなぞって動かす。ドラッグ中は pick-face だけ
+       その場で動かし（毎回 paintFaces で作り直すと重い・ちらつく）、離した瞬間に
+       保存して他の3か所（home/おまいり/おまいりのあと）にも反映する。 */
+    var faceDrag = null;
+    $('#pick-face').addEventListener('pointerdown', function (e) {
+      if (!faceURL) return;
+      var img = $('#pick-face img'); if (!img || !img.naturalWidth) return;
+      e.preventDefault();
+      if (this.setPointerCapture) this.setPointerCapture(e.pointerId);
+      faceDrag = {
+        x0: e.clientX, y0: e.clientY,
+        fx: st.pet.faceX != null ? st.pet.faceX : 0.5,
+        fy: st.pet.faceY != null ? st.pet.faceY : 0.5,
+        nw: img.naturalWidth, nh: img.naturalHeight,
+        bw: img.parentElement.clientWidth, bh: img.parentElement.clientHeight
+      };
+    });
+    $('#pick-face').addEventListener('pointermove', function (e) {
+      if (!faceDrag) return;
+      var z = st.pet.faceZoom || 1;
+      var scale = Math.max(faceDrag.bw / faceDrag.nw, faceDrag.bh / faceDrag.nh) * z;
+      var rw = faceDrag.nw * scale, rh = faceDrag.nh * scale;
+      var maxX = Math.max(0, rw - faceDrag.bw), maxY = Math.max(0, rh - faceDrag.bh);
+      var dx = e.clientX - faceDrag.x0, dy = e.clientY - faceDrag.y0;
+      // 右へなぞる＝写真を右へ動かす＝見えるのは写真の左側が増える、なのでxは減らす
+      st.pet.faceX = Math.max(0, Math.min(1, maxX ? faceDrag.fx - dx / maxX : 0.5));
+      st.pet.faceY = Math.max(0, Math.min(1, maxY ? faceDrag.fy - dy / maxY : 0.5));
+      if (pickPlace) pickPlace();
+    });
+    function faceDragEnd() {
+      if (!faceDrag) return;
+      faceDrag = null;
+      S.save(); paintFaces();
+    }
+    $('#pick-face').addEventListener('pointerup', faceDragEnd);
+    $('#pick-face').addEventListener('pointercancel', faceDragEnd);
+
+    $('#in-facezoom').addEventListener('input', function () {
+      st.pet.faceZoom = (+this.value) / 100;
+      if (pickPlace) pickPlace();
+    });
+    $('#in-facezoom').addEventListener('change', function () { S.save(); paintFaces(); });
 
     $('#btn-omairi').onclick = startRitual;
     $('#ritual').addEventListener('click', function (e) {

@@ -20,7 +20,8 @@
         name: '', kind: 'dog', deathISO: '', birthISO: '', faves: [],
         kaimyo: '',        // お寺からいただいたものがあれば、ここへ。空ならアプリが選んだ名
         kaimyoOff: false,  // 戒名になじみのない人もいる。出さないこともできる
-        scene: 'garden'    // トップの絵の配色。garden/sunset/sakura/snow
+        scene: 'garden',   // トップの絵の配色。garden/sunset/sakura/snow
+        faceX: 0.5, faceY: 0.5, faceZoom: 1   // 遺影の位置・大きさ（0〜1・1〜2.5）。既定は中央・そのまま
       },
       selfLog: {},         // { "2026-09-14": 3 } その日の自分。1〜5
       letters: [],         // 飼い主からあの子へ書いた手紙 [{at, text}]

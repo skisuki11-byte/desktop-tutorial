@@ -116,11 +116,18 @@
         <p class="onbo-sub">カメラロールから選ぶだけ。<br>この端末の中にだけ残り、どこにも送られません。</p>
         <div class="field">
           <div class="pickwrap">
-            <div class="face face-lg" id="pick-face" style="position:relative">
+            <div class="face pick-face" id="pick-face">
               <svg class="art" id="pick-art"><use href="#art-dog"></use></svg>
               <span class="badge-ok" id="pick-ok" hidden><svg width="16" height="16"><use href="#ic-check"></use></svg></span>
             </div>
             <p id="pick-msg" style="margin:0;font-size:var(--fs-3);font-weight:700;color:var(--muted)">まだ写真はありません</p>
+            <div class="facecrop" id="pick-crop" hidden>
+              <p class="facecrop-hint">指でなぞって位置を、下のつまみで大きさを合わせられます</p>
+              <div class="facecrop-zoom">
+                <span class="lbl">大きさ</span>
+                <input type="range" id="in-facezoom" min="100" max="250" value="100">
+              </div>
+            </div>
             <button type="button" class="btn btn-line" style="width:auto;padding:0 24px;border-radius:999px" id="btn-pick">写真をえらぶ</button>
             <input type="file" id="in-photo" accept="image/*" hidden>
           </div>
