@@ -933,6 +933,16 @@
     var p = $('#player');
     if (p && !p.paused) { try { p.pause(); } catch (e) {} }
   }
+  /* ブラウザ既定の再生UIは消したので、画面タップだけで再生／一時停止する。
+     何が起きたかは、中央に一瞬だけ出すアイコンで示す（常設のボタンは置かない）。 */
+  var flashT = null;
+  function showPlayerFlash(playing) {
+    var el = $('#player-flash');
+    el.querySelector('use').setAttribute('href', playing ? '#ic-pause' : '#ic-play');
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    clearTimeout(flashT);
+    flashT = setTimeout(function () { el.classList.remove('show'); }, 260);
+  }
 
   /* ============ てがみ（飼い主 → あの子） ============
      お別れの挨拶を、自分の言葉で渡せるようにする。
@@ -1361,6 +1371,12 @@
       if (tile) S.getMedia(tile.dataset.vid).then(function (v) { if (v) playVideo(v); });
     });
     $('#btn-player-close').onclick = function () { show(lastTab); };
+    $('#player').addEventListener('click', function () {
+      var p = $('#player');
+      if (p.paused) { var pr = p.play(); if (pr && pr.catch) pr.catch(function () {}); }
+      else p.pause();
+      showPlayerFlash(!p.paused);
+    });
 
     // 「てがみを書く」は、いつ押しても書く画面へ。
     // 以前は1通でもあると一覧が開いていた。押した言葉と起きることが違っていた。

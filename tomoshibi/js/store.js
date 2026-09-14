@@ -47,6 +47,17 @@
       // 章ごとに隠す機能はやめた。古い保存に残っていても、もう見ない。
       // 消して書き戻さないと、バックアップに死んだ設定が混ざり続ける。
       if ('photoHidden' in v) { delete v.photoHidden; stale = true; }
+      // 以前は端末のファイル名（"_users_0484f8d0-…" のような読めない名前）を
+      // そのまま見出しにしていた版があった。残っていれば既定名に戻す。
+      if (v.videoTitles) {
+        Object.keys(v.videoTitles).forEach(function (id) {
+          var n = String(v.videoTitles[id] || '');
+          if (/^_?users?[_-]/i.test(n) || /^[0-9a-f]{8}-[0-9a-f]{4}/i.test(n)) {
+            v.videoTitles[id] = 'うごくすがた';
+            stale = true;
+          }
+        });
+      }
       Object.keys(base).forEach(function (k) { if (!(k in v)) v[k] = base[k]; });
       Object.keys(base.pet).forEach(function (k) { if (!(k in v.pet)) v.pet[k] = base.pet[k]; });
       return v;
