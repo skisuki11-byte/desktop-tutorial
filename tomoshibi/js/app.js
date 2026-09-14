@@ -412,8 +412,11 @@
     });
     $$('.selfask').forEach(function (box) {
       box.classList.toggle('done', !!v);
-      // 「記録しました」だけだと、いつの記録か分からない。1日に1つなので、その日のこととして言う。
-      box.querySelector('.q').textContent = v ? 'きょうは 記録しました' : 'いまの気分は、どうですか';
+      // 「記録しました」は、こちらが処理を終えた報告に聞こえる。
+      // ここで扱っているのはその人の気持ちなので、気持ちの言葉で、誘うように言う。
+      // 誘いと、その返事。同じ言葉づかいで対にする。
+      box.querySelector('.q').textContent = v ? 'きょうの気持ちを 伝えました'
+                                              : 'きょうの気持ちを 伝えましょう';
       var qs = box.querySelector('.qs');
       // 同じ日をもう一度押せば、後から押したほうで上書きされる。それを先に伝える。
       if (qs) qs.textContent = v ? '押しなおせば、あとから変えられます。'
