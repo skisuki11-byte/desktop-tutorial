@@ -39,6 +39,23 @@
          : st.pet.kind === 'other' ? '#art-paw' : '#art-dog';
   }
 
+  /* トップの絵の配色。図形は共通、色だけをCSS変数で差し替える（css/style.css の
+     [data-scene="…"]）。ここでは選択肢の一覧と、選ぶボタンのHTMLだけを持つ。
+     将来、有料版で動く背景を足すときもこの配列に足すだけでよいようにしてある。 */
+  var SCENES = [
+    { id: 'garden', label: '庭' },
+    { id: 'sunset', label: '夕空' },
+    { id: 'sakura', label: '桜' },
+    { id: 'snow', label: '雪' }
+  ];
+  function sceneOf() { return st.pet.scene || 'garden'; }
+  function scenePickHTML(cur) {
+    return SCENES.map(function (s) {
+      return '<button type="button" data-scene="' + s.id + '" aria-pressed="' + (s.id === cur) + '">' +
+        '<span class="sw" data-scene="' + s.id + '"></span>' + s.label + '</button>';
+    }).join('');
+  }
+
   /* 作った objectURL は必ず覚えて、作り直すときに解放する */
   var urlCache = {};
   function mediaURL(rec) {
@@ -163,8 +180,9 @@
     $$('#onbo-steps i').forEach(function (el, i) { el.classList.toggle('on', i <= step); });
     $('#btn-back').hidden = step === 0;
     $('#btn-skip').hidden = step !== 2;
-    $('#btn-next').textContent = step === 4 ? 'はじめる' : 'つぎへ';
+    $('#btn-next').textContent = step === 5 ? 'はじめる' : 'つぎへ';
     if (step === 4) renderFaveEdit();
+    if (step === 5) $('#scenepick-onbo').innerHTML = scenePickHTML(sceneOf());
     $('#onbo-err').hidden = true;
     var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
     var ow = $('#onbo-warn'); if (ow) ow.hidden = !S.storeInfo().embedded;
@@ -190,6 +208,8 @@
     }
     if (step === 4) {
       addFave($('#in-fave').value);      // 入力途中のものも拾う
+    }
+    if (step === 5) {
       st.onboarded = true; S.save(); show('home'); return;
     }
     step++; S.save(); renderOnbo();
@@ -205,10 +225,12 @@
     return true;
   }
   function faveChip(name, opts) {
-    return '<button class="fave"' + (opts && opts.done ? ' data-done="1"' : '') +
-      (opts && opts.act ? ' data-fave="' + esc(name) + '"' : ' data-favedel="' + esc(name) + '"') +
+    opts = opts || {};
+    return '<button class="fave' + (opts.offering ? ' offering' : '') + '"' +
+      (opts.done ? ' data-done="1"' : (opts.sel ? ' data-sel="1"' : '')) +
+      (opts.act ? ' data-fave="' + esc(name) + '" aria-pressed="' + (opts.done || opts.sel) + '"' : ' data-favedel="' + esc(name) + '"') +
       '><svg aria-hidden="true"><use href="#of-dish"></use></svg>' + esc(name) +
-      (opts && opts.act ? '' : ' <span style="color:var(--faint);font-weight:400">×</span>') + '</button>';
+      (opts.act ? '' : ' <span style="color:var(--faint);font-weight:400">×</span>') + '</button>';
   }
   function renderFaveEdit() {
     var f = st.pet.faves || [];
@@ -246,6 +268,7 @@
     var t = S.today();
     $('#home-date').textContent = S.formatMD(t);
     $('#home-name').textContent = st.pet.name || '—';
+    $('#home-scene').dataset.scene = sceneOf();
 
     var death = S.parseISO(st.pet.deathISO), birth = S.parseISO(st.pet.birthISO);
     // 上の行は享年と命日。この子が何年生きて、いつ旅立ったか。
@@ -345,6 +368,11 @@
      順序固定・スキップ不可。毎回まったく同じ手順であることが効いている。 */
   var LEADS = ['灯りを、ともします', 'お水を、そなえます', 'ごはんを、そなえます', 'お花を、そなえます'];
   var rstep = 0, rcounted = false;
+  /* 好きだったものは、4動作とは別枠。順序を問わず気になるものだけ選び、
+     まとめて1回でそなえる。faveSel＝まだそなえていない「選んだ」状態、
+     justOffered＝そなえた直後のもの（このおまいり画面を開いている間だけ、
+     次の再描画で一度だけ光らせるための印） */
+  var faveSel = {}, justOffered = {};
   function renderRitual() {
     $$('#ritual .offer').forEach(function (b, i) {
       if (i < rstep) { b.dataset.state = 'done'; b.disabled = true; }
@@ -378,14 +406,22 @@
     var f = st.pet.faves || [];
     $('#faves-h').hidden = false;
     $('#faves-h').textContent = f.length ? (st.pet.name || 'あの子') + 'の好きだったもの' : '';
+    $('#faves-hint').hidden = !f.length;
     $('#omairi-faves').innerHTML =
-      f.map(function (n) { return faveChip(n, { act: true, done: S.faveDoneOn(t, n) }); }).join('') +
+      f.map(function (n) {
+        var done = S.faveDoneOn(t, n);
+        return faveChip(n, { act: true, done: done, sel: !done && !!faveSel[n], offering: !!justOffered[n] });
+      }).join('') +
       (f.length < 3
         ? '<button class="fave add" id="btn-fave-add"><svg aria-hidden="true"><use href="#ic-plus"></use></svg>' +
           (f.length ? '足す' : '好きだったものを足す') + '</button>'
         : '');
+    justOffered = {};   // 光らせるのは直後の1回だけ
+    var pend = f.filter(function (n) { return faveSel[n] && !S.faveDoneOn(t, n); });
+    $('#btn-fave-offer').hidden = pend.length === 0;
+    $('#fave-offer-label').textContent = 'そなえる（' + pend.length + '）';
   }
-  function startRitual() { rstep = 0; rcounted = false; renderRitual(); show('omairi'); }
+  function startRitual() { rstep = 0; rcounted = false; faveSel = {}; justOffered = {}; renderRitual(); show('omairi'); }
   function tapOffer(i) {
     if (i !== rstep) return;
     rstep++;
@@ -623,7 +659,10 @@
       var photos = all.filter(function (p) { return p.id !== 'portrait'; });
       var chs = S.chapters(photos);
       $('#album-empty').hidden = chs.length > 0;
-      $('#album-sub').textContent = photos.length ? photos.length + '枚 ・ ' + chs.length + 'つの章' : '写真をくわえてください';
+      var tg = S.daysTogether();
+      $('#album-sub').textContent = photos.length
+        ? photos.length + '枚 ・ ' + chs.length + 'つの章' + (tg ? ' ・ いっしょだった' + tg.toLocaleString('ja-JP') + '日' : '')
+        : (tg ? 'いっしょだった' + tg.toLocaleString('ja-JP') + '日' : '写真をくわえてください');
       $('#album-list').innerHTML = chs.map(function (c) {
         var range = S.formatShort(new Date(c.from)) + ' — ' + S.formatShort(new Date(c.to));
         return '<div class="chapter">' +
@@ -927,6 +966,7 @@
     $('#store-state').textContent =
       (si.embedded ? '試し用（消えます）' : si.durable ? 'この端末の中・保護あり' : si.idb ? 'この端末の中' : '写真のみ') + ' ›';
     $('#warn-ephemeral').hidden = !si.embedded;
+    $('#scenepick-set').innerHTML = scenePickHTML(sceneOf());
     renderKaimyo();
   }
 
@@ -1106,6 +1146,12 @@
       paintFaces();
       var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
     });
+    $('#scenepick-onbo').addEventListener('click', function (e) {
+      // .sw（丸い見本）にも data-scene があるため、closest は button に絞る
+      var b = e.target.closest('button[data-scene]'); if (!b) return;
+      st.pet.scene = b.dataset.scene; S.save();
+      $$('#scenepick-onbo button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    });
     $('#in-fave').addEventListener('keydown', function (e) {
       if (e.key !== 'Enter') return;
       e.preventDefault();
@@ -1137,11 +1183,21 @@
         if (n && addFave(n)) renderRitual();
         return;
       }
-      var b = e.target.closest('[data-fave]'); if (!b) return;
+      var b = e.target.closest('button[data-fave]'); if (!b) return;
       var t = S.today(), n2 = b.dataset.fave;
       if (S.faveDoneOn(t, n2)) return;
-      S.putFave(t, n2); renderRitual();
+      // すぐそなえるのではなく、選ぶだけ。まとめて「そなえる」で確定する。
+      if (faveSel[n2]) delete faveSel[n2]; else faveSel[n2] = true;
+      renderRitual();
     });
+    $('#btn-fave-offer').onclick = function () {
+      var t = S.today();
+      Object.keys(faveSel).forEach(function (n) {
+        if (!S.faveDoneOn(t, n)) { S.putFave(t, n); justOffered[n] = true; }
+      });
+      faveSel = {};
+      renderRitual();
+    };
     $('#btn-omairi-close').onclick = function () {
       if (rstep >= 4) showAfter(rcounted); else show('home');
     };
@@ -1251,6 +1307,10 @@
       var b = e.target.closest('[data-v]'); if (!b) return;
       var j = offsetJumps()[b.dataset.v]; if (!j) return;
       st.dateOffset = j.offset; S.save(); renderSettings();
+    });
+    $('#scenepick-set').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-scene]'); if (!b) return;
+      st.pet.scene = b.dataset.scene; S.save(); renderSettings();
     });
     $('#btn-export').onclick = exportAll;
     $('#btn-import').onclick = function () {

@@ -88,7 +88,7 @@
   <!-- ============ おむかえ ============ -->
   <section class="view" id="view-onbo">
     <div class="body scroll foot">
-      <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+      <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
 
       <div class="step" data-step="0">
         <p class="onbo-lead">この子のことを、<br>すこしだけ教えてください</p>
@@ -160,6 +160,14 @@
         <div class="faves" id="fave-list"></div>
       </div>
 
+      <div class="step" data-step="5" hidden>
+        <p class="onbo-lead">おうちの背景</p>
+        <p class="onbo-sub">あとから設定でいつでも変えられます。</p>
+        <div class="field">
+          <div class="scenepick" id="scenepick-onbo"></div>
+        </div>
+      </div>
+
       <div class="spacer"></div>
       <p id="onbo-err" class="tip tip-warn" hidden><span></span></p>
       <button class="btn btn-amber btn-lg" id="btn-next" style="margin-bottom:10px">つぎへ</button>
@@ -183,18 +191,18 @@
       </div>
 
       <div class="card homecard">
-        <div class="scene">
+        <div class="scene" id="home-scene">
           <svg class="bg" viewBox="0 0 390 212" preserveAspectRatio="none" aria-hidden="true">
-            <ellipse cx="52" cy="42" rx="26" ry="14" fill="#FFFFFF" opacity=".85"/>
-            <ellipse cx="74" cy="36" rx="18" ry="12" fill="#FFFFFF" opacity=".85"/>
-            <ellipse cx="320" cy="58" rx="22" ry="12" fill="#FFFFFF" opacity=".7"/>
-            <path d="M0 134 C60 124 110 142 170 134 C230 126 280 144 390 132 L390 212 L0 212 Z" fill="#CFE6BC"/>
-            <g stroke="#8FB878" stroke-width="2.4" stroke-linecap="round" fill="none">
+            <ellipse class="s-cloud" cx="52" cy="42" rx="26" ry="14" opacity=".85"/>
+            <ellipse class="s-cloud" cx="74" cy="36" rx="18" ry="12" opacity=".85"/>
+            <ellipse class="s-cloud" cx="320" cy="58" rx="22" ry="12" opacity=".7"/>
+            <path class="s-ground" d="M0 134 C60 124 110 142 170 134 C230 126 280 144 390 132 L390 212 L0 212 Z"/>
+            <g class="s-stem" stroke-width="2.4" stroke-linecap="round" fill="none">
               <path d="M28 178 C26 168 30 162 34 158"/><path d="M40 182 C40 172 37 166 33 161"/>
               <path d="M352 174 C350 164 354 158 358 154"/><path d="M364 178 C364 168 361 162 357 157"/>
             </g>
-            <g><circle cx="60" cy="152" r="5.5" fill="#E8A0A0"/><circle cx="60" cy="152" r="2.2" fill="#FBF0DA"/><path d="M60 158 v12" stroke="#8FB878" stroke-width="2.4" stroke-linecap="round"/></g>
-            <g><circle cx="332" cy="148" r="5" fill="#E8A33D"/><circle cx="332" cy="148" r="2" fill="#FFF7E6"/><path d="M332 153 v12" stroke="#8FB878" stroke-width="2.4" stroke-linecap="round"/></g>
+            <g><circle class="s-fa" cx="60" cy="152" r="5.5"/><circle class="s-fa-c" cx="60" cy="152" r="2.2"/><path class="s-stem" d="M60 158 v12" stroke-width="2.4" stroke-linecap="round"/></g>
+            <g><circle class="s-fb" cx="332" cy="148" r="5"/><circle class="s-fb-c" cx="332" cy="148" r="2"/><path class="s-stem" d="M332 153 v12" stroke-width="2.4" stroke-linecap="round"/></g>
           </svg>
           <div class="face face-lg" id="home-face"><svg class="art"><use href="#art-dog"></use></svg></div>
           <p class="kaimyo-v" id="home-kaimyo" hidden><span></span></p>
@@ -255,7 +263,11 @@
         <span class="plus" id="seasonal-p">+</span>
       </button>
       <p class="faves-h" id="faves-h" hidden>好きだったもの</p>
+      <p class="faves-hint" id="faves-hint" hidden>気になるものを選んで、まとめてそなえられます</p>
       <div class="faves" id="omairi-faves"></div>
+      <button class="btn btn-amber fave-offer-btn" id="btn-fave-offer" hidden>
+        <svg width="20" height="20"><use href="#of-light"></use></svg><span id="fave-offer-label">そなえる</span>
+      </button>
       <div class="spacer"></div>
       <button class="btn btn-line" id="btn-omairi-close">また、あとで</button>
     </div>
@@ -530,6 +542,12 @@
         <div class="seg" id="seg-theme" style="grid-template-columns:1fr 1fr">
           <button data-v="day">昼</button><button data-v="night">夜</button>
         </div>
+      </div>
+
+      <div class="cardbox">
+        <h4>おうちの背景</h4>
+        <p class="cap">いつでも変えられます。</p>
+        <div class="scenepick" id="scenepick-set" style="margin-top:10px"></div>
       </div>
 
       <div class="cardbox">
