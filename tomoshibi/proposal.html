@@ -347,6 +347,12 @@ ol.open{padding-left:1.3em;margin:var(--s4) 0 0}
 ol.open li{margin-bottom:var(--s4);color:var(--muted);line-height:1.9}
 ol.open li b{color:var(--ink)}
 ol.open li::marker{color:var(--tomo)}
+/* 決まったものは消さない。何を決めたかが、次を決めるときの手がかりになる。 */
+ol.open li.settled{color:var(--faint)}
+ol.open li.settled b{color:var(--muted)}
+ol.open li.settled .del{text-decoration:line-through}
+ol.open li.settled .ans{display:block;margin-top:6px;color:var(--ink)}
+ol.open li.settled .ans b{color:var(--ink)}
 
 footer.board-foot{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;line-height:1.9}
 footer.board-foot a{color:var(--muted)}
@@ -362,7 +368,7 @@ footer.board-foot a{color:var(--muted)}
 <div class="wrap">
 
 <header class="board-head">
-  <p class="eyebrow">わんずのともしび／ペット供養アプリ</p>
+  <p class="eyebrow">ともしび／ペット供養アプリ</p>
   <h1><span class="flame-inline"><svg width="26" height="34" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.4 C 11 6.2 6.6 9.4 6.6 14.1 a5.4 5.4 0 0 0 10.8 0 C 17.4 9.6 13.2 6.6 12 1.4 Z" fill="#f0b357" opacity=".92"/><path d="M12 8.4 C 10.4 11.2 9.2 12.5 9.2 14.3 a2.8 2.8 0 0 0 5.6 0 C 14.8 12.5 13.6 11.2 12 8.4 Z" fill="#ffe9c2"/></svg></span>ともしび — UI案</h1>
   <p class="lede">企画書 v2（2026年9月13日／一次検証済み）の設計思想を、そのまま触れる画面に落としたものです。
   中核は「毎日ひらくお墓」「節目のカウントダウン」「命日の6秒」の3点。企画で<b>使わないと決めた手法</b>は、UIの側でも実装できない形にしています。</p>
@@ -831,9 +837,12 @@ footer.board-foot a{color:var(--muted)}
 <!-- ============ 5. 次に決めること ============ -->
 <h2 class="sec"><span class="num">05</span>次に決めること</h2>
 <ol class="open">
-  <li><b>名前「わんず」を残すかどうか。</b>企画の市場は犬猫1,600万頭ですが、「わんず」は犬に限定して聞こえます。猫の飼い主が自分向けだと思えない可能性が高い。<b>製品名は「ともしび」単独</b>とし、わんずはプロジェクト内の呼称に留めるのが安全だと考えます。</li>
+  <li class="settled"><span class="del"><b>名前「わんず」を残すかどうか。</b>企画の市場は犬猫1,600万頭ですが、「わんず」は犬に限定して聞こえます。猫の飼い主が自分向けだと思えない可能性が高い。</span>
+    <span class="ans">→ <b>製品名は「ともしび」単独で決着</b>（2026-09-14）。犬の呼称を外す。種類の選択に「そのほかの動物」を足したあとでは、名前だけが犬に寄っている状態は筋が通らない。</span></li>
   <li><b>「つらいときの相談先」の実体。</b>設定に枠だけ置きました。実在する窓口の確認が必要で、確認できるまでこの行は表に出せません（架空の窓口を出すことがこの製品で最悪の事故になります）。</li>
-  <li><b>最期の数週間の写真を、既定で非表示にするか。</b>本案は「既定で非表示、あとから出せる」にしました。ここは他者検証で必ず割れる論点なので、5〜10名のヒアリングで最初に聞く項目にすべきです。</li>
+  <li class="settled"><span class="del"><b>最期の数週間の写真を、既定で非表示にするか。</b>本案は「既定で非表示、あとから出せる」にしました。</span>
+    <span class="ans">→ <b>隠さないことで決着</b>（2026-09-14）。本人の写真で本人の悲しみである以上、どの姿を見てよいかをアプリが決めるのは差し出がましい。章ごとの「この期間は出さない」は残す。除外できることと、既定で隠すことは別。<br>
+    なお本案の記述は提案止まりで、既定で隠す処理は実装に一度も入っていない。</span></li>
   <li><b>四十九日の「一度だけの頻度選択」を、どの画面で出すか。</b>本案では設定に曲線として集約しましたが、企画の事前コミットメント（四十九日に一度だけ選ぶ）は専用の1画面にする案もあります。</li>
   <li><b>お参りの4動作は、90日で飽きに耐えるか。</b>企画の検証仮説そのもの。ここが崩れたら「変えない」という前提ごと再設計が要ります。</li>
 </ol>
