@@ -382,7 +382,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .setrow:active,.btn-line:active,.btn-ghost:active,.btn-dash:active,.tab:active,
 .offer:not([disabled]):active,.seg button:active,.kindpick button:active,
 .scale button:active,.letter-card:active,.seasonal:active,.scenepick button:active,
-.starters button:active,.pnav:active,.player-bar button:active,.menu:active{
+.starters button:active,.pnav:active,.player-bar button:active,.menu:active,.more:active{
   opacity:.6;
 }
 .chapter .th{flex:none;width:58px;height:58px;border-radius:14px;overflow:hidden;background:var(--amber-soft);display:grid;place-items:center}
@@ -597,8 +597,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 
 /* 書いた手紙の一覧 */
 .mail{background:var(--panel);border:2px solid var(--line);border-radius:var(--r-sm);padding:var(--s4);margin-top:var(--s3)}
-.mail .d{margin:0 0 6px;font-size:var(--fs-1);color:var(--faint);font-variant-numeric:tabular-nums}
-.mail p{margin:0;font-family:var(--round);font-size:var(--fs-4);line-height:2;white-space:pre-line}
+.mail-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mail .d{margin:0;font-size:var(--fs-1);color:var(--faint);font-variant-numeric:tabular-nums}
+.mail p{margin:6px 0 0;font-family:var(--round);font-size:var(--fs-4);line-height:2;white-space:pre-line}
+/* 章・動画の「···」と同じ構え。誤タップで即消えないよう、本文ではなくここだけに置く。 */
+.mail .more{flex:none;width:36px;height:44px;border:0;background:none;color:var(--faint);font-size:var(--fs-5);cursor:pointer}
 
 /* ---------- 失われたものの知らせ ---------- */
 #lost-note{margin-top:var(--s4)}
