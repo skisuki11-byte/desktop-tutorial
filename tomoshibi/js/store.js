@@ -244,7 +244,8 @@
     return (state.pet.kaimyo || '').trim() || kaimyoAuto();
   }
   function setKaimyo(v) {
-    state.pet.kaimyo = String(v == null ? '' : v).trim().slice(0, 20);
+    // 14字あれば院号つきの戒名も入る。それ以上は遺影の横に立てると小さくなりすぎる。
+    state.pet.kaimyo = String(v == null ? '' : v).trim().slice(0, 14);
     save();
   }
   function setKaimyoOff(off) { state.pet.kaimyoOff = !!off; save(); }

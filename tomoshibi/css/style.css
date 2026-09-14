@@ -13,6 +13,8 @@
   --sky:#7FB3D0; --sky-ink:#33708F; --sky-dark:#5C93B2; --sky-soft:#E3EFF6;
   --grass:#96C079; --grass-ink:#4B8340; --grass-soft:#F3F7EC; --grass-line:#DDEBCD;
   --rose:#E8A0A0; --outline:#5A4A3A;
+  --sumi:#3B3228; --sumi-halo:rgba(255,255,255,.6);   /* 戒名の墨と、地から浮かせる薄い縁 */
+  --brush:"Yuji Syuku","Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
   --r:22px; --r-sm:16px;
   --shadow:0 4px 14px rgba(90,74,58,.07);
   --shadow-lg:0 8px 22px rgba(90,74,58,.14);
@@ -27,6 +29,7 @@
   --amber-soft:#3A2F1C; --sky-soft:#1F2B33; --grass-soft:#222A1E; --grass-line:#39452F;
   --panel-2:#2C2925;
   --shadow:0 4px 14px rgba(0,0,0,.35); --shadow-lg:0 8px 22px rgba(0,0,0,.45);
+  --sumi:#E7DCC9; --sumi-halo:rgba(0,0,0,.5);
 }
 
 *{box-sizing:border-box}
@@ -79,38 +82,66 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .scene{position:relative;height:212px;border-radius:var(--r) var(--r) 0 0;overflow:hidden;
   background:linear-gradient(180deg,#EAF3F8 0%,#EAF3F8 62%,#EAF5E4 62%,#E4F0DA 100%)}
 :root[data-theme="night"] .scene{background:linear-gradient(180deg,#232A31 0%,#232A31 62%,#26301F 62%,#222B1C 100%)}
+/* 絵の色が塗りの属性で直に書いてあるため、夜にしても地面だけ明るい緑のまま残っていた。
+   戒名はこの面の上に立つので、薄墨の最後の字が読めなくなる。夜の色に合わせる。 */
+:root[data-theme="night"] .scene svg.bg > path{fill:#27301E}
+:root[data-theme="night"] .scene svg.bg > ellipse{fill:#3C444E}
+:root[data-theme="night"] .scene svg.bg [stroke="#8FB878"]{stroke:#516A42}
 .scene svg.bg{position:absolute;inset:0;width:100%;height:100%}
+/* 戒名を右に立てたぶん、遺影をわずかに左へ寄せて釣り合いをとる。
+   中央のままだと、右だけ字で詰まって見える。 */
 .scene .face{position:absolute;left:50%;top:26px;transform:translateX(-50%)}
+.scene:has(.kaimyo-v:not([hidden])) .face{transform:translateX(calc(-50% - 17px))}
 
 .card{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .homecard{overflow:hidden;padding-bottom:18px}
-.petname{margin:10px 0 4px;font-family:var(--round);font-weight:700;font-size:27px;letter-spacing:.08em;text-align:center;line-height:1.4}
+.petname{margin:16px 0 4px;font-family:var(--round);font-weight:700;font-size:27px;letter-spacing:.08em;text-align:center;line-height:1.4}
 .petmeta{margin:0;font-size:12.5px;color:var(--ink);text-align:center;letter-spacing:.03em;font-variant-numeric:tabular-nums}
 .petmeta.sub{margin-top:3px;font-size:11px;color:var(--faint)}
 
 /* ---------- 戒名 ----------
-   この一行だけ明朝にする。アプリの他の文字はすべて丸ゴシックと角ゴシックなので、
-   書体が変わること自体が「ここは格が違う」という合図になる。
-   端末に入っている書体だけを使うので、読み込むものは増やさない。
-   字間を広くとるのは、位牌の書きかたにならったもの。 */
-.kaimyo{
-  display:flex;align-items:center;gap:11px;margin:16px 0 0;
-  font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Times New Roman",serif;
-  font-size:13.5px;color:var(--amber-ink);line-height:1.6;
+   縦書きの毛筆で、遺影の右に立てる。位牌と同じ構えにした。
+   縦書きの日本語は右から左へ読むので、右に置くのが順序として正しい。
+
+   書体はこの一か所だけ毛筆にする。アプリの他の文字はすべて丸ゴシックと
+   角ゴシックなので、書体が変わること自体が「ここは格が違う」という合図になる。
+   色は増やさない。書体と向きの対比だけで格を作る。
+
+   毛筆は端末に入っていないので Yuji Syuku を読み込む。Google Fonts の日本語は
+   使う字の含まれる断片だけを配るため、増えるのは数KB。
+   届かないときは明朝に落ちる。縦書きと墨色は残るので、格は保たれる。 */
+/* 縦に積むのに writing-mode は使わない。
+   毛筆体が届かず別の書体に落ちたとき、その書体に縦書きの字送りが入っていないと
+   字が同じ場所に重なる。実際に重なった。
+   1字ずつ箱にして縦に並べれば、どの書体でも必ず縦に立つ。 */
+.kaimyo-v{
+  position:absolute;top:22px;right:14px;z-index:2;margin:0;
+  display:flex;flex-direction:column;align-items:center;
+  font-family:var(--brush);font-weight:400;
+  color:var(--sumi);line-height:1;
+  /* 空の地の上でも字が沈まないように、ごく薄い縁をつける */
+  text-shadow:0 0 3px var(--sumi-halo),0 1px 1px var(--sumi-halo);
+  pointer-events:none;
 }
-.kaimyo::before,.kaimyo::after{content:"";flex:1;height:1px;background:var(--line-2);opacity:.7}
-/* 字間を空けると最後の1字のうしろにも隙間が残り、中央からずれて見える。
-   同じぶんだけ先頭に足して打ち消す。 */
-.kaimyo span{letter-spacing:.24em;text-indent:.24em}
-.kaimyo.set{margin-top:12px}
-.kaimyo.off{color:var(--faint)}
-.kaimyo.off span{letter-spacing:.06em;text-indent:0;font-style:normal}
+.kaimyo-v i{display:block;font-style:normal;line-height:1.16;font-feature-settings:"vert" 1}
+.kaimyo-v.off{
+  display:block;font-family:var(--sans);font-size:12px;line-height:1.7;
+  color:var(--faint);text-shadow:none;
+}
+/* 設定では位牌のように、小さな枠の中に立てて見せる。
+   ここに出るものが、そのままトップに出る。 */
+.kaimyo-box{
+  margin-top:12px;display:grid;place-items:center;min-height:152px;padding:14px;
+  background:var(--amber-soft);border-radius:var(--r-sm);
+}
+.kaimyo-box .kaimyo-v{position:static;font-size:20px}
+.kaimyo-box .kaimyo-v.off{font-size:12.5px}
 /* どの字がどこから来たか */
 .whylist{margin:12px 0 0;display:flex;flex-direction:column;gap:7px}
 .whyrow{display:flex;align-items:baseline;gap:10px;font-size:11.5px;color:var(--muted);line-height:1.7}
 .whyrow b{
-  flex:none;min-width:2.6em;text-align:center;color:var(--amber-ink);font-size:15px;font-weight:400;
-  font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Times New Roman",serif;
+  flex:none;min-width:2.8em;text-align:center;color:var(--amber-ink);font-size:16px;font-weight:400;
+  font-family:var(--brush);
 }
 
 /* ---------- ボタン ---------- */

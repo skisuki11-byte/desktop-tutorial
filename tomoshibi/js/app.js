@@ -242,8 +242,13 @@
     $('#home-meta2').textContent = sub.join(' ・ ');
 
     var km = S.kaimyo();
-    $('#home-kaimyo').hidden = !km;
-    $('#home-kaimyo').firstElementChild.textContent = km;
+    var kb = $('#home-kaimyo');
+    kb.hidden = !km;
+    if (km) {
+      kb.innerHTML = brushHTML(km);
+      // 縦に立てるので、字数が増えるほど下へ伸びる。絵からはみ出さない大きさに合わせる。
+      kb.style.fontSize = fitBrush(Array.from(km).length) + 'px';
+    }
 
     var n = S.visitCount(), done = S.visitedOn(t);
     $('#omairi-label').textContent = done ? 'もう一度おまいりする' : 'おまいりする';
@@ -860,6 +865,18 @@
     renderKaimyo();
   }
 
+  /* 戒名を1字ずつの箱にして縦に積む。書体に縦書きの字送りが無くても、これなら必ず立つ。 */
+  function brushHTML(text) {
+    return Array.from(String(text || '')).map(function (c) {
+      return '<i>' + esc(c) + '</i>';
+    }).join('');
+  }
+  /* 遺影の絵は高さ212px。上下に22pxずつ残した168pxに字数ぶんを収める。
+     1字の高さは字の大きさの1.16倍（.kaimyo-v i の行送り）。 */
+  function fitBrush(len) {
+    return Math.max(9, Math.min(19, Math.floor(168 / (Math.max(1, len) * 1.16))));
+  }
+
   /* 戒名の欄。どの字がどこから来たかを開いて見せる。
      由来の分からない名を押しつけるのは、贈りものではなく押しつけになる。 */
   function renderKaimyo() {
@@ -867,9 +884,10 @@
     var off = !!st.pet.kaimyoOff;
     var shown = off ? '' : (own || S.kaimyoAuto());
     var box = $('#set-kaimyo');
-    box.classList.toggle('off', off || !shown);
-    box.firstElementChild.textContent = off ? '出していません'
-      : shown || '（なまえと命日を入れると決まります）';
+    var blank = off || !shown;
+    box.classList.toggle('off', blank);
+    if (blank) box.textContent = off ? '出していません' : '（なまえと命日を入れると決まります）';
+    else box.innerHTML = brushHTML(shown);
 
     var why = $('#set-kaimyo-why');
     var k = (!off && !own) ? S.kaimyoParts() : null;
