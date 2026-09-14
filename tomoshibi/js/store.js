@@ -167,28 +167,31 @@
   function putSeasonal(d) { state.seasonal[ym(d)] = true; save(); }
 
   /* ============ 写真と動画 ============
-     保存先が3つある。環境によって使えるものが違うので、順に試す。
+     保存先は、この端末の中だけ。どこにも送らない。
+     外に預けないので流出しようがなく、こちらの容量も気にしなくていい。
+     そのかわり端末を変えるときは、バックアップを書き出して読み込ませる。
 
-       assets … このアプリを claude.ai のページとして開いたときだけ使える。
-                埋め込み(iframe)では IndexedDB が塞がれるので、動画はここにしか置けない。
-                mp4 / webm のみ・1本20MiBまで。
-       IndexedDB … ホーム画面に追加した場合やブラウザで直接開いた場合。容量が大きい。
-       localStorage … 最後の砦。写真1〜数枚ぶん。
+       IndexedDB   … 本命。写真も動画も、形式・大きさの制限なく入る
+       localStorage … IndexedDB が使えないときの保険。写真1枚ぶん
 
-     どこに何があるかは索引(index)に持つ。索引がないと、assets に上げた動画を
-     次に開いたとき見つけられない。 */
+     どこに何があるかは索引(index)に持つ。 */
 
   var DB = 'tomoshibi-media', STORE = 'media', dbp = null;
   var INDEX_KEY = 'tomoshibi.index.v1';
-  var back = { assets: false, idb: false };
-  var assetsNS = null, dbNS = null, dlNS = null;
+  var back = { idb: false };
+  var dlNS = null;
+  /* 埋め込み(iframe)で開かれているか。Safari はこの状態だと保存を
+     一時的なものとして扱い、閉じたときに消すことがある。 */
+  var embedded = (function () {
+    try { return global.self !== global.top; } catch (e) { return true; }
+  })();
+  var durable = false;
 
   function getIndex() {
     try { return JSON.parse(localStorage.getItem(INDEX_KEY)) || []; } catch (e) { return []; }
   }
   function setIndex(a) {
     try { localStorage.setItem(INDEX_KEY, JSON.stringify(a)); } catch (e) {}
-    if (dbNS) { try { dbNS.doc('media/index').set({ items: a }); } catch (e) {} }
   }
   function indexPut(entry) {
     var a = getIndex().filter(function (x) { return x.id !== entry.id; });
@@ -265,24 +268,30 @@
       });
     }).then(function () { back.idb = true; }).catch(function () { back.idb = false; }));
 
-    // claude.use は後から解決する。返らない環境もあるので上限をつける。
+    /* ブラウザに「この保存を勝手に消さないでほしい」と頼む。
+       Chrome/Edge/Firefox はここで許可が下りる。Safari は
+       ホーム画面に追加してあるかどうかなどで自分で判断する。 */
+    jobs.push(new Promise(function (res) {
+      try {
+        if (navigator.storage && navigator.storage.persist) {
+          navigator.storage.persist().then(function (ok) { durable = !!ok; res(); }, function () { res(); });
+          setTimeout(res, 3000);
+          return;
+        }
+      } catch (e) {}
+      res();
+    }));
+
+    // 書き出し口（claude.ai の画面で使う）。保存先ではなく、持ち出しにだけ使う。
     jobs.push(new Promise(function (res) {
       if (!(global.claude && typeof global.claude.use === 'function')) { res(); return; }
       var settled = false;
       var done = function () { if (!settled) { settled = true; res(); } };
-      setTimeout(done, 5000);
-      Promise.all([
-        global.claude.use('assets').catch(function () { return null; }),
-        global.claude.use('db').catch(function () { return null; }),
-        global.claude.use('downloads').catch(function () { return null; })
-      ]).then(function (r) {
-        assetsNS = r[0] || null; dbNS = r[1] || null; dlNS = r[2] || null;
-        back.assets = !!assetsNS;
-        done();
-      }, done);
+      setTimeout(done, 4000);
+      global.claude.use('downloads').then(function (d) { dlNS = d || null; done(); }, done);
     }));
 
-    return Promise.all(jobs).then(migrate).then(mergeRemoteIndex);
+    return Promise.all(jobs).then(migrate);
   }
 
   /* 索引を入れる前に保存したものを拾う。すでに入れた写真を見失わないため。 */
@@ -310,44 +319,19 @@
     });
   }
 
-  /* localStorage が消えても、db に控えがあれば拾い直す */
-  function mergeRemoteIndex() {
-    if (!dbNS) return;
-    return dbNS.doc('media/index').get().then(function (d) {
-      var remote = (d && d.data && d.data.items) || [];
-      if (!remote.length) return;
-      var local = getIndex(), seen = {};
-      local.forEach(function (x) { seen[x.id] = 1; });
-      var merged = local.concat(remote.filter(function (x) { return !seen[x.id]; }));
-      merged.sort(function (x, y) { return (x.at || 0) - (y.at || 0); });
-      try { localStorage.setItem(INDEX_KEY, JSON.stringify(merged)); } catch (e) {}
-    }).catch(function () {});
-  }
-
   function idbAvailable() { return back.idb; }
   function downloader() { return dlNS; }
-  function assetsAvailable() { return back.assets; }
-  /* どこに保存できるかを、画面で説明するために返す */
+  /* どこに保存できて、それが消されない保存かを、画面で説明するために返す。
+     embedded（埋め込み表示）のときは、閉じると消えることがある。 */
   function storeInfo() {
-    return { idb: back.idb, assets: back.assets,
-             video: back.idb || back.assets, photo: true };
+    return { idb: back.idb, video: back.idb, photo: true,
+             embedded: embedded, durable: durable && !embedded };
   }
-
-  var VIDEO_OK = { 'video/mp4': 1, 'video/webm': 1 };
-  var ASSET_MAX = 20 * 1024 * 1024;
 
   /* 保存。必ず解決する。失敗は {ok:false, reason} で返す。 */
   function putMedia(rec) {
-    var order = rec.kind === 'video' ? ['idb', 'assets'] : ['idb', 'assets', 'ls'];
-    // 同じidに上書きするとき（遺影の撮り直しなど）、前の実体を残さない
-    var prev = indexGet(rec.id);
-    return tryStores(rec, order, 0, null).then(function (r) {
-      if (r.ok && prev && prev.store === 'assets' && assetsNS) {
-        var now = indexGet(rec.id);
-        if (!now || now.assetId !== prev.assetId) assetsNS.delete(prev.assetId).catch(function () {});
-      }
-      return r;
-    });
+    var order = rec.kind === 'video' ? ['idb'] : ['idb', 'ls'];
+    return tryStores(rec, order, 0, null);
   }
 
   function tryStores(rec, order, i, lastReason) {
@@ -365,22 +349,6 @@
       }).catch(function (e) { return next(reasonOf(e)); });
     }
 
-    if (w === 'assets') {
-      if (!assetsNS) return next(null);
-      var type = rec.blob.type || '';
-      if (rec.kind === 'video') {
-        // iPhone の .mov(video/quicktime) は中身が mp4 と同じ ISO-BMFF のことが多い。
-        // このブラウザで再生できると確かめたものだけ、mp4 と申告して通す。
-        if (!VIDEO_OK[type] && rec.playable) type = 'video/mp4';
-        if (!VIDEO_OK[type]) return next('video-format');
-        if (rec.blob.size > ASSET_MAX) return next('video-too-large');
-      }
-      return assetsNS.upload(rec.blob, type ? { type: type } : undefined).then(function (r) {
-        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, store: 'assets', assetId: r.id });
-        return { ok: true, where: 'assets' };
-      }).catch(function (e) { return next(assetReason(e)); });
-    }
-
     return blobToDataURL(rec.blob).then(function (u) {
       if (u.length > LS_LIMIT) return next('too-large');
       try {
@@ -391,15 +359,6 @@
     }).catch(function (e) { return next(reasonOf(e)); });
   }
 
-  function assetReason(e) {
-    var c = (e && e.code) || '';
-    if (c === 'too_large') return 'video-too-large';
-    if (c === 'unsupported_type') return 'video-format';
-    if (c === 'quota_or_state') return 'quota';
-    if (c === 'rate_limited') return 'rate';
-    if (c === 'not_granted' || c === 'capability_disabled' || c === 'capability_removed') return 'no-store';
-    return 'unknown';
-  }
   function reasonOf(e) {
     var n = (e && (e.name || e.message)) || '';
     if (/Quota|quota/.test(n)) return 'quota';
@@ -408,12 +367,9 @@
     return 'unknown';
   }
 
-  /* 読み出し。assets のものは url を、ほかは blob を返す。 */
+  /* 読み出し */
   function loadEntry(e) {
     if (!e) return Promise.resolve(null);
-    if (e.store === 'assets') {
-      return Promise.resolve({ id: e.id, kind: e.kind, at: e.at, url: '/_blob/' + e.assetId });
-    }
     if (e.store === 'ls') {
       try {
         var raw = localStorage.getItem(LS_PREFIX + e.id);
@@ -442,16 +398,43 @@
     indexDel(id);
     if (!e) return Promise.resolve();
     if (e.store === 'ls') { try { localStorage.removeItem(LS_PREFIX + id); } catch (x) {} return Promise.resolve(); }
-    if (e.store === 'assets') {
-      if (!assetsNS) return Promise.resolve();
-      return assetsNS.delete(e.assetId).catch(function () {});
-    }
     if (!back.idb) return Promise.resolve();
     return tx('readwrite').then(function (s) { return wrap(s.delete(id)); }).catch(function () {});
   }
 
   function newId(kind) {
     return kind + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  /* バックアップからの復元。機種を変えたときの受け口。
+     いまの中身は全部消してから入れ直す。混ざるほうが分かりにくいため。 */
+  function restoreAll(pack) {
+    if (!pack || pack.app !== 'ともしび' || !pack.data) {
+      return Promise.resolve({ ok: false, reason: 'not-tomoshibi' });
+    }
+    var media = pack.media || [];
+    return allMedia().then(function (old) {
+      return Promise.all(old.map(function (m) { return deleteMedia(m.id); }));
+    }).catch(function () {}).then(function () {
+      setIndex([]);
+      var fails = 0;
+      return media.reduce(function (p, m) {
+        return p.then(function () {
+          var blob = dataURLToBlob(m.dataURL);
+          if (!blob) { fails++; return; }
+          return putMedia({ id: m.id, blob: blob, at: m.at || Date.now(), kind: m.kind, playable: true })
+            .then(function (r) { if (!r.ok) fails++; });
+        });
+      }, Promise.resolve()).then(function () {
+        var base = blank();
+        Object.keys(base).forEach(function (k) { if (k in pack.data) state[k] = pack.data[k]; });
+        Object.keys(base.pet).forEach(function (k) {
+          if (pack.data.pet && k in pack.data.pet) state.pet[k] = pack.data.pet[k];
+        });
+        save();
+        return { ok: true, restored: media.length - fails, failed: fails };
+      });
+    });
   }
 
   /* ============ アルバムの章立て ============ */
@@ -476,7 +459,7 @@
 
   global.Store = {
     state: state, save: save, probe: probe,
-    idbAvailable: idbAvailable, assetsAvailable: assetsAvailable, storeInfo: storeInfo, downloader: downloader,
+    idbAvailable: idbAvailable, storeInfo: storeInfo, downloader: downloader, restoreAll: restoreAll,
     reset: function () { state = blank(); save(); },
     ymd: ymd, parseISO: parseISO, addDays: addDays, addYears: addYears, diffDays: diffDays,
     today: today, formatJP: formatJP, formatMD: formatMD, formatShort: formatShort,

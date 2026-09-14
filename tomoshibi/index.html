@@ -109,6 +109,11 @@
           <svg width="19" height="19" style="color:var(--amber-ink)"><use href="#ic-info"></use></svg>
           <p>うまく取りこめないときは、その場で理由を出します。<br>黙って止まることはありません。</p>
         </div>
+        <div class="tip tip-warn" id="onbo-warn" hidden>
+          <svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>
+          <p><b>この画面は試し用です。</b>閉じると消えることがあります。<br>
+          共有ボタンから<b>「ホーム画面に追加」</b>して、そちらで開いてください。</p>
+        </div>
       </div>
 
       <div class="step" data-step="3" hidden>
@@ -138,6 +143,12 @@
       <div class="daybar">
         <span class="d"><svg width="22" height="22"><use href="#ic-sun"></use></svg><span id="home-date">—</span></span>
         <span class="greet" id="home-greet">おはよう</span>
+      </div>
+
+      <div class="tip tip-warn" id="home-warn" hidden>
+        <svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>
+        <p><b>この画面は試し用です。</b>閉じると、入れた写真や動画が消えることがあります。<br>
+        共有ボタンから<b>「ホーム画面に追加」</b>して、そちらで開いてください。</p>
       </div>
 
       <div class="card homecard">
@@ -298,9 +309,23 @@
   <section class="view" id="view-settings">
     <div class="body scroll foot">
       <div class="head"><h1>設定</h1></div>
+
+      <div class="tip tip-warn" id="warn-ephemeral" hidden style="margin-top:4px">
+        <svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>
+        <p><b>いまの開きかたは試し用です。</b>閉じると、入れた写真や動画が消えることがあります。<br>
+        ずっと残すには、共有ボタンから<b>「ホーム画面に追加」</b>して、そちらで開いてください。</p>
+      </div>
+
       <button class="setrow" id="btn-profile"><span>なまえ・写真・日づけ</span><span class="arw">›</span></button>
-      <button class="setrow" id="btn-export"><span style="color:var(--amber-ink);font-weight:700">すべて手元に持ち出す</span><span class="arw">›</span></button>
-      <p style="margin:7px 2px 14px;font-size:11.5px;color:var(--faint);line-height:1.8">やめても、写真・動画・記録はすべて手元に残ります</p>
+
+      <div class="cardbox">
+        <h4>バックアップ</h4>
+        <p class="cap">写真も動画も記録も、この端末の中だけにあります。<br>
+        端末を変えるときは、書き出して、新しい端末で読み込ませてください。</p>
+        <button class="setrow" id="btn-export" style="margin-top:10px"><span style="color:var(--amber-ink);font-weight:700">バックアップを書き出す</span><span class="arw">›</span></button>
+        <button class="setrow" id="btn-import"><span>バックアップから戻す</span><span class="arw">›</span></button>
+        <input type="file" id="in-backup" accept="application/json,.json" hidden>
+      </div>
 
       <div class="cardbox">
         <h4>見た目</h4>
