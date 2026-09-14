@@ -29,6 +29,7 @@
       visits: [],          // お参りした日 "YYYY-MM-DD"。通算回数はこの長さ
       seasonal: {},        // { "2026-09": true } 季節のおそなえを置いた月
       videoTitles: {},     // { mediaId: "走ってるところ" }
+      videoThumbs: {},     // { mediaId: "data:image/jpeg;base64,…" } 最初のコマの静止画
       chapterTitles: {},
       theme: 'light',
       dateOffset: 0        // 確認用。通常0
