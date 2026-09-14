@@ -228,12 +228,22 @@
     $('#home-name').textContent = st.pet.name || '—';
 
     var death = S.parseISO(st.pet.deathISO), birth = S.parseISO(st.pet.birthISO);
+    // 上の行は享年と命日。この子が何年生きて、いつ旅立ったか。
     var meta = [];
-    if (birth && death) meta.push(S.formatShort(birth) + ' — ' + S.formatShort(death));
-    else if (death) meta.push(S.formatShort(death));
-    var tg = S.daysTogether();
-    if (tg) meta.push('いっしょに ' + tg.toLocaleString('ja-JP') + '日');
+    var age = S.ageAtDeath();
+    if (age) meta.push('享年 ' + (age.years != null ? age.years + '歳' : age.months + 'か月'));
+    if (death) meta.push((death.getMonth() + 1) + '月' + death.getDate() + '日 没');
     $('#home-meta').textContent = meta.join(' ・ ');
+    // 下の行は生まれた日といっしょにいた日数。控えめに添える。
+    var sub = [];
+    if (birth) sub.push(S.formatShort(birth) + ' 生');
+    var tg = S.daysTogether();
+    if (tg) sub.push('いっしょに ' + tg.toLocaleString('ja-JP') + '日');
+    $('#home-meta2').textContent = sub.join(' ・ ');
+
+    var km = S.kaimyo();
+    $('#home-kaimyo').hidden = !km;
+    $('#home-kaimyo').firstElementChild.textContent = km;
 
     var n = S.visitCount(), done = S.visitedOn(t);
     $('#omairi-label').textContent = done ? 'もう一度おまいりする' : 'おまいりする';
@@ -380,7 +390,7 @@
     show('after');
   }
 
-  /* きょうの自分。1〜5。答えなくてもいい。 */
+  /* いまの気分。1〜5。答えなくてもいい。 */
   function renderSelfAsk() {
     var t = S.today(), v = S.selfOn(t);
     $$('#self-scale button').forEach(function (b) {
@@ -388,7 +398,7 @@
     });
     var box = $('#self-ask');
     box.classList.toggle('done', !!v);
-    box.querySelector('.q').textContent = v ? '記録しました' : 'きょうの自分は、どうでしたか';
+    box.querySelector('.q').textContent = v ? '記録しました' : 'いまの気分は、どうですか';
   }
 
   /* 波のグラフ。1本だけなので凡例はいらない。
@@ -397,24 +407,25 @@
     var data = S.selfSeries(30);
     var box = $('#self-chart'), cap = $('#self-cap');
     if (data.length < 2) {
-      box.innerHTML = '<p class="chart-empty">おまいりのあとに、きょうの自分を<br>記録できます。' +
+      box.innerHTML = '<p class="chart-empty">おまいりのあとに、いまの気分を<br>記録できます。' +
         (data.length ? '<br>2回めから、波が見えてきます。' : '') + '</p>';
       cap.textContent = '';
       return;
     }
-    var W = 320, H = 132, L = 40, R = 12, T = 14, B = 26;
+    // 左の余白は軸の文字にあわせる。「前を向けた」は5文字あり、40pxでは収まらない。
+    var W = 320, H = 132, L = 62, R = 12, T = 14, B = 26;
     var iw = W - L - R, ih = H - T - B;
     var x = function (i) { return L + (data.length === 1 ? iw / 2 : iw * i / (data.length - 1)); };
     var y = function (v) { return T + ih - (v - 1) / 4 * ih; };
 
-    var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="きょうの自分の記録">'];
+    var o = ['<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="いまの気分の記録">'];
     // 目盛りは控えめに。5段のうち上下だけ名前をつける
     for (var g = 1; g <= 5; g++) {
       o.push('<line x1="' + L + '" y1="' + y(g) + '" x2="' + (W - R) + '" y2="' + y(g) +
         '" stroke="currentColor" stroke-width="1" opacity="' + (g === 1 || g === 5 ? '.18' : '.08') + '"/>');
     }
-    o.push('<text x="' + (L - 8) + '" y="' + (y(5) + 4) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".55">かるい</text>');
-    o.push('<text x="' + (L - 8) + '" y="' + (y(1) + 4) + '" text-anchor="end" font-size="10" fill="currentColor" opacity=".55">おもい</text>');
+    o.push('<text x="' + (L - 8) + '" y="' + (y(5) + 4) + '" text-anchor="end" font-size="9.5" fill="currentColor" opacity=".55">前を向けた</text>');
+    o.push('<text x="' + (L - 8) + '" y="' + (y(1) + 4) + '" text-anchor="end" font-size="9.5" fill="currentColor" opacity=".55">重い</text>');
 
     var pts = data.map(function (d, i) { return x(i).toFixed(1) + ',' + y(d.v).toFixed(1); }).join(' ');
     o.push('<polyline points="' + pts + '" fill="none" stroke="#4B8340" stroke-width="2" ' +
@@ -435,7 +446,7 @@
     box.innerHTML = o.join('');
     box.style.color = 'var(--muted)';
 
-    var LV = ['', 'おもかった', 'すこし おもかった', 'ふつう', 'すこし かるかった', 'かるかった'];
+    var LV = ['', '重かった', 'すこし 重かった', 'ふつう', 'すこし 前を向けた', '前を向けた'];
     var say = function (i) {
       var d = data[i], dd = new Date(d.day.replace(/-/g, '/'));
       cap.textContent = (dd.getMonth() + 1) + '月' + dd.getDate() + '日 ・ ' + LV[d.v];
@@ -451,7 +462,7 @@
     $('#self-help').innerHTML = run >= 5
       ? '<div class="tip tip-amber" style="margin-top:14px">' +
         '<svg width="19" height="19" style="color:var(--amber-ink)"><use href="#ic-info"></use></svg>' +
-        '<p>おもい日が' + run + '日つづいています。<br>' +
+        '<p>重い日が' + run + '日つづいています。<br>' +
         '<button id="btn-self-help" style="margin-top:8px;min-height:40px;padding:0 14px;border-radius:999px;' +
         'border:2px solid var(--tomo-line,var(--line));background:transparent;color:var(--amber-ink);' +
         'font-size:12.5px;font-weight:700;cursor:pointer">相談できるところを見る</button></p></div>'
@@ -846,6 +857,42 @@
     $('#store-state').textContent =
       (si.embedded ? '試し用（消えます）' : si.durable ? 'この端末の中・保護あり' : si.idb ? 'この端末の中' : '写真のみ') + ' ›';
     $('#warn-ephemeral').hidden = !si.embedded;
+    renderKaimyo();
+  }
+
+  /* 戒名の欄。どの字がどこから来たかを開いて見せる。
+     由来の分からない名を押しつけるのは、贈りものではなく押しつけになる。 */
+  function renderKaimyo() {
+    var own = (st.pet.kaimyo || '').trim();
+    var off = !!st.pet.kaimyoOff;
+    var shown = off ? '' : (own || S.kaimyoAuto());
+    var box = $('#set-kaimyo');
+    box.classList.toggle('off', off || !shown);
+    box.firstElementChild.textContent = off ? '出していません'
+      : shown || '（なまえと命日を入れると決まります）';
+
+    var why = $('#set-kaimyo-why');
+    var k = (!off && !own) ? S.kaimyoParts() : null;
+    why.innerHTML = k
+      ? '<div class="whylist">' +
+        '<div class="whyrow"><b>' + esc(k.michi) + '</b><span>' + esc(k.michiWhy) + '</span></div>' +
+        '<div class="whyrow"><b>' + esc(k.head) + '</b><span>' + esc(k.headWhy) + '</span></div>' +
+        '<div class="whyrow"><b>' + esc(k.sue) + '</b><span>' + esc(k.sueWhy) + '</span></div>' +
+        '<div class="whyrow"><b>' + esc(k.kurai) + '</b><span>ペットの供養で広く使われる結び</span></div>' +
+        '</div>'
+      : own && !off ? '<p class="cap" style="margin:10px 0 0">あなたが書いた名です。</p>' : '';
+
+    $('#btn-kaimyo-auto').hidden = !own;
+    $('#kaimyo-off-label').textContent = off ? '出す' : '出さない';
+  }
+
+  function editKaimyo() {
+    var now = (st.pet.kaimyo || '').trim() || S.kaimyoAuto();
+    var v = window.prompt('戒名', now);
+    if (v === null) return;
+    // アプリが選んだ名と同じなら、書いたことにしない。以後も生年月日にあわせて変わる。
+    S.setKaimyo(v.trim() === S.kaimyoAuto() ? '' : v);
+    renderKaimyo();
   }
 
   function exportAll() {
@@ -1158,6 +1205,18 @@
       $('#in-fave').value = '';
       renderOnbo(); show('onbo');
     };
+    $('#btn-kaimyo-edit').onclick = editKaimyo;
+    $('#btn-kaimyo-auto').onclick = function () {
+      sheet('アプリの名にもどす', '書いた戒名は消えます。', [
+        { label: 'もどす', primary: true, on: function () { S.setKaimyo(''); renderKaimyo(); } },
+        { label: 'やめる' }
+      ]);
+    };
+    $('#btn-kaimyo-off').onclick = function () {
+      S.setKaimyoOff(!st.pet.kaimyoOff);
+      renderKaimyo();
+    };
+
     $('#btn-store').onclick = function () {
       var i = S.storeInfo();
       var body = '写真も動画も記録も、<b>この端末の中だけ</b>に保存しています。' +

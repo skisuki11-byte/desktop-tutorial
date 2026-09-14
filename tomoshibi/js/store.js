@@ -16,7 +16,11 @@
   function blank() {
     return {
       onboarded: false,
-      pet: { name: '', kind: 'dog', deathISO: '', birthISO: '', faves: [] },
+      pet: {
+        name: '', kind: 'dog', deathISO: '', birthISO: '', faves: [],
+        kaimyo: '',        // お寺からいただいたものがあれば、ここへ。空ならアプリが選んだ名
+        kaimyoOff: false   // 戒名になじみのない人もいる。出さないこともできる
+      },
       selfLog: {},         // { "2026-09-14": 3 } その日の自分。1〜5
       letters: [],         // 飼い主からあの子へ書いた手紙 [{at, text}]
       faveDone: {},        // { "2026-09-14": ["さつまいも"] } その日そなえたもの
@@ -148,6 +152,103 @@
     return Math.max(0, diffDays(b, d));
   }
 
+  /* 享年。満年齢で数える。1年に満たない子は月で返す。
+     0歳と出すより、7か月と出すほうがその子の時間に近い。 */
+  function ageAtDeath() {
+    var b = parseISO(state.pet.birthISO), d = parseISO(state.pet.deathISO);
+    if (!b || !d || d < b) return null;
+    var y = d.getFullYear() - b.getFullYear();
+    var m = d.getMonth() - b.getMonth();
+    if (d.getDate() < b.getDate()) m--;
+    if (m < 0) { y--; m += 12; }
+    return y >= 1 ? { years: y } : { months: m };
+  }
+
+  /* ============ 戒名 ============
+     お寺が授けるものを、アプリが代わりに出せるはずがない。
+     ここで作るのは「この子のために選んだ名」であって、授戒ではない。
+     だからどの字がどこから来たかを必ず開いて見せるし、書きかえられる。
+
+     組み立ては人の戒名にならい、道号2字＋法号2字＋位号2字。
+       道号  旅立った季節から
+       法号  この子の名の頭の一字 ＋ 生まれた季節の一字
+       位号  霊位（ペット供養で広く使われる形）
+     生まれた季節と旅立った季節が両端にくるので、
+     名前がその子の一生をそのまま包む形になる。 */
+
+  // 名の頭の音を一字にする。万葉仮名のように音を借りる、昔からのやり方。
+  var ONE = {
+    'あ':'安','い':'伊','う':'羽','え':'永','お':'桜',
+    'か':'香','き':'樹','く':'空','け':'慶','こ':'幸',
+    'さ':'咲','し':'志','す':'翠','せ':'誠','そ':'爽',
+    'た':'太','ち':'千','つ':'月','て':'天','と':'灯',
+    'な':'那','に':'日','ぬ':'温','ね':'寧','の':'希',
+    'は':'晴','ひ':'陽','ふ':'風','へ':'平','ほ':'穂',
+    'ま':'真','み':'美','む':'夢','め':'芽','も':'望',
+    'や':'弥','ゆ':'優','よ':'好',
+    'ら':'楽','り':'理','る':'瑠','れ':'玲','ろ':'朗',
+    'わ':'和','ゐ':'和','ゑ':'永','を':'和','ん':'音'
+  };
+  var DAKU = {
+    'が':'か','ぎ':'き','ぐ':'く','げ':'け','ご':'こ','ざ':'さ','じ':'し','ず':'す','ぜ':'せ','ぞ':'そ',
+    'だ':'た','ぢ':'ち','づ':'つ','で':'て','ど':'と','ば':'は','び':'ひ','ぶ':'ふ','べ':'へ','ぼ':'ほ',
+    'ぱ':'は','ぴ':'ひ','ぷ':'ふ','ぺ':'へ','ぽ':'ほ',
+    'ぁ':'あ','ぃ':'い','ぅ':'う','ぇ':'え','ぉ':'お','ゃ':'や','ゅ':'ゆ','ょ':'よ','っ':'つ','ゎ':'わ'
+  };
+  // 旅立った季節。2か月ずつ6つに分ける。
+  var MICHI = ['寒月','寒月','春光','春光','薫風','薫風','夏雲','夏雲','秋水','秋水','冬晴','冬晴'];
+  var MICHI_WHY = ['冬の月のころ','冬の月のころ','春の光のころ','春の光のころ','初夏の風のころ','初夏の風のころ','夏の雲のころ','夏の雲のころ','秋の水のころ','秋の水のころ','冬の晴れたころ','冬の晴れたころ'];
+  // 生まれた季節。
+  var UMARE = { 0:'清', 1:'清', 2:'和', 3:'和', 4:'和', 5:'陽', 6:'陽', 7:'陽', 8:'実', 9:'実', 10:'実', 11:'清' };
+  var UMARE_WHY = { '和':'春に生まれた', '陽':'夏に生まれた', '実':'秋に生まれた', '清':'冬に生まれた' };
+  var KIND_CHAR = { dog:'睦', cat:'静', other:'円' };
+  var KIND_WHY = { '睦':'犬とむつまじく過ごした', '静':'猫としずかに寄りそった', '円':'まるく穏やかに過ごした' };
+
+  function headChar(name) {
+    var n = String(name || '').trim();
+    if (!n) return '';
+    var c = n.charAt(0);
+    // 漢字ならその字をそのまま使う。人の戒名でも名の一字を採る。
+    if (/[\u4E00-\u9FFF]/.test(c)) return c;
+    // カタカナはひらがなに寄せる
+    if (/[\u30A1-\u30F6]/.test(c)) c = String.fromCharCode(c.charCodeAt(0) - 0x60);
+    if (DAKU[c]) c = DAKU[c];
+    return ONE[c] || '';
+  }
+
+  /* 戒名の部品。画面で「どの字がどこから来たか」を見せるために使う。 */
+  function kaimyoParts(pet) {
+    var p = pet || state.pet;
+    var d = parseISO(p.deathISO), b = parseISO(p.birthISO);
+    var head = headChar(p.name);
+    if (!d || !head) return null;
+    var mi = d.getMonth();
+    var sue = b ? UMARE[b.getMonth()] : (KIND_CHAR[p.kind] || '円');
+    return {
+      michi: MICHI[mi],
+      michiWhy: MICHI_WHY[mi] + 'に旅立った',
+      head: head,
+      headWhy: '「' + p.name + '」の頭の一字',
+      sue: sue,
+      sueWhy: b ? UMARE_WHY[sue] : KIND_WHY[sue],
+      kurai: '霊位'
+    };
+  }
+  function kaimyoAuto(pet) {
+    var k = kaimyoParts(pet);
+    return k ? k.michi + k.head + k.sue + k.kurai : '';
+  }
+  /* 表に出す戒名。お寺からいただいたものがあれば、そちらが優先される。 */
+  function kaimyo() {
+    if (state.pet.kaimyoOff) return '';
+    return (state.pet.kaimyo || '').trim() || kaimyoAuto();
+  }
+  function setKaimyo(v) {
+    state.pet.kaimyo = String(v == null ? '' : v).trim().slice(0, 20);
+    save();
+  }
+  function setKaimyoOff(off) { state.pet.kaimyoOff = !!off; save(); }
+
   /* ============ おまいり ============
      数えるのは通算。連続記録ではない。
      連続は1日休むと途切れて罪悪感になるが、通算は減らず、途切れない。 */
@@ -183,7 +284,7 @@
     save();
   }
 
-  /* きょうの自分。1〜5。点数ではなく、波を見るための記録。
+  /* いまの気分。1〜5。点数ではなく、波を見るための記録。
      死別への対処は行ったり来たりしながら進む（Dual Process Model,
      Stroebe & Schut 1999）。上がり続けるのが正常なのではない。
      だから平均も目標も出さないし、良し悪しの判定もしない。 */
@@ -541,7 +642,9 @@
     reset: function () { state = blank(); save(); },
     ymd: ymd, parseISO: parseISO, addDays: addDays, addYears: addYears, diffDays: diffDays,
     today: today, formatJP: formatJP, formatMD: formatMD, formatShort: formatShort,
-    milestones: milestones, daysTogether: daysTogether,
+    milestones: milestones, daysTogether: daysTogether, ageAtDeath: ageAtDeath,
+    kaimyo: kaimyo, kaimyoAuto: kaimyoAuto, kaimyoParts: kaimyoParts,
+    setKaimyo: setKaimyo, setKaimyoOff: setKaimyoOff,
     visitCount: visitCount, visitedOn: visitedOn, recordVisit: recordVisit,
     seasonalFor: seasonalFor, seasonalDone: seasonalDone, putSeasonal: putSeasonal,
     faveDoneOn: faveDoneOn, putFave: putFave, addLetter: addLetter,
