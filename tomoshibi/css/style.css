@@ -143,7 +143,15 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    「花は枯れない」の演出をそのまま保つ。 */
 :root[data-theme="night"] .scene{--scene-cloud:#3C444E;--scene-ground:#27301E;--scene-stem:#516A42}
 .scene svg.bg{position:absolute;inset:0;width:100%;height:100%}
-.scene .s-cloud{fill:var(--scene-cloud)}
+/* 雲だけ、ごくゆっくり左右に流す。速さも幅も控えめにして、
+   ずっと眺めていても気が散らない・目に留まりすぎない程度にとどめる。 */
+.scene .s-cloud{fill:var(--scene-cloud);transform-box:fill-box;transform-origin:center;animation:scene-drift 48s ease-in-out infinite}
+.scene .s-cloud:nth-child(2){animation-duration:40s;animation-delay:-7s}
+.scene .s-cloud:nth-child(3){animation-duration:58s;animation-delay:-21s}
+@keyframes scene-drift{0%,100%{transform:translateX(-7px)}50%{transform:translateX(9px)}}
+@media (prefers-reduced-motion:reduce){
+  .scene .s-cloud{animation:none}
+}
 .scene .s-ground{fill:var(--scene-ground)}
 .scene .s-stem{stroke:var(--scene-stem)}
 .scene .s-fa{fill:var(--scene-fa)}
@@ -496,6 +504,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 :root[data-theme="night"] .tip-warn{background:#3A2620;border-color:#5A3A2E} :root[data-theme="night"] .tip-warn p{color:#F0A88C}
 
 .empty{color:var(--faint);font-size:var(--fs-3);text-align:center;padding:var(--s8) var(--s4);line-height:2}
+/* 空のアルバム・動画一覧に出す肉球。案内文とボタンだけだと下に間延びした
+   空白が残るため、既存の絵（おむかえで使う art-paw）を弱めた色で添えて埋める。
+   新しい絵は作らず、あるものを流用する（一貫性を崩さないため）。 */
+.empty-art{display:block;width:72px;height:72px;margin:0 auto 6px;opacity:.4}
+:root[data-theme="night"] .empty-art{opacity:.32}
 
 /* ---------- 設定 ---------- */
 .setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:58px;
@@ -509,6 +522,24 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .cardbox{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);padding:14px 16px 16px;margin-top:var(--s3)}
 .cardbox h4{margin:0 0 4px;font-size:var(--fs-4);font-weight:700}
 .cardbox .cap{margin:0 0 var(--s2);font-size:var(--fs-2);color:var(--muted);line-height:1.8}
+
+/* ---------- 追加できました ---------- */
+/* 写真・動画をくわえた直後の手応え。てがみの「とどきました」やおまいりの花のような
+   専用画面を作るほどではない操作なので、ごく短く出て自然に消えるだけにする。 */
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);z-index:70;
+  transform:translate(-50%,-8px);opacity:0;pointer-events:none;
+  display:flex;align-items:center;gap:8px;
+  /* 常に濃色・白文字で固定（昼夜どちらの配色にも埋もれない、素材アプリの
+     スナックバーと同じ考え方）。トークンを流用すると夜モードで反転して
+     浮いて見えるため、あえてテーマに追従させない。 */
+  background:rgba(35,32,26,.94);color:#FBF6EA;padding:11px 20px;border-radius:999px;
+  font-size:var(--fs-2);font-weight:700;box-shadow:var(--shadow-lg);
+  transition:opacity .22s ease,transform .22s ease}
+.toast svg{flex:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){
+  .toast{transition:opacity .01s linear}
+}
 
 /* ---------- シート ---------- */
 .sheet{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center}

@@ -753,6 +753,7 @@
             '</span></div>';
         }).join('') + '</div>'
       : '';
+    $('#btn-ics').hidden = !ms.length;
   }
 
   /* ============ アルバム ============ */
@@ -863,6 +864,22 @@
     ]);
   }
 
+  /* 追加できたときの、ごく短い手応え。てがみやおまいりのような専用画面を
+     作るほどの操作ではないので、上に一瞬出るだけにする。 */
+  var toastT = null;
+  function toast(msg) {
+    var el = $('#toast'); if (!el) return;
+    $('#toast-msg').textContent = msg;
+    el.hidden = false;
+    void el.offsetWidth;
+    el.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(function () {
+      el.classList.remove('show');
+      setTimeout(function () { el.hidden = true; }, 240);
+    }, 1500);
+  }
+
   /* 1枚ずつ順に入れる。1枚失敗しても残りは入れ、最後にまとめて理由を出す。 */
   function addPhotos(files) {
     var list = Array.prototype.slice.call(files);
@@ -887,6 +904,7 @@
       return renderAlbum();
     }).then(function () {
       var keys = Object.keys(fails);
+      if (okCount && !keys.length) toast(okCount + '枚くわえました');
       if (!keys.length) return;
       sheet('入らなかった写真があります',
         keys.map(function (k) { return '<b>' + fails[k] + '枚</b>：' + esc(reasonText(k)); }).join('<br><br>') +
@@ -940,7 +958,7 @@
     }
     var btn = $('#btn-add-vids'), orig = btn.innerHTML;
     btn.disabled = true;
-    var fails = {};
+    var fails = {}, okCount = 0;
     var p = Promise.resolve();
     list.forEach(function (f, i) {
       p = p.then(function () {
@@ -953,6 +971,7 @@
           .then(function (r) {
             if (!r) return;
             if (r.ok) {
+              okCount++;
               st.videoTitles[id] = videoName(f);
               S.save();
             } else fails[r.reason] = (fails[r.reason] || 0) + 1;
@@ -964,6 +983,7 @@
       return renderVideos();
     }).then(function () {
       var keys = Object.keys(fails);
+      if (okCount && !keys.length) toast(okCount + '本くわえました');
       if (!keys.length) return;
       sheet('入らなかった動画があります',
         keys.map(function (k) { return '<b>' + fails[k] + '本</b>：' + esc(reasonText(k)); }).join('<br><br>'),
@@ -1217,6 +1237,94 @@
       if (!ok && navigator.clipboard) navigator.clipboard.writeText(t.value).catch(function () {});
       btn.textContent = 'コピーしました';
     };
+  }
+
+  /* ============ だいじな日をカレンダーに ============
+     節目の通知はプッシュ通知では作らない。バックグラウンド配信には自前サーバーが要り、
+     「どこにも送らない」という core の約束と衝突する。かわりに、端末の中だけで
+     .ics ファイルを組み立て、OS標準のカレンダーアプリに登録先を任せる。
+     月命日・お誕生日は繰り返し（RRULE）、四十九日などその子だけの日は単発にする。 */
+  function icsPad(n) { return (n < 10 ? '0' : '') + n; }
+  function icsDateStamp(d) {
+    return d.getUTCFullYear() + icsPad(d.getUTCMonth() + 1) + icsPad(d.getUTCDate()) +
+      'T' + icsPad(d.getUTCHours()) + icsPad(d.getUTCMinutes()) + icsPad(d.getUTCSeconds()) + 'Z';
+  }
+  function icsDate(d) { return d.getFullYear() + icsPad(d.getMonth() + 1) + icsPad(d.getDate()); }
+  function icsText(s) { return String(s).replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n'); }
+
+  function buildICS() {
+    var death = S.parseISO(st.pet.deathISO);
+    if (!death) return null;
+    var name = st.pet.name || 'あの子';
+    var stamp = icsDateStamp(new Date());
+    var uidBase = 'tomoshibi-' + (st.pet.deathISO || '') + '-';
+    var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//tomoshibi//ja', 'CALSCALE:GREGORIAN'];
+    function vevent(key, date, summary, rrule) {
+      lines.push('BEGIN:VEVENT');
+      lines.push('UID:' + uidBase + key + '@tomoshibi.local');
+      lines.push('DTSTAMP:' + stamp);
+      lines.push('DTSTART;VALUE=DATE:' + icsDate(date));
+      lines.push('SUMMARY:' + icsText(summary));
+      if (rrule) lines.push('RRULE:' + rrule);
+      lines.push('END:VEVENT');
+    }
+    vevent('d49', S.addDays(death, 48), name + 'の四十九日');
+    vevent('d100', S.addDays(death, 99), name + 'の百か日');
+    vevent('y1', S.addYears(death, 1), name + 'の一周忌');
+    vevent('y3', S.addYears(death, 2), name + 'の三回忌');
+    vevent('monthly', death, name + 'の月命日', 'FREQ=MONTHLY');
+    var birth = S.parseISO(st.pet.birthISO);
+    if (birth) vevent('birthday', birth, name + 'のお誕生日', 'FREQ=YEARLY');
+    lines.push('END:VCALENDAR');
+    return lines.join('\r\n');
+  }
+
+  function icsCopyOut(ics) {
+    sheet('カレンダーに追加する',
+      'いまの開きかたではファイルを保存できないため、中身をそのままお渡しします。<br><br>' +
+      '<textarea id="ics-text" readonly rows="4" style="width:100%;font-size:var(--fs-1);background:var(--bg);' +
+      'color:var(--muted);border:2px solid var(--line);border-radius:12px;padding:10px"></textarea>',
+      [{ label: 'コピーする', primary: true, keep: true, on: function () {} }]);
+    var ta = $('#ics-text'); if (ta) ta.value = ics;
+    var btn = $('#sheet-root [data-act="0"]');
+    if (btn) btn.onclick = function () {
+      var t = $('#ics-text');
+      t.select(); t.setSelectionRange(0, t.value.length);
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      if (!ok && navigator.clipboard) navigator.clipboard.writeText(t.value).catch(function () {});
+      btn.textContent = 'コピーしました';
+    };
+  }
+
+  function downloadICS() {
+    var ics = buildICS();
+    if (!ics) return;
+    var name = 'tomoshibi-' + (st.pet.name || 'pet') + '.ics';
+    var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    var okMsg = function () {
+      sheet('カレンダーに追加しました',
+        '月命日・お誕生日・四十九日などの日を書き出しました。<br><br>' +
+        'お使いのカレンダーアプリ（カレンダー・Googleカレンダーなど）で、届いたファイルを開いて取りこんでください。',
+        [{ label: 'とじる', primary: true }]);
+    };
+    var dl = S.downloader();
+    if (dl) {
+      dl.save({ filename: name, data: blob }).then(okMsg).catch(function (e) {
+        if (e && e.code === 'declined') return;
+        icsCopyOut(ics);
+      });
+      return;
+    }
+    var embedded = false;
+    try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+    if (embedded) { icsCopyOut(ics); return; }
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+    okMsg();
   }
 
   /* 相談先。実在と受付状況を確認できた窓口だけを載せる。
@@ -1487,6 +1595,7 @@
       st.pet.scene = b.dataset.scene; S.save(); renderSettings();
     });
     $('#btn-export').onclick = exportAll;
+    $('#btn-ics').onclick = downloadICS;
     $('#btn-import').onclick = function () {
       sheet('バックアップから戻す',
         'いま入っているものは、いったん全部消してから入れ直します。<br><br>' +
