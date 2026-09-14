@@ -297,15 +297,31 @@
   /* ============ おまいりの4動作 ============
      順序固定・スキップ不可。毎回まったく同じ手順であることが効いている。 */
   var LEADS = ['灯りを、ともします', 'お水を、そなえます', 'ごはんを、そなえます', 'お花を、そなえます'];
-  var rstep = 0;
+  var rstep = 0, rcounted = false;
   function renderRitual() {
     $$('#ritual .offer').forEach(function (b, i) {
       if (i < rstep) { b.dataset.state = 'done'; b.disabled = true; }
       else if (i === rstep) { b.dataset.state = 'next'; b.disabled = false; }
       else { delete b.dataset.state; b.disabled = true; }
     });
-    $('#ritual-lead').textContent = rstep < 4 ? LEADS[rstep] : 'ありがとう';
+    var faves = st.pet.faves || [];
+    $('#ritual-lead').textContent = rstep < 4
+      ? LEADS[rstep]
+      : (faves.length ? 'ほかにも、どうぞ' : 'そなえました');
+    $('#ritual-sub').textContent = rstep < 4
+      ? 'じゅんばんに、4つ'
+      : '終わったら、下のボタンで';
     $('#ritual-pill').textContent = rstep + ' / 4';
+
+    // 4つ終わるまでは「また、あとで」、終わったら「おまいりを終える」
+    var b = $('#btn-omairi-close');
+    if (rstep < 4) {
+      b.className = 'btn btn-line';
+      b.textContent = 'また、あとで';
+    } else {
+      b.className = 'btn btn-amber btn-lg';
+      b.textContent = 'おまいりを終える';
+    }
     var t = S.today(), sea = S.seasonalFor(t), done = S.seasonalDone(t);
     $('#seasonal-t').textContent = (t.getMonth() + 1) + '月のおそなえ ・ ' + sea.name;
     $('#seasonal-s').textContent = done ? 'そなえました' : '月がわり。置いても置かなくても、いい';
@@ -322,16 +338,17 @@
           (f.length ? '足す' : '好きだったものを足す') + '</button>'
         : '');
   }
-  function startRitual() { rstep = 0; renderRitual(); show('omairi'); }
+  function startRitual() { rstep = 0; rcounted = false; renderRitual(); show('omairi'); }
   function tapOffer(i) {
     if (i !== rstep) return;
-    rstep++; renderRitual();
+    rstep++;
     if (rstep === 4) {
+      // 4つそろった時点でおまいりは成立。数えるのはここ。
+      // ただし画面は終わらせない。好きだったものをそなえる余地を残す。
       rin();
-      var t = S.today();
-      var counted = S.recordVisit(t);
-      setTimeout(function () { showAfter(counted); }, 850);
+      rcounted = S.recordVisit(S.today());
     }
+    renderRitual();
   }
 
   function showAfter(counted) {
@@ -792,7 +809,9 @@
       if (S.faveDoneOn(t, n2)) return;
       S.putFave(t, n2); renderRitual();
     });
-    $('#btn-omairi-close').onclick = function () { show('home'); };
+    $('#btn-omairi-close').onclick = function () {
+      if (rstep >= 4) showAfter(rcounted); else show('home');
+    };
     $('#btn-after-close').onclick = function () { show('home'); };
 
     $('#btn-add-photos').onclick = function () { $('#in-photos').click(); };
