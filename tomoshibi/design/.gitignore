@@ -1,0 +1,4 @@
+# 書き出したキャンバス（2.5MB）。エディタ本体を丸ごと含むため置かない。
+# .dc.html と canvas.json から seed-canvas.mjs でいつでも作り直せる。
+tomoshibi-app.html
+__pycache__/
