@@ -394,6 +394,19 @@
       $('#home-vid-list').innerHTML = latest.map(function (v) {
         return tileHTML(v, latest.length === 1);
       }).join('');
+      primeTileThumbs($('#home-vid-list'));
+    });
+  }
+
+  /* preload="metadata" だけでは絵が出ず、多くのブラウザで真っ黒のまま止まる。
+     メタデータが読めた時点でごくわずかな時間へ実際にシークさせ、動画の最初の
+     ひとコマを静止画として描かせる（0そのものだと「シークなし」と判断されて
+     絵が出ないことがあるため、ごく小さな正の時間にずらす）。 */
+  function primeTileThumbs(root) {
+    $$('video', root).forEach(function (v) {
+      var seek = function () { try { v.currentTime = 0.05; } catch (e) {} };
+      if (v.readyState >= 1) seek();
+      else v.addEventListener('loadedmetadata', seek, { once: true });
     });
   }
 
@@ -847,6 +860,7 @@
         return tileHTML(v, vs.length === 1 || (i === 0 && vs.length % 2 === 1)).replace('<span class="cap">',
           '<button class="menu" data-vmenu="' + esc(v.id) + '" aria-label="この動画の設定">···</button><span class="cap">');
       }).join('');
+      primeTileThumbs($('#vid-list'));
       $('#vid-warn').innerHTML = S.storeInfo().idb ? '' :
         '<div class="tip tip-warn"><svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>' +
         '<p>いまの開きかたでは動画を保存できません。ホーム画面に追加してから開くか、SafariやChromeで直接開いてください。</p></div>';
