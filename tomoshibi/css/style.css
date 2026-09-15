@@ -189,6 +189,41 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   width:calc(var(--scene-h) - 52px);height:calc(var(--scene-h) - 52px);
 }
 .scene:has(.kaimyo-v:not([hidden])) .face{transform:translateX(calc(-50% - 17px))}
+/* ここが利用者が最初に目にとめ、いちばん気持ちの乗る場所。
+   アプリ名そのものである「灯」をそのまま視覚化する——遺影に、
+   ろうそくのようにやわらかい光暈を添える。box-shadowは要素自身の
+   overflow:hiddenには影響されず外へにじむため、丸く切り抜いた写真の
+   外側にも自然に光が回る（新しい要素を足さずに実現できる）。
+   位牌の脇に灯明を置く仏事の作法にも通じる、この文化圏での意味のある
+   演出。色だけを昼夜で変え（--face-glow-*）、強さの揺れ方
+   （@keyframes）は1つで昼夜共通にする。translateXでの水平寄せと
+   同じtransformプロパティをここで動かすと、戒名の有無で変わる
+   位置とアニメーションの終着点が食い違う恐れがあるため、
+   このアニメーションはopacityとbox-shadowだけで作り、位置には
+   一切触れない（衝突しようがない構成）。 */
+.scene .face{
+  --face-glow-a:rgba(232,163,61,.28); --face-glow-b:rgba(232,163,61,.46);
+  box-shadow:var(--shadow-lg), 0 0 30px 5px var(--face-glow-a);
+  animation:face-glow-breathe 6.5s ease-in-out infinite;
+}
+:root[data-theme="night"] .scene .face{
+  --face-glow-a:rgba(224,162,74,.34); --face-glow-b:rgba(224,162,74,.56);
+}
+@keyframes face-glow-breathe{
+  0%,100%{box-shadow:var(--shadow-lg), 0 0 26px 4px var(--face-glow-a)}
+  50%{box-shadow:var(--shadow-lg), 0 0 40px 9px var(--face-glow-b)}
+}
+@media (prefers-reduced-motion:reduce){
+  .scene .face{animation:none;box-shadow:var(--shadow-lg), 0 0 30px 5px var(--face-glow-a)}
+}
+/* おうちを開くたび（タブを行き来して戻ったときも）、遺影がそっと
+   現れる。既存の呼吸アニメーションと同時に走らせるだけなので、
+   足すのはopacityのfade-inのみ。 */
+.scene .face.face-in{animation:face-glow-breathe 6.5s ease-in-out infinite, face-in .8s ease-out both}
+@keyframes face-in{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  .scene .face.face-in{animation:none}
+}
 
 .card{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .homecard{overflow:hidden;padding-bottom:18px}
@@ -231,7 +266,9 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 /* 最初はtranslateYを7pxだけにしたが、雲と同じ失敗（振れ幅が小さすぎて
    「動いた」と感じる前に終わる）をしていた。距離を広げ、わずかな
    縮小から等倍に戻す動きも足して、ふわっと舞い降りる感じをはっきりさせる。 */
-#home-kaimyo.kaimyo-in{animation:kaimyo-in 1.1s cubic-bezier(.16,1,.3,1) both}
+/* 遺影のface-inより一拍おくれて出す。主役（遺影）が先、名（戒名）が
+   そのあとに続く順番にする。 */
+#home-kaimyo.kaimyo-in{animation:kaimyo-in 1.1s cubic-bezier(.16,1,.3,1) .18s both}
 @keyframes kaimyo-in{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){
   #home-kaimyo.kaimyo-in{animation:none}
