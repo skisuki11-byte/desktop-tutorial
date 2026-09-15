@@ -20,7 +20,7 @@
         name: '', kind: 'dog', deathISO: '', birthISO: '', faves: [],
         kaimyo: '',        // お寺からいただいたものがあれば、ここへ。空ならアプリが選んだ名
         kaimyoOff: false,  // 戒名になじみのない人もいる。出さないこともできる
-        scene: 'garden',   // トップの絵の配色。garden/sunset/sakura/snow
+        scene: 'summer',   // トップの絵の配色。spring/summer/autumn/winter
         faceX: 0.5, faceY: 0.5, faceZoom: 1   // 遺影の位置・大きさ（0〜1・1〜2.5）。既定は中央・そのまま
       },
       selfLog: {},         // { "2026-09-14": 3 } その日の自分。1〜5
@@ -58,6 +58,11 @@
           }
         });
       }
+      // 背景を「庭・夕空・桜・雪」から、春夏秋冬の4つに作り直した。
+      // 前の名のまま残っていると、どのCSSにも一致せず既定色に戻ってしまう
+      // ため、対応する季節へ付け替える。
+      var SCENE_RENAME = { garden: 'summer', sunset: 'autumn', sakura: 'spring', snow: 'winter' };
+      if (v.pet && SCENE_RENAME[v.pet.scene]) { v.pet.scene = SCENE_RENAME[v.pet.scene]; stale = true; }
       Object.keys(base).forEach(function (k) { if (!(k in v)) v[k] = base[k]; });
       Object.keys(base.pet).forEach(function (k) { if (!(k in v.pet)) v.pet[k] = base.pet[k]; });
       return v;

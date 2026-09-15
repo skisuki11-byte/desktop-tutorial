@@ -43,12 +43,12 @@
      [data-scene="…"]）。ここでは選択肢の一覧と、選ぶボタンのHTMLだけを持つ。
      将来、有料版で動く背景を足すときもこの配列に足すだけでよいようにしてある。 */
   var SCENES = [
-    { id: 'garden', label: '庭' },
-    { id: 'sunset', label: '夕空' },
-    { id: 'sakura', label: '桜' },
-    { id: 'snow', label: '雪' }
+    { id: 'spring', label: '春' },
+    { id: 'summer', label: '夏' },
+    { id: 'autumn', label: '秋' },
+    { id: 'winter', label: '冬' }
   ];
-  function sceneOf() { return st.pet.scene || 'garden'; }
+  function sceneOf() { return st.pet.scene || 'summer'; }
   function scenePickHTML(cur) {
     return SCENES.map(function (s) {
       return '<button type="button" data-scene="' + s.id + '" aria-pressed="' + (s.id === cur) + '">' +

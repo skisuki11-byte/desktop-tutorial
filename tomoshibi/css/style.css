@@ -162,13 +162,16 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .scene .s-fb{fill:var(--scene-fb)}
 .scene .s-fb-c{fill:var(--scene-fb-c)}
 
-/* 背景の柄。図形は1つのまま、色だけを差し替える3種。
+/* 背景の柄。図形は1つのまま、色だけを差し替える。以前は庭・夕空・桜・雪の
+   4種だったが、季節がひとめで分かる春夏秋冬に作り直した
+   （庭→夏、夕空→秋、桜→春、雪→冬、と色そのものは引き継いでいる）。
    Stripe型の禁欲主義（色数を増やすほど信頼感が下がる）にならい、図形そのものは
-   増やさず、変えるのは色調だけにとどめた。花の色は据え置き、空・雲・地面だけ変える。 */
-[data-scene="sunset"]{--scene-sky1:#FCE4D6;--scene-sky2:#F3D9C4;--scene-cloud:#FFF1E4;
+   増やさず、変えるのは色調だけにとどめた。花の色は据え置き、空・雲・地面だけ変える。
+   夏は:rootの既定色をそのまま使うため、ここには専用の上書きを置かない。 */
+[data-scene="spring"]{--scene-sky1:#FBEAF0;--scene-sky2:#F3E1E8;--scene-cloud:#FBD9E4}
+[data-scene="autumn"]{--scene-sky1:#FCE4D6;--scene-sky2:#F3D9C4;--scene-cloud:#FFF1E4;
   --scene-ground:#E6C79A;--scene-stem:#B99A66;--scene-fa:#E58B6D;--scene-fa-c:#FFF3E6}
-[data-scene="sakura"]{--scene-sky1:#FBEAF0;--scene-sky2:#F3E1E8;--scene-cloud:#FBD9E4}
-[data-scene="snow"]{--scene-sky1:#EDF3F6;--scene-sky2:#E7EEF2;--scene-cloud:#FFFFFF;
+[data-scene="winter"]{--scene-sky1:#EDF3F6;--scene-sky2:#E7EEF2;--scene-cloud:#FFFFFF;
   --scene-ground:#E3EDF2;--scene-stem:#9CA9A0;--scene-fa:#C65C4B;--scene-fa-c:#FFF7EC}
 
 /* 背景えらび（おむかえ・設定 共通）。.kindpick と同じ構え（2×2・枠+選択色）で、
