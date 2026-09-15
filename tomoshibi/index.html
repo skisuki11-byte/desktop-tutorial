@@ -357,7 +357,36 @@
   <section class="view" id="view-after">
     <div class="after">
       <svg class="petals" id="petals" width="340" height="360" viewBox="0 0 340 360" aria-hidden="true"></svg>
-      <div class="face face-xl" id="after-face"><svg class="art"><use href="#art-dog"></use></svg></div>
+      <div class="heaven">
+        <svg class="bg" viewBox="0 0 260 260" aria-hidden="true">
+          <defs>
+            <radialGradient id="heaven-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="var(--heaven-core)"/>
+              <stop offset="55%" stop-color="var(--heaven-mid)"/>
+              <stop offset="100%" stop-color="var(--heaven-edge)" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <g class="h-rays">
+            <polygon points="130,130 118,0 142,0"/>
+            <polygon points="130,130 118,0 142,0" transform="rotate(60 130 130)"/>
+            <polygon points="130,130 118,0 142,0" transform="rotate(120 130 130)"/>
+            <polygon points="130,130 118,0 142,0" transform="rotate(180 130 130)"/>
+            <polygon points="130,130 118,0 142,0" transform="rotate(240 130 130)"/>
+            <polygon points="130,130 118,0 142,0" transform="rotate(300 130 130)"/>
+          </g>
+          <circle class="h-glow" cx="130" cy="130" r="128" fill="url(#heaven-glow)"/>
+          <g class="h-cloud">
+            <ellipse cx="34" cy="76" rx="24" ry="13"/><ellipse cx="52" cy="66" rx="17" ry="10"/>
+          </g>
+          <g class="h-cloud">
+            <ellipse cx="222" cy="100" rx="22" ry="12"/><ellipse cx="206" cy="112" rx="15" ry="9"/>
+          </g>
+          <g class="h-cloud">
+            <ellipse cx="130" cy="16" rx="20" ry="11"/>
+          </g>
+        </svg>
+        <div class="face face-xl" id="after-face"><svg class="art"><use href="#art-dog"></use></svg></div>
+      </div>
       <p class="line" id="after-line">ありがとう。<br>またね。</p>
       <div class="tally">
         <div><p class="n" id="after-count">1</p><p class="nl">回目のおまいり</p></div>

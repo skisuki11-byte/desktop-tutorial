@@ -30,6 +30,11 @@
   --reien-stone:#C7C2B6; --reien-stone-ink:#8A8476;
   --reien-flame:#F0B25C; --reien-smoke:#C9C2B4;
 
+  /* おまいりのあとの絵。遺影の奥に、雲間から差す光のような柔らかい
+     光暈を置き、「あの子は、いま天国にいる」という空気を添える。 */
+  --heaven-core:#FFFFFF; --heaven-mid:#DCEBF5; --heaven-edge:#DCEBF5;
+  --heaven-ray:#FFE9BE; --heaven-cloud:#FFFFFF;
+
   --r:22px; --r-sm:16px;
   --shadow:0 4px 14px rgba(90,74,58,.07);
   --shadow-lg:0 8px 22px rgba(90,74,58,.14);
@@ -283,6 +288,29 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 }
 .reien .face{position:absolute;left:50%;bottom:22px;transform:translateX(-50%)}
 :root[data-theme="night"] .reien .r-flame{fill:#E0A24A}
+
+/* ---------- おまいりのあとの絵 ---------- */
+/* 「お参り終わったあとの写真の背景を、天国っぽくして」との依頼。
+   雲間から差す光のような、やわらかい光暈を遺影の奥に置いた。
+   ちょうちょ（追記34）が飛ぶ、この画面いちばんの見せ場を邪魔しない
+   よう、光も雲もごく淡く、控えめにとどめた。 */
+.heaven{position:relative;width:230px;height:230px;margin:0 auto}
+.heaven svg.bg{position:absolute;inset:0;width:100%;height:100%}
+.heaven .h-glow{animation:heaven-breathe 7s ease-in-out infinite}
+@keyframes heaven-breathe{0%,100%{opacity:.85}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.heaven .h-glow{animation:none;opacity:.92}}
+.heaven .h-rays{fill:var(--heaven-ray);opacity:.32;transform-box:fill-box;transform-origin:center;
+  animation:heaven-spin 90s linear infinite}
+@keyframes heaven-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.heaven .h-rays{animation:none}}
+.heaven .h-cloud{fill:var(--heaven-cloud);opacity:.9}
+.heaven .face{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+:root[data-theme="night"] .heaven{
+  --heaven-core:#63768C;--heaven-mid:#2A323D;--heaven-edge:#2A323D;--heaven-cloud:#4A5563;
+}
+/* 光の筋は「雲間から差す日の光」なので、夜は太陽そのものが出ていない。
+   代わりに、やわらかい月あかりの光暈と雲だけを見せる。 */
+:root[data-theme="night"] .heaven .h-rays{display:none}
 
 .card{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .homecard{overflow:hidden;padding-bottom:18px}
