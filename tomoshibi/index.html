@@ -89,6 +89,10 @@
   <!-- ============ おむかえ ============ -->
   <section class="view" id="view-onbo">
     <div class="body scroll foot">
+      <div class="daybar" id="onbo-topbar" hidden>
+        <span class="d">なまえ・写真・日づけ</span>
+        <button class="btn btn-line bar-btn" id="btn-onbo-close">とじる</button>
+      </div>
       <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
 
       <div class="step" data-step="0">
@@ -563,15 +567,6 @@
         <h4>おうちの背景</h4>
         <p class="cap">いつでも変えられます。</p>
         <div class="scenepick" id="scenepick-set" style="margin-top:10px"></div>
-      </div>
-
-      <div class="cardbox">
-        <h4>日づけを仮に進めて確かめる</h4>
-        <p class="cap">節目の画面を待たずに見るための項目です。通常は「今日」のまま。</p>
-        <div class="seg" id="seg-offset" style="grid-template-columns:repeat(3,1fr)">
-          <button data-v="now">今日</button><button data-v="d49">四十九日</button><button data-v="y1">一周忌</button>
-        </div>
-        <p class="cap" id="offset-now" style="margin:10px 0 0"></p>
       </div>
 
       <button class="setrow" id="btn-store"><span>保存のようす</span><span class="arw" id="store-state">—</span></button>
