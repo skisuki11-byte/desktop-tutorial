@@ -185,8 +185,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    戒名を右に立てたぶん、わずかに左へ寄せて釣り合いをとる。
    中央のままだと、右だけ字で詰まって見える。 */
 .scene .face{
-  position:absolute;left:50%;top:26px;transform:translateX(-50%);
-  width:calc(var(--scene-h) - 52px);height:calc(var(--scene-h) - 52px);
+  position:absolute;left:50%;top:20px;transform:translateX(-50%);
+  width:calc(var(--scene-h) - 40px);height:calc(var(--scene-h) - 40px);
 }
 .scene:has(.kaimyo-v:not([hidden])) .face{transform:translateX(calc(-50% - 17px))}
 /* ここが利用者が最初に目にとめ、いちばん気持ちの乗る場所。
