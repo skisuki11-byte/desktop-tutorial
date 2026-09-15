@@ -22,6 +22,14 @@
   --scene-ground:#CFE6BC; --scene-stem:#8FB878;
   --scene-fa:#E8A0A0; --scene-fa-c:#FBF0DA; --scene-fb:#E8A33D; --scene-fb-c:#FFF7E6;
 
+  /* おまいり画面の絵（.reien＝霊園）。灯籠・玉垣ふうの植込み・敷石を淡い色で。
+     お墓そのもの（墓石の四角い列）にはせず、灯籠の火と香煙で「あたたかい
+     お参りの場」の空気だけを添える。 */
+  --reien-sky1:#EDEFF6; --reien-sky2:#E6EAEE; --reien-cloud:#FFFFFF;
+  --reien-hedge:#B9C7AE; --reien-ground:#DCD6C8;
+  --reien-stone:#C7C2B6; --reien-stone-ink:#8A8476;
+  --reien-flame:#F0B25C; --reien-smoke:#C9C2B4;
+
   --r:22px; --r-sm:16px;
   --shadow:0 4px 14px rgba(90,74,58,.07);
   --shadow-lg:0 8px 22px rgba(90,74,58,.14);
@@ -228,6 +236,53 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 @media (prefers-reduced-motion:reduce){
   .scene .face.face-in{animation:none}
 }
+
+/* ---------- おまいりの絵（霊園） ---------- */
+/* 「ペットの部分にお墓参りらしさを、霊園っぽい雰囲気で」との依頼。
+   お墓そのもの（四角い墓石の列）は重く見えるため避け、遺影の下に
+   小さな台座、両脇に灯籠、玉垣がわりの刈り込みの植込みを置き、
+   台座のそばから香煙をひとすじ立たせて「参りに来た場所」の空気を
+   添えた。灯籠の火（--reien-flame）は、アプリ名の「灯」および
+   とうみょうのおそなえと同じ橙にそろえてある。 */
+.reien{--reien-h:clamp(150px,20vh,182px);position:relative;height:var(--reien-h);margin-top:2px;
+  border-radius:var(--r);overflow:hidden;
+  background:linear-gradient(180deg,var(--reien-sky1) 0%,var(--reien-sky1) 66%,var(--reien-sky2) 66%,var(--reien-sky2) 100%)}
+:root[data-theme="night"] .reien{background:linear-gradient(180deg,#20242C 0%,#20242C 66%,#22271F 66%,#1F2420 100%)}
+:root[data-theme="night"] .reien{--reien-hedge:#39443A;--reien-ground:#2B2A22;--reien-stone:#4C4A44;--reien-stone-ink:#8D857A;--reien-smoke:#5A574E}
+.reien svg.bg{position:absolute;inset:0;width:100%;height:100%}
+.reien .r-cloud{fill:var(--reien-cloud);transform-box:fill-box;transform-origin:center;animation:scene-drift 26s linear infinite}
+.reien .r-cloud:nth-child(2){animation-duration:21s;animation-delay:-6s}
+@media (prefers-reduced-motion:reduce){.reien .r-cloud{animation:none}}
+.reien .r-hedge{fill:var(--reien-hedge)}
+.reien .r-ground{fill:var(--reien-ground)}
+.reien .r-stone{fill:var(--reien-stone);stroke:var(--reien-stone-ink);stroke-width:1.6;stroke-linejoin:round}
+.reien .r-pedestal-base,.reien .r-pedestal-top{fill:var(--reien-stone);stroke:var(--reien-stone-ink);stroke-width:1.8;stroke-linejoin:round}
+.reien .r-flame{fill:var(--reien-flame)}
+/* 4つのおそなえをタップするたび、台座の上にその印がひとつずつ増えていく。
+   祭壇に実際に供えていく動きに寄せた（追記40）。 */
+.reien .r-placed{opacity:0;transform:scale(.3) translateY(5px);transform-box:fill-box;transform-origin:center}
+.reien .r-placed.on{animation:r-place-in .6s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes r-place-in{
+  0%{opacity:0;transform:scale(.3) translateY(5px)}
+  55%{opacity:1;transform:scale(1.18) translateY(-2px)}
+  100%{opacity:1;transform:scale(1) translateY(0)}
+}
+@media (prefers-reduced-motion:reduce){
+  .reien .r-placed.on{animation:none;opacity:1;transform:none}
+}
+.reien .r-wisp{stroke:var(--reien-smoke);stroke-width:3;opacity:0;animation:reien-smoke 5s ease-out infinite}
+.reien .r-wisp-b{animation-delay:-2.4s}
+@keyframes reien-smoke{
+  0%{opacity:0;transform:translateY(6px)}
+  18%{opacity:.55}
+  70%{opacity:.2}
+  100%{opacity:0;transform:translateY(-14px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .reien .r-wisp{animation:none;opacity:.28;transform:none}
+}
+.reien .face{position:absolute;left:50%;bottom:22px;transform:translateX(-50%)}
+:root[data-theme="night"] .reien .r-flame{fill:#E0A24A}
 
 .card{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .homecard{overflow:hidden;padding-bottom:18px}

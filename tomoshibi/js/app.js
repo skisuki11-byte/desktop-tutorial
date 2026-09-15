@@ -504,6 +504,8 @@
       else if (i === rstep) { b.dataset.state = 'next'; b.disabled = false; }
       else { delete b.dataset.state; b.disabled = true; }
     });
+    // そなえた4つは、台座の上にひとつずつ増えていく（見た目の裏づけ）。
+    $$('#reien-offerings .r-placed').forEach(function (el, i) { el.classList.toggle('on', i < rstep); });
     var faves = st.pet.faves || [];
     $('#ritual-lead').textContent = rstep < 4
       ? LEADS[rstep]
