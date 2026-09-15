@@ -604,6 +604,9 @@
   function renderJibun() {
     renderSelfAsk();
     renderSelfChart();
+    var death = S.parseISO(st.pet.deathISO), sp = $('#jibun-since');
+    sp.hidden = !death;
+    if (death) sp.textContent = 'あれから ' + S.diffDays(death, S.today()).toLocaleString('ja-JP') + '日';
     var all = S.selfSeries(0);
     // 数えるのは日数と、はじめた日だけ。良し悪しになる数は出さない。
     // おもい日が続いていることは、下の相談先の知らせで伝える。
