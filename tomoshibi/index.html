@@ -375,6 +375,17 @@
             <polygon points="130,130 118,0 142,0" transform="rotate(300 130 130)"/>
           </g>
           <circle class="h-glow" cx="130" cy="130" r="128" fill="url(#heaven-glow)"/>
+          <!-- 虹の橋（Rainbow Bridge）。ペットを亡くした人の間で広く知られる
+               詩に出てくる、あの子が渡って迎えに来てくれる橋のモチーフ。
+               彩度を落とし、アプリ既存の色（rose/amber/grass/sky）を
+               そのまま使って、浮かないようにした。 -->
+          <g class="h-rainbow" fill="none" stroke-linecap="round">
+            <path class="h-rb-1" d="M25,170 A105,133 0 0 1 235,170"/>
+            <path class="h-rb-2" d="M17,170 A113,142 0 0 1 243,170"/>
+            <path class="h-rb-3" d="M9,170 A121,151 0 0 1 251,170"/>
+            <path class="h-rb-4" d="M1,170 A129,160 0 0 1 259,170"/>
+            <path class="h-rb-5" d="M-7,170 A137,169 0 0 1 267,170"/>
+          </g>
           <g class="h-cloud">
             <ellipse cx="34" cy="76" rx="24" ry="13"/><ellipse cx="52" cy="66" rx="17" ry="10"/>
           </g>
@@ -383,6 +394,12 @@
           </g>
           <g class="h-cloud">
             <ellipse cx="130" cy="16" rx="20" ry="11"/>
+          </g>
+          <g class="h-cloud h-cloud-sm">
+            <ellipse cx="66" cy="210" rx="16" ry="9"/>
+          </g>
+          <g class="h-cloud h-cloud-sm">
+            <ellipse cx="196" cy="212" rx="14" ry="8"/>
           </g>
         </svg>
         <div class="face face-xl" id="after-face"><svg class="art"><use href="#art-dog"></use></svg></div>
