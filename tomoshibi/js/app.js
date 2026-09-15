@@ -230,7 +230,7 @@
     if (step === 4) renderFaveEdit();
     if (step === 5) $('#scenepick-onbo').innerHTML = scenePickHTML(sceneOf());
     if (step === 6) {
-      $('#in-message').value = st.pet.message || '';
+      $('#in-message').value = (st.pet.message || '').slice(0, 14);
       $('#in-message-count').textContent = $('#in-message').value.length;
     }
     $('#onbo-err').hidden = true;
@@ -260,7 +260,7 @@
       addFave($('#in-fave').value);      // 入力途中のものも拾う
     }
     if (step === 6) {
-      st.pet.message = $('#in-message').value.trim().slice(0, 20);
+      st.pet.message = $('#in-message').value.trim().slice(0, 14);
       st.onboarded = true; S.save();
       var toSettings = onboEditMode; onboEditMode = false;
       show(toSettings ? 'settings' : 'home');
