@@ -320,6 +320,11 @@
     $('#home-date').textContent = S.formatMD(t);
     $('#home-name').textContent = st.pet.name || '—';
     $('#home-scene').dataset.scene = sceneOf();
+    // おうちを開くたび、遺影がそっと現れる（戒名のkaimyo-inより一拍先に）。
+    var hf = $('#home-face');
+    hf.classList.remove('face-in');
+    void hf.offsetWidth;
+    hf.classList.add('face-in');
 
     var death = S.parseISO(st.pet.deathISO), birth = S.parseISO(st.pet.birthISO);
     // 上の行は享年と命日。この子が何年生きて、いつ旅立ったか。
