@@ -407,6 +407,27 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .tally .g p{margin:0;font-size:var(--fs-2);line-height:1.7}
 .after .note{position:relative;margin:18px 0 0;font-size:var(--fs-2);color:var(--faint);text-align:center;line-height:1.9}
 .petals{position:absolute;top:40px;left:50%;transform:translateX(-50%);pointer-events:none}
+/* おまいりのあとに舞う粒。花びら・紅葉・雪・灯りの粒・しずくの5種類から
+   毎回1つを選ぶ（直前と同じ柄は選ばない）。動きの向き（落ちる／昇る）と
+   揺れ・回転の幅は個体ごとにJSから--sway/--spinで渡す。opacityの0%を
+   fill-mode:backwardsで先取りさせ、animation-delay中に満開表示のまま
+   固まって見えないようにする。 */
+.petals .pt{animation-fill-mode:both;animation-iteration-count:infinite}
+@keyframes pt-fall{
+  0%{transform:translate(0,0) rotate(0deg);opacity:0}
+  10%{opacity:1}
+  82%{opacity:1}
+  100%{transform:translate(var(--sway,10px),420px) rotate(var(--spin,25deg));opacity:0}
+}
+@keyframes pt-rise{
+  0%{transform:translate(0,0) rotate(0deg);opacity:0}
+  10%{opacity:1}
+  82%{opacity:.9}
+  100%{transform:translate(var(--sway,-10px),-420px) rotate(var(--spin,-15deg));opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .petals .pt{animation:none !important;opacity:1}
+}
 /* 「うごくを見る」「おうちにもどる」は、以前は.afterの外の固定枠に別置きしていた。
    実機で、動画ボタンが後から現れて枠が伸びたときに、.afterの中身の下側
    （きょうの気持ち欄の下端）と重なって隠れる不具合が起きた。

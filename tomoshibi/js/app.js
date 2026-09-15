@@ -689,17 +689,55 @@
     if (hb) hb.onclick = showHelp;
   }
 
+  /* おまいりのあとに庭へ舞う5つの柄。花びら・紅葉・雪・灯りの粒・しずく
+     ——4動作（灯り・水・ごはん・花）と季節の背景で、すでにこのアプリの中に
+     ある題材だけを使う。灯りの粒だけ下から上へ昇らせ、灯籠流しのような
+     見送りの動きにした。毎回この中から1つ、直前と同じ柄にならないように選ぶ。 */
+  var AFTER_FX = [
+    { sym: '#pt-petal', colors: ['#F0B6C4', '#FFD98A', '#CFE6BC'], motion: 'fall' },
+    { sym: '#pt-leaf', colors: ['#E58B6D', '#D9A24A', '#C9862A'], motion: 'fall' },
+    { sym: '#pt-snow', colors: ['#9FC3DC', '#FFFFFF', '#9CA9A0'], motion: 'fall' },
+    { sym: '#pt-light', colors: ['#FFD98A', '#E8A33D', '#F4C67A'], motion: 'rise' },
+    { sym: '#pt-drop', colors: ['#8FC3DE', '#BEDCEA', '#5C93B2'], motion: 'fall' }
+  ];
+  var lastFx = -1;
   function drawPetals() {
-    var P = [[26, 54, 20, '#F0B6C4'], [284, 86, 17, '#FFD98A'], [50, 266, 15, '#CFE6BC'],
-             [270, 234, 19, '#F0B6C4'], [156, 22, 14, '#FFD98A']];
-    $('#petals').innerHTML = P.map(function (p) {
-      return '<g transform="translate(' + p[0] + ' ' + p[1] + ')"><svg width="' + p[2] + '" height="' + p[2] +
-        '" viewBox="0 0 24 24"><g fill="' + p[3] + '" stroke="#5A4A3A" stroke-width="1.5">' +
-        '<ellipse cx="12" cy="6.4" rx="3.4" ry="4.2"/><ellipse cx="17" cy="10" rx="4.2" ry="3.4"/>' +
-        '<ellipse cx="15.1" cy="16" rx="3.4" ry="4.2"/><ellipse cx="8.9" cy="16" rx="3.4" ry="4.2"/>' +
-        '<ellipse cx="7" cy="10" rx="4.2" ry="3.4"/></g>' +
-        '<circle cx="12" cy="12" r="3.2" fill="#FFF6E2" stroke="#5A4A3A" stroke-width="1.5"/></svg></g>';
-    }).join('');
+    var i;
+    if (lastFx < 0) {
+      i = Math.floor(Math.random() * AFTER_FX.length);
+    } else {
+      i = Math.floor(Math.random() * (AFTER_FX.length - 1));
+      if (i >= lastFx) i++;         // 直前と同じ柄を候補から外す
+    }
+    lastFx = i;
+    var fx = AFTER_FX[i];
+    var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var n = 7, out = [];
+    for (var k = 0; k < n; k++) {
+      var x = 20 + Math.random() * 300;
+      var size = 14 + Math.random() * 9;
+      var col = fx.colors[k % fx.colors.length];
+      var y0, style;
+      if (reduced) {
+        // 動かせないときは、以前と同じく画面内に静かに置くだけにする。
+        y0 = 20 + Math.random() * 300;
+        style = 'color:' + col;
+      } else {
+        y0 = fx.motion === 'rise' ? (340 + Math.random() * 40) : (-20 - Math.random() * 60);
+        var dur = (3.6 + Math.random() * 2.4).toFixed(2);
+        var delay = (Math.random() * 2.6).toFixed(2);
+        var sway = Math.round((Math.random() - 0.5) * 60);
+        var spin = Math.round((Math.random() - 0.5) * 70);
+        style = 'color:' + col + ';--sway:' + sway + 'px;--spin:' + spin + 'deg;' +
+          'animation-name:pt-' + fx.motion + ';animation-duration:' + dur + 's;' +
+          'animation-delay:' + delay + 's;animation-timing-function:ease-in-out';
+      }
+      out.push('<g transform="translate(' + x.toFixed(1) + ' ' + y0.toFixed(1) + ')">' +
+        '<g class="pt" style="' + style + '">' +
+        '<svg width="' + size.toFixed(0) + '" height="' + size.toFixed(0) + '" viewBox="0 0 24 24">' +
+        '<use href="' + fx.sym + '"></use></svg></g></g>');
+    }
+    $('#petals').innerHTML = out.join('');
   }
 
   /* おりん。毎回まったく同じ音であることが儀式として効くので、鳴らし分けない。 */
