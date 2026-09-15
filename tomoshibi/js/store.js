@@ -31,8 +31,7 @@
       videoTitles: {},     // { mediaId: "走ってるところ" }
       videoThumbs: {},     // { mediaId: "data:image/jpeg;base64,…" } 最初のコマの静止画
       chapterTitles: {},
-      theme: 'light',
-      dateOffset: 0        // 確認用。通常0
+      theme: 'light'
     };
   }
 
@@ -96,8 +95,7 @@
   }
   function today() {
     var d = new Date();
-    d = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    return state.dateOffset ? addDays(d, state.dateOffset) : d;
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
   }
   var WEEK = ['日', '月', '火', '水', '木', '金', '土'];
   function formatJP(d, w) {

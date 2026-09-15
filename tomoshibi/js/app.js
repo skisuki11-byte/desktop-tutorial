@@ -216,9 +216,14 @@
 
   /* ============ おむかえ ============ */
   var step = 0;
+  // 設定の「なまえ・写真・日づけ」から開いたときだけ true。
+  // 初回のおむかえには「戻る先」が存在しないため、この場合だけ
+  // 「とじる」を出し、途中の段でも設定に戻れるようにする。
+  var onboEditMode = false;
   function renderOnbo() {
     $$('#view-onbo .step').forEach(function (el) { el.hidden = +el.dataset.step !== step; });
     $$('#onbo-steps i').forEach(function (el, i) { el.classList.toggle('on', i <= step); });
+    $('#onbo-topbar').hidden = !onboEditMode;
     $('#btn-back').hidden = step === 0;
     $('#btn-skip').hidden = step !== 2;
     $('#btn-next').textContent = step === 5 ? 'はじめる' : 'つぎへ';
@@ -251,7 +256,10 @@
       addFave($('#in-fave').value);      // 入力途中のものも拾う
     }
     if (step === 5) {
-      st.onboarded = true; S.save(); show('home'); return;
+      st.onboarded = true; S.save();
+      var toSettings = onboEditMode; onboEditMode = false;
+      show(toSettings ? 'settings' : 'home');
+      return;
     }
     step++; S.save(); renderOnbo();
   }
@@ -1083,26 +1091,8 @@
     // ついでにフォーム部品（日付選択・スクロールバーなど）の既定色も画面のテーマに揃う。
     document.documentElement.style.colorScheme = night ? 'dark' : 'light';
   }
-  function offsetJumps() {
-    var real = new Date(); real = new Date(real.getFullYear(), real.getMonth(), real.getDate());
-    var death = S.parseISO(st.pet.deathISO);
-    var map = { now: { label: '今日', offset: 0 } };
-    if (!death) return map;
-    [['d49', '四十九日', S.addDays(death, 48)], ['y1', '一周忌', S.addYears(death, 1)]].forEach(function (j) {
-      var n = S.diffDays(real, j[2]);
-      if (n > 0) map[j[0]] = { label: j[1], offset: n };
-    });
-    return map;
-  }
   function renderSettings() {
     $$('#seg-theme button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.theme === 'night' ? 'night' : 'day'))); });
-    var jumps = offsetJumps();
-    $$('#seg-offset button').forEach(function (b) {
-      var j = jumps[b.dataset.v];
-      b.hidden = !j;
-      if (j) { b.textContent = j.label; b.setAttribute('aria-pressed', String(j.offset === st.dateOffset)); }
-    });
-    $('#offset-now').textContent = '表示中の日づけ：' + S.formatJP(S.today(), true);
     var si = S.storeInfo();
     $('#store-state').textContent =
       (si.embedded ? '試し用（消えます）' : si.durable ? 'この端末の中・保護あり' : si.idb ? 'この端末の中' : '写真のみ') + ' ›';
@@ -1367,6 +1357,7 @@
     $('#btn-next').onclick = onboNext;
     $('#btn-back').onclick = function () { if (step > 0) { step--; renderOnbo(); } };
     $('#btn-skip').onclick = function () { step++; renderOnbo(); };
+    $('#btn-onbo-close').onclick = function () { onboEditMode = false; show('settings'); };
     $('#in-name').addEventListener('keydown', function (e) { if (e.key === 'Enter') onboNext(); });
     $('#kindpick').addEventListener('click', function (e) {
       var b = e.target.closest('[data-kind]'); if (!b) return;
@@ -1589,11 +1580,6 @@
       var b = e.target.closest('[data-v]'); if (!b) return;
       st.theme = b.dataset.v; S.save(); applyTheme(); renderSettings();
     });
-    $('#seg-offset').addEventListener('click', function (e) {
-      var b = e.target.closest('[data-v]'); if (!b) return;
-      var j = offsetJumps()[b.dataset.v]; if (!j) return;
-      st.dateOffset = j.offset; S.save(); renderSettings();
-    });
     $('#scenepick-set').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-scene]'); if (!b) return;
       st.pet.scene = b.dataset.scene; S.save(); renderSettings();
@@ -1634,6 +1620,7 @@
     };
     $('#btn-profile').onclick = function () {
       step = 0;
+      onboEditMode = true;
       $('#in-name').value = st.pet.name;
       $('#in-death').value = st.pet.deathISO;
       $('#in-birth').value = st.pet.birthISO;
@@ -1687,8 +1674,8 @@
 
     $('#btn-reset').onclick = function () {
       sheet('この端末のデータを消す',
-        'なまえ・日づけ・おまいりの記録・写真・動画を、この端末から消します。取り消せません。<br><br>先に「すべて手元に持ち出す」で保存しておけます。',
-        [{ label: '消す', on: hardReset }, { label: 'やめる', primary: true }]);
+        'なまえ・日づけ・おまいりの記録・写真・動画を、この端末から消します。取り消せません。<br><br>先に「バックアップを書き出す」で持ち出しておけます。',
+        [{ label: '消す', on: confirmHardReset }, { label: 'やめる', primary: true }]);
     };
   }
 
@@ -1703,6 +1690,14 @@
     if (name === null) return;
     st.videoTitles[id] = (name.trim() || 'うごくすがた').slice(0, 24);
     S.save(); renderVideos(); renderHomeVideos();
+  }
+  /* 端末のデータを消すのは、取り消せない・気づいたら押していた、が
+     いちばん困る操作。1回の確認では押し間違いを拾いきれないため、
+     もう一段、はっきりした言葉で念を押してから実行する。 */
+  function confirmHardReset() {
+    sheet('本当に消しますか？',
+      'この操作は取り消せません。<br>消したあとに戻せるのは、書き出しておいたバックアップからだけです。',
+      [{ label: '消す', on: hardReset }, { label: 'やめる', primary: true }]);
   }
   function hardReset() {
     S.allMedia().then(function (all) {
