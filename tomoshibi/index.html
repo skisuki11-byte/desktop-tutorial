@@ -111,7 +111,7 @@
 
   <!-- ============ おむかえ ============ -->
   <section class="view" id="view-onbo">
-    <div class="body scroll foot">
+    <div class="body scroll">
       <div class="daybar" id="onbo-topbar" hidden>
         <span class="d">なまえ・写真・日づけ・一言</span>
         <button class="btn btn-line bar-btn" id="btn-onbo-close">とじる</button>
@@ -208,13 +208,14 @@
         <p class="onbo-sub">トップ画面のいちばん上に表示されます。<br>
         あとから設定でいつでも変えられます。</p>
         <div class="field">
-          <label for="in-message">短い言葉で（20文字まで）</label>
-          <input type="text" id="in-message" placeholder="いつまでも家族だよ" autocomplete="off" enterkeyhint="done" maxlength="20">
-          <p class="count"><span id="in-message-count">0</span> / 20文字</p>
+          <label for="in-message">短い言葉で（14文字まで）</label>
+          <input type="text" id="in-message" placeholder="いつまでも家族だよ" autocomplete="off" enterkeyhint="done" maxlength="14">
+          <p class="count"><span id="in-message-count">0</span> / 14文字</p>
         </div>
       </div>
 
-      <div class="spacer"></div>
+    </div>
+    <div class="onbo-foot">
       <p id="onbo-err" class="tip tip-warn" hidden><span></span></p>
       <button class="btn btn-amber btn-lg" id="btn-next" style="margin-bottom:10px">つぎへ</button>
       <button class="btn btn-ghost" id="btn-back" hidden>もどる</button>

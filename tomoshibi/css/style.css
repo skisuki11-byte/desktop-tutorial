@@ -551,6 +551,15 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   border-radius:999px;font-size:var(--fs-3);font-weight:700;cursor:pointer}
 
 /* ---------- おむかえ ---------- */
+/* 「つぎへ」等のボタンは、本文の.scrollとは別の固定フッターに置く。
+   本文の中に置くと、ステップによって中身の量が違うため（お顔の写真の
+   ステップは特に長い）、ボタンへ届くまでにスクロールが要る/要らないが
+   ステップごとにバラつく。タブバー（.tabbar）と同じ「本文は.scrollで
+   流し、フッターは別の固定要素にする」形にそろえ、どのステップでも
+   スクロールなしでボタンへ届くようにした。 */
+.onbo-foot{flex:none;padding:14px 20px calc(env(safe-area-inset-bottom,0px) + 14px);
+  border-top:2px solid var(--line);background:var(--bg)}
+#view-onbo .body{padding-bottom:var(--s4)}
 .steps{display:flex;gap:6px;margin-bottom:22px}
 .steps i{flex:1;height:4px;border-radius:2px;background:var(--line);display:block}
 .steps i.on{background:var(--amber)}
@@ -761,9 +770,12 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 }
 
 /* ---------- おうちの見出し ---------- */
+/* 一言は1行に収めたい。実測（320px幅・追記37）で、この大きさ・字間なら
+   14文字までが1行に収まる境界だったので、そこに合わせて --fs-6→--fs-5・
+   字間.08em→0にした（文字数の上限もこれに合わせて14文字にしてある）。 */
 .home-title{
   margin:2px 0 12px;font-family:var(--round);font-weight:700;
-  font-size:var(--fs-6);letter-spacing:.08em;
+  font-size:var(--fs-5);
 }
 
 /* ---------- いまの気分 ----------
