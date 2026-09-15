@@ -407,11 +407,14 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .tally .g p{margin:0;font-size:var(--fs-2);line-height:1.7}
 .after .note{position:relative;margin:18px 0 0;font-size:var(--fs-2);color:var(--faint);text-align:center;line-height:1.9}
 .petals{position:absolute;top:40px;left:50%;transform:translateX(-50%);pointer-events:none}
-/* おまいりのあとに舞う粒。花びら・紅葉・雪・灯りの粒・しずくの5種類から
-   毎回1つを選ぶ（直前と同じ柄は選ばない）。動きの向き（落ちる／昇る）と
+/* おまいりのあとに舞う粒。花びら・紅葉・雪・灯りの粒・ちょうちょの5種類から
+   毎回1つを選ぶ（直前と同じ柄は選ばない）。動きの向き（落ちる／昇る／舞う）と
    揺れ・回転の幅は個体ごとにJSから--sway/--spinで渡す。opacityの0%を
    fill-mode:backwardsで先取りさせ、animation-delay中に満開表示のまま
-   固まって見えないようにする。 */
+   固まって見えないようにする。しずく（涙を連想させ、気持ちが下がる）は
+   ちょうちょに差し替えた。亡くなった人・動物の魂がちょうちょになって
+   会いに来る、という言い伝えは日本・欧米どちらにもあり、「見送ったあと」
+   の演出として意味が通る。 */
 .petals .pt{animation-fill-mode:both;animation-iteration-count:infinite}
 @keyframes pt-fall{
   0%{transform:translate(0,0) rotate(0deg);opacity:0}
@@ -424,6 +427,17 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   10%{opacity:1}
   82%{opacity:.9}
   100%{transform:translate(var(--sway,-10px),-420px) rotate(var(--spin,-15deg));opacity:0}
+}
+/* ちょうちょだけ、まっすぐ昇らせない。左右にゆれながら不規則に上がる
+   ほうが「飛んでいる」感じになる（灯りの粒との違いをはっきりさせる）。 */
+@keyframes pt-flutter{
+  0%{transform:translate(0,0) rotate(0deg);opacity:0}
+  10%{opacity:1}
+  25%{transform:translate(calc(var(--sway,10px) * .3),-90px) rotate(calc(var(--spin,20deg) * .3))}
+  50%{transform:translate(calc(var(--sway,10px) * -.5),-190px) rotate(calc(var(--spin,20deg) * -.4))}
+  75%{transform:translate(calc(var(--sway,10px) * .7),-300px) rotate(calc(var(--spin,20deg) * .6))}
+  85%{opacity:.95}
+  100%{transform:translate(var(--sway,10px),-420px) rotate(var(--spin,20deg));opacity:0}
 }
 @media (prefers-reduced-motion:reduce){
   .petals .pt{animation:none !important;opacity:1}
