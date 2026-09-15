@@ -97,6 +97,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .btn.bar-btn{
   width:auto;min-height:44px;padding:0 14px;margin-right:-14px;
   font-size:var(--fs-3);border-radius:var(--r-sm);
+  white-space:nowrap;flex-shrink:0;
 }
 /* 画面の下に置く、控えめな入口。主役のボタンと同じ重さにしない。
    同じ理由で .btn.sub-link まで詳細度を上げてある。 */
