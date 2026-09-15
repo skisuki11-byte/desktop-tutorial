@@ -338,8 +338,14 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 
 /* ---------- 見出し ---------- */
 .head{padding:18px 0 4px}
-.head h1{margin:0;font-family:var(--round);font-weight:700;font-size:var(--fs-7);letter-spacing:.06em}
+.head h1{margin:0;font-family:var(--round);font-weight:700;font-size:var(--fs-7);letter-spacing:.06em;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .head p{margin:4px 0 0;font-size:var(--fs-3);color:var(--muted)}
+/* 「あれから◯日」は達成でも記録でもないので、おまいりの4/4のような
+   強調色（amber）にはしない。静かな事実として、輪郭だけの地味なpillにする。 */
+.since-pill{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:var(--muted);
+  background:var(--panel);border:2px solid var(--line);padding:4px 13px;border-radius:999px;
+  letter-spacing:.02em}
 
 /* ---------- おまいりの4動作 ---------- */
 .ritual{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:var(--s6)}
