@@ -560,6 +560,12 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .onbo-foot{flex:none;padding:14px 20px calc(env(safe-area-inset-bottom,0px) + 14px);
   border-top:2px solid var(--line);background:var(--bg)}
 #view-onbo .body{padding-bottom:var(--s4)}
+/* お顔の写真のステップだけ、他より中身が多い（写真・位置あわせ・
+   大きさ調整・ボタン）。見出しや余白を少し詰めて、なるべく狭い画面でも
+   スクロールなしで「つぎへ」まで届くようにした（追記38）。 */
+#view-onbo .step[data-step="2"] .onbo-lead{font-size:var(--fs-6)}
+#view-onbo .step[data-step="2"] .onbo-sub{margin-top:6px}
+#view-onbo .step[data-step="2"] .field{margin-top:10px}
 .steps{display:flex;gap:6px;margin-bottom:22px}
 .steps i{flex:1;height:4px;border-radius:2px;background:var(--line);display:block}
 .steps i.on{background:var(--amber)}
@@ -577,16 +583,18 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   font-family:var(--round);font-weight:700;font-size:var(--fs-4);color:var(--muted)}
 .kindpick button[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-soft);color:var(--amber-ink)}
 .kindpick svg{width:64px;height:64px}
-.pickwrap{border:2.5px solid var(--line);border-radius:28px;background:var(--panel);padding:24px;
-  display:flex;flex-direction:column;align-items:center;gap:16px}
+.pickwrap{border:2.5px solid var(--line);border-radius:28px;background:var(--panel);padding:14px;
+  display:flex;flex-direction:column;align-items:center;gap:8px}
 .badge-ok{position:absolute;right:4px;bottom:4px;width:34px;height:34px;border-radius:50%;background:var(--grass-ink);
   display:grid;place-items:center;border:3px solid var(--panel)}
 /* 位置あわせ中はドラッグで動かす。.pickwrap の余白ぶんを引いた幅までは縮む
-   （280px幅でもはみ出さない）。 */
-.pick-face{width:min(200px,100%);aspect-ratio:1;touch-action:none;cursor:grab}
+   （280px幅でもはみ出さない）。おむかえの「お顔の写真」ステップは中身が
+   多く、スクロールなしで「つぎへ」まで届かせたかったため（追記38）、
+   130pxまで小さくした。 */
+.pick-face{width:min(130px,100%);aspect-ratio:1;touch-action:none;cursor:grab}
 .pick-face:active{cursor:grabbing}
 .facecrop{width:100%}
-.facecrop-hint{margin:0 0 10px;font-size:var(--fs-1);color:var(--faint);text-align:center;line-height:1.7}
+.facecrop-hint{margin:0 0 6px;font-size:var(--fs-1);color:var(--faint);text-align:center;line-height:1.5}
 .facecrop-zoom{display:flex;align-items:center;gap:12px}
 .facecrop-zoom .lbl{flex:none;font-size:var(--fs-2);color:var(--muted);font-weight:700}
 .facecrop-zoom input[type=range]{

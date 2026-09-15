@@ -141,7 +141,7 @@
 
       <div class="step" data-step="2" hidden>
         <p class="onbo-lead">お顔の写真を<br>1枚えらんでください</p>
-        <p class="onbo-sub">カメラロールから選ぶだけ。<br>この端末の中にだけ残り、どこにも送られません。</p>
+        <p class="onbo-sub">カメラロールから選ぶだけ。この端末の中にだけ残ります。</p>
         <div class="field">
           <div class="pickwrap">
             <div class="face pick-face" id="pick-face">
@@ -150,7 +150,7 @@
             </div>
             <p id="pick-msg" style="margin:0;font-size:var(--fs-3);font-weight:700;color:var(--muted)">まだ写真はありません</p>
             <div class="facecrop" id="pick-crop" hidden>
-              <p class="facecrop-hint">指でなぞって位置を、下のつまみで大きさを合わせられます</p>
+              <p class="facecrop-hint">指でなぞって動かせます</p>
               <div class="facecrop-zoom">
                 <span class="lbl">大きさ</span>
                 <input type="range" id="in-facezoom" min="100" max="250" value="100">
@@ -159,10 +159,6 @@
             <button type="button" class="btn btn-line" style="width:auto;padding:0 24px;border-radius:999px" id="btn-pick">写真をえらぶ</button>
             <input type="file" id="in-photo" accept="image/*" hidden>
           </div>
-        </div>
-        <div class="tip tip-amber">
-          <svg width="19" height="19" style="color:var(--amber-ink)"><use href="#ic-info"></use></svg>
-          <p>うまく取りこめないときは、その場で理由を出します。<br>黙って止まることはありません。</p>
         </div>
         <div class="tip tip-warn" id="onbo-warn" hidden>
           <svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>
