@@ -226,9 +226,13 @@
     $('#onbo-topbar').hidden = !onboEditMode;
     $('#btn-back').hidden = step === 0;
     $('#btn-skip').hidden = step !== 2;
-    $('#btn-next').textContent = step === 5 ? 'はじめる' : 'つぎへ';
+    $('#btn-next').textContent = step === 6 ? 'はじめる' : 'つぎへ';
     if (step === 4) renderFaveEdit();
     if (step === 5) $('#scenepick-onbo').innerHTML = scenePickHTML(sceneOf());
+    if (step === 6) {
+      $('#in-message').value = st.pet.message || '';
+      $('#in-message-count').textContent = $('#in-message').value.length;
+    }
     $('#onbo-err').hidden = true;
     var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
     var ow = $('#onbo-warn'); if (ow) ow.hidden = !S.storeInfo().embedded;
@@ -255,7 +259,8 @@
     if (step === 4) {
       addFave($('#in-fave').value);      // 入力途中のものも拾う
     }
-    if (step === 5) {
+    if (step === 6) {
+      st.pet.message = $('#in-message').value.trim().slice(0, 20);
       st.onboarded = true; S.save();
       var toSettings = onboEditMode; onboEditMode = false;
       show(toSettings ? 'settings' : 'home');
@@ -316,6 +321,7 @@
   function renderHome() {
     // 消える環境なら、写真を入れる前に知らせる。あとから「消えました」では遅い。
     $('#home-warn').hidden = !S.storeInfo().embedded;
+    $('#home-title').textContent = st.pet.message || 'いつまでも家族だよ';
     var t = S.today();
     $('#home-date').textContent = S.formatMD(t);
     $('#home-name').textContent = st.pet.name || '—';
@@ -1433,6 +1439,8 @@
       st.pet.faves = (st.pet.faves || []).filter(function (x) { return x !== n; });
       S.save(); renderFaveEdit();
     });
+    $('#in-message').addEventListener('input', function () { $('#in-message-count').textContent = this.value.length; });
+    $('#in-message').addEventListener('keydown', function (e) { if (e.key === 'Enter') onboNext(); });
 
     $('#btn-pick').onclick = function () { $('#in-photo').click(); };
     $('#in-photo').onchange = function (e) { pickPortrait(e.target.files && e.target.files[0]); e.target.value = ''; };
