@@ -116,7 +116,7 @@
         <span class="d">なまえ・写真・日づけ</span>
         <button class="btn btn-line bar-btn" id="btn-onbo-close">とじる</button>
       </div>
-      <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
       <div class="step" data-step="0">
         <p class="onbo-lead">この子のことを、<br>すこしだけ教えてください</p>
@@ -200,6 +200,17 @@
         <p class="onbo-sub">あとから設定でいつでも変えられます。</p>
         <div class="field">
           <div class="scenepick" id="scenepick-onbo"></div>
+        </div>
+      </div>
+
+      <div class="step" data-step="6" hidden>
+        <p class="onbo-lead">ペットへの一言</p>
+        <p class="onbo-sub">トップ画面のいちばん上に表示されます。<br>
+        あとから設定でいつでも変えられます。</p>
+        <div class="field">
+          <label for="in-message">短い言葉で（20文字まで）</label>
+          <input type="text" id="in-message" placeholder="いつまでも家族だよ" autocomplete="off" enterkeyhint="done" maxlength="20">
+          <p class="count"><span id="in-message-count">0</span> / 20文字</p>
         </div>
       </div>
 

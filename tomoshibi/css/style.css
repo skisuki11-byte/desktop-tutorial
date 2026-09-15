@@ -557,6 +557,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .onbo-sub{margin:12px 0 0;font-size:var(--fs-3);color:var(--muted);line-height:1.95}
 .field{margin-top:var(--s6)}
 .field > label{display:block;font-size:var(--fs-2);color:var(--faint);letter-spacing:.1em;margin-bottom:var(--s2);font-weight:700}
+.field > .count{text-align:right;font-size:var(--fs-1);color:var(--faint);margin:4px 2px 0;font-variant-numeric:tabular-nums}
 .field input[type=text],.field input[type=date]{width:100%;min-height:58px;border-radius:var(--r-sm);
   border:2px solid var(--line);background:var(--panel);padding:0 var(--s4);font-family:var(--round);
   font-size:var(--fs-6);letter-spacing:.1em}
