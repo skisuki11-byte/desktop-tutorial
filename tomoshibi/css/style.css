@@ -361,6 +361,13 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .tally .g p{margin:0;font-size:var(--fs-2);line-height:1.7}
 .after .note{position:relative;margin:18px 0 0;font-size:var(--fs-2);color:var(--faint);text-align:center;line-height:1.9}
 .petals{position:absolute;top:40px;left:50%;transform:translateX(-50%);pointer-events:none}
+/* 「うごくを見る」「おうちにもどる」は、以前は.afterの外の固定枠に別置きしていた。
+   実機で、動画ボタンが後から現れて枠が伸びたときに、.afterの中身の下側
+   （きょうの気持ち欄の下端）と重なって隠れる不具合が起きた。
+   ボタンを.afterのスクロール範囲の内側・最後の要素にすることで、
+   「2つの箱の高さが必ず一致する」前提をなくし、重なりようがない形にする。 */
+.after-actions{width:100%;display:flex;flex-direction:column;gap:10px;
+  margin-top:26px;padding-bottom:env(safe-area-inset-bottom,0px)}
 
 /* ---------- おまいりの庭 ---------- */
 .garden{border:2px solid var(--line);border-radius:26px;overflow:hidden;background:#EDF6E2;box-shadow:var(--shadow)}
