@@ -336,6 +336,10 @@
       kb.innerHTML = '<b class="kaimyo-label">戒名</b>' + brushHTML(km);
       // 縦に立てるので、字数が増えるほど下へ伸びる。絵からはみ出さない大きさに合わせる。
       kb.style.fontSize = fitBrush(Array.from(km).length) + 'px';
+      // おうちを開くたび（タブを行き来したときも含めて）、そっと浮かび上がらせる。
+      kb.classList.remove('kaimyo-in');
+      void kb.offsetWidth;
+      kb.classList.add('kaimyo-in');
     }
 
     var n = S.visitCount(), done = S.visitedOn(t);

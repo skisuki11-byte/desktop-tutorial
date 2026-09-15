@@ -143,12 +143,15 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    「花は枯れない」の演出をそのまま保つ。 */
 :root[data-theme="night"] .scene{--scene-cloud:#3C444E;--scene-ground:#27301E;--scene-stem:#516A42}
 .scene svg.bg{position:absolute;inset:0;width:100%;height:100%}
-/* 雲だけ、ごくゆっくり左右に流す。速さも幅も控えめにして、
-   ずっと眺めていても気が散らない・目に留まりすぎない程度にとどめる。 */
-.scene .s-cloud{fill:var(--scene-cloud);transform-box:fill-box;transform-origin:center;animation:scene-drift 48s ease-in-out infinite}
-.scene .s-cloud:nth-child(2){animation-duration:40s;animation-delay:-7s}
-.scene .s-cloud:nth-child(3){animation-duration:58s;animation-delay:-21s}
-@keyframes scene-drift{0%,100%{transform:translateX(-7px)}50%{transform:translateX(9px)}}
+/* 雲だけ、左右にゆっくり流す。最初は46〜58秒・振れ幅16pxで作ったが、
+   ease-in-outの両端（速度がほぼ0になる場所）でしか見ていないと
+   「動いていない」ように見えるほど遅かった（実機で確認された）。
+   振れ幅を広げ、速さが一定に見えるlinearに変え、見てすぐ分かる
+   遅さに寄せ直した（気が散る速さにはしない）。 */
+.scene .s-cloud{fill:var(--scene-cloud);transform-box:fill-box;transform-origin:center;animation:scene-drift 24s linear infinite}
+.scene .s-cloud:nth-child(2){animation-duration:19s;animation-delay:-5s}
+.scene .s-cloud:nth-child(3){animation-duration:30s;animation-delay:-12s}
+@keyframes scene-drift{0%,100%{transform:translateX(-13px)}50%{transform:translateX(13px)}}
 @media (prefers-reduced-motion:reduce){
   .scene .s-cloud{animation:none}
 }
@@ -222,6 +225,14 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   pointer-events:none;
 }
 .kaimyo-v i{display:block;font-style:normal;line-height:1.16;font-feature-settings:"vert" 1}
+/* おうちを開くたび、戒名だけそっと浮かび上がる。トップの.viewの切り替え
+   （.32秒の全体フェード）とは別に、ここだけ少し遅らせて・長めにゆっくり
+   出すことで、名として静かに現れる感じを添える。 */
+#home-kaimyo.kaimyo-in{animation:kaimyo-in .9s cubic-bezier(.22,.61,.36,1) both}
+@keyframes kaimyo-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  #home-kaimyo.kaimyo-in{animation:none}
+}
 /* 「戒名」の注記は毛筆の本文とは別物。地の書体・固定の小ささで出す。
    本文の字を大きくしても、この注記までつられて大きくならないように em ではなく px で固定する。 */
 .kaimyo-label{
