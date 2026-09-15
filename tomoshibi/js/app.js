@@ -689,16 +689,17 @@
     if (hb) hb.onclick = showHelp;
   }
 
-  /* おまいりのあとに庭へ舞う5つの柄。花びら・紅葉・雪・灯りの粒・しずく
-     ——4動作（灯り・水・ごはん・花）と季節の背景で、すでにこのアプリの中に
-     ある題材だけを使う。灯りの粒だけ下から上へ昇らせ、灯籠流しのような
-     見送りの動きにした。毎回この中から1つ、直前と同じ柄にならないように選ぶ。 */
+  /* おまいりのあとに庭へ舞う5つの柄。花びら・紅葉・雪・灯りの粒・ちょうちょ
+     ——4動作（灯り・水・ごはん・花）と季節の背景、「見送る」ことにまつわる
+     言い伝えなど、すでにこのアプリの中にある題材だけを使う。灯りの粒と
+     ちょうちょだけ下から上へ昇らせ、灯籠流しのような見送りの動きにした。
+     毎回この中から1つ、直前と同じ柄にならないように選ぶ。 */
   var AFTER_FX = [
     { sym: '#pt-petal', colors: ['#F0B6C4', '#FFD98A', '#CFE6BC'], motion: 'fall' },
     { sym: '#pt-leaf', colors: ['#E58B6D', '#D9A24A', '#C9862A'], motion: 'fall' },
     { sym: '#pt-snow', colors: ['#9FC3DC', '#FFFFFF', '#9CA9A0'], motion: 'fall' },
     { sym: '#pt-light', colors: ['#FFD98A', '#E8A33D', '#F4C67A'], motion: 'rise' },
-    { sym: '#pt-drop', colors: ['#8FC3DE', '#BEDCEA', '#5C93B2'], motion: 'fall' }
+    { sym: '#pt-fly', colors: ['#F0B6C4', '#FFD98A', '#C9A8DE'], motion: 'flutter' }
   ];
   var lastFx = -1;
   function drawPetals() {
@@ -712,7 +713,9 @@
     lastFx = i;
     var fx = AFTER_FX[i];
     var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var n = 7, out = [];
+    // 「もっと多く」という要望を受けて7→13に増やした。演出が1画面に
+    // 出るのはこのあとの数秒だけなので、多めでも賑やかさが勝る。
+    var n = 13, out = [];
     for (var k = 0; k < n; k++) {
       var x = 20 + Math.random() * 300;
       var size = 14 + Math.random() * 9;
@@ -723,7 +726,8 @@
         y0 = 20 + Math.random() * 300;
         style = 'color:' + col;
       } else {
-        y0 = fx.motion === 'rise' ? (340 + Math.random() * 40) : (-20 - Math.random() * 60);
+        var startsLow = fx.motion === 'rise' || fx.motion === 'flutter';
+        y0 = startsLow ? (340 + Math.random() * 40) : (-20 - Math.random() * 60);
         var dur = (3.6 + Math.random() * 2.4).toFixed(2);
         var delay = (Math.random() * 2.6).toFixed(2);
         var sway = Math.round((Math.random() - 0.5) * 60);
