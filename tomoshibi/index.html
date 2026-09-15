@@ -289,7 +289,44 @@
         <span class="d">おまいり</span>
         <span class="step-pill" id="ritual-pill">0 / 4</span>
       </div>
-      <div style="display:flex;justify-content:center;margin-top:6px">
+      <div class="reien">
+        <svg class="bg" viewBox="0 0 390 176" preserveAspectRatio="none" aria-hidden="true">
+          <ellipse class="r-cloud" cx="64" cy="30" rx="24" ry="12" opacity=".8"/>
+          <ellipse class="r-cloud" cx="330" cy="24" rx="20" ry="11" opacity=".65"/>
+          <g class="r-hedge">
+            <ellipse cx="26" cy="118" rx="34" ry="21"/><ellipse cx="70" cy="124" rx="26" ry="16"/>
+            <ellipse cx="322" cy="122" rx="30" ry="18"/><ellipse cx="368" cy="126" rx="24" ry="15"/>
+          </g>
+          <path class="r-ground" d="M0 134 C60 128 130 140 195 134 C260 128 330 140 390 132 L390 176 L0 176 Z"/>
+          <g class="r-lantern" transform="translate(54,64)">
+            <path d="M-16 20 L0 6 L16 20 Z" class="r-stone"/>
+            <circle cx="0" cy="2" r="3" class="r-stone"/>
+            <rect x="-11" y="20" width="22" height="19" rx="3" class="r-stone"/>
+            <rect x="-5" y="25" width="10" height="10" rx="2" class="r-flame"/>
+            <rect x="-4" y="39" width="8" height="21" class="r-stone"/>
+            <path d="M-10 60 L10 60 L7 67 L-7 67 Z" class="r-stone"/>
+          </g>
+          <g class="r-lantern" transform="translate(336,64)">
+            <path d="M-16 20 L0 6 L16 20 Z" class="r-stone"/>
+            <circle cx="0" cy="2" r="3" class="r-stone"/>
+            <rect x="-11" y="20" width="22" height="19" rx="3" class="r-stone"/>
+            <rect x="-5" y="25" width="10" height="10" rx="2" class="r-flame"/>
+            <rect x="-4" y="39" width="8" height="21" class="r-stone"/>
+            <path d="M-10 60 L10 60 L7 67 L-7 67 Z" class="r-stone"/>
+          </g>
+          <path class="r-pedestal-base" d="M144 151 L246 151 L258 175 L132 175 Z"/>
+          <rect class="r-pedestal-top" x="139" y="144" width="112" height="13" rx="4"/>
+          <g id="reien-offerings">
+            <g class="r-placed" data-i="0"><use href="#of-light" x="151" y="152" width="20" height="20"></use></g>
+            <g class="r-placed" data-i="1"><use href="#of-water" x="177" y="152" width="20" height="20"></use></g>
+            <g class="r-placed" data-i="2"><use href="#of-food" x="203" y="152" width="20" height="20"></use></g>
+            <g class="r-placed" data-i="3"><use href="#of-flower" x="229" y="152" width="20" height="20"></use></g>
+          </g>
+          <g class="r-smoke">
+            <path class="r-wisp r-wisp-a" d="M172 145 C170 126 178 114 174 96" stroke-linecap="round" fill="none"/>
+            <path class="r-wisp r-wisp-b" d="M218 145 C220 128 212 116 216 98" stroke-linecap="round" fill="none"/>
+          </g>
+        </svg>
         <div class="face face-md" id="omairi-face"><svg class="art"><use href="#art-dog"></use></svg></div>
       </div>
       <p class="ritual-lead" id="ritual-lead">灯りを、ともします</p>
