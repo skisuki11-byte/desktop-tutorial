@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#FDFAF2">
+<!-- 通信は一切しないアプリなので、スクリプトの出どころ・つながる先をこの一行で
+     縛っておく。style-srcだけ'unsafe-inline'が要る（画面のあちこちにある
+     style="..."のため）。それ以外は自分のファイルとGoogle Fontsの2つの
+     ドメインしか許さない。frame-ancestorsはmetaタグからは効かない
+     （ブラウザに無視される）ので、ここには入れていない（追記47）。 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
 <title>ともしび</title>
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -773,12 +779,6 @@
 
 <script src="js/store.js"></script>
 <script src="js/app.js"></script>
-<script>
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () { /* 未対応でも動く */ });
-  });
-}
-</script>
+<script src="js/register-sw.js"></script>
 </body>
 </html>

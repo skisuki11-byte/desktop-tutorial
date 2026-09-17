@@ -751,7 +751,6 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .tip svg{flex:none;margin-top:2px}
 .tip p{margin:0;font-size:var(--fs-2);line-height:1.9}
 .tip-amber{background:var(--amber-soft)} .tip-amber p{color:var(--amber-ink)}
-.tip-grass{background:var(--grass-soft);border:2px solid var(--grass-line)} .tip-grass p{color:var(--grass-ink)}
 .tip-warn{background:#FBE9E4;border:2px solid #F2CFC4} .tip-warn p{color:#9A4A2E}
 :root[data-theme="night"] .tip-warn{background:#3A2620;border-color:#5A3A2E} :root[data-theme="night"] .tip-warn p{color:#F0A88C}
 
