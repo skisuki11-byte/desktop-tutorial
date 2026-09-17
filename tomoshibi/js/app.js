@@ -138,14 +138,15 @@
     ap.innerHTML = (ashesURL ? '<img src="' + ashesURL + '" alt="">' : '') +
       '<span class="badge-ok" id="ashes-ok"' + (ashesURL ? '' : ' hidden') +
       '><svg width="16" height="16"><use href="#ic-check"></use></svg></span>';
-    // おうち・おまいりでの見せ方は、骨壺のイラスト（既定）か登録した実物の写真かを
-    // 設定（#seg-ashes-display）で選べる。追記44。
+    // おまいりでの見せ方は、骨壺のイラスト（既定）か登録した実物の写真かを
+    // 設定（#seg-ashes-display）で選べる（追記44）。おうち画面には出さない
+    // （追記45：利用者の判断で、おまいり画面だけにした）。
     var showPhoto = !!(ashesURL && st.pet.ashesShowPhoto);
-    var photoHTML = '<img src="' + ashesURL + '" alt="お骨の写真">';
     var ra = $('#reien-ashes');
-    if (ra) { ra.hidden = !ashesURL; ra.innerHTML = showPhoto ? photoHTML : '<svg width="16" height="16"><use href="#of-urn"></use></svg>'; }
-    var hb = $('#home-ashes');
-    if (hb) { hb.hidden = !ashesURL; hb.innerHTML = showPhoto ? photoHTML : '<svg width="18" height="18"><use href="#of-urn"></use></svg>'; }
+    if (ra) {
+      ra.hidden = !ashesURL;
+      ra.innerHTML = showPhoto ? '<img src="' + ashesURL + '" alt="お骨の写真">' : '<svg width="16" height="16"><use href="#of-urn"></use></svg>';
+    }
     var bd = $('#box-ashes-display'); if (bd) bd.hidden = !ashesURL;
   }
   function pickAshes(file) {
