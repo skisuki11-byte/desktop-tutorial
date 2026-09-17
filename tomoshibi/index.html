@@ -276,7 +276,6 @@
           </svg>
           <div class="face face-lg" id="home-face"><svg class="art"><use href="#art-dog"></use></svg></div>
           <p class="kaimyo-v" id="home-kaimyo" hidden><span></span></p>
-          <span class="ashes-badge" id="home-ashes" hidden title="納骨ずみ"><svg width="18" height="18"><use href="#of-urn"></use></svg></span>
         </div>
         <h1 class="petname" id="home-name">—</h1>
         <p class="petmeta" id="home-meta"></p>
@@ -356,7 +355,7 @@
           </g>
         </svg>
         <div class="face face-md" id="omairi-face"><svg class="art"><use href="#art-dog"></use></svg></div>
-        <div class="ashes-frame" id="reien-ashes" hidden title="納骨ずみ"><svg width="16" height="16"><use href="#of-urn"></use></svg></div>
+        <div class="ashes-frame" id="reien-ashes" hidden title="納骨ずみ"></div>
       </div>
       <p class="ritual-lead" id="ritual-lead">灯りを、ともします</p>
       <p class="ritual-sub" id="ritual-sub">じゅんばんに、4つ</p>
@@ -697,6 +696,15 @@
         <button class="setrow" id="btn-kaimyo-edit" style="margin-top:10px"><span>書きかえる</span><span class="arw">›</span></button>
         <button class="setrow" id="btn-kaimyo-auto" hidden><span>選びなおす（アプリの名にもどす）</span><span class="arw">›</span></button>
         <button class="setrow" id="btn-kaimyo-off"><span id="kaimyo-off-label">出さない</span><span class="arw">›</span></button>
+      </div>
+
+      <div class="cardbox" id="box-ashes-display" hidden>
+        <h4>納骨の写真の見せ方</h4>
+        <p class="cap">おまいりの絵に出す見た目です。<br>
+        写真そのものは、見るたびつらくなる人もいます。</p>
+        <div class="seg" id="seg-ashes-display" style="grid-template-columns:1fr 1fr">
+          <button data-v="illust">イラスト</button><button data-v="photo">写真</button>
+        </div>
       </div>
 
       <div class="cardbox">

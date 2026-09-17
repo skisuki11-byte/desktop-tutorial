@@ -138,8 +138,16 @@
     ap.innerHTML = (ashesURL ? '<img src="' + ashesURL + '" alt="">' : '') +
       '<span class="badge-ok" id="ashes-ok"' + (ashesURL ? '' : ' hidden') +
       '><svg width="16" height="16"><use href="#ic-check"></use></svg></span>';
-    var ra = $('#reien-ashes'); if (ra) ra.hidden = !ashesURL;
-    var hb = $('#home-ashes'); if (hb) hb.hidden = !ashesURL;
+    // おまいりでの見せ方は、骨壺のイラスト（既定）か登録した実物の写真かを
+    // 設定（#seg-ashes-display）で選べる（追記44）。おうち画面には出さない
+    // （追記45：利用者の判断で、おまいり画面だけにした）。
+    var showPhoto = !!(ashesURL && st.pet.ashesShowPhoto);
+    var ra = $('#reien-ashes');
+    if (ra) {
+      ra.hidden = !ashesURL;
+      ra.innerHTML = showPhoto ? '<img src="' + ashesURL + '" alt="お骨の写真">' : '<svg width="16" height="16"><use href="#of-urn"></use></svg>';
+    }
+    var bd = $('#box-ashes-display'); if (bd) bd.hidden = !ashesURL;
   }
   function pickAshes(file) {
     if (!file) return;
@@ -1194,6 +1202,7 @@
   function renderSettings() {
     $$('#seg-theme button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.theme === 'night' ? 'night' : 'day'))); });
     $$('#seg-opening button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.openingOff ? 'off' : 'on'))); });
+    $$('#seg-ashes-display button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.pet.ashesShowPhoto ? 'photo' : 'illust'))); });
     var si = S.storeInfo();
     $('#store-state').textContent =
       (si.embedded ? '試し用（消えます）' : si.durable ? 'この端末の中・保護あり' : si.idb ? 'この端末の中' : '写真のみ') + ' ›';
@@ -1688,6 +1697,10 @@
     $('#seg-opening').addEventListener('click', function (e) {
       var b = e.target.closest('[data-v]'); if (!b) return;
       st.openingOff = b.dataset.v === 'off'; S.save(); renderSettings();
+    });
+    $('#seg-ashes-display').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-v]'); if (!b) return;
+      st.pet.ashesShowPhoto = b.dataset.v === 'photo'; S.save(); renderSettings(); paintAshes();
     });
     $('#scenepick-set').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-scene]'); if (!b) return;
