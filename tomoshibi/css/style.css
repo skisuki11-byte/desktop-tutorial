@@ -178,13 +178,14 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .scene .s-fb-c{fill:var(--scene-fb-c)}
 
 /* 納骨のお骨の写真を登録していれば、おうちの絵の左下すみに小さな印を出す。
-   戒名の札が右上に立つのと対に、左下は空いているのでそこを使う。
-   おまいり画面の写真立てと同じ理由で、登録した実物の写真ではなく骨壷の
-   イラスト（#of-urn）だけを見せる（追記43）。「登録した」という事実だけを
-   静かに伝える印なので、タップでは何も起きない（pointer-events:none）。 */
+   戒名の札が右上に立つのと対に、左下は空いているのでそこを使う。中身は
+   設定（納骨の写真の見せ方）で骨壺のイラスト（既定・追記43）か登録した
+   実物の写真かを選べる（追記44）。「登録した」という事実だけを静かに
+   伝える印なので、タップでは何も起きない（pointer-events:none）。 */
 .ashes-badge{position:absolute;left:14px;bottom:14px;z-index:2;
   width:32px;height:32px;border-radius:50%;background:var(--panel);box-shadow:var(--shadow);
-  display:flex;align-items:center;justify-content:center;pointer-events:none}
+  display:flex;align-items:center;justify-content:center;pointer-events:none;overflow:hidden}
+.ashes-badge img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* 背景の柄。図形は1つのまま、色だけを差し替える。以前は庭・夕空・桜・雪の
    4種だったが、季節がひとめで分かる春夏秋冬に作り直した
@@ -300,12 +301,14 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 :root[data-theme="night"] .reien .r-flame{fill:#E0A24A}
 /* 納骨のときのお骨の写真を登録していれば、台座の左どなりに小さな写真立てを置く
    （左の灯籠と台座のあいだの空きに収まる大きさ・位置）。追記42。
-   中身は登録した実際の写真ではなく、骨壷のイラスト（#of-urn）にする。骨の写真そのものは
-   人によっては直視がつらく、あたたかいお参りの場にそぐわないため（追記43）。 */
+   中身は設定（納骨の写真の見せ方）で、骨壺のイラスト（#of-urn・既定。骨の写真
+   そのものは人によっては直視がつらく、あたたかいお参りの場にそぐわないため
+   ＝追記43）か、登録した実物の写真かを選べる（追記44）。 */
 .reien .ashes-frame{position:absolute;left:21.8%;top:83%;width:8.7%;aspect-ratio:1;
   border-radius:4px;overflow:hidden;border:2px solid var(--panel);box-shadow:var(--shadow);
   background:var(--amber-soft);display:flex;align-items:center;justify-content:center}
 .reien .ashes-frame svg{width:62%;height:62%}
+.reien .ashes-frame img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* ---------- おまいりのあとの絵 ---------- */
 /* 「お参り終わったあとの写真の背景を、天国っぽくして」との依頼。

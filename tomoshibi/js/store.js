@@ -22,6 +22,7 @@
         kaimyoOff: false,  // 戒名になじみのない人もいる。出さないこともできる
         scene: 'summer',   // トップの絵の配色。spring/summer/autumn/winter
         message: '',       // トップいちばん上の一言。空なら既定の「いつまでも家族だよ」を出す
+        ashesShowPhoto: false, // 納骨のお骨の写真の見せ方。false=骨壺のイラスト（既定）、true=登録した実物の写真
         faceX: 0.5, faceY: 0.5, faceZoom: 1   // 遺影の位置・大きさ（0〜1・1〜2.5）。既定は中央・そのまま
       },
       selfLog: {},         // { "2026-09-14": 3 } その日の自分。1〜5
