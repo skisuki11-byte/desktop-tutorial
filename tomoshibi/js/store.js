@@ -34,7 +34,8 @@
       videoThumbs: {},     // { mediaId: "data:image/jpeg;base64,…" } 最初のコマの静止画
       chapterTitles: {},
       theme: 'light',
-      openingOff: false  // オープニング画面。既定は毎回表示、設定でoffにできる
+      openingOff: false,  // オープニング画面。既定は毎回表示、設定でoffにできる
+      echoDismissedOn: '' // 手紙のこだまを、その日だけ閉じた日付。翌日以降は関係なく戻る
     };
   }
 
@@ -170,6 +171,30 @@
     var b = parseISO(state.pet.birthISO), d = parseISO(state.pet.deathISO);
     if (!b || !d) return 0;
     return Math.max(0, diffDays(b, d));
+  }
+
+  /* 大きな節目（四十九日・百か日・一周忌・三回忌）だけを扱う。月命日・お誕生日は
+     毎月・毎年来て頻度が高すぎるので、ここには含めない。追記46。 */
+  var BIG_KEYS = { d49: 1, d100: 1, y1: 1, y3: 1, birthday: 1 };
+  /* 今日がちょうどその大きな節目にあたるか。手紙のこだま（追記46）で、
+     節目の日だけ過去の手紙を1通そっと差し出すために使う。 */
+  function milestoneToday(from) {
+    var hit = milestones(from).filter(function (m) { return m.days === 0 && BIG_KEYS[m.key]; });
+    return hit[0] || null;
+  }
+  /* すでに過ぎた大きな節目（新しい順）。ふりかえり画面（追記46）を、
+     その節目を過ぎたあとはいつでも開けるようにするために使う。 */
+  function pastMilestones(from) {
+    var death = parseISO(state.pet.deathISO);
+    if (!death) return [];
+    var list = [
+      { key: 'd49', label: '四十九日', date: addDays(death, 48) },
+      { key: 'd100', label: '百か日', date: addDays(death, 99) },
+      { key: 'y1', label: '一周忌', date: addYears(death, 1) },
+      { key: 'y3', label: '三回忌', date: addYears(death, 2) }
+    ];
+    return list.filter(function (m) { return diffDays(m.date, from) >= 0; })
+      .sort(function (a, b) { return b.date - a.date; });
   }
 
   /* 享年。満年齢で数える。1年に満たない子は月で返す。
@@ -387,6 +412,7 @@
     state.letters.splice(i, 1);
     save(); return true;
   }
+  function dismissEcho(d) { state.echoDismissedOn = ymd(d); save(); }
   function seasonalDone(d) { return !!state.seasonal[ym(d)]; }
   function putSeasonal(d) { state.seasonal[ym(d)] = true; save(); }
 
@@ -718,12 +744,13 @@
     ymd: ymd, parseISO: parseISO, addDays: addDays, addYears: addYears, diffDays: diffDays,
     today: today, formatJP: formatJP, formatMD: formatMD, formatShort: formatShort,
     milestones: milestones, daysTogether: daysTogether, ageAtDeath: ageAtDeath,
+    milestoneToday: milestoneToday, pastMilestones: pastMilestones,
     kaimyo: kaimyo, kaimyoAuto: kaimyoAuto, kaimyoParts: kaimyoParts,
     setKaimyo: setKaimyo, setKaimyoOff: setKaimyoOff,
     visitCount: visitCount, visitedOn: visitedOn, recordVisit: recordVisit,
     seasonalFor: seasonalFor, seasonalDone: seasonalDone, putSeasonal: putSeasonal,
     faveDoneOn: faveDoneOn, putFave: putFave, addLetter: addLetter,
-    deleteLetter: deleteLetter,
+    deleteLetter: deleteLetter, dismissEcho: dismissEcho,
     selfOn: selfOn, putSelf: putSelf, selfSeries: selfSeries, heavyRun: heavyRun,
     putMedia: putMedia, getMedia: getMedia, allMedia: allMedia, deleteMedia: deleteMedia, newId: newId,
     chapters: chapters

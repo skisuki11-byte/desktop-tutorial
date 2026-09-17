@@ -289,6 +289,18 @@
         <p class="count-line" id="home-count"></p>
       </div>
 
+      <div class="echo-card" id="letter-echo" hidden>
+        <button class="echo-x" id="btn-echo-close" aria-label="今日はとじる"><svg width="12" height="12"><use href="#ic-plus"></use></svg></button>
+        <button class="echo-open" data-go="mails">
+          <svg class="env" aria-hidden="true"><use href="#art-env"></use></svg>
+          <span>
+            <span class="k" id="echo-kicker"></span>
+            <span class="d" id="echo-date"></span>
+            <span class="t" id="echo-text"></span>
+          </span>
+        </button>
+      </div>
+
       <button class="letter-card" id="btn-write">
         <svg class="env" aria-hidden="true"><use href="#art-env"></use></svg>
         <span style="flex:1">
@@ -481,9 +493,26 @@
       </div>
       <div style="margin-top:24px" id="niwa-days"></div>
       <button class="btn btn-line" id="btn-ics" style="margin-top:16px" hidden>だいじな日をカレンダーに追加</button>
+      <div id="niwa-review"></div>
       <div class="spacer"></div>
     </div>
     <nav class="tabbar" data-tabs></nav>
+  </section>
+
+  <!-- ============ ふりかえり ============ -->
+  <section class="view" id="view-review">
+    <div class="body scroll foot">
+      <div class="daybar">
+        <span class="d">ふりかえり</span>
+        <button class="btn btn-line bar-btn" data-go="niwa">とじる</button>
+      </div>
+      <div class="head"><h1 id="review-title">—</h1><p id="review-sub"></p></div>
+      <div class="stats" id="review-stats" style="grid-template-columns:1fr 1fr 1fr"></div>
+      <div class="notebox">
+        <p id="review-note">ゆっくりでも、ちゃんと続いていました。</p>
+      </div>
+      <div class="spacer"></div>
+    </div>
   </section>
 
   <!-- ============ じぶん ============ -->
