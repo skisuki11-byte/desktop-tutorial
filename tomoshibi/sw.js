@@ -4,7 +4,7 @@
  * つながらないときだけキャッシュを使う＝圏外でもお参りはできる。
  * 「圏外でもお参りできること」は、この製品では体験の核にあたる。
  */
-var CACHE = 'tomoshibi-v5';
+var CACHE = 'tomoshibi-v6';
 var ASSETS = [
   './',
   './index.html',
@@ -12,6 +12,7 @@ var ASSETS = [
   './css/style.css',
   './js/store.js',
   './js/app.js',
+  './js/register-sw.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png'
