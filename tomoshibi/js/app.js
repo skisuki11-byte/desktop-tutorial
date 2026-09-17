@@ -120,6 +120,47 @@
       return !!faceURL;
     }).catch(function () { paintFaces(); return false; });
   }
+  /* ============ 納骨のときのお骨の写真 ============
+     任意。遺影とは別枠（kind:'ashes'）で持ち、アルバムには出さない。
+     位置あわせ・大きさ調整はしない（遺影ほど頻繁に見返すものではないため）。 */
+  var ashesURL = null;
+  function loadAshes() {
+    return S.getMedia('ashes').then(function (rec) {
+      if (ashesURL && ashesURL.indexOf('blob:') === 0) URL.revokeObjectURL(ashesURL);
+      ashesURL = null;
+      if (rec) ashesURL = rec.url || URL.createObjectURL(rec.blob);
+      paintAshes();
+      return !!ashesURL;
+    }).catch(function () { paintAshes(); return false; });
+  }
+  function paintAshes() {
+    var ap = $('#ashes-pick'); if (!ap) return;
+    ap.innerHTML = (ashesURL ? '<img src="' + ashesURL + '" alt="">' : '') +
+      '<span class="badge-ok" id="ashes-ok"' + (ashesURL ? '' : ' hidden') +
+      '><svg width="16" height="16"><use href="#ic-check"></use></svg></span>';
+    var ra = $('#reien-ashes');
+    if (ra) { ra.hidden = !ashesURL; if (ashesURL) ra.querySelector('img').src = ashesURL; }
+  }
+  function pickAshes(file) {
+    if (!file) return;
+    $('#ashes-msg').innerHTML = '<span class="busy"></span> 取りこんでいます…';
+    shrink(file, 1200, 0.85)
+      .then(function (blob) {
+        return S.putMedia({ id: 'ashes', blob: blob, at: file.lastModified || Date.now(), kind: 'ashes' });
+      })
+      .then(function (r) {
+        if (!r.ok) { $('#ashes-msg').textContent = ''; onboErr(reasonText(r.reason)); return; }
+        return loadAshes().then(function () {
+          $('#ashes-msg').innerHTML = '<span style="color:var(--grass-ink)">とりこみました</span>';
+          $('#btn-ashes-pick').textContent = 'えらびなおす';
+          $('#onbo-err').hidden = true;
+        });
+      })
+      .catch(function (e) {
+        $('#ashes-msg').textContent = '';
+        onboErr(reasonText((e && e.message) || 'unknown'));
+      });
+  }
   /* 1枚の遺影を、home/おまいり/おまいりのあと/写真えらび の4つの丸枠すべてに出す。
      枠の大きさが場所ごとに違う（154px・124px・168px、しかも home は端末の高さで
      可変）ため、object-fit の位置指定だけでは合わせにくい。枠の実寸を測って
@@ -226,10 +267,10 @@
     $('#onbo-topbar').hidden = !onboEditMode;
     $('#btn-back').hidden = step === 0;
     $('#btn-skip').hidden = step !== 2;
-    $('#btn-next').textContent = step === 6 ? 'はじめる' : 'つぎへ';
-    if (step === 4) renderFaveEdit();
-    if (step === 5) $('#scenepick-onbo').innerHTML = scenePickHTML(sceneOf());
-    if (step === 6) {
+    $('#btn-next').textContent = step === 7 ? 'はじめる' : 'つぎへ';
+    if (step === 5) renderFaveEdit();
+    if (step === 6) $('#scenepick-onbo').innerHTML = scenePickHTML(sceneOf());
+    if (step === 7) {
       $('#in-message').value = (st.pet.message || '').slice(0, 14);
       $('#in-message-count').textContent = $('#in-message').value.length;
     }
@@ -237,6 +278,7 @@
     var pa = $('#pick-art'); if (pa) pa.innerHTML = '<use href="' + artRef() + '"></use>';
     var ow = $('#onbo-warn'); if (ow) ow.hidden = !S.storeInfo().embedded;
     if (step === 2) paintFaces();
+    if (step === 3) paintAshes();
   }
   function onboErr(msg) {
     var e = $('#onbo-err');
@@ -249,17 +291,17 @@
       if (!n) { onboErr('なまえを入れてください'); return; }
       st.pet.name = n;
     }
-    if (step === 3) {
+    if (step === 4) {
       var d = $('#in-death').value;
       if (d && S.diffDays(S.parseISO(d), S.today()) < 0) { onboErr('これから先の日づけは選べません'); return; }
       st.pet.deathISO = d || '';
       st.pet.birthISO = $('#in-birth').value || '';
       S.save();
     }
-    if (step === 4) {
+    if (step === 5) {
       addFave($('#in-fave').value);      // 入力途中のものも拾う
     }
-    if (step === 6) {
+    if (step === 7) {
       st.pet.message = $('#in-message').value.trim().slice(0, 14);
       st.onboarded = true; S.save();
       var toSettings = onboEditMode; onboEditMode = false;
@@ -1151,6 +1193,7 @@
   }
   function renderSettings() {
     $$('#seg-theme button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.theme === 'night' ? 'night' : 'day'))); });
+    $$('#seg-opening button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.openingOff ? 'off' : 'on'))); });
     var si = S.storeInfo();
     $('#store-state').textContent =
       (si.embedded ? '試し用（消えます）' : si.durable ? 'この端末の中・保護あり' : si.idb ? 'この端末の中' : '写真のみ') + ' ›';
@@ -1446,6 +1489,8 @@
 
     $('#btn-pick').onclick = function () { $('#in-photo').click(); };
     $('#in-photo').onchange = function (e) { pickPortrait(e.target.files && e.target.files[0]); e.target.value = ''; };
+    $('#btn-ashes-pick').onclick = function () { $('#in-ashes').click(); };
+    $('#in-ashes').onchange = function (e) { pickAshes(e.target.files && e.target.files[0]); e.target.value = ''; };
 
     /* 写真の位置あわせ。指（マウス）でなぞって動かす。ドラッグ中は pick-face だけ
        その場で動かし（毎回 paintFaces で作り直すと重い・ちらつく）、離した瞬間に
@@ -1640,6 +1685,10 @@
       var b = e.target.closest('[data-v]'); if (!b) return;
       st.theme = b.dataset.v; S.save(); applyTheme(); renderSettings();
     });
+    $('#seg-opening').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-v]'); if (!b) return;
+      st.openingOff = b.dataset.v === 'off'; S.save(); renderSettings();
+    });
     $('#scenepick-set').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-scene]'); if (!b) return;
       st.pet.scene = b.dataset.scene; S.save(); renderSettings();
@@ -1687,6 +1736,8 @@
       $$('#kindpick button').forEach(function (x) { x.setAttribute('aria-pressed', String(x.dataset.kind === st.pet.kind)); });
       $('#btn-pick').textContent = faceURL ? 'えらびなおす' : '写真をえらぶ';
       $('#pick-msg').textContent = faceURL ? '' : 'まだ写真はありません';
+      $('#btn-ashes-pick').textContent = ashesURL ? 'えらびなおす' : '写真をえらぶ';
+      $('#ashes-msg').textContent = ashesURL ? '' : 'まだ写真はありません';
       $('#in-fave').value = '';
       renderOnbo(); show('onbo');
     };
@@ -1777,14 +1828,19 @@
   }, true);
 
   /* ============ 起動 ============ */
+  function enterApp() {
+    if (st.onboarded) show('home');
+    else { step = 0; renderOnbo(); show('onbo'); }
+  }
   buildTabs();
   wire();
   applyTheme();
   fillHomeHints();
+  $('#btn-opening-start').onclick = enterApp;
   S.probe().then(function () {
-    return loadFace();
+    return Promise.all([loadFace(), loadAshes()]);
   }).then(function () {
-    if (st.onboarded) show('home');
-    else { step = 0; renderOnbo(); show('onbo'); }
+    if (st.openingOff) enterApp();
+    else show('opening');
   });
 })();

@@ -32,7 +32,8 @@
       videoTitles: {},     // { mediaId: "走ってるところ" }
       videoThumbs: {},     // { mediaId: "data:image/jpeg;base64,…" } 最初のコマの静止画
       chapterTitles: {},
-      theme: 'light'
+      theme: 'light',
+      openingOff: false  // オープニング画面。既定は毎回表示、設定でoffにできる
     };
   }
 
