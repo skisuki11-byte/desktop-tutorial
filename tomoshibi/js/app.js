@@ -138,8 +138,8 @@
     ap.innerHTML = (ashesURL ? '<img src="' + ashesURL + '" alt="">' : '') +
       '<span class="badge-ok" id="ashes-ok"' + (ashesURL ? '' : ' hidden') +
       '><svg width="16" height="16"><use href="#ic-check"></use></svg></span>';
-    var ra = $('#reien-ashes');
-    if (ra) { ra.hidden = !ashesURL; if (ashesURL) ra.querySelector('img').src = ashesURL; }
+    var ra = $('#reien-ashes'); if (ra) ra.hidden = !ashesURL;
+    var hb = $('#home-ashes'); if (hb) hb.hidden = !ashesURL;
   }
   function pickAshes(file) {
     if (!file) return;
