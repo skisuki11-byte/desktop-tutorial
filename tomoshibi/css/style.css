@@ -289,6 +289,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 }
 .reien .face{position:absolute;left:50%;bottom:22px;transform:translateX(-50%)}
 :root[data-theme="night"] .reien .r-flame{fill:#E0A24A}
+/* 納骨のときのお骨の写真。設定していれば、台座の左どなりに小さな写真立てのように置く
+   （左の灯籠と台座のあいだの空きに収まる大きさ・位置）。追記42。 */
+.reien .ashes-frame{position:absolute;left:21.8%;top:83%;width:8.7%;aspect-ratio:1;
+  border-radius:4px;overflow:hidden;border:2px solid var(--panel);box-shadow:var(--shadow)}
+.reien .ashes-frame img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* ---------- おまいりのあとの絵 ---------- */
 /* 「お参り終わったあとの写真の背景を、天国っぽくして」との依頼。
@@ -322,6 +327,22 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 /* 光の筋は「雲間から差す日の光」なので、夜は太陽そのものが出ていない。
    代わりに、やわらかい月あかりの光暈と雲だけを見せる。 */
 :root[data-theme="night"] .heaven .h-rays{display:none}
+
+/* ---------- オープニング ---------- */
+/* アプリを開いた最初の一枚。灯りのマーク・アプリ名・一言だけの、静かな迎え。
+   1回目は必ず出し、2回目からは設定「起動画面」で省けるようにする（追記42）。 */
+.body.opening{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.opening-glow{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;color:var(--amber-ink);
+  background:var(--amber-soft);margin-bottom:22px;animation:opening-breathe 3.6s ease-in-out infinite}
+@keyframes opening-breathe{
+  0%,100%{box-shadow:0 0 18px 5px rgba(232,163,61,.22)}
+  50%{box-shadow:0 0 30px 10px rgba(232,163,61,.4)}
+}
+@media (prefers-reduced-motion:reduce){.opening-glow{animation:none;box-shadow:0 0 22px 7px rgba(232,163,61,.3)}}
+.opening-kicker{margin:0;font-size:var(--fs-3);color:var(--muted);letter-spacing:.16em}
+.opening-title{margin:8px 0 14px;font-family:var(--round);font-weight:700;font-size:var(--fs-9);letter-spacing:.14em;color:var(--ink)}
+.opening-tagline{margin:0 0 40px;font-size:var(--fs-4);color:var(--muted);letter-spacing:.04em}
+#btn-opening-start{width:min(280px,100%)}
 
 .card{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .homecard{overflow:hidden;padding-bottom:18px}
@@ -687,6 +708,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    130pxまで小さくした。 */
 .pick-face{width:min(130px,100%);aspect-ratio:1;touch-action:none;cursor:grab}
 .pick-face:active{cursor:grabbing}
+/* お骨の写真は位置あわせ（ドラッグ）をしないため、.pick-faceのtouch-action:noneを
+   解除する。解除しないと、指でなぞってもスクロールできず、写真の下に続く内容へ
+   届けなくなる（追記42）。 */
+#ashes-pick{touch-action:auto;cursor:default}
 .facecrop{width:100%}
 .facecrop-hint{margin:0 0 6px;font-size:var(--fs-1);color:var(--faint);text-align:center;line-height:1.5}
 .facecrop-zoom{display:flex;align-items:center;gap:12px}

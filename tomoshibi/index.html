@@ -109,14 +109,25 @@
 
 <div id="app">
 
+  <!-- ============ オープニング ============ -->
+  <section class="view" id="view-opening">
+    <div class="body opening">
+      <div class="opening-glow"><svg width="30" height="30" aria-hidden="true"><use href="#of-light"></use></svg></div>
+      <p class="opening-kicker">ペットのお墓</p>
+      <h1 class="opening-title">ともしび</h1>
+      <p class="opening-tagline">あの子といつも一緒にいるために</p>
+      <button class="btn btn-amber btn-lg" id="btn-opening-start">はじめる</button>
+    </div>
+  </section>
+
   <!-- ============ おむかえ ============ -->
   <section class="view" id="view-onbo">
     <div class="body scroll">
       <div class="daybar" id="onbo-topbar" hidden>
-        <span class="d">なまえ・写真・日づけ・一言</span>
+        <span class="d">なまえ・写真・日づけ・一言・納骨</span>
         <button class="btn btn-line bar-btn" id="btn-onbo-close">とじる</button>
       </div>
-      <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
       <div class="step" data-step="0">
         <p class="onbo-lead">この子のことを、<br>すこしだけ教えてください</p>
@@ -168,6 +179,21 @@
       </div>
 
       <div class="step" data-step="3" hidden>
+        <p class="onbo-lead">納骨のときの<br>お骨の写真</p>
+        <p class="onbo-sub">なくても大丈夫です。あとからでも入れられます。</p>
+        <div class="field">
+          <div class="pickwrap">
+            <div class="face pick-face" id="ashes-pick">
+              <span class="badge-ok" id="ashes-ok" hidden><svg width="16" height="16"><use href="#ic-check"></use></svg></span>
+            </div>
+            <p id="ashes-msg" style="margin:0;font-size:var(--fs-3);font-weight:700;color:var(--muted)">まだ写真はありません</p>
+            <button type="button" class="btn btn-line" style="width:auto;padding:0 24px;border-radius:999px" id="btn-ashes-pick">写真をえらぶ</button>
+            <input type="file" id="in-ashes" accept="image/*" hidden>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" data-step="4" hidden>
         <p class="onbo-lead">日づけ</p>
         <p class="onbo-sub">節目のお知らせに使います。<br>わからなければ、あとからでも大丈夫です。</p>
         <div class="field">
@@ -180,7 +206,7 @@
         </div>
       </div>
 
-      <div class="step" data-step="4" hidden>
+      <div class="step" data-step="5" hidden>
         <p class="onbo-lead">好きだったもの</p>
         <p class="onbo-sub">おまいりのとき、そなえられるようにします。<br>
         さつまいも、ボール、まくらの角。なんでも。</p>
@@ -191,7 +217,7 @@
         <div class="faves" id="fave-list"></div>
       </div>
 
-      <div class="step" data-step="5" hidden>
+      <div class="step" data-step="6" hidden>
         <p class="onbo-lead">おうちの背景</p>
         <p class="onbo-sub">あとから設定でいつでも変えられます。</p>
         <div class="field">
@@ -199,7 +225,7 @@
         </div>
       </div>
 
-      <div class="step" data-step="6" hidden>
+      <div class="step" data-step="7" hidden>
         <p class="onbo-lead">ペットへの一言</p>
         <p class="onbo-sub">トップ画面のいちばん上に表示されます。<br>
         あとから設定でいつでも変えられます。</p>
@@ -328,6 +354,7 @@
           </g>
         </svg>
         <div class="face face-md" id="omairi-face"><svg class="art"><use href="#art-dog"></use></svg></div>
+        <div class="ashes-frame" id="reien-ashes" hidden><img src="" alt="お骨の写真"></div>
       </div>
       <p class="ritual-lead" id="ritual-lead">灯りを、ともします</p>
       <p class="ritual-sub" id="ritual-sub">じゅんばんに、4つ</p>
@@ -646,7 +673,7 @@
         ずっと残すには、<span id="hint-settings"></span></p>
       </div>
 
-      <button class="setrow" id="btn-profile"><span>なまえ・写真・日づけ・一言</span><span class="arw">›</span></button>
+      <button class="setrow" id="btn-profile"><span>なまえ・写真・日づけ・一言・納骨</span><span class="arw">›</span></button>
 
       <div class="cardbox">
         <h4>バックアップ</h4>
@@ -675,6 +702,14 @@
         <p class="cap">夜のほうが落ち着く人のために</p>
         <div class="seg" id="seg-theme" style="grid-template-columns:1fr 1fr">
           <button data-v="day">昼</button><button data-v="night">夜</button>
+        </div>
+      </div>
+
+      <div class="cardbox">
+        <h4>起動画面</h4>
+        <p class="cap">アプリを開いたときの「ともしび」の画面</p>
+        <div class="seg" id="seg-opening" style="grid-template-columns:1fr 1fr">
+          <button data-v="on">表示する</button><button data-v="off">省く</button>
         </div>
       </div>
 
