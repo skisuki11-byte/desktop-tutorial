@@ -96,6 +96,7 @@
     if (name !== 'player') stopPlayer();
     if (name === 'home') renderHome();
     if (name === 'niwa') renderNiwa();
+    if (name === 'review') renderReview();
     if (name === 'jibun') renderJibun();
     if (name === 'album') renderAlbum();
     if (name === 'ugoku') renderVideos();
@@ -368,6 +369,33 @@
 
   /* ============ おうち ============ */
 
+  /* 手紙のこだま。日付とその日の手紙数から必ず同じ1通を選ぶ（乱数を保存しない）。
+     節目が変わらない限り、開き直しても同じ手紙のまま。追記46。 */
+  function pickEchoLetter(dateKey, letters) {
+    var h = 0;
+    for (var i = 0; i < dateKey.length; i++) h = (h * 31 + dateKey.charCodeAt(i)) >>> 0;
+    return letters[h % letters.length];
+  }
+  var ECHO_KICKER = {
+    d49: '四十九日に、あなたが書いた手紙', d100: '百か日に、あなたが書いた手紙',
+    y1: '一周忌に、あなたが書いた手紙', y3: '三回忌に、あなたが書いた手紙',
+    birthday: 'お誕生日に、あなたが書いた手紙'
+  };
+  function paintLetterEcho(t) {
+    var echo = $('#letter-echo'); if (!echo) return;
+    var todayKey = S.ymd(t);
+    var big = S.milestoneToday(t);
+    var letters = st.letters || [];
+    var dismissed = st.echoDismissedOn === todayKey;
+    if (!big || !letters.length || dismissed) { echo.hidden = true; return; }
+    var letter = pickEchoLetter(todayKey, letters);
+    echo.hidden = false;
+    $('#echo-kicker').textContent = ECHO_KICKER[big.key] || 'その日、あなたが書いた手紙';
+    $('#echo-date').textContent = S.formatJP(new Date(letter.at));
+    var text = letter.text.length > 56 ? letter.text.slice(0, 56) + '…' : letter.text;
+    $('#echo-text').textContent = text;
+  }
+
   function renderHome() {
     // 消える環境なら、写真を入れる前に知らせる。あとから「消えました」では遅い。
     $('#home-warn').hidden = !S.storeInfo().embedded;
@@ -428,6 +456,8 @@
     var mb = $('#btn-mails');
     mb.hidden = !n2;
     $('#mails-n').textContent = n2;
+
+    paintLetterEcho(t);
 
     // 中身が失われたものがあれば、黙って見せずに知らせる
     var lost = S.lostCount();
@@ -611,9 +641,22 @@
     renderRitual();
   }
 
+  /* 四十九日・百か日・一周忌・三回忌・お誕生日、ちょうどその日だけ、
+     ここの一言と絵をほんの少し特別にする。プッシュ通知では知らせない
+     （自前サーバーが要るため）ので、その日にお参りしたときだけ気づける
+     静かな演出にとどめる（追記46）。 */
+  var MILESTONE_LINE = {
+    d49: '四十九日です。<br>ここまで、ちゃんと歩いてきましたね。',
+    d100: '百か日です。<br>やすらかな場所に、着いたころです。',
+    y1: '一周忌です。<br>1年、想い続けましたね。',
+    y3: '三回忌です。<br>ずっと、いっしょです。',
+    birthday: 'お誕生日です。<br>おめでとう。'
+  };
   function showAfter(counted) {
     var name = st.pet.name || 'あの子';
-    $('#after-line').innerHTML = 'ありがとう。<br>またね。';
+    var big = S.milestoneToday(S.today());
+    $('#after-line').innerHTML = (big && MILESTONE_LINE[big.key]) || 'ありがとう。<br>またね。';
+    var heaven = $('.heaven'); if (heaven) heaven.classList.toggle('milestone', !!big);
     $('#after-count').textContent = S.visitCount();
     var tally = $('.tally .g');
     tally.innerHTML = counted
@@ -874,6 +917,39 @@
         }).join('') + '</div>'
       : '';
     $('#btn-ics').hidden = !ms.length;
+
+    // 大きな節目をすでに過ぎていれば、ふりかえりへの入口を出す。
+    // 節目のその日だけでなく、過ぎたあとはいつでも開けるようにする
+    // （その日にアプリを開くとは限らないため）。追記46。
+    var pm = S.pastMilestones(S.today());
+    var rv = $('#niwa-review');
+    if (rv) {
+      rv.innerHTML = pm.length
+        ? '<button class="letter-card" id="btn-review-open" data-go="review" style="margin-top:20px">' +
+          '<svg width="26" height="26"><use href="#of-light"></use></svg>' +
+          '<span style="flex:1"><span class="t">' + esc(pm[0].label) + 'を迎えて</span>' +
+          '<span class="s">これまでの日々を、そっとふりかえる</span></span>' +
+          '<span class="arw">›</span></button>'
+        : '';
+    }
+  }
+
+  /* ============ ふりかえり ============
+     大きな節目を過ぎたら開ける、これまでの日々の物語。回数を人と比べる
+     ためではなく、「ちゃんと続いていた」とだけ気づくためのもの。だから
+     見出しにするのは回数そのものではなく、その先の一言（confirm-note）。追記46。 */
+  function renderReview() {
+    var pm = S.pastMilestones(S.today());
+    var top = pm[0], nm = st.pet.name || 'あの子';
+    $('#review-title').textContent = (top ? top.label : 'ふりかえり') + 'を迎えて';
+    var death = S.parseISO(st.pet.deathISO);
+    var days = death ? S.diffDays(death, S.today()) : 0;
+    $('#review-sub').textContent = nm + 'を見送ってから、' + days.toLocaleString('ja-JP') + '日。';
+    var visits = S.visitCount(), letters = (st.letters || []).length, selfDays = S.selfSeries(0).length;
+    $('#review-stats').innerHTML =
+      '<div class="stat"><p class="n" style="color:var(--amber-ink)">' + visits + '</p><p class="l">おまいりした回数</p></div>' +
+      '<div class="stat"><p class="n" style="color:var(--rose)">' + letters + '</p><p class="l">書いた手紙</p></div>' +
+      '<div class="stat"><p class="n" style="color:var(--grass-ink)">' + selfDays + '</p><p class="l">じぶんを記録した日</p></div>';
   }
 
   /* ============ アルバム ============ */
@@ -1659,6 +1735,7 @@
     // 以前は1通でもあると一覧が開いていた。押した言葉と起きることが違っていた。
     $('#btn-write').onclick = function () { show('write'); };
     $('#btn-mails').onclick = function () { show('mails'); };
+    $('#btn-echo-close').onclick = function () { S.dismissEcho(S.today()); paintLetterEcho(S.today()); };
     $('#btn-write2').onclick = function () { show('write'); };
     $('#btn-mails2').onclick = function () { show('mails'); };
     $('#btn-mails-close2').onclick = function () { show('home'); };

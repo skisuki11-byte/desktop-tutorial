@@ -333,6 +333,13 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    代わりに、やわらかい月あかりの光暈と雲だけを見せる。 */
 :root[data-theme="night"] .heaven .h-rays{display:none}
 
+/* 四十九日・百か日・一周忌・三回忌・お誕生日、ちょうどその日だけ、
+   虹と光をほんの少しだけはっきりさせる。新しい絵は足さず、既存の
+   淡さを一段引き上げるだけにとどめ、はしゃぎすぎない特別感にする（追記46）。 */
+.heaven.milestone .h-rainbow path{opacity:.96}
+.heaven.milestone .h-rays{opacity:.66}
+:root[data-theme="night"] .heaven.milestone .h-rainbow{opacity:.78}
+
 /* ---------- オープニング ---------- */
 /* アプリを開いた最初の一枚。灯りのマーク・アプリ名・一言だけの、静かな迎え。
    1回目は必ず出し、2回目からは設定「起動画面」で省けるようにする（追記42）。 */
@@ -852,6 +859,25 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .letter-card .t{display:block;margin:0;font-family:var(--round);font-weight:700;font-size:var(--fs-5)}
 .letter-card .s{display:block;margin:3px 0 0;font-size:var(--fs-2);color:var(--muted);line-height:1.6}
 .letter-card .arw{margin-left:auto;color:var(--faint)}
+
+/* 手紙のこだま。大きな節目の日だけ、書いた手紙を1通そっと差し出す
+   （継続する絆＝continuing bonds。お別れした相手との対話を続けることが
+   悲嘆の支えになるという考え方に沿う）。押し通知では知らせず、その日に
+   アプリを開いたときだけ気づける静かな作りにする（追記46）。 */
+.echo-card{position:relative;margin-top:20px}
+.echo-open{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
+  background:var(--amber-soft);border:2px solid var(--amber);border-radius:var(--r);
+  padding:14px 40px 14px 16px;box-shadow:var(--shadow);
+}
+.echo-open .env{flex:none;width:34px;height:34px}
+.echo-open .k{display:block;margin:0;font-size:var(--fs-1);font-weight:700;color:var(--amber-ink);letter-spacing:.03em}
+.echo-open .d{display:block;margin:2px 0 0;font-size:var(--fs-1);color:var(--muted)}
+.echo-open .t{display:block;margin:4px 0 0;font-size:var(--fs-2);color:var(--ink);line-height:1.6}
+.echo-x{position:absolute;right:10px;top:10px;z-index:1;
+  width:26px;height:26px;border-radius:50%;background:var(--panel);border:1px solid var(--line-2);
+  display:flex;align-items:center;justify-content:center;color:var(--faint);cursor:pointer}
+.echo-x svg{transform:rotate(45deg)}
 
 .paper{
   background:linear-gradient(180deg,#FFFDF6,#FFFBF0);
