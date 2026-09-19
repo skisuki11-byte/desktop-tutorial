@@ -11,7 +11,7 @@ App Store Connectの各入力欄にそのまま貼れるように、項目ごと
 - **プロモーションテキスト**（170字以内・審査なしでいつでも変更可）：
   大切な家族を見送った、その日から。おまいりして、庭に花を増やして、あの子への手紙を書く。アカウント登録もサーバー通信も一切ない、あなたとその子だけの場所です。
 - **価格**：無料（アプリ内課金・広告なし。収益化の仕組みは現状組み込んでいない）
-- **サポートURL**：`https://skisuki11-byte.github.io/desktop-tutorial/tomoshibi/`（確認済み。GitHub Pagesはmainブランチ・ルートから公開中。ただし現時点ではPR #101未マージのため、マージ後に有効になる）。具体的な問い合わせ先は`privacy.html`に記載のメールアドレス
+- **サポートURL**：`https://skisuki11-byte.github.io/desktop-tutorial/tomoshibi/`（PR #101はmainにマージ済み。GitHub Pagesの再ビルド後に有効になる）。具体的な問い合わせ先は`privacy.html`に記載のメールアドレス
 - **マーケティングURL**：同上、または空欄でも可
 - **プライバシーポリシーURL**：`https://skisuki11-byte.github.io/desktop-tutorial/tomoshibi/privacy.html`
 - **著作権**：発行年＋開発者名（例：2026 ◯◯）
