@@ -578,8 +578,16 @@
   /* 好きだったものは、4動作とは別枠。順序を問わず、気になるものを
      タップしたその場でそなえる（4動作と同じ、選んで即・確定の1タップ）。
      justOffered＝そなえた直後のもの（このおまいり画面を開いている間だけ、
-     次の再描画で一度だけ光らせるための印） */
-  var justOffered = {};
+     次の再描画で一度だけ光らせるための印）
+     sessionFaves＝このおまいりで自分がタップしたもの。チェックは
+     これだけを見て付ける。保存(S.faveDoneOn)は「今日すでにそなえた
+     か」を持っているが、それをそのままチェックの根拠にすると、
+     今日すでに一度そなえていた場合に画面を開いた瞬間から最初から
+     チェック済みに見えてしまい、「自分で選んだらチェックが付く」
+     という手応えにならない。4動作（rstep）も毎回0から始まるのと
+     同じく、好きだったものの見た目も毎回のおまいりでまっさらから
+     始める（追記63）。 */
+  var justOffered = {}, sessionFaves = {};
   function renderRitual() {
     $$('#ritual .offer').forEach(function (b, i) {
       if (i < rstep) { b.dataset.state = 'done'; b.disabled = true; }
@@ -607,14 +615,13 @@
       b.className = 'btn btn-amber btn-lg';
       b.textContent = 'おまいりを終える';
     }
-    var t = S.today();
     var f = st.pet.faves || [];
     $('#faves-h').hidden = false;
     $('#faves-h').textContent = f.length ? (st.pet.name || 'あの子') + 'の好きだったもの' : '';
     $('#faves-hint').hidden = !f.length;
     $('#omairi-faves').innerHTML =
       f.map(function (n) {
-        return faveChip(n, { act: true, done: S.faveDoneOn(t, n), offering: !!justOffered[n] });
+        return faveChip(n, { act: true, done: !!sessionFaves[n], offering: !!justOffered[n] });
       }).join('') +
       (f.length < 2
         ? '<button class="fave add" id="btn-fave-add"><svg aria-hidden="true"><use href="#ic-plus"></use></svg>' +
@@ -622,7 +629,7 @@
         : '');
     justOffered = {};   // 光らせるのは直後の1回だけ
   }
-  function startRitual() { rstep = 0; rcounted = false; justOffered = {}; renderRitual(); show('omairi'); }
+  function startRitual() { rstep = 0; rcounted = false; justOffered = {}; sessionFaves = {}; renderRitual(); show('omairi'); }
   function tapOffer(i) {
     if (i !== rstep) return;
     rstep++;
@@ -1705,10 +1712,11 @@
         return;
       }
       var b = e.target.closest('button[data-fave]'); if (!b) return;
-      var t = S.today(), n2 = b.dataset.fave;
-      if (S.faveDoneOn(t, n2)) return;
+      var n2 = b.dataset.fave;
+      if (sessionFaves[n2]) return;
       // 4動作と同じ、タップしたその場でそなえる（選ぶ→確定の2段階にしない）。
-      S.putFave(t, n2);
+      S.putFave(S.today(), n2);
+      sessionFaves[n2] = true;
       justOffered[n2] = true;
       renderRitual();
       toast(n2 + '、そなえました');
