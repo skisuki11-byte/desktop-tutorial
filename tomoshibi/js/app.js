@@ -860,7 +860,12 @@
   }
 
   /* ============ おまいりの庭 ============
-     花は枯れない・減らない・他人と比べない。 */
+     花は枯れない・減らない・他人と比べない。
+     何年も続くと1日ずつでは並べきれなくなるため、今月だけは1日ごとの花
+     （そなえた実感を、その日のうちに）、先月より前は月ごとに1つの、
+     すこし大きな花にまとめる。大きさはその月どれだけおまいりしたかで
+     決まる（毎日そなえた月ほど大きく咲く）。どの日の分も消えたり
+     隠れたりはしない——数えられ方が変わるだけ（追記54）。 */
   var FCOL = ['#F0B6C4', '#FFD98A', '#CFE6BC', '#BEDCEA', '#E8A0A0', '#F5C98C'];
   function renderNiwa() {
     var n = S.visitCount();
@@ -868,26 +873,62 @@
     var tg = S.daysTogether();
     $('#stat-days').textContent = tg ? tg.toLocaleString('ja-JP') : '—';
 
-    var perRow = 11, shown = Math.min(n, 600);
-    var rows = Math.max(2, Math.ceil(shown / perRow));
-    var W = 350, H = 30 + rows * 32 + 34;
-    var out = ['<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">',
-      '<path d="M0 ' + (H - 52) + ' C70 ' + (H - 62) + ' 120 ' + (H - 44) + ' 190 ' + (H - 52) +
-      ' C250 ' + (H - 59) + ' 300 ' + (H - 42) + ' ' + W + ' ' + (H - 52) + ' L' + W + ' ' + H + ' L0 ' + H + ' Z" fill="#CFE6BC"/>'];
-    for (var k = 0; k < shown; k++) {
-      var r = Math.floor(k / perRow), c = k % perRow;
-      var inRow = Math.min(perRow, shown - r * perRow);
-      var startX = (W - inRow * 30) / 2 + 15;   // 端数の行も中央に寄せる
-      var x = startX + c * 30, y = 30 + r * 32;
-      var kk = (1.05 + (k % 3) * 0.11).toFixed(2), col = FCOL[k % FCOL.length];
-      // 他の画面と同じ花びらの形。丸を2つ重ねただけだと、花ではなく輪に見える
-      out.push('<g transform="translate(' + x.toFixed(1) + ' ' + y + ') scale(' + kk + ')">' +
+    var visits = st.visits || [];
+    var curMonthKey = S.ymd(S.today()).slice(0, 7);
+    var monthCounts = {}, monthOrder = [], curMonthDays = [];
+    visits.forEach(function (v) {
+      var mk = v.slice(0, 7);
+      if (mk === curMonthKey) { curMonthDays.push(v); return; }
+      if (!(mk in monthCounts)) { monthCounts[mk] = 0; monthOrder.push(mk); }
+      monthCounts[mk]++;
+    });
+    function daysInMonth(mk) { return new Date(+mk.slice(0, 4), +mk.slice(5, 7), 0).getDate(); }
+    function monthScale(mk) {
+      var ratio = monthCounts[mk] / daysInMonth(mk);
+      return ratio >= 0.6 ? 2.0 : ratio >= 0.25 ? 1.65 : 1.35;
+    }
+    function monthLabel(mk) { return (+mk.slice(0, 4)) + '年' + (+mk.slice(5, 7)) + '月・' + monthCounts[mk] + '回'; }
+    // 他の画面と同じ花びらの形。丸を2つ重ねただけだと、花ではなく輪に見える
+    function flowerG(x, y, scale, col, title) {
+      return '<g transform="translate(' + x.toFixed(1) + ' ' + y + ') scale(' + scale + ')">' +
+        (title ? '<title>' + esc(title) + '</title>' : '') +
         '<g fill="' + col + '" stroke="#5A4A3A" stroke-width="1.3">' +
         '<ellipse cy="-5.6" rx="3.4" ry="4.2"/><ellipse cx="5" cy="-2" rx="4.2" ry="3.4"/>' +
         '<ellipse cx="3.1" cy="4" rx="3.4" ry="4.2"/><ellipse cx="-3.1" cy="4" rx="3.4" ry="4.2"/>' +
         '<ellipse cx="-5" cy="-2" rx="4.2" ry="3.4"/></g>' +
-        '<circle r="3" fill="#FFF6E2" stroke="#5A4A3A" stroke-width="1.2"/></g>');
+        '<circle r="3" fill="#FFF6E2" stroke="#5A4A3A" stroke-width="1.2"/></g>';
     }
+
+    var W = 350;
+    var bigPerRow = 8, bigPitch = 40, bigRowH = 44;
+    var smallPerRow = 11, smallPitch = 30, smallRowH = 32;
+    var bigCount = monthOrder.length, smallCount = curMonthDays.length;
+    var bigRows = bigCount ? Math.ceil(bigCount / bigPerRow) : 0;
+    var smallRows = smallCount ? Math.ceil(smallCount / smallPerRow) : 0;
+    var H = 30 + bigRows * bigRowH + smallRows * smallRowH + (bigRows + smallRows ? 0 : 64) + 34;
+
+    var out = ['<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">',
+      '<path d="M0 ' + (H - 52) + ' C70 ' + (H - 62) + ' 120 ' + (H - 44) + ' 190 ' + (H - 52) +
+      ' C250 ' + (H - 59) + ' 300 ' + (H - 42) + ' ' + W + ' ' + (H - 52) + ' L' + W + ' ' + H + ' L0 ' + H + ' Z" fill="#CFE6BC"/>'];
+
+    monthOrder.forEach(function (mk, i) {
+      var r = Math.floor(i / bigPerRow), c = i % bigPerRow;
+      var inRow = Math.min(bigPerRow, bigCount - r * bigPerRow);
+      var startX = (W - inRow * bigPitch) / 2 + bigPitch / 2;
+      var x = startX + c * bigPitch, y = 30 + r * bigRowH;
+      out.push(flowerG(x, y, monthScale(mk), FCOL[i % FCOL.length], monthLabel(mk)));
+    });
+
+    var smallTop = 30 + bigRows * bigRowH;
+    curMonthDays.forEach(function (v, i) {
+      var r = Math.floor(i / smallPerRow), c = i % smallPerRow;
+      var inRow = Math.min(smallPerRow, smallCount - r * smallPerRow);
+      var startX = (W - inRow * smallPitch) / 2 + smallPitch / 2;
+      var x = startX + c * smallPitch, y = smallTop + r * smallRowH;
+      var kk = (1.05 + (i % 3) * 0.11).toFixed(2);
+      out.push(flowerG(x, y, kk, FCOL[(bigCount + i) % FCOL.length]));
+    });
+
     if (!n) out.push('<text x="' + (W / 2) + '" y="' + (H / 2) + '" text-anchor="middle" fill="#7E9B6C" font-size="13">' +
       'はじめてのおまいりで、花が1つ咲きます</text>');
     out.push('</svg>');
@@ -1968,6 +2009,10 @@
   fillHomeHints();
   syncMilestoneNotifications();
   $('#btn-opening-start').onclick = enterApp;
+  var chkOpeningOff = $('#chk-opening-off');
+  if (chkOpeningOff) chkOpeningOff.onchange = function () {
+    st.openingOff = chkOpeningOff.checked; S.save();
+  };
   S.probe().then(function () {
     return Promise.all([loadFace(), loadAshes()]);
   }).then(function () {

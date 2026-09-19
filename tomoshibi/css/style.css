@@ -345,16 +345,46 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    1回目は必ず出し、2回目からは設定「起動画面」で省けるようにする（追記42）。 */
 .body.opening{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
 .opening-glow{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;color:var(--amber-ink);
-  background:var(--amber-soft);margin-bottom:22px;animation:opening-breathe 3.6s ease-in-out infinite}
+  background:var(--amber-soft);margin-bottom:22px;
+  animation:opening-glow-in .9s ease-out both, opening-breathe 3.6s ease-in-out .9s infinite}
+@keyframes opening-glow-in{
+  0%{box-shadow:0 0 0 0 rgba(232,163,61,0);transform:scale(.72)}
+  100%{box-shadow:0 0 18px 5px rgba(232,163,61,.22);transform:scale(1)}
+}
 @keyframes opening-breathe{
   0%,100%{box-shadow:0 0 18px 5px rgba(232,163,61,.22)}
   50%{box-shadow:0 0 30px 10px rgba(232,163,61,.4)}
 }
-@media (prefers-reduced-motion:reduce){.opening-glow{animation:none;box-shadow:0 0 22px 7px rgba(232,163,61,.3)}}
+/* 火が、そっと灯る。マッチのように小さく縮こまった状態から、
+   ふわっとひと呼吸で立ちあがる（点火）。そのあとは、生きた炎のように
+   ごく小さく揺れ続ける（追記54）。 */
+.opening-flame{transform-origin:50% 88%;
+  animation:opening-flame-light .9s cubic-bezier(.34,1.56,.64,1) both,
+            opening-flame-flicker 2.8s ease-in-out .9s infinite}
+@keyframes opening-flame-light{
+  0%{opacity:0;transform:scaleY(.2) scaleX(.6) translateY(5px)}
+  60%{opacity:1;transform:scaleY(1.14) scaleX(1.06) translateY(-1px)}
+  100%{opacity:1;transform:scaleY(1) scaleX(1) translateY(0)}
+}
+@keyframes opening-flame-flicker{
+  0%,100%{transform:scaleY(1) scaleX(1) rotate(0deg)}
+  25%{transform:scaleY(1.05) scaleX(.97) rotate(-1.2deg)}
+  50%{transform:scaleY(.96) scaleX(1.03) rotate(.6deg)}
+  75%{transform:scaleY(1.03) scaleX(.98) rotate(-.6deg)}
+}
+@media (prefers-reduced-motion:reduce){
+  .opening-glow{animation:none;box-shadow:0 0 22px 7px rgba(232,163,61,.3)}
+  .opening-flame{animation:none;opacity:1;transform:none}
+}
 .opening-kicker{margin:0;font-size:var(--fs-3);color:var(--muted);letter-spacing:.16em}
 .opening-title{margin:8px 0 14px;font-family:var(--round);font-weight:700;font-size:var(--fs-9);letter-spacing:.14em;color:var(--ink)}
 .opening-tagline{margin:0 0 40px;font-size:var(--fs-4);color:var(--muted);letter-spacing:.04em}
 #btn-opening-start{width:min(280px,100%)}
+/* 主役はあくまで「はじめる」。この行はあってもなくても迷わない、
+   静かな脇役として小さく置く。タップ域だけは指1本ぶん確保する。 */
+.opening-noshow{display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:18px;padding:10px 8px;font-size:var(--fs-2);color:var(--faint);cursor:pointer}
+.opening-noshow input{width:18px;height:18px;accent-color:var(--amber);cursor:pointer}
 
 .card{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .homecard{overflow:hidden;padding-bottom:18px}

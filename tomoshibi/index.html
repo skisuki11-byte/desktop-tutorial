@@ -119,11 +119,15 @@
   <!-- ============ オープニング ============ -->
   <section class="view" id="view-opening">
     <div class="body opening">
-      <div class="opening-glow"><svg width="30" height="30" aria-hidden="true"><use href="#of-light"></use></svg></div>
+      <div class="opening-glow"><svg class="opening-flame" width="30" height="30" aria-hidden="true"><use href="#of-light"></use></svg></div>
       <p class="opening-kicker">ペットのお墓</p>
       <h1 class="opening-title">ともしび</h1>
       <p class="opening-tagline">あの子といつも一緒にいるために</p>
       <button class="btn btn-amber btn-lg" id="btn-opening-start">はじめる</button>
+      <label class="opening-noshow">
+        <input type="checkbox" id="chk-opening-off">
+        <span>次回からこの画面を出さない</span>
+      </label>
     </div>
   </section>
 
@@ -549,7 +553,7 @@
       </div>
 
       <div class="notebox">
-        <p><b>ここで見るのは、良くなったかどうかではありません。波のかたちです。</b><br>
+        <p><b>ここで見るのは、波のかたちです。</b><br>
         おもい日のあとに、すこし戻る日が来る。また下がる。
         その行き来そのものが、前へ進んでいる形です。<br>
         だから平均も目標線も出しません。<br>
