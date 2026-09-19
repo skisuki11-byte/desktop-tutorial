@@ -20,7 +20,7 @@
         name: '', kind: 'dog', deathISO: '', birthISO: '', faves: [],
         kaimyo: '',        // お寺からいただいたものがあれば、ここへ。空ならアプリが選んだ名
         kaimyoOff: false,  // 戒名になじみのない人もいる。出さないこともできる
-        scene: 'summer',   // トップの絵の配色。spring/summer/autumn/winter
+        scene: 'auto',     // トップの絵の配色。auto=実際の今の季節／spring/summer/autumn/winter
         message: '',       // トップいちばん上の一言。空なら既定の「いつまでも家族だよ」を出す
         ashesShowPhoto: false, // 納骨のお骨の写真の見せ方。false=骨壺のイラスト（既定）、true=登録した実物の写真
         faceX: 0.5, faceY: 0.5, faceZoom: 1   // 遺影の位置・大きさ（0〜1・1〜2.5）。既定は中央・そのまま
@@ -59,6 +59,12 @@
         v.pet.faves = v.pet.faves.slice(0, 2);
         stale = true;
       }
+      // おうちの背景は既定が「夏」固定だったが、実際の季節に自動で
+      // 合わせる「自動」を既定にした（追記65）。既定のまま一度も
+      // 触っていない保存（scene==='summer'）は「自動」に引き上げる。
+      // 明示的に夏を選び直した場合も同じ値になってしまうが、設定画面
+      // からいつでも選び直せるので実害は小さいと判断した。
+      if (v.pet && v.pet.scene === 'summer') { v.pet.scene = 'auto'; stale = true; }
       // 以前は端末のファイル名（"_users_0484f8d0-…" のような読めない名前）を
       // そのまま見出しにしていた版があった。残っていれば既定名に戻す。
       if (v.videoTitles) {
