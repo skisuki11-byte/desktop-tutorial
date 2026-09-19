@@ -708,6 +708,11 @@
     var death = S.parseISO(st.pet.deathISO), sp = $('#jibun-since');
     sp.hidden = !death;
     if (death) sp.textContent = 'あれから ' + S.diffDays(death, S.today()).toLocaleString('ja-JP') + '日';
+    // 波のグラフの説明を、この子の名で締める。「乗り越える」ではなく
+    // 「向き合っていく」にする。悲嘆を終わらせるべきものとして急かさない
+    // ため（グラフに目標線を出さないのと同じ考え方）。
+    var nw = $('#jibun-note-warm');
+    if (nw) nw.textContent = 'あなたがこの悲しみとゆっくり向き合っていく日々を、' + (st.pet.name || 'あの子') + 'もそばで見守っています。';
     var all = S.selfSeries(0);
     // 数えるのは日数と、はじめた日だけ。良し悪しになる数は出さない。
     var first = all.length ? new Date(all[0].day.replace(/-/g, '/')) : null;
