@@ -833,6 +833,8 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   padding:0 var(--s4);background:var(--panel);border:2px solid var(--line);border-radius:var(--r-sm);
   margin-top:var(--s2);font-size:var(--fs-4);text-align:left;cursor:pointer;font-weight:500}
 .setrow .arw{color:var(--faint);flex:none;font-size:var(--fs-2)}
+/* 押せない行（見るだけ）。バージョン表示など。 */
+.setrow-info{cursor:default}
 .seg{display:grid;gap:var(--s2);margin-top:var(--s2)}
 .seg button{min-height:52px;border-radius:var(--r-sm);border:2px solid var(--line);background:var(--panel);
   color:var(--muted);font-size:var(--fs-3);font-weight:700;cursor:pointer}

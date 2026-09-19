@@ -8,6 +8,19 @@
 (function () {
   'use strict';
 
+  /* 表に出すバージョン。設定画面のいちばん下に「Ver ◯.◯」として出る。
+   *
+   * 付けかた（利用者の決めごと。こちらの判断では上げない）:
+   *   ・軽微な修正（不具合直し・文言・見た目の微調整）では上げない
+   *   ・小さな機能追加は +0.1
+   *   ・大幅な機能変更は +1
+   *
+   * 上げるときは、ここと合わせて次も同じ数字にそろえる:
+   *   ・package.json の "version"
+   *   ・ios/App/App.xcodeproj/project.pbxproj の MARKETING_VERSION（2か所）
+   * （ストアの審査で使われるのはiOS側の値。ここはアプリ内の表示用） */
+  var APP_VERSION = '1.0';
+
   var S = window.Store, st = S.state;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -1300,6 +1313,8 @@
     $('#btn-mails2').hidden = !n;
     $('#mails-n2').textContent = n;
     var ta = $('#write-text');
+    // 前に打ちかけて閉じてしまったぶんがあれば、そのまま戻す（追記67）
+    if (!ta.value) ta.value = S.draft();
     $('#write-count').textContent = ta.value.length;
     $('#btn-send').disabled = !ta.value.trim();
   }
@@ -1321,6 +1336,7 @@
     if (!text) return;
     S.addLetter(text);
     ta.value = '';
+    S.setDraft('');
     $('#sent-line').textContent = (st.pet.name || 'あの子') + 'に、とどきました。';
     show('sent');
     // 演出をやり直せるよう、入るたびに掛け直す
@@ -1355,6 +1371,7 @@
     $('#store-state').textContent =
       (si.embedded ? '試し用（消えます）' : si.durable ? 'この端末の中・保護あり' : si.idb ? 'この端末の中' : '写真のみ') + ' ›';
     $('#warn-ephemeral').hidden = !si.embedded;
+    $('#app-version').textContent = 'Ver ' + APP_VERSION;
     $('#scenepick-set').innerHTML = scenePickHTML(sceneRaw());
     renderKaimyo();
   }
@@ -1829,7 +1846,7 @@
     $('#btn-write2').onclick = function () { show('write'); };
     $('#btn-mails2').onclick = function () { show('mails'); };
     $('#btn-mails-close2').onclick = function () { show('home'); };
-    $('#btn-write-close').onclick = function () { $('#write-text').value = ''; show('home'); };
+    $('#btn-write-close').onclick = function () { $('#write-text').value = ''; S.setDraft(''); show('home'); };
     $('#btn-mails-close').onclick = function () { show('home'); };
     $('#mail-list').addEventListener('click', function (e) {
       var b = e.target.closest('[data-mail]'); if (!b) return;
@@ -1843,6 +1860,7 @@
     $('#write-text').addEventListener('input', function () {
       $('#write-count').textContent = this.value.length;
       $('#btn-send').disabled = !this.value.trim();
+      S.setDraft(this.value);
     });
     $('#starters').addEventListener('click', function (e) {
       var b = e.target.closest('[data-t]'); if (!b) return;
@@ -1852,6 +1870,7 @@
       ta.setSelectionRange(ta.value.length, ta.value.length);
       $('#write-count').textContent = ta.value.length;
       $('#btn-send').disabled = false;
+      S.setDraft(ta.value);
     });
     $('#btn-send').onclick = sendLetter;
 

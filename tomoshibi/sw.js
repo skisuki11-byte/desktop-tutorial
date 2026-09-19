@@ -4,7 +4,7 @@
  * つながらないときだけキャッシュを使う＝圏外でもお参りはできる。
  * 「圏外でもお参りできること」は、この製品では体験の核にあたる。
  */
-var CACHE = 'tomoshibi-v8';
+var CACHE = 'tomoshibi-v9';
 var ASSETS = [
   './',
   './index.html',
