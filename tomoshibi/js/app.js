@@ -723,9 +723,17 @@
     y3: ['ずっと、そばにいるよ。'],
     birthday: ['うまれてきて、よかったよ。', '今日は、うまれた日だね。', '何歳になっても、そばにいるよ。', '今日もいっしょに、お祝いしよう。']
   };
-  function pickMilestoneLine(key) {
+  /* くじではなく、その日1日は同じ一言になるようにする（追記72）。
+     1日に何度おまいりしても言葉が変わると、選んでいるように見えて
+     しまう。日付＋節目の種類を種にした簡易ハッシュで選び、同じ日
+     なら必ず同じ番号を引く（手紙のこだま・pickEchoLetterと同じ
+     考え方）。 */
+  function pickMilestoneLine(key, dateKey) {
     var arr = MILESTONE_LINE[key]; if (!arr) return null;
-    return arr[Math.floor(Math.random() * arr.length)];
+    if (arr.length <= 1) return arr[0];
+    var seed = key + dateKey, h = 0;
+    for (var i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return arr[h % arr.length];
   }
   function showAfter(counted) {
     var name = st.pet.name || 'あの子';
@@ -737,7 +745,7 @@
     if (!big) {
       big = S.milestones(S.today()).filter(function (m) { return m.key === 'monthly' && m.days === 0; })[0] || null;
     }
-    var line = big && pickMilestoneLine(big.key);
+    var line = big && pickMilestoneLine(big.key, S.ymd(S.today()));
     $('#after-line').innerHTML = (big && line) ? (big.label + 'です。<br>' + line) : 'ありがとう。<br>またね。';
     var heaven = $('.heaven'); if (heaven) heaven.classList.toggle('milestone', !!big);
     $('#after-count').textContent = S.visitCount();
