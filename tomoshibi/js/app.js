@@ -53,10 +53,13 @@
   }
   /* おうち画面、日付の横のマーク。灯りは毎回使うにはこの画面では
      重く見えるという指摘を受け、この子がいぬ・ねこ・そのほかの
-     どれかで変えることにした（追記69）。 */
+     どれかで変えることにした（追記69）。「どちらですか」（#kindpick）
+     で選ぶときの絵と同じものにする（追記73）——犬猫は同じ絵
+     （#art-dog／#art-cat）、そのほかはハート（#mark-other、
+     #kindpickと共通）。 */
   function markRef() {
-    return st.pet.kind === 'cat' ? '#mark-cat'
-         : st.pet.kind === 'other' ? '#mark-other' : '#mark-dog';
+    return st.pet.kind === 'cat' ? '#art-cat'
+         : st.pet.kind === 'other' ? '#mark-other' : '#art-dog';
   }
 
   /* トップの絵の配色。図形は共通、色だけをCSS変数で差し替える（css/style.css の
