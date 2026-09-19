@@ -51,6 +51,13 @@
     return st.pet.kind === 'cat' ? '#art-cat'
          : st.pet.kind === 'other' ? '#art-paw' : '#art-dog';
   }
+  /* おうち画面、日付の横のマーク。灯りは毎回使うにはこの画面では
+     重く見えるという指摘を受け、この子がいぬ・ねこ・そのほかの
+     どれかで変えることにした（追記69）。 */
+  function markRef() {
+    return st.pet.kind === 'cat' ? '#mark-cat'
+         : st.pet.kind === 'other' ? '#mark-other' : '#mark-dog';
+  }
 
   /* トップの絵の配色。図形は共通、色だけをCSS変数で差し替える（css/style.css の
      [data-scene="…"]）。ここでは選択肢の一覧と、選ぶボタンのHTMLだけを持つ。
@@ -437,6 +444,7 @@
     $('#home-title').textContent = st.pet.message || 'いつまでも家族だよ';
     var t = S.today();
     $('#home-date').textContent = S.formatMD(t);
+    $('#home-mark').setAttribute('href', markRef());
     $('#home-name').textContent = st.pet.name || '—';
     $('#home-scene').dataset.scene = sceneOf();
     // おうちを開くたび、遺影がそっと現れる（戒名のkaimyo-inより一拍先に）。
