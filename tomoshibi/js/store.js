@@ -53,6 +53,12 @@
       if ('photoHidden' in v) { delete v.photoHidden; stale = true; }
       // 季節のおそなえ機能はやめた（追記56）。古い保存に残っていても、もう見ない。
       if ('seasonal' in v) { delete v.seasonal; stale = true; }
+      // 好きだったものの上限を3つから2つにした（追記57）。それより前に
+      // 3つ登録していた保存が残っていれば、先頭2つだけ残す。
+      if (v.pet && Array.isArray(v.pet.faves) && v.pet.faves.length > 2) {
+        v.pet.faves = v.pet.faves.slice(0, 2);
+        stale = true;
+      }
       // 以前は端末のファイル名（"_users_0484f8d0-…" のような読めない名前）を
       // そのまま見出しにしていた版があった。残っていれば既定名に戻す。
       if (v.videoTitles) {
