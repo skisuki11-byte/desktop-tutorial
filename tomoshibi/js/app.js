@@ -41,14 +41,29 @@
 
   /* トップの絵の配色。図形は共通、色だけをCSS変数で差し替える（css/style.css の
      [data-scene="…"]）。ここでは選択肢の一覧と、選ぶボタンのHTMLだけを持つ。
-     将来、有料版で動く背景を足すときもこの配列に足すだけでよいようにしてある。 */
+     将来、有料版で動く背景を足すときもこの配列に足すだけでよいようにしてある。
+     既定は「自動」＝実際の今の季節（気象庁の区分＝3-5月春・6-8月夏・
+     9-11月秋・12-2月冬）に合わせる。手動で選べば、それが自動に戻す
+     までずっと優先される（追記65）。 */
   var SCENES = [
+    { id: 'auto', label: '自動（今の季節）' },
     { id: 'spring', label: '春' },
     { id: 'summer', label: '夏' },
     { id: 'autumn', label: '秋' },
     { id: 'winter', label: '冬' }
   ];
-  function sceneOf() { return st.pet.scene || 'summer'; }
+  function seasonNow() {
+    var m = new Date().getMonth() + 1;   // 1〜12
+    if (m >= 3 && m <= 5) return 'spring';
+    if (m >= 6 && m <= 8) return 'summer';
+    if (m >= 9 && m <= 11) return 'autumn';
+    return 'winter';
+  }
+  function sceneOf() {
+    var v = st.pet.scene;
+    return (!v || v === 'auto') ? seasonNow() : v;
+  }
+  function sceneRaw() { return st.pet.scene || 'auto'; }   // 選択肢の表示（どのボタンを選んだ状態にするか）用
   function scenePickHTML(cur) {
     return SCENES.map(function (s) {
       return '<button type="button" data-scene="' + s.id + '" aria-pressed="' + (s.id === cur) + '">' +
@@ -79,7 +94,12 @@
   function buildTabs() {
     $$('[data-tabs]').forEach(function (nav) {
       nav.innerHTML = TABS.map(function (t) {
-        return '<button class="tab" data-go="' + t.id + '"><svg aria-hidden="true"><use href="#' + t.icon + '"></use></svg>' + t.label + '</button>';
+        // 「じぶん」だけ、他のタブより一段目立つ丸いボタンにする
+        // （利用者の依頼：支払いアプリの中央ボタンのような見た目に）。
+        var hero = t.id === 'jibun';
+        return '<button class="tab' + (hero ? ' tab-hero' : '') + '" data-go="' + t.id + '">' +
+          '<span class="tab-ic"><svg aria-hidden="true"><use href="#' + t.icon + '"></use></svg></span>' +
+          t.label + '</button>';
       }).join('');
     });
   }
@@ -278,7 +298,7 @@
     $('#btn-skip').hidden = step !== 2;
     $('#btn-next').textContent = step === 7 ? 'はじめる' : 'つぎへ';
     if (step === 5) renderFaveEdit();
-    if (step === 6) $('#scenepick-onbo').innerHTML = scenePickHTML(sceneOf());
+    if (step === 6) $('#scenepick-onbo').innerHTML = scenePickHTML(sceneRaw());
     if (step === 7) {
       $('#in-message').value = (st.pet.message || '').slice(0, 14);
       $('#in-message-count').textContent = $('#in-message').value.length;
@@ -1335,7 +1355,7 @@
     $('#store-state').textContent =
       (si.embedded ? '試し用（消えます）' : si.durable ? 'この端末の中・保護あり' : si.idb ? 'この端末の中' : '写真のみ') + ' ›';
     $('#warn-ephemeral').hidden = !si.embedded;
-    $('#scenepick-set').innerHTML = scenePickHTML(sceneOf());
+    $('#scenepick-set').innerHTML = scenePickHTML(sceneRaw());
     renderKaimyo();
   }
 

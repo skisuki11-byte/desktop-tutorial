@@ -196,8 +196,15 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   border:2.5px solid var(--line);border-radius:var(--r-sm);background:var(--panel);cursor:pointer;
   font-family:var(--round);font-weight:700;font-size:var(--fs-3);color:var(--muted)}
 .scenepick button[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-soft);color:var(--amber-ink)}
+/* 「自動」を先頭・2列ぶん使う1行にして、いちばん選んでほしい既定を目立たせる
+   （追記65）。残る4つの季節は今まで通り2×2で並ぶ。 */
+.scenepick button:first-child{grid-column:1 / -1}
 .scenepick .sw{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid rgba(0,0,0,.08);
   background:linear-gradient(180deg,var(--scene-sky1) 0%,var(--scene-sky1) 55%,var(--scene-ground) 55%,var(--scene-ground) 100%)}
+/* 「自動」は単一の季節色を持たないため、4つの季節の空色を組み合わせた
+   風車状にして「季節ごとに変わる」ことを一目で伝える。 */
+.scenepick .sw[data-scene="auto"]{background:conic-gradient(
+  #FBEAF0 0deg 90deg, #EAF3F8 90deg 180deg, #FCE4D6 180deg 270deg, #EDF3F6 270deg 360deg)}
 
 /* 遺影の円も絵の高さに連れて縮める。固定のままだと、絵が低い端末ではみ出す。
    戒名を右に立てたぶん、わずかに左へ寄せて釣り合いをとる。
@@ -508,8 +515,19 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 /* タブは4つ並ぶので、本文と同じには上げられない。狭い端末で折り返さない上限。 */
 .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:54px;
   background:none;border:0;color:var(--faint);font-size:11.5px;font-weight:500;white-space:nowrap;cursor:pointer}
+.tab-ic{display:flex}
 .tab svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .tab[aria-current="page"]{color:var(--amber-ink);font-weight:700}
+/* 「じぶん」だけ、決済アプリの中央ボタンのようにタブバーから丸く
+   浮き上がらせる（利用者の依頼）。アイコンをタブの箱から外に出し、
+   バーの上端に橙の丸として乗せる。ラベルはその下、他のタブと同じ
+   場所に残す。 */
+.tab-hero{position:relative;justify-content:flex-end;padding-bottom:1px}
+.tab-hero .tab-ic{position:absolute;top:-25px;left:50%;transform:translateX(-50%);
+  width:52px;height:52px;border-radius:50%;background:var(--amber);
+  align-items:center;justify-content:center;
+  border:3px solid var(--panel);box-shadow:0 4px 10px rgba(154,106,27,.35)}
+.tab-hero .tab-ic svg{width:24px;height:24px;stroke:#fff}
 
 /* ---------- 見出し ---------- */
 .head{padding:18px 0 4px}
