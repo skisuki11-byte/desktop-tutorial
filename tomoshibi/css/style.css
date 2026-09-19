@@ -684,11 +684,9 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .tile video,.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .tile .play{position:relative;width:44px;height:44px}
 .tile.big .play{width:56px;height:56px}
-.tile .cap{position:absolute;left:0;right:0;bottom:0;padding:22px 11px 9px;
-  background:linear-gradient(180deg,transparent,rgba(51,48,42,.62))}
-.tile .cap b{display:block;font-size:var(--fs-2);font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tile .cap span{display:block;font-size:var(--fs-1);color:#fff;opacity:.88;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.tile .cap{position:absolute;left:0;right:0;bottom:0;padding:12px 11px 9px;
+  background:linear-gradient(180deg,transparent,rgba(51,48,42,.62));
+  display:block;font-size:var(--fs-1);color:#fff;opacity:.88;text-shadow:0 1px 4px rgba(0,0,0,.6)}
 .tile .dur{position:absolute;right:9px;top:9px;font-size:var(--fs-1);font-weight:700;color:#fff;
   background:rgba(51,48,42,.6);padding:3px 8px;border-radius:999px}
 .tile .menu{position:absolute;left:9px;top:9px;width:30px;height:30px;border-radius:50%;border:0;
@@ -707,9 +705,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .setrow:active,.btn-line:active,.btn-ghost:active,.btn-dash:active,.tab:active,
 .offer:not([disabled]):active,.seg button:active,.kindpick button:active,
 .scale button:active,.letter-card:active,.scenepick button:active,
-.starters button:active,.pnav:active,.player-bar button:active,.menu:active,.more:active{
+.starters button:active,.pnav:active,.player-bar button:active,.menu:active,.more:active,
+.tile:active{
   opacity:.6;
 }
+.tile{touch-action:manipulation}
 .chapter .th{flex:none;width:58px;height:58px;border-radius:14px;overflow:hidden;background:var(--amber-soft);display:grid;place-items:center}
 .chapter .th img{width:100%;height:100%;object-fit:cover}
 .chapter .th .art{width:80%;height:80%}

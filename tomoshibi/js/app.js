@@ -539,7 +539,7 @@
         '<p style="margin:0;font-family:var(--round);font-weight:700;font-size:var(--fs-4)">うごく' + esc(st.pet.name || 'あの子') + '</p>' +
         '<button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:var(--fs-2);font-weight:700;color:var(--sky-ink)" data-go="ugoku">ぜんぶ見る</button></div>' +
         '<div class="grid2" id="home-vid-list" style="margin-top:8px"></div>';
-      var latest = vs.slice(-2);
+      var latest = vs.slice(-2).reverse();
       $('#home-vid-list').innerHTML = latest.map(function (v) {
         return tileHTML(v, latest.length === 1);
       }).join('');
@@ -603,7 +603,6 @@
   }
 
   function tileHTML(v, big) {
-    var title = st.videoTitles[v.id] || 'うごくすがた';
     var d = v.at ? S.formatShort(new Date(v.at)) : '';
     var thumb = st.videoThumbs[v.id];
     var pic = thumb ? '<img src="' + thumb + '" alt="">'
@@ -611,7 +610,7 @@
     return '<div class="tile' + (big ? ' big' : '') + '" data-vid="' + esc(v.id) + '">' +
       pic +
       '<svg class="play" viewBox="0 0 24 24"><use href="#ic-play"></use></svg>' +
-      '<span class="cap"><b>' + esc(title) + '</b><span>' + esc(d) + '</span></span>' +
+      '<span class="cap">' + esc(d) + '</span>' +
       '</div>';
   }
 
