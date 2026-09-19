@@ -861,17 +861,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 }
 .fave svg{width:20px;height:20px;flex:none}
 .fave[data-done="1"]{border-color:var(--grass-ink);background:var(--grass-soft);color:var(--grass-ink)}
-.fave[data-sel="1"]{border-color:var(--amber);background:var(--amber-soft);color:var(--amber-ink)}
+.fave:disabled{cursor:default}
 .fave.add{border-style:dashed;border-color:var(--line-2);color:var(--amber-ink)}
 .faves-h{margin:var(--s6) 0 0;font-size:var(--fs-2);color:var(--faint);font-weight:700;letter-spacing:.06em}
 .faves-hint{margin:4px 0 0;font-size:var(--fs-1);color:var(--faint);line-height:1.7}
-
-/* 好きだったものを「選ぶ→まとめてそなえる」。全幅の主ボタンと並ぶと格が
-   同じに見えてしまうため、.btn の基準（幅100%・高さ60px）は継がず、
-   ピル型の小さめボタンにする。.btn 単体より詳細度を上げて確実に上書きする。 */
-/* .body は縦のflexでalign-items既定がstretchのため、width:autoだけでは
-   横いっぱいに伸びてしまう。align-self で明示的に縮める。 */
-.btn.fave-offer-btn{width:auto;align-self:flex-start;min-height:46px;padding:0 22px;margin-top:12px;border-radius:999px;font-size:var(--fs-3)}
 
 /* そなえた直後だけ、灯りが灯るような短い光を一度だけ見せる。派手な演出（紙吹雪等）は
    このアプリでは禁じているため、ごく短く・控えめに留める（docs/UI設計.md）。 */
