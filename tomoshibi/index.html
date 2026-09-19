@@ -63,21 +63,10 @@
     <ellipse cx="70" cy="36" rx="10" ry="14" transform="rotate(7 70 36)" fill="#C9A87E" stroke="#5A4A3A" stroke-width="2.6"/>
     <ellipse cx="88" cy="50" rx="10" ry="13" transform="rotate(18 88 50)" fill="#C9A87E" stroke="#5A4A3A" stroke-width="2.6"/>
   </symbol>
-  <!-- おうち画面、日付の横のマーク（追記69）。この子がいぬ・ねこ・
-       そのほかのどれかで、灯りから肉球／またたび／ハートに変わる。 -->
-  <symbol id="mark-dog" viewBox="0 0 24 24" fill="#C9A87E" stroke="#5A4A3A" stroke-width="1.5">
-    <ellipse cx="12" cy="16.6" rx="4.3" ry="3.5"/>
-    <ellipse cx="6.3" cy="11.2" rx="2" ry="2.5" transform="rotate(-20 6.3 11.2)"/>
-    <ellipse cx="9.6" cy="8.4" rx="2.1" ry="2.6" transform="rotate(-8 9.6 8.4)"/>
-    <ellipse cx="14.4" cy="8.4" rx="2.1" ry="2.6" transform="rotate(8 14.4 8.4)"/>
-    <ellipse cx="17.7" cy="11.2" rx="2" ry="2.5" transform="rotate(20 17.7 11.2)"/>
-  </symbol>
-  <symbol id="mark-cat" viewBox="0 0 24 24" fill="#A9CE87" stroke="#4B6B36" stroke-width="1.5" stroke-linejoin="round">
-    <path d="M12 20 C12 15.5 12 11.5 12 7" fill="none" stroke-linecap="round"/>
-    <ellipse cx="7.6" cy="13.4" rx="3.6" ry="2.1" transform="rotate(-38 7.6 13.4)"/>
-    <ellipse cx="16.4" cy="13.4" rx="3.6" ry="2.1" transform="rotate(38 16.4 13.4)"/>
-    <ellipse cx="12" cy="7.4" rx="2.5" ry="3.6"/>
-  </symbol>
+  <!-- おうち画面、日付の横のマーク（追記69・73）。この子がいぬ・ねこ・
+       そのほかのどれかで変わる。「どちらですか」（#kindpick）で選ぶ
+       ときの絵と同じにしてある——犬猫は#art-dog／#art-cat、そのほかは
+       このハート（#mark-other）を共用する。 -->
   <symbol id="mark-other" viewBox="0 0 24 24" fill="#F0B6C4" stroke="#5A4A3A" stroke-width="1.5" stroke-linejoin="round">
     <path d="M12 19.2 C12 19.2 4.3 13.9 4.3 8.9 C4.3 6.1 6.4 4.2 8.9 4.2 C10.5 4.2 11.6 5 12 6.1 C12.4 5 13.5 4.2 15.1 4.2 C17.6 4.2 19.7 6.1 19.7 8.9 C19.7 13.9 12 19.2 12 19.2 Z"/>
   </symbol>
@@ -277,7 +266,7 @@
   <section class="view" id="view-home">
     <div class="body scroll">
       <div class="daybar">
-        <span class="d"><svg width="22" height="22"><use id="home-mark" href="#mark-dog"></use></svg><span id="home-date">—</span></span>
+        <span class="d"><svg width="22" height="22"><use id="home-mark" href="#art-dog"></use></svg><span id="home-date">—</span></span>
       </div>
       <h1 class="home-title" id="home-title">いつまでも家族だよ</h1>
 
