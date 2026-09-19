@@ -28,7 +28,7 @@
   --reien-sky1:#EDEFF6; --reien-sky2:#E6EAEE; --reien-cloud:#FFFFFF;
   --reien-hedge:#B9C7AE; --reien-ground:#DCD6C8;
   --reien-stone:#C7C2B6; --reien-stone-ink:#8A8476;
-  --reien-flame:#F0B25C; --reien-smoke:#C9C2B4;
+  --reien-flame:#F0B25C; --reien-flame-off:#C9C2B4; --reien-smoke:#C9C2B4;
 
   /* おまいりのあとの絵。遺影の奥に、雲間から差す光のような柔らかい
      光暈を置き、「あの子は、いま天国にいる」という空気を添える。 */
@@ -254,7 +254,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   border-radius:var(--r);overflow:hidden;
   background:linear-gradient(180deg,var(--reien-sky1) 0%,var(--reien-sky1) 66%,var(--reien-sky2) 66%,var(--reien-sky2) 100%)}
 :root[data-theme="night"] .reien{background:linear-gradient(180deg,#20242C 0%,#20242C 66%,#22271F 66%,#1F2420 100%)}
-:root[data-theme="night"] .reien{--reien-hedge:#39443A;--reien-ground:#2B2A22;--reien-stone:#4C4A44;--reien-stone-ink:#8D857A;--reien-smoke:#5A574E}
+:root[data-theme="night"] .reien{--reien-hedge:#39443A;--reien-ground:#2B2A22;--reien-stone:#4C4A44;--reien-stone-ink:#8D857A;--reien-smoke:#5A574E;--reien-flame-off:#4C4A44;--reien-flame:#E0A24A}
 .reien svg.bg{position:absolute;inset:0;width:100%;height:100%}
 .reien .r-cloud{fill:var(--reien-cloud);transform-box:fill-box;transform-origin:center;animation:scene-drift 26s linear infinite}
 .reien .r-cloud:nth-child(2){animation-duration:21s;animation-delay:-6s}
@@ -263,18 +263,23 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .reien .r-ground{fill:var(--reien-ground)}
 .reien .r-stone{fill:var(--reien-stone);stroke:var(--reien-stone-ink);stroke-width:1.6;stroke-linejoin:round}
 .reien .r-pedestal-base,.reien .r-pedestal-top{fill:var(--reien-stone);stroke:var(--reien-stone-ink);stroke-width:1.8;stroke-linejoin:round}
-.reien .r-flame{fill:var(--reien-flame)}
+/* 4つそろうまでは、灯籠の火は灯っていない（石と同じ落ち着いた色）。
+   昼間は淡い橙とグレーの差が分かりにくく、光の演出（box-shadow等）
+   だけでは「灯った」ことが伝わらないという指摘を受け、色そのものを
+   変える＝昼夜を問わず一目で分かる合図にした（追記64）。 */
+.reien .r-flame{fill:var(--reien-flame-off);transition:fill .6s ease}
 /* 4つのお供えがそろった瞬間、両脇の灯籠にも火が入ったように光る
-   （追記55）。灯籠の輪郭ではなく、火（.r-flame）だけをふわっと
+   （追記55・64）。色が変わったうえで、火（.r-flame）だけをふわっと
    光らせる。左右で少しだけ揺れをずらし、同じ生きた炎でも揃いすぎ
    ないようにする。 */
-.reien.lit .r-flame{animation:reien-lantern-glow 2.6s ease-in-out .1s infinite}
+.reien.lit .r-flame{fill:var(--reien-flame);animation:reien-lantern-glow 2.6s ease-in-out .1s infinite}
 .reien.lit .r-lantern + .r-lantern .r-flame{animation-delay:.5s}
 @keyframes reien-lantern-glow{
   0%,100%{filter:drop-shadow(0 0 2px rgba(240,178,92,.4))}
   50%{filter:drop-shadow(0 0 6px rgba(240,178,92,.9))}
 }
 @media (prefers-reduced-motion:reduce){
+  .reien .r-flame{transition:none}
   .reien.lit .r-flame{animation:none;filter:drop-shadow(0 0 4px rgba(240,178,92,.7))}
 }
 /* 4つのおそなえをタップするたび、台座の上にその印がひとつずつ増えていく。
@@ -301,7 +306,6 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   .reien .r-wisp{animation:none;opacity:.28;transform:none}
 }
 .reien .face{position:absolute;left:50%;bottom:22px;transform:translateX(-50%)}
-:root[data-theme="night"] .reien .r-flame{fill:#E0A24A}
 /* 納骨のときのお骨の写真を登録していれば、台座の左どなりに小さな写真立てを置く
    （左の灯籠と台座のあいだの空きに収まる大きさ・位置）。追記42。
    中身は設定（納骨の写真の見せ方）で、骨壺のイラスト（#of-urn・既定。骨の写真
