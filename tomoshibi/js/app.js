@@ -586,6 +586,7 @@
     });
     // そなえた4つは、台座の上にひとつずつ増えていく（見た目の裏づけ）。
     $$('#reien-offerings .r-placed').forEach(function (el, i) { el.classList.toggle('on', i < rstep); });
+    var reien = $('.reien'); if (reien) reien.classList.toggle('lit', rstep >= 4);
     var faves = st.pet.faves || [];
     $('#ritual-lead').textContent = rstep < 4
       ? LEADS[rstep]
@@ -860,7 +861,15 @@
   }
 
   /* ============ おまいりの庭 ============
-     花は枯れない・減らない・他人と比べない。 */
+     花は枯れない・減らない・他人と比べない。
+     何年も続くと1日ずつでは並べきれなくなるため、3段階でまとめる：
+     今月＝1日ごとの花（そなえた実感を、その日のうちに）、
+     今年のそれより前の月＝月ごとに1つの中くらいの花、
+     去年より前＝年ごとに1つの大きな花。年が変わるたびに、今年の
+     月の花たちも自動でその年1つの花へとまとまっていく。どの段階でも
+     大きさはその期間どれだけおまいりしたかで決まる（毎日そなえた
+     期間ほど大きく咲く）。どの日の分も消えたり隠れたりはしない
+     ——数えられ方が変わるだけ（追記54・55）。 */
   var FCOL = ['#F0B6C4', '#FFD98A', '#CFE6BC', '#BEDCEA', '#E8A0A0', '#F5C98C'];
   function renderNiwa() {
     var n = S.visitCount();
@@ -868,26 +877,71 @@
     var tg = S.daysTogether();
     $('#stat-days').textContent = tg ? tg.toLocaleString('ja-JP') : '—';
 
-    var perRow = 11, shown = Math.min(n, 600);
-    var rows = Math.max(2, Math.ceil(shown / perRow));
-    var W = 350, H = 30 + rows * 32 + 34;
-    var out = ['<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">',
-      '<path d="M0 ' + (H - 52) + ' C70 ' + (H - 62) + ' 120 ' + (H - 44) + ' 190 ' + (H - 52) +
-      ' C250 ' + (H - 59) + ' 300 ' + (H - 42) + ' ' + W + ' ' + (H - 52) + ' L' + W + ' ' + H + ' L0 ' + H + ' Z" fill="#CFE6BC"/>'];
-    for (var k = 0; k < shown; k++) {
-      var r = Math.floor(k / perRow), c = k % perRow;
-      var inRow = Math.min(perRow, shown - r * perRow);
-      var startX = (W - inRow * 30) / 2 + 15;   // 端数の行も中央に寄せる
-      var x = startX + c * 30, y = 30 + r * 32;
-      var kk = (1.05 + (k % 3) * 0.11).toFixed(2), col = FCOL[k % FCOL.length];
-      // 他の画面と同じ花びらの形。丸を2つ重ねただけだと、花ではなく輪に見える
-      out.push('<g transform="translate(' + x.toFixed(1) + ' ' + y + ') scale(' + kk + ')">' +
+    var visits = st.visits || [];
+    var todayISO = S.ymd(S.today());
+    var curYear = +todayISO.slice(0, 4), curMonthKey = todayISO.slice(0, 7);
+
+    var yearCounts = {}, yearOrder = [], monthCounts = {}, monthOrder = [], curMonthDays = [];
+    visits.forEach(function (v) {
+      var y = +v.slice(0, 4), mk = v.slice(0, 7);
+      if (mk === curMonthKey) { curMonthDays.push(v); return; }
+      if (y === curYear) {
+        if (!(mk in monthCounts)) { monthCounts[mk] = 0; monthOrder.push(mk); }
+        monthCounts[mk]++;
+        return;
+      }
+      if (!(y in yearCounts)) { yearCounts[y] = 0; yearOrder.push(y); }
+      yearCounts[y]++;
+    });
+
+    function daysInMonth(mk) { return new Date(+mk.slice(0, 4), +mk.slice(5, 7), 0).getDate(); }
+    function daysInYear(y) { return ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0) ? 366 : 365; }
+    function tierScale(ratio, a, b, c) { return ratio >= 0.6 ? c : ratio >= 0.25 ? b : a; }
+    function monthScale(mk) { return tierScale(monthCounts[mk] / daysInMonth(mk), 1.35, 1.65, 2.0); }
+    function yearScale(y) { return tierScale(yearCounts[y] / daysInYear(y), 2.3, 2.7, 3.2); }
+    function monthLabel(mk) { return (+mk.slice(0, 4)) + '年' + (+mk.slice(5, 7)) + '月・' + monthCounts[mk] + '回'; }
+    function yearLabel(y) { return y + '年・' + yearCounts[y] + '回'; }
+    // 他の画面と同じ花びらの形。丸を2つ重ねただけだと、花ではなく輪に見える
+    function flowerG(x, y, scale, col, title) {
+      return '<g transform="translate(' + x.toFixed(1) + ' ' + y + ') scale(' + scale + ')">' +
+        (title ? '<title>' + esc(title) + '</title>' : '') +
         '<g fill="' + col + '" stroke="#5A4A3A" stroke-width="1.3">' +
         '<ellipse cy="-5.6" rx="3.4" ry="4.2"/><ellipse cx="5" cy="-2" rx="4.2" ry="3.4"/>' +
         '<ellipse cx="3.1" cy="4" rx="3.4" ry="4.2"/><ellipse cx="-3.1" cy="4" rx="3.4" ry="4.2"/>' +
         '<ellipse cx="-5" cy="-2" rx="4.2" ry="3.4"/></g>' +
-        '<circle r="3" fill="#FFF6E2" stroke="#5A4A3A" stroke-width="1.2"/></g>');
+        '<circle r="3" fill="#FFF6E2" stroke="#5A4A3A" stroke-width="1.2"/></g>';
     }
+
+    var W = 350, colorAt = 0;
+    function nextCol() { return FCOL[colorAt++ % FCOL.length]; }
+    var yearItems = yearOrder.map(function (y) { return { scale: yearScale(y), col: nextCol(), title: yearLabel(y) }; });
+    var monthItems = monthOrder.map(function (mk) { return { scale: monthScale(mk), col: nextCol(), title: monthLabel(mk) }; });
+    var dayItems = curMonthDays.map(function (v, i) { return { scale: (1.05 + (i % 3) * 0.11).toFixed(2), col: nextCol() }; });
+
+    // 段ごとに大きさが違うので、それぞれ専用の列数・間隔でレイアウトする
+    // （年の花はいちばん大きいので、間隔を広く取って重ならないようにする）。
+    function layoutTier(items, perRow, pitch, rowH, topY) {
+      var count = items.length, html = '';
+      items.forEach(function (it, i) {
+        var r = Math.floor(i / perRow), c = i % perRow;
+        var inRow = Math.min(perRow, count - r * perRow);
+        var startX = (W - inRow * pitch) / 2 + pitch / 2;
+        var x = startX + c * pitch, y = topY + r * rowH;
+        html += flowerG(x, y, it.scale, it.col, it.title);
+      });
+      var rows = count ? Math.ceil(count / perRow) : 0;
+      return { html: html, height: rows * rowH };
+    }
+    var yTier = layoutTier(yearItems, 5, 64, 72, 30);
+    var mTier = layoutTier(monthItems, 8, 40, 44, 30 + yTier.height);
+    var dTier = layoutTier(dayItems, 11, 30, 32, 30 + yTier.height + mTier.height);
+
+    var H = 30 + yTier.height + mTier.height + dTier.height + (n ? 0 : 64) + 34;
+    var out = ['<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">',
+      '<path d="M0 ' + (H - 52) + ' C70 ' + (H - 62) + ' 120 ' + (H - 44) + ' 190 ' + (H - 52) +
+      ' C250 ' + (H - 59) + ' 300 ' + (H - 42) + ' ' + W + ' ' + (H - 52) + ' L' + W + ' ' + H + ' L0 ' + H + ' Z" fill="#CFE6BC"/>',
+      yTier.html, mTier.html, dTier.html];
+
     if (!n) out.push('<text x="' + (W / 2) + '" y="' + (H / 2) + '" text-anchor="middle" fill="#7E9B6C" font-size="13">' +
       'はじめてのおまいりで、花が1つ咲きます</text>');
     out.push('</svg>');
@@ -1968,6 +2022,10 @@
   fillHomeHints();
   syncMilestoneNotifications();
   $('#btn-opening-start').onclick = enterApp;
+  var chkOpeningOff = $('#chk-opening-off');
+  if (chkOpeningOff) chkOpeningOff.onchange = function () {
+    st.openingOff = chkOpeningOff.checked; S.save();
+  };
   S.probe().then(function () {
     return Promise.all([loadFace(), loadAshes()]);
   }).then(function () {
