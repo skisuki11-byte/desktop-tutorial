@@ -264,6 +264,19 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .reien .r-stone{fill:var(--reien-stone);stroke:var(--reien-stone-ink);stroke-width:1.6;stroke-linejoin:round}
 .reien .r-pedestal-base,.reien .r-pedestal-top{fill:var(--reien-stone);stroke:var(--reien-stone-ink);stroke-width:1.8;stroke-linejoin:round}
 .reien .r-flame{fill:var(--reien-flame)}
+/* 4つのお供えがそろった瞬間、両脇の灯籠にも火が入ったように光る
+   （追記55）。灯籠の輪郭ではなく、火（.r-flame）だけをふわっと
+   光らせる。左右で少しだけ揺れをずらし、同じ生きた炎でも揃いすぎ
+   ないようにする。 */
+.reien.lit .r-flame{animation:reien-lantern-glow 2.6s ease-in-out .1s infinite}
+.reien.lit .r-lantern + .r-lantern .r-flame{animation-delay:.5s}
+@keyframes reien-lantern-glow{
+  0%,100%{filter:drop-shadow(0 0 2px rgba(240,178,92,.4))}
+  50%{filter:drop-shadow(0 0 6px rgba(240,178,92,.9))}
+}
+@media (prefers-reduced-motion:reduce){
+  .reien.lit .r-flame{animation:none;filter:drop-shadow(0 0 4px rgba(240,178,92,.7))}
+}
 /* 4つのおそなえをタップするたび、台座の上にその印がひとつずつ増えていく。
    祭壇に実際に供えていく動きに寄せた（追記40）。 */
 .reien .r-placed{opacity:0;transform:scale(.3) translateY(5px);transform-box:fill-box;transform-origin:center}
