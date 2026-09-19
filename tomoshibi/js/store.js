@@ -43,11 +43,32 @@
   var state = load();
   if (stale) save();
 
+  /* 保存の中身が期待した形かを確かめ、違えば既定値に戻す（追記67）。
+     保存が壊れる道は現実にある——書き込みの途中で端末の空きが尽きた、
+     古い版の保存が残っている、他の端末で書いたバックアップを読み込んだ、など。
+     形が違うまま画面を描くと `visits.forEach is not a function` のように
+     途中で落ち、その画面がまるごと出なくなる。ここで直しておけば、
+     壊れたぶんだけ既定に戻って、残りは今まで通り開ける。 */
+  function coerce(v, base) {
+    Object.keys(base).forEach(function (k) {
+      var want = base[k], got = v[k];
+      var ok;
+      if (Array.isArray(want)) ok = Array.isArray(got);
+      else if (want === null) ok = true;                     // 形を決めていないもの
+      else if (typeof want === 'object') ok = got !== null && typeof got === 'object' && !Array.isArray(got);
+      else ok = typeof got === typeof want;
+      if (!ok) { v[k] = Array.isArray(want) ? [] : (typeof want === 'object' ? {} : want); stale = true; }
+    });
+    return v;
+  }
+
   function load() {
     try {
       var raw = localStorage.getItem(KEY);
       if (!raw) return blank();
       var v = JSON.parse(raw), base = blank();
+      if (!v || typeof v !== 'object' || Array.isArray(v)) return blank();
+      if (!v.pet || typeof v.pet !== 'object' || Array.isArray(v.pet)) { v.pet = blank().pet; stale = true; }
       // 章ごとに隠す機能はやめた。古い保存に残っていても、もう見ない。
       // 消して書き戻さないと、バックアップに死んだ設定が混ざり続ける。
       if ('photoHidden' in v) { delete v.photoHidden; stale = true; }
@@ -83,6 +104,11 @@
       if (v.pet && SCENE_RENAME[v.pet.scene]) { v.pet.scene = SCENE_RENAME[v.pet.scene]; stale = true; }
       Object.keys(base).forEach(function (k) { if (!(k in v)) v[k] = base[k]; });
       Object.keys(base.pet).forEach(function (k) { if (!(k in v.pet)) v.pet[k] = base.pet[k]; });
+      coerce(v, base);
+      coerce(v.pet, base.pet);
+      // 日付として読めない記録は、置いておくと日付の計算のたびに落ちる。
+      v.visits = v.visits.filter(function (d) { return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d); });
+      v.letters = v.letters.filter(function (m) { return m && typeof m === 'object' && typeof m.text === 'string'; });
       return v;
     } catch (e) { return blank(); }
   }
@@ -404,6 +430,24 @@
     if (!state.letters[i]) return false;
     state.letters.splice(i, 1);
     save(); return true;
+  }
+
+  /* 書きかけの手紙（追記67）。打っている途中でアプリが閉じられることは
+     ある——iOSが裏に回ったアプリを落とす、うっかり別のアプリへ移る、
+     サービスワーカーが新しい版に切り替わる。あの子へ宛てた言葉が
+     それで消えるのは、このアプリでいちばん避けたいことなので、
+     打つそばから控えておいて、次に開いたときに戻す。
+     送るか、自分で閉じたときに消える。本文の保存(state.letters)とは
+     別のキーに置く——書きかけはバックアップに混ぜない。 */
+  var DRAFT_KEY = 'tomoshibi.draft.v1';
+  function draft() {
+    try { return localStorage.getItem(DRAFT_KEY) || ''; } catch (e) { return ''; }
+  }
+  function setDraft(text) {
+    try {
+      if (text) localStorage.setItem(DRAFT_KEY, String(text).slice(0, 2000));
+      else localStorage.removeItem(DRAFT_KEY);
+    } catch (e) { /* 空きが無いなら諦める。書きかけのために本体を壊さない */ }
   }
   function dismissEcho(d) { state.echoDismissedOn = ymd(d); save(); }
 
@@ -731,7 +775,7 @@
     state: state, save: save, probe: probe,
     idbAvailable: idbAvailable, storeInfo: storeInfo, downloader: downloader, restoreAll: restoreAll,
     lostCount: lostCount, clearLost: clearLost,
-    reset: function () { state = blank(); save(); },
+    reset: function () { state = blank(); setDraft(''); save(); },
     ymd: ymd, parseISO: parseISO, addDays: addDays, addYears: addYears, diffDays: diffDays,
     today: today, formatJP: formatJP, formatMD: formatMD, formatShort: formatShort,
     milestones: milestones, daysTogether: daysTogether, ageAtDeath: ageAtDeath,
@@ -740,7 +784,7 @@
     setKaimyo: setKaimyo, setKaimyoOff: setKaimyoOff,
     visitCount: visitCount, visitedOn: visitedOn, recordVisit: recordVisit,
     putFave: putFave, addLetter: addLetter,
-    deleteLetter: deleteLetter, dismissEcho: dismissEcho,
+    deleteLetter: deleteLetter, draft: draft, setDraft: setDraft, dismissEcho: dismissEcho,
     selfOn: selfOn, putSelf: putSelf, selfSeries: selfSeries,
     putMedia: putMedia, getMedia: getMedia, allMedia: allMedia, deleteMedia: deleteMedia, newId: newId,
     chapters: chapters
