@@ -363,11 +363,9 @@
     return true;
   }
 
-  /* この子の好きだったもの。おまいりのときにそなえる。 */
-  function faveDoneOn(d, name) {
-    var k = ymd(d);
-    return !!(state.faveDone[k] && state.faveDone[k].indexOf(name) >= 0);
-  }
+  /* この子の好きだったもの。おまいりのときにそなえる。
+     チェック表示は画面側（app.js）がそのおまいりの間だけ覚えている
+     もので判定し、ここでは記録だけする（追記63）。 */
   function putFave(d, name) {
     var k = ymd(d);
     if (!state.faveDone[k]) state.faveDone[k] = [];
@@ -735,7 +733,7 @@
     kaimyo: kaimyo, kaimyoAuto: kaimyoAuto, kaimyoParts: kaimyoParts,
     setKaimyo: setKaimyo, setKaimyoOff: setKaimyoOff,
     visitCount: visitCount, visitedOn: visitedOn, recordVisit: recordVisit,
-    faveDoneOn: faveDoneOn, putFave: putFave, addLetter: addLetter,
+    putFave: putFave, addLetter: addLetter,
     deleteLetter: deleteLetter, dismissEcho: dismissEcho,
     selfOn: selfOn, putSelf: putSelf, selfSeries: selfSeries,
     putMedia: putMedia, getMedia: getMedia, allMedia: allMedia, deleteMedia: deleteMedia, newId: newId,
