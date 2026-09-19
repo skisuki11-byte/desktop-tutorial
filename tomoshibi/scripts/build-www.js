@@ -11,6 +11,7 @@ var OUT = path.join(ROOT, 'www');
 
 var ENTRIES = [
   'index.html',
+  'privacy.html',
   'manifest.webmanifest',
   'sw.js',
   'css',
