@@ -703,7 +703,10 @@
   <!-- ============ 設定 ============ -->
   <section class="view" id="view-settings">
     <div class="body scroll foot">
-      <div class="head"><h1>設定</h1></div>
+      <div class="head" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+        <h1 style="margin:0">設定</h1>
+        <button class="btn btn-ghost" id="btn-settings-close-top" style="width:auto;min-height:auto;padding:10px 4px;margin:-10px -4px 0 0;font-size:var(--fs-2);font-weight:700;color:var(--muted)">閉じる</button>
+      </div>
 
       <div class="tip tip-warn" id="warn-ephemeral" hidden style="margin-top:4px">
         <svg width="19" height="19" style="color:#9A4A2E"><use href="#ic-info"></use></svg>
