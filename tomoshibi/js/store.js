@@ -394,13 +394,6 @@
     if (n && keys.length > n) keys = keys.slice(keys.length - n);
     return keys.map(function (k) { return { day: k, v: state.selfLog[k] }; });
   }
-  /* いちばん重い記録が続いているか。相談先をそっと出すかの判断にだけ使う。
-     診断ではないので、それ以外には使わない。 */
-  function heavyRun() {
-    var a = selfSeries(0), n = 0;
-    for (var i = a.length - 1; i >= 0; i--) { if (a[i].v <= 1) n++; else break; }
-    return n;
-  }
 
   /* 手紙。新しいものが先に来るように入れる。 */
   function addLetter(text) {
@@ -751,7 +744,7 @@
     seasonalFor: seasonalFor, seasonalDone: seasonalDone, putSeasonal: putSeasonal,
     faveDoneOn: faveDoneOn, putFave: putFave, addLetter: addLetter,
     deleteLetter: deleteLetter, dismissEcho: dismissEcho,
-    selfOn: selfOn, putSelf: putSelf, selfSeries: selfSeries, heavyRun: heavyRun,
+    selfOn: selfOn, putSelf: putSelf, selfSeries: selfSeries,
     putMedia: putMedia, getMedia: getMedia, allMedia: allMedia, deleteMedia: deleteMedia, newId: newId,
     chapters: chapters
   };

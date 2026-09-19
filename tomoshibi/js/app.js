@@ -710,7 +710,6 @@
     if (death) sp.textContent = 'あれから ' + S.diffDays(death, S.today()).toLocaleString('ja-JP') + '日';
     var all = S.selfSeries(0);
     // 数えるのは日数と、はじめた日だけ。良し悪しになる数は出さない。
-    // おもい日が続いていることは、下の相談先の知らせで伝える。
     var first = all.length ? new Date(all[0].day.replace(/-/g, '/')) : null;
     $('#self-stats').innerHTML = all.length
       ? '<div class="stat"><p class="n" style="color:var(--amber-ink)">' + all.length +
@@ -775,19 +774,6 @@
       var c = e.target.closest('[data-i]'); if (!c) return;
       say(+c.dataset.i);
     };
-
-    // 重い記録が続いているときだけ、そっと相談先を出す。判定はしない。
-    var run = S.heavyRun();
-    $('#self-help').innerHTML = run >= 5
-      ? '<div class="tip tip-amber" style="margin-top:14px">' +
-        '<svg width="19" height="19" style="color:var(--amber-ink)"><use href="#ic-info"></use></svg>' +
-        '<p>重い日が' + run + '日つづいています。<br>' +
-        '<button id="btn-self-help" style="margin-top:8px;min-height:40px;padding:0 14px;border-radius:999px;' +
-        'border:2px solid var(--tomo-line,var(--line));background:transparent;color:var(--amber-ink);' +
-        'font-size:var(--fs-2);font-weight:700;cursor:pointer">相談できるところを見る</button></p></div>'
-      : '';
-    var hb = $('#btn-self-help');
-    if (hb) hb.onclick = showHelp;
   }
 
   /* おまいりのあとに庭へ舞う5つの柄。花びら・紅葉・雪・灯りの粒・ちょうちょ
@@ -1507,18 +1493,6 @@
     okMsg();
   }
 
-  /* 相談先。実在と受付状況を確認できた窓口だけを載せる。
-     確認できていないものは絶対に載せない。 */
-  function showHelp() {
-    sheet('つらいときの相談先',
-      'ひとりで抱えなくて大丈夫です。まずは、こういうところがあります。<br><br>' +
-      '・かかりつけだった動物病院<br>' +
-      '・お住まいの自治体の こころの健康相談窓口<br>' +
-      '・ペットロスの相談を受けているカウンセリング機関<br><br>' +
-      '<span style="font-size:var(--fs-2);color:var(--faint)">※ 具体的な窓口名と連絡先は、実在と受付状況を確認できしだいここに載せます。確認できていないものは載せません。</span>',
-      [{ label: 'とじる', primary: true }]);
-  }
-
   /* ============ シート ============ */
   function sheet(title, html, actions) {
     var root = $('#sheet-root');
@@ -1863,8 +1837,6 @@
       body += '<br><br>端末を変えるときは、設定の「バックアップを書き出す」で持ち出して、新しい端末で読み込ませてください。';
       sheet('保存のようす', body, [{ label: 'とじる', primary: true }]);
     };
-    // 設定からの入口は一旦なくした（依頼により）。「じぶん」で重い日が
-    // 続いたときのそっとした案内（#btn-self-help）だけは残す（追記48）。
 
     document.addEventListener('click', function (e) {
       var g = e.target.closest('[data-self]'); if (!g) return;
