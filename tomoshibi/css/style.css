@@ -577,6 +577,21 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 #btn-omairi-close{margin-top:var(--s4)}
 #faves-h{margin-top:var(--s4)}
 
+/* iPhone SEなど縦が短い機種では、上の余白の詰めだけでは「おまいりを
+   終える」まで届かなかった（追記74）。高さ700px以下でだけ、絵と
+   カードをさらに一段小さくする。横幅は変えないので、大きい機種の
+   見た目はそのまま。 */
+@media (max-height:700px){
+  .reien{--reien-h:110px}
+  .ritual-lead{margin-top:6px}
+  .ritual-sub{margin-top:4px}
+  .ritual{margin-top:var(--s3);gap:8px}
+  .offer{min-height:80px}
+  #faves-h{margin-top:10px}
+  #omairi-faves{margin-top:var(--s2)}
+  #btn-omairi-close{margin-top:10px}
+}
+
 /* ---------- おまいりのあと ---------- */
 .after{
   position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;
