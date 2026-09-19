@@ -4,7 +4,7 @@
  * つながらないときだけキャッシュを使う＝圏外でもお参りはできる。
  * 「圏外でもお参りできること」は、この製品では体験の核にあたる。
  */
-var CACHE = 'tomoshibi-v7';
+var CACHE = 'tomoshibi-v8';
 var ASSETS = [
   './',
   './index.html',
@@ -45,7 +45,12 @@ self.addEventListener('fetch', function (e) {
   if (new URL(req.url).origin !== self.location.origin) return;
   e.respondWith(
     caches.open(CACHE).then(function (cache) {
-      return fetch(req).then(function (res) {
+      // {cache:'no-store'} が肝心。これが無いと、素のfetch()はブラウザの
+      // 通常のHTTPキャッシュ（Cache-Controlヘッダ）にも従ってしまい、
+      // 「network-first」のつもりが実は数分〜十数分古いHTTPキャッシュの
+      // 応答を「最新」として返し続けることがある。デプロイのたびに
+      // 手元だけ古い版が残る不具合の実体はこれだった（追記61）。
+      return fetch(req, { cache: 'no-store' }).then(function (res) {
         if (res && res.ok) cache.put(req, res.clone());
         return res;
       }).catch(function () {
