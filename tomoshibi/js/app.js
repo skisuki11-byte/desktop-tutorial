@@ -637,14 +637,17 @@
       // ただし画面は終わらせない。好きだったものをそなえる余地を残す。
       rin();
       rcounted = S.recordVisit(S.today());
+      if (window.TomoshibiNative) window.TomoshibiNative.hapticSuccess();
     }
     renderRitual();
   }
 
   /* 四十九日・百か日・一周忌・三回忌・お誕生日、ちょうどその日だけ、
-     ここの一言と絵をほんの少し特別にする。プッシュ通知では知らせない
-     （自前サーバーが要るため）ので、その日にお参りしたときだけ気づける
-     静かな演出にとどめる（追記46）。 */
+     ここの一言と絵をほんの少し特別にする（追記46）。ストア配信版では
+     設定「大事な日のお知らせ」でこの日を教えることもできるが（下の
+     scheduleMilestoneNotifications）、それをオフにしていても・その日
+     アプリを開かなくても、お参りに来たその瞬間だけそっと気づける
+     演出として、これは変わらず残す。 */
   var MILESTONE_LINE = {
     d49: '四十九日です。<br>ここまで、ちゃんと歩いてきましたね。',
     d100: '百か日です。<br>やすらかな場所に、着いたころです。',
@@ -1257,6 +1260,7 @@
   function applyTheme() {
     var night = st.theme === 'night';
     document.documentElement.setAttribute('data-theme', night ? 'night' : 'day');
+    if (window.TomoshibiNative) window.TomoshibiNative.setStatusBarStyle(night);
     var m = document.querySelector('meta[name=theme-color]');
     if (m) m.setAttribute('content', night ? '#1B1A18' : '#FDFAF2');
     // color-scheme を明示しないと、Androidの「ウェブサイトを自動的に暗くする」機能が
@@ -1268,6 +1272,9 @@
   }
   function renderSettings() {
     $$('#seg-theme button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.theme === 'night' ? 'night' : 'day'))); });
+    var boxNotify = $('#box-notify');
+    if (boxNotify) boxNotify.hidden = !(window.TomoshibiNative && window.TomoshibiNative.isNative);
+    $$('#seg-notify button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.notifyMilestones ? 'on' : 'off'))); });
     $$('#seg-opening button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.openingOff ? 'off' : 'on'))); });
     $$('#seg-ashes-display button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === (st.pet.ashesShowPhoto ? 'photo' : 'illust'))); });
     var si = S.storeInfo();
@@ -1498,6 +1505,35 @@
     okMsg();
   }
 
+  /* ============ 大事な日のお知らせ（ストア配信版のみ） ============
+     サーバーを使わず、端末のOSに予定を渡すだけ（buildICS()と同じ発想の通知版）。
+     トグルを変えるたび・アプリを開くたびに、いったん全部キャンセルしてから
+     今日の日付で組みなおす。月命日・お誕生日は「次の1回」だけを組み、
+     次にアプリを開いたときにまた次の1回へ張り替えていく。 */
+  function syncMilestoneNotifications() {
+    var nat = window.TomoshibiNative;
+    if (!nat || !nat.isNative) return;
+    if (!st.notifyMilestones) { nat.cancelMilestoneNotifications(); return; }
+    var name = st.pet.name || 'あの子';
+    var LABEL = {
+      d49: name + 'の四十九日です', d100: name + 'の百か日です', monthly: name + 'の月命日です',
+      y1: name + 'の一周忌です', y3: name + 'の三回忌です', birthday: name + 'のお誕生日です'
+    };
+    var ORDER = ['d49', 'd100', 'monthly', 'y1', 'y3', 'birthday'];
+    var byKey = {};
+    S.milestones(S.today()).forEach(function (m) { byKey[m.key] = m; });
+    var items = [];
+    ORDER.forEach(function (key) {
+      var m = byKey[key]; if (!m) return;
+      items.push({
+        title: 'ともしび',
+        body: LABEL[key],
+        date: new Date(m.date.getFullYear(), m.date.getMonth(), m.date.getDate(), 9, 0, 0)
+      });
+    });
+    nat.cancelMilestoneNotifications().then(function () { return nat.scheduleMilestoneNotifications(items); });
+  }
+
   /* ============ シート ============ */
   function sheet(title, html, actions) {
     var root = $('#sheet-root');
@@ -1551,9 +1587,20 @@
     $('#in-message').addEventListener('input', function () { $('#in-message-count').textContent = this.value.length; });
     $('#in-message').addEventListener('keydown', function (e) { if (e.key === 'Enter') onboNext(); });
 
-    $('#btn-pick').onclick = function () { $('#in-photo').click(); };
+    // ストア配信版ではOS標準のカメラ／フォト選択を使う。ブラウザ・PWAでは
+    // 従来どおり隠しinputへ。isNativeでしか分岐しないので、この端末での
+    // 挙動はどちらか一方に決まり、切り替わったりはしない。
+    $('#btn-pick').onclick = function () {
+      var nat = window.TomoshibiNative;
+      if (nat && nat.isNative) { nat.takePhoto().then(function (f) { if (f) pickPortrait(f); }); return; }
+      $('#in-photo').click();
+    };
     $('#in-photo').onchange = function (e) { pickPortrait(e.target.files && e.target.files[0]); e.target.value = ''; };
-    $('#btn-ashes-pick').onclick = function () { $('#in-ashes').click(); };
+    $('#btn-ashes-pick').onclick = function () {
+      var nat = window.TomoshibiNative;
+      if (nat && nat.isNative) { nat.takePhoto().then(function (f) { if (f) pickAshes(f); }); return; }
+      $('#in-ashes').click();
+    };
     $('#in-ashes').onchange = function (e) { pickAshes(e.target.files && e.target.files[0]); e.target.value = ''; };
 
     /* 写真の位置あわせ。指（マウス）でなぞって動かす。ドラッグ中は pick-face だけ
@@ -1754,6 +1801,21 @@
       var b = e.target.closest('[data-v]'); if (!b) return;
       st.openingOff = b.dataset.v === 'off'; S.save(); renderSettings();
     });
+    var segNotify = $('#seg-notify');
+    if (segNotify) segNotify.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-v]'); if (!b) return;
+      var on = b.dataset.v === 'on';
+      if (!on) { st.notifyMilestones = false; S.save(); renderSettings(); syncMilestoneNotifications(); return; }
+      window.TomoshibiNative.requestNotifyPermission().then(function (granted) {
+        st.notifyMilestones = !!granted;
+        S.save(); renderSettings(); syncMilestoneNotifications();
+        if (!granted) {
+          sheet('通知が許可されていません',
+            '端末の設定アプリから、ともしびの通知を許可してください。',
+            [{ label: 'わかった', primary: true }]);
+        }
+      });
+    });
     $('#seg-ashes-display').addEventListener('click', function (e) {
       var b = e.target.closest('[data-v]'); if (!b) return;
       st.pet.ashesShowPhoto = b.dataset.v === 'photo'; S.save(); renderSettings(); paintAshes();
@@ -1904,11 +1966,14 @@
   wire();
   applyTheme();
   fillHomeHints();
+  syncMilestoneNotifications();
   $('#btn-opening-start').onclick = enterApp;
   S.probe().then(function () {
     return Promise.all([loadFace(), loadAshes()]);
   }).then(function () {
     if (st.openingOff) enterApp();
     else show('opening');
+  }).then(function () {
+    if (window.TomoshibiNative) window.TomoshibiNative.hideSplash();
   });
 })();

@@ -2410,3 +2410,99 @@ Playwrightで、ペットの名を登録した状態で「じぶん」画面を�
 名を登録していない場合は「あの子」に置き換わることも確認した。
 説明文の枠が、文が増えても崩れないことを昼・夜配色、320px幅の
 スクリーンショットで確認した。JSの例外が出ないことも確認した。
+
+# 追記51：ストア配信（iOS）に向けて、Capacitorでネイティブの土台を作る（2026-09-19）
+
+利用者から「ストア配信をしたい」「iPhoneで進めよう」「では、ネイティブ
+っぽくしよう。プッシュ通知機能は何か入れよう」との依頼。Appleの審査
+（ガイドライン4.2「単なるWebサイトに見えないこと」）を通りやすくする
+ため、既存の静的HTML/CSS/JSをそのまま活かしつつ、Capacitorでネイティブ
+の器に包み、ネイティブAPIを実際に使う4点を実装した。
+
+## 方針：ルート直下は今まで通り、www/はビルド成果物
+
+このアプリはGitHub Pages配信のPWAとして、ルート直下の`index.html`・
+`css/`・`js/`・`icons/`・`manifest.webmanifest`・`sw.js`がそのまま
+配信物になっている。Capacitorはこれとは別に`webDir`（ネイティブが
+読み込む場所）を必要とするため、ルート側を一切変えずに`www/`という
+ビルド出力先を新設し、そこへコピーするだけの`scripts/build-www.js`を
+書いた（`www/`はコピー先なのでgit管理外＝`.gitignore`）。これにより
+GitHub PagesのPWAは今までと完全に同じファイルのまま、影響を受けない。
+
+## npmパッケージ（@capacitor/*）をバンドラ無しのapp.jsから使う
+
+このアプリには元々ビルド工程が無く、`<script src>`でそのまま読む
+素のJSファイルだけで出来ている。Capacitorのプラグイン（Haptics・
+LocalNotifications・Camera・SplashScreen・StatusBar）はnpm/ESM前提の
+パッケージなので、直接app.jsからは読めない。
+
+そこで`capacitor-src/bridge.js`（ESMソース、npmパッケージをimportする）
+を新設し、esbuildで`js/capacitor-bridge.js`という素のIIFEにまとめる
+（`scripts/build-bridge.js`）。これを`window.TomoshibiNative`という
+ただのオブジェクトとしてindex.htmlの先頭（store.js・app.jsより前）で
+読み込む。`js/capacitor-bridge.js`はビルド成果物だが、ルート直下の
+PWAもこのファイルを直接読むため（バンドラが無いので他に方法がない）、
+`www/`とは違いgit管理する＝ルート側の「配信物」の一部として扱う。
+
+`Capacitor.isNativePlatform()`が false（ブラウザ・PWA）のときは、
+`TomoshibiNative`の全関数が何もせず`null`を返すだけのno-opになる
+（`safe()`というラッパーで統一）。app.js側は「ネイティブかどうか」を
+気にせずただ呼べばよく、ブラウザで開いたときの挙動は一切変わらない
+（Playwrightで確認済み。詳細は下）。
+
+## 実装した4点
+
+1. **触覚フィードバック**：おまいりの4つのお供えが揃った瞬間
+   （`tapOffer()`内、`rstep===4`）に`hapticSuccess()`を呼ぶ。
+2. **大事な日のお知らせ（ローカル通知）**：設定に「大事な日のお知らせ」
+   カード（`#box-notify`、ネイティブでのみ表示）を追加。既定オフ。
+   オンにすると`requestNotifyPermission()`で許可を求め、許可されたら
+   `syncMilestoneNotifications()`が`S.milestones()`（既存の.icsカレンダー
+   書き出し機能と同じ節目計算）から四十九日・百か日・月命日・お誕生日・
+   一周忌・三回忌の次回日を組み立て、端末のOSにそのままスケジュールする。
+   **サーバーは一切使わない**——このアプリの「100%ローカル・アカウント
+   不要」という一貫した約束はここでも変わらない（以前の追記46で
+   「プッシュ通知は自前サーバーが要るため使わない」としていたのは
+   サーバー配信の話で、`@capacitor/local-notifications`は端末内で完結する
+   別の仕組み）。アプリを開くたびに一旦全部キャンセルしてから今日の日付で
+   組みなおすため、日付がずれたまま残ることがない。
+3. **カメラ**：顔写真・お骨写真の「えらぶ」ボタンは、ネイティブでは
+   OS標準のカメラ／フォトライブラリ選択（`@capacitor/camera`、
+   `CameraSource.Prompt`で選択肢を出す）を使う。ブラウザ・PWAでは
+   従来通り隠しinputのまま。取得した写真はBlobから`File`に包み直し、
+   既存の`pickPortrait()`・`pickAshes()`にそのまま渡せるようにした
+   （呼び出され側の処理は一切変更していない）。
+4. **起動画面・ステータスバー**：`capacitor.config.json`で
+   SplashScreenを`launchAutoHide:false`にし、既存の起動シーケンス
+   （`S.probe()`→写真読み込み→オープニング表示）が終わったタイミングで
+   明示的に`hideSplash()`する（白い一瞬の空白を防ぐ）。背景色はアプリの
+   `--bg`（#FDFAF2）に合わせた単色画像に差し替えた（`ios/App/App/
+   Assets.xcassets/Splash.imageset/`、Node標準のzlibだけで生成）。
+   ステータスバーの文字色は`applyTheme()`の中で昼/夜と同期する
+   （`setStatusBarStyle()`）。なお本物のブランドロゴ入り起動画像は
+   今回は単色止まりとした——デザインの詰めは実機を持つ人の目で行う方が
+   よい判断だと考えたため。
+
+## iOS側の追加設定
+
+- `Info.plist`にカメラ・写真ライブラリの利用目的（`NSCameraUsage
+  Description`ほか）を追加。無いと審査どころか起動時にクラッシュする。
+- Capacitor 8はデフォルトでCocoaPodsではなくSwift Package Manager
+  （`ios/App/CapApp-SPM/`）でプラグインを解決する。そのため
+  `npx cap sync ios`はこのLinuxサンドボックスでも最後まで成功した
+  （CocoaPods特有の`pod install`が無いため）。ただし実機・シミュレータ
+  でのビルド・実行はXcodeが要るため、利用者自身のMacで行う必要がある
+  （ここでは確認できていない）。
+
+## 確かめたこと
+
+`node --check`でapp.js・store.jsの構文確認。Playwrightで、ブラウザ
+（`TomoshibiNative.isNative===false`）のとき：`#box-notify`が非表示の
+まま、おまいりの4お供えが例外なく完了できること（触覚呼び出しが
+no-opでも問題ないこと）、設定画面が壊れていないことを確認。さらに
+`window.TomoshibiNative`を差し替えてネイティブを模した状態も作り、
+「大事な日のお知らせ」カードが正しく表示・トグルでき、状態が保存
+されること、昼・夜どちらの配色でも崩れないことをスクリーンショットで
+確認した。実機・Xcodeでのビルド、実際の通知・カメラ・触覚の動作は
+このサンドボックス環境では確認できていない（利用者のMac側での確認が
+必要）。
