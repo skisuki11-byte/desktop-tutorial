@@ -1933,6 +1933,7 @@
 
     $('#btn-settings').onclick = function () { show('settings'); };
     $('#btn-settings-close').onclick = function () { show('home'); };
+    $('#btn-settings-close-top').onclick = function () { show('home'); };
     $('#seg-theme').addEventListener('click', function (e) {
       var b = e.target.closest('[data-v]'); if (!b) return;
       st.theme = b.dataset.v; S.save(); applyTheme(); renderSettings();
