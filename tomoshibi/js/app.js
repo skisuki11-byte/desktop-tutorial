@@ -1995,22 +1995,49 @@
     if (st.onboarded) show('home');
     else { step = 0; renderOnbo(); show('onbo'); }
   }
-  buildTabs();
-  wire();
-  applyTheme();
-  fillHomeHints();
-  syncMilestoneNotifications();
-  $('#btn-opening-start').onclick = enterApp;
-  var chkOpeningOff = $('#chk-opening-off');
-  if (chkOpeningOff) chkOpeningOff.onchange = function () {
-    st.openingOff = chkOpeningOff.checked; S.save();
-  };
-  S.probe().then(function () {
-    return Promise.all([loadFace(), loadAshes()]);
-  }).then(function () {
-    if (st.openingOff) enterApp();
-    else show('opening');
-  }).then(function () {
-    if (window.TomoshibiNative) window.TomoshibiNative.hideSplash();
-  });
+  /* 起動のどこかで例外が起きると、すべての画面がCSSで隠れたまま
+     何も表示されない「真っ白」になる。原因調査とは別に、少なくとも
+     何が起きたか分かる画面を必ず出す（インライン onclick は使わず
+     addEventListenerで付ける。script-srcが'self'のみのCSPのため）。 */
+  function showBootError() {
+    try {
+      var app = $('#app'); if (app) app.style.display = 'none';
+      var box = document.createElement('div');
+      box.style.cssText = 'position:fixed;inset:0;display:flex;flex-direction:column;' +
+        'align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;' +
+        'background:#FDFAF2;color:#33302A;font-family:sans-serif';
+      var p = document.createElement('p');
+      p.textContent = '読み込みでうまくいきませんでした。もう一度開いてみてください。';
+      p.style.margin = '0';
+      var btn = document.createElement('button');
+      btn.textContent = '再読み込み';
+      btn.style.cssText = 'padding:12px 28px;border-radius:999px;border:none;' +
+        'background:#E8A33D;color:#fff;font-size:16px;cursor:pointer';
+      btn.addEventListener('click', function () { location.reload(); });
+      box.appendChild(p); box.appendChild(btn);
+      document.body.appendChild(box);
+    } catch (e) { /* ここまで失敗したら、他にできることはない */ }
+  }
+  try {
+    buildTabs();
+    wire();
+    applyTheme();
+    fillHomeHints();
+    syncMilestoneNotifications();
+    $('#btn-opening-start').onclick = enterApp;
+    var chkOpeningOff = $('#chk-opening-off');
+    if (chkOpeningOff) chkOpeningOff.onchange = function () {
+      st.openingOff = chkOpeningOff.checked; S.save();
+    };
+    S.probe().then(function () {
+      return Promise.all([loadFace(), loadAshes()]);
+    }).then(function () {
+      if (st.openingOff) enterApp();
+      else show('opening');
+    }).then(function () {
+      if (window.TomoshibiNative) window.TomoshibiNative.hideSplash();
+    }).catch(showBootError);
+  } catch (e) {
+    showBootError();
+  }
 })();
