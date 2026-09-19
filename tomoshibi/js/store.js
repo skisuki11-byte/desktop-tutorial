@@ -29,7 +29,6 @@
       letters: [],         // 飼い主からあの子へ書いた手紙 [{at, text}]
       faveDone: {},        // { "2026-09-14": ["さつまいも"] } その日そなえたもの
       visits: [],          // お参りした日 "YYYY-MM-DD"。通算回数はこの長さ
-      seasonal: {},        // { "2026-09": true } 季節のおそなえを置いた月
       videoTitles: {},     // { mediaId: "走ってるところ" }
       videoThumbs: {},     // { mediaId: "data:image/jpeg;base64,…" } 最初のコマの静止画
       chapterTitles: {},
@@ -52,6 +51,8 @@
       // 章ごとに隠す機能はやめた。古い保存に残っていても、もう見ない。
       // 消して書き戻さないと、バックアップに死んだ設定が混ざり続ける。
       if ('photoHidden' in v) { delete v.photoHidden; stale = true; }
+      // 季節のおそなえ機能はやめた（追記56）。古い保存に残っていても、もう見ない。
+      if ('seasonal' in v) { delete v.seasonal; stale = true; }
       // 以前は端末のファイル名（"_users_0484f8d0-…" のような読めない名前）を
       // そのまま見出しにしていた版があった。残っていれば既定名に戻す。
       if (v.videoTitles) {
@@ -83,7 +84,6 @@
      ローカル時刻の「日」として扱う。UTCに直すと日本時間の朝が前日になる。 */
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
-  function ym(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
   function parseISO(s) {
     if (!s) return null;
     var p = String(s).split('-');
@@ -357,17 +357,6 @@
     return true;
   }
 
-  /* 季節のおそなえ。月がわりで1つ。置いても置かなくてもいい。 */
-  var SEASONAL = [
-    { m: 1, name: 'おもち', c: '#F2E6D2' }, { m: 2, name: 'いちご', c: '#EFA5A5' },
-    { m: 3, name: 'さくら', c: '#F3C2CE' }, { m: 4, name: 'つくし', c: '#CFE0A8' },
-    { m: 5, name: 'かしわもち', c: '#CFE6BC' }, { m: 6, name: 'あじさい', c: '#C4C9E8' },
-    { m: 7, name: 'すいか', c: '#EF9E9E' }, { m: 8, name: 'ひまわり', c: '#FFD98A' },
-    { m: 9, name: 'おはぎ', c: '#D9BFA6' }, { m: 10, name: 'さつまいも', c: '#D7B0CE' },
-    { m: 11, name: 'もみじ', c: '#EBA97E' }, { m: 12, name: 'みかん', c: '#FFC16B' }
-  ];
-  function seasonalFor(d) { return SEASONAL[d.getMonth()]; }
-
   /* この子の好きだったもの。おまいりのときにそなえる。 */
   function faveDoneOn(d, name) {
     var k = ymd(d);
@@ -407,8 +396,6 @@
     save(); return true;
   }
   function dismissEcho(d) { state.echoDismissedOn = ymd(d); save(); }
-  function seasonalDone(d) { return !!state.seasonal[ym(d)]; }
-  function putSeasonal(d) { state.seasonal[ym(d)] = true; save(); }
 
   /* ============ 写真と動画 ============
      保存先は、この端末の中だけ。どこにも送らない。
@@ -742,7 +729,6 @@
     kaimyo: kaimyo, kaimyoAuto: kaimyoAuto, kaimyoParts: kaimyoParts,
     setKaimyo: setKaimyo, setKaimyoOff: setKaimyoOff,
     visitCount: visitCount, visitedOn: visitedOn, recordVisit: recordVisit,
-    seasonalFor: seasonalFor, seasonalDone: seasonalDone, putSeasonal: putSeasonal,
     faveDoneOn: faveDoneOn, putFave: putFave, addLetter: addLetter,
     deleteLetter: deleteLetter, dismissEcho: dismissEcho,
     selfOn: selfOn, putSelf: putSelf, selfSeries: selfSeries,

@@ -542,16 +542,9 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .ritual-sub{margin:6px 0 0;font-size:var(--fs-2);color:var(--muted);text-align:center}
 .step-pill{font-size:var(--fs-2);font-weight:700;color:var(--amber-ink);background:var(--amber-soft);padding:5px 13px;border-radius:999px}
 
-/* 季節のおそなえ */
-.seasonal{display:flex;align-items:center;gap:12px;background:var(--grass-soft);border:2px solid var(--grass-line);
-  border-radius:20px;padding:13px 16px;margin-top:var(--s4);width:100%;text-align:left;cursor:pointer}
-/* span なので、block にしないと見出しと説明が続いてしまう */
-.seasonal .t{display:block;margin:0;font-size:var(--fs-3);font-weight:700;line-height:1.6}
-/* 2行になるときは行の長さをそろえる。最後に1字だけ残ると落ち着かない。 */
-.seasonal .s{display:block;margin:2px 0 0;font-size:var(--fs-2);color:var(--muted);line-height:1.6;text-wrap:balance}
-.seasonal .plus{margin-left:auto;font-size:var(--fs-7);color:var(--grass-ink);line-height:1;font-family:var(--round)}
-.seasonal[data-done="1"]{opacity:.72}
-.seasonal[data-done="1"] .plus{font-size:var(--fs-6)}
+/* おまいりを終える／また、あとで。4つのお供えのすぐ下に置き、
+   スクロールしなくても見えるようにする（追記56）。 */
+#btn-omairi-close{margin-top:var(--s6)}
 
 /* ---------- おまいりのあと ---------- */
 .after{
@@ -662,7 +655,7 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    タップハイライトを消した意味がなくなり、Androidでは何も光らなくなる。 */
 .setrow:active,.btn-line:active,.btn-ghost:active,.btn-dash:active,.tab:active,
 .offer:not([disabled]):active,.seg button:active,.kindpick button:active,
-.scale button:active,.letter-card:active,.seasonal:active,.scenepick button:active,
+.scale button:active,.letter-card:active,.scenepick button:active,
 .starters button:active,.pnav:active,.player-bar button:active,.menu:active,.more:active{
   opacity:.6;
 }
