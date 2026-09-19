@@ -332,8 +332,8 @@
   function faveChip(name, opts) {
     opts = opts || {};
     return '<button class="fave' + (opts.offering ? ' offering' : '') + '"' +
-      (opts.done ? ' data-done="1"' : (opts.sel ? ' data-sel="1"' : '')) +
-      (opts.act ? ' data-fave="' + esc(name) + '" aria-pressed="' + (opts.done || opts.sel) + '"' : ' data-favedel="' + esc(name) + '"') +
+      (opts.done ? ' data-done="1"' : '') +
+      (opts.act ? ' data-fave="' + esc(name) + '" aria-pressed="' + !!opts.done + '"' + (opts.done ? ' disabled' : '') : ' data-favedel="' + esc(name) + '"') +
       '><svg aria-hidden="true"><use href="#of-dish"></use></svg>' + esc(name) +
       (opts.act ? '' : ' <span style="color:var(--faint);font-weight:400">×</span>') + '</button>';
   }
@@ -573,11 +573,11 @@
      順序固定・スキップ不可。毎回まったく同じ手順であることが効いている。 */
   var LEADS = ['灯りを、ともします', 'お水を、そなえます', 'ごはんを、そなえます', 'お花を、そなえます'];
   var rstep = 0, rcounted = false;
-  /* 好きだったものは、4動作とは別枠。順序を問わず気になるものだけ選び、
-     まとめて1回でそなえる。faveSel＝まだそなえていない「選んだ」状態、
+  /* 好きだったものは、4動作とは別枠。順序を問わず、気になるものを
+     タップしたその場でそなえる（4動作と同じ、選んで即・確定の1タップ）。
      justOffered＝そなえた直後のもの（このおまいり画面を開いている間だけ、
      次の再描画で一度だけ光らせるための印） */
-  var faveSel = {}, justOffered = {};
+  var justOffered = {};
   function renderRitual() {
     $$('#ritual .offer').forEach(function (b, i) {
       if (i < rstep) { b.dataset.state = 'done'; b.disabled = true; }
@@ -612,19 +612,15 @@
     $('#faves-hint').hidden = !f.length;
     $('#omairi-faves').innerHTML =
       f.map(function (n) {
-        var done = S.faveDoneOn(t, n);
-        return faveChip(n, { act: true, done: done, sel: !done && !!faveSel[n], offering: !!justOffered[n] });
+        return faveChip(n, { act: true, done: S.faveDoneOn(t, n), offering: !!justOffered[n] });
       }).join('') +
       (f.length < 2
         ? '<button class="fave add" id="btn-fave-add"><svg aria-hidden="true"><use href="#ic-plus"></use></svg>' +
           (f.length ? '足す' : '好きだったものを足す') + '</button>'
         : '');
     justOffered = {};   // 光らせるのは直後の1回だけ
-    var pend = f.filter(function (n) { return faveSel[n] && !S.faveDoneOn(t, n); });
-    $('#btn-fave-offer').hidden = pend.length === 0;
-    $('#fave-offer-label').textContent = 'そなえる（' + pend.length + '）';
   }
-  function startRitual() { rstep = 0; rcounted = false; faveSel = {}; justOffered = {}; renderRitual(); show('omairi'); }
+  function startRitual() { rstep = 0; rcounted = false; justOffered = {}; renderRitual(); show('omairi'); }
   function tapOffer(i) {
     if (i !== rstep) return;
     rstep++;
@@ -1709,18 +1705,11 @@
       var b = e.target.closest('button[data-fave]'); if (!b) return;
       var t = S.today(), n2 = b.dataset.fave;
       if (S.faveDoneOn(t, n2)) return;
-      // すぐそなえるのではなく、選ぶだけ。まとめて「そなえる」で確定する。
-      if (faveSel[n2]) delete faveSel[n2]; else faveSel[n2] = true;
+      // 4動作と同じ、タップしたその場でそなえる（選ぶ→確定の2段階にしない）。
+      S.putFave(t, n2);
+      justOffered[n2] = true;
       renderRitual();
     });
-    $('#btn-fave-offer').onclick = function () {
-      var t = S.today();
-      Object.keys(faveSel).forEach(function (n) {
-        if (!S.faveDoneOn(t, n)) { S.putFave(t, n); justOffered[n] = true; }
-      });
-      faveSel = {};
-      renderRitual();
-    };
     $('#btn-omairi-close').onclick = function () {
       if (rstep >= 4) showAfter(rcounted); else show('home');
     };
