@@ -2556,3 +2556,63 @@ Playwrightで、昼・夜どちらの配色でも崩れないこと（`localStor
 320px幅でも崩れないこと、設定画面の「プライバシーポリシー」の行から
 実際に`privacy.html`へ遷移できること、コンソールにJSの例外が出ない
 ことをスクリーンショット付きで確認した。
+
+# 追記53：Codemagicでのビルド・提出を自動化する（2026-09-19）
+
+利用者の手元のMac（2014年・macOS Big Sur）にはClaude Codeが入らず、
+そもそも最新のXcodeも動かせないため、Mac本体に頼らずクラウドのCIで
+ビルド・署名・TestFlight配信まで自動化する方針にした（利用者の選択）。
+
+## codemagic.yamlをリポジトリのルートに置く
+
+このリポジトリはモノレポ（`tomoshibi/`はその中の1アプリ）。Codemagicの
+仕様上、設定ファイルはリポジトリのルートに置く必要がある（`tomoshibi/`
+の中には置けない）ため、`/codemagic.yaml`とし、`working_directory:
+tomoshibi`で対象を絞った。他のアプリ（cashbook・dividend等）には
+影響しない。中身は公式のCapacitorサンプル
+（`codemagic-ci-cd/codemagic-sample-projects`のionic/ionic-capacitor
+-demo-project）を土台にしたが、このプロジェクトはCapacitor 8で
+CocoaPodsではなくSwift Package Manager（SPM）を使う（追記51）ため、
+`.xcworkspace`が存在しない。そのため公式サンプルの
+`--workspace "App.xcworkspace"`ではなく`--project "ios/App/App.
+xcodeproj"`に置き換えた（WebFetchで`codemagic-cli-tools`のドキュメント
+を確認し、`--project`がworkspace無しのプロジェクト向けに用意されている
+ことを確かめた上での変更）。
+
+## ビルド前に見つけて直した、実機を持つ人がいないと気づけない2つの欠落
+
+`npx cap add ios`で生成されたプロジェクトには、誰もXcodeで一度も
+開いたことがなかったため、次の2つが欠けていた。ローカルでXcodeを
+開けば自動生成されるが、開かれるまでは存在せず、CIのような無人環境
+では通らない：
+
+1. **共有スキーム（`.xcscheme`）が無かった。** `xcodebuild -scheme App`
+   はスキームが「共有」としてgit管理されていないと動かない。Xcodeを
+   開いて手動で「共有」にチェックを入れる操作の代わりに、標準的な
+   スキームXMLを`ios/App/App.xcodeproj/xcshareddata/xcschemes/
+   App.xcscheme`として直接書いた（`project.pbxproj`内のターゲットの
+   BlueprintIdentifierを実際の値に合わせて参照）。
+2. **`VERSIONING_SYSTEM`が設定されていなかった。** codemagic.yamlの
+   ビルド番号自動採番（`agvtool new-version`）は、ビルド設定に
+   `VERSIONING_SYSTEM = "apple-generic"`が無いと動かない。Debug・
+   Release両方のビルド設定に追加した。
+
+## 安全側に倒したところ
+
+- `submit_to_app_store: false`を既定にした。審査への提出は明確な
+  意思決定なので、ここを`true`に変えるまで自動化しない（TestFlightへの
+  配信＝`submit_to_testflight: true`までは自動でよいという判断）。
+- `APP_STORE_APP_ID`はダミー値のプレースホルダのまま。App Store
+  Connectでアプリのレコードを作ったあとでないと決まらない値のため。
+- Codemagic側の設定（App Store ConnectのAPIキー登録など）は、
+  リポジトリの外（Codemagicの管理画面）で利用者本人が行う必要がある
+  手順として、yamlの冒頭コメントに残した。
+
+## 確かめたこと
+
+`codemagic.yaml`をPythonの`yaml.safe_load`で構文確認。追加した
+`App.xcscheme`をPythonの`xml.dom.minidom`で構文確認。`project.pbxproj`
+は波括弧の対応数が変更前後で保たれていること（48対48）と、差分が
+意図した2行の追加だけであることを確認した。実際のCodemagicでの
+ビルド実行そのものは、Codemagicアカウントでの連携設定が要るため、この
+セッションでは確認できていない（利用者側での初回ビルドの確認が必要）。

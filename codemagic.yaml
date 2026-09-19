@@ -1,0 +1,83 @@
+# Codemagic CI/CD 設定（ともしび・iOS）
+#
+# このリポジトリはモノレポ（tomoshibi/はその中の1アプリ）。codemagic.yamlは
+# 仕様上リポジトリのルートに置く必要があるため、この場所に置き、
+# working_directory: tomoshibi で対象をtomoshibi/に絞っている
+# （他のアプリ：cashbook・dividend・yosou等には影響しない）。
+#
+# Capacitor 8はCocoaPodsではなくSwift Package Manager（SPM）でプラグインを
+# 解決するため、.xcworkspaceは存在しない（.xcodeprojのみ）。SPMの依存先は
+# tomoshibi/ios/App/CapApp-SPM/Package.swift内で node_modules/@capacitor/* を
+# ローカルパス参照しているため、Xcodeが依存解決するより先に必ず npm ci が
+# 要る（下のスクリプトの順序はそのため）。
+#
+# 使う前に、Codemagicの管理画面（web）で以下を用意すること：
+#   1. このリポジトリをCodemagicに接続する
+#   2. Team settings → Integrations → App Store Connect で、
+#      App Store ConnectのAPIキー（Issuer ID・Key ID・.p8ファイル）を登録し、
+#      好きな名前を付ける（下のintegrations.app_store_connectと同じ名前にする。
+#      既定では tomoshibi_asc という名前にしてある）
+#   3. Apple Developer側でこのアプリ（com.tomoshibi.app）のBundle IDと、
+#      App Store Connect側でアプリのレコードを作る（アプリ名・言語などの最低限）
+#   4. App Store Connect > App > General > App Information にある
+#      「Apple ID」（数字だけの、アプリごとのID）を、下のAPP_STORE_APP_IDに入れる
+#
+# ここまで準備できれば、このブランチにpushするたびに自動でビルド・署名・
+# TestFlightへの配信までが走る。審査への提出（submit_to_app_store）は
+# 既定でfalseにしてあり、それだけは人が判断して切り替えるまで自動化しない。
+
+workflows:
+  tomoshibi-ios:
+    name: ともしび iOS
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    working_directory: tomoshibi
+    integrations:
+      app_store_connect: tomoshibi_asc
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.tomoshibi.app
+      vars:
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+        APP_STORE_APP_ID: 1234567890 # ← App Store Connectでアプリのレコードを作ったら、そのApple IDに差し替える
+      xcode: latest
+      node: 20
+    scripts:
+      - name: npm依存パッケージをインストール
+        script: npm ci
+      - name: 静的ファイル（www/）とCapacitorのブリッジをビルド
+        script: npm run build
+      - name: Capacitorの依存とWebアセットをiOSへ同期
+        script: npx cap sync ios
+      - name: 署名設定をXcodeプロジェクトへ反映
+        script: xcode-project use-profiles
+      - name: ビルド番号を進める
+        script: |
+          cd ios/App
+          agvtool new-version -all "$BUILD_NUMBER"
+      - name: ipaを書き出す（.xcworkspaceが無いので--projectを使う）
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      # working_directoryの中で作られるが、artifactsのパスはリポジトリの
+      # ルートからの相対パスで見るため、tomoshibi/を付ける
+      - tomoshibi/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - halufuway@gmail.com
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # 外部テスターのグループに配るときだけ、下のコメントを外して名前を入れる
+        # beta_groups:
+        #   - グループ名
+        submit_to_app_store: false # 審査への提出は、ここをtrueにするまで自動化しない
