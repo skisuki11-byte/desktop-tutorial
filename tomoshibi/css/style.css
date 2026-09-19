@@ -125,10 +125,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .daybar{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);padding:4px 0 8px}
 .daybar .d{display:flex;align-items:center;gap:8px;font-size:var(--fs-4);color:var(--muted);font-weight:500}
 .daybar-set{flex:none;display:flex;align-items:center;justify-content:center;
-  width:44px;height:44px;margin:-11px -10px -11px 0;border:0;border-radius:50%;
+  width:52px;height:52px;margin:-15px -14px -15px 0;border:0;border-radius:50%;
   background:transparent;color:var(--muted);cursor:pointer}
 .daybar-set:active{background:var(--panel)}
-.daybar-set svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.daybar-set svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- 写真とイラスト ---------- */
 /* 写真が入ればイラストは消える。イラストは写真が入るまでの代役。 */
