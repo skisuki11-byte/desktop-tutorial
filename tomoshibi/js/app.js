@@ -1863,7 +1863,8 @@
       body += '<br><br>端末を変えるときは、設定の「バックアップを書き出す」で持ち出して、新しい端末で読み込ませてください。';
       sheet('保存のようす', body, [{ label: 'とじる', primary: true }]);
     };
-    $('#btn-help').onclick = showHelp;
+    // 設定からの入口は一旦なくした（依頼により）。「じぶん」で重い日が
+    // 続いたときのそっとした案内（#btn-self-help）だけは残す（追記48）。
 
     document.addEventListener('click', function (e) {
       var g = e.target.closest('[data-self]'); if (!g) return;
