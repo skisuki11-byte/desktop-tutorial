@@ -51,18 +51,13 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<!-- 追記74：この画面は縦専用でしか作っていない（固定高さの絵・
+	     下部タブなど）。横向きやiPadを許すと、そのぶん崩れて見える
+	     場所が出るため、対応する向き・機種をiPhoneの縦のみに絞る。
+	     TARGETED_DEVICE_FAMILYもiPhoneのみに揃えてある。 -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
