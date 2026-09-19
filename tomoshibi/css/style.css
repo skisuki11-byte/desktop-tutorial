@@ -542,9 +542,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .ritual-sub{margin:6px 0 0;font-size:var(--fs-2);color:var(--muted);text-align:center}
 .step-pill{font-size:var(--fs-2);font-weight:700;color:var(--amber-ink);background:var(--amber-soft);padding:5px 13px;border-radius:999px}
 
-/* おまいりを終える／また、あとで。4つのお供えのすぐ下に置き、
-   スクロールしなくても見えるようにする（追記56）。 */
-#btn-omairi-close{margin-top:var(--s6)}
+/* おまいりを終える／また、あとで。好きだったものの下に置く
+   （追記57）。ここまでがスクロールなしで収まるよう、直前の見出し
+   （#faves-h）ともども余白を少し詰めている。 */
+#btn-omairi-close{margin-top:var(--s4)}
+#faves-h{margin-top:var(--s4)}
 
 /* ---------- おまいりのあと ---------- */
 .after{

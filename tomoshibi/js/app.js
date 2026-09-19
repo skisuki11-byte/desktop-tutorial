@@ -320,12 +320,12 @@
     step++; S.save(); renderOnbo();
   }
 
-  /* 好きだったもの。3つまで。 */
+  /* 好きだったもの。2つまで。 */
   function addFave(name) {
     name = String(name || '').trim().slice(0, 12);
     if (!name) return false;
     if (!st.pet.faves) st.pet.faves = [];
-    if (st.pet.faves.length >= 3 || st.pet.faves.indexOf(name) >= 0) return false;
+    if (st.pet.faves.length >= 2 || st.pet.faves.indexOf(name) >= 0) return false;
     st.pet.faves.push(name); S.save();
     return true;
   }
@@ -340,8 +340,8 @@
   function renderFaveEdit() {
     var f = st.pet.faves || [];
     $('#fave-list').innerHTML = f.map(function (n) { return faveChip(n, {}); }).join('');
-    $('#in-fave').disabled = f.length >= 3;
-    $('#in-fave').placeholder = f.length >= 3 ? '3つまでです' : 'さつまいも';
+    $('#in-fave').disabled = f.length >= 2;
+    $('#in-fave').placeholder = f.length >= 2 ? '2つまでです' : 'さつまいも';
   }
 
   function pickPortrait(file) {
@@ -615,7 +615,7 @@
         var done = S.faveDoneOn(t, n);
         return faveChip(n, { act: true, done: done, sel: !done && !!faveSel[n], offering: !!justOffered[n] });
       }).join('') +
-      (f.length < 3
+      (f.length < 2
         ? '<button class="fave add" id="btn-fave-add"><svg aria-hidden="true"><use href="#ic-plus"></use></svg>' +
           (f.length ? '足す' : '好きだったものを足す') + '</button>'
         : '');
