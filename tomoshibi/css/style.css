@@ -855,13 +855,19 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 /* ---------- お供え：この子の好きだったもの ---------- */
 .faves{display:flex;flex-wrap:wrap;gap:9px;margin-top:var(--s3)}
 .fave{
-  display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;
+  position:relative;display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;
   border-radius:999px;border:2px solid var(--line);background:var(--panel);
   color:var(--muted);font-size:var(--fs-3);font-weight:700;cursor:pointer;
+  transition:all .3s ease;
 }
 .fave svg{width:20px;height:20px;flex:none}
 .fave[data-done="1"]{border-color:var(--grass-ink);background:var(--grass-soft);color:var(--grass-ink)}
 .fave:disabled{cursor:default}
+/* タップして選んだことが色の変化だけだと気づきにくいという指摘を受け、
+   4動作（.offer .chk）と同じチェックの丸バッジを付ける（追記62）。 */
+.fave .chk{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;
+  background:var(--grass-ink);display:none;place-items:center;box-shadow:0 0 0 2px var(--panel)}
+.fave[data-done="1"] .chk{display:grid}
 .fave.add{border-style:dashed;border-color:var(--line-2);color:var(--amber-ink)}
 .faves-h{margin:var(--s6) 0 0;font-size:var(--fs-2);color:var(--faint);font-weight:700;letter-spacing:.06em}
 .faves-hint{margin:4px 0 0;font-size:var(--fs-1);color:var(--faint);line-height:1.7}
