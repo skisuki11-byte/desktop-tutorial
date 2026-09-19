@@ -605,12 +605,7 @@
       b.className = 'btn btn-amber btn-lg';
       b.textContent = 'おまいりを終える';
     }
-    var t = S.today(), sea = S.seasonalFor(t), done = S.seasonalDone(t);
-    $('#seasonal-t').textContent = (t.getMonth() + 1) + '月のおそなえ ・ ' + sea.name;
-    $('#seasonal-s').textContent = done ? 'そなえました' : '月がわり。置いても置かなくても、いい';
-    $('#seasonal').dataset.done = done ? '1' : '0';
-    $('#seasonal-p').textContent = done ? '✓' : '+';
-
+    var t = S.today();
     var f = st.pet.faves || [];
     $('#faves-h').hidden = false;
     $('#faves-h').textContent = f.length ? (st.pet.name || 'あの子') + 'の好きだったもの' : '';
@@ -1705,11 +1700,6 @@
       var b = e.target.closest('.offer');
       if (b && !b.disabled) tapOffer(+b.dataset.i);
     });
-    $('#seasonal').onclick = function () {
-      var t = S.today();
-      if (S.seasonalDone(t)) return;
-      S.putSeasonal(t); renderRitual();
-    };
     $('#omairi-faves').addEventListener('click', function (e) {
       if (e.target.closest('#btn-fave-add')) {
         var n = window.prompt('好きだったもの', '');
