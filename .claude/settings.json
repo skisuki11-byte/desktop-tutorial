@@ -1,0 +1,4 @@
+{
+  "model": "claude-sonnet-5",
+  "fallbackModel": ["claude-opus-5"]
+}
