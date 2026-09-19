@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="day">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FDFAF2">
+<meta name="description" content="ともしび のプライバシーポリシー。このアプリが集める情報・使う権限について、実際の実装に基づいて説明します。">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'">
+<title>プライバシーポリシー — ともしび</title>
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* この1ページだけの上書き。アプリ本体は固定高さ・タブ付きのシェルだが、
+     このページはただの読み物なので、素直に縦スクロールする普通の文書にする。 */
+  html,body{height:auto;overflow:visible;overscroll-behavior:auto}
+  body{padding:0 0 48px}
+  .doc{max-width:640px;margin:0 auto;padding:0 20px}
+  .doc-top{padding:28px 0 6px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .doc-back{display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-size:var(--fs-3);text-decoration:none;white-space:nowrap}
+  .doc-back:hover{color:var(--amber-ink)}
+  .doc h1{margin:2px 0 0;font-family:var(--round);font-weight:700;font-size:var(--fs-7);letter-spacing:.04em}
+  .doc-meta{margin:6px 0 0;font-size:var(--fs-2);color:var(--faint)}
+  .doc section{margin-top:var(--s6)}
+  .doc h2{margin:0 0 8px;font-size:var(--fs-5);font-weight:700;font-family:var(--round)}
+  .doc p{margin:0 0 10px;font-size:var(--fs-3);line-height:1.9;color:var(--ink)}
+  .doc p:last-child{margin-bottom:0}
+  .doc ul{margin:0 0 10px;padding-left:1.3em;font-size:var(--fs-3);line-height:1.9}
+  .doc li{margin-bottom:4px}
+  .doc li:last-child{margin-bottom:0}
+  .doc code{background:var(--amber-soft);color:var(--amber-ink);border-radius:6px;padding:1px 6px;font-size:.9em}
+  .doc-foot{margin-top:var(--s8);padding-top:var(--s4);border-top:2px solid var(--line);font-size:var(--fs-2);color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="doc-top">
+    <div>
+      <a class="doc-back" href="./"><svg width="16" height="16" aria-hidden="true"><use href="#ic-back"></use></svg>ともしびに戻る</a>
+      <h1>プライバシーポリシー</h1>
+      <p class="doc-meta">ともしび（tomoshibi）・2026年9月19日 制定</p>
+    </div>
+  </div>
+
+  <div class="tip tip-amber" style="margin-top:18px">
+    <svg width="19" height="19" style="color:var(--amber-ink)" aria-hidden="true"><use href="#ic-info"></use></svg>
+    <p><b>ひとことで言うと、このアプリはあなたの情報を一切集めません。</b><br>
+    アカウント登録も、サーバーへの送信も、広告も、アクセス解析もありません。
+    なまえ・写真・動画・手紙・気分の記録は、すべてこの端末の中だけに残ります。
+    以下は、それを実際のつくりに沿って詳しく説明したものです。</p>
+  </div>
+
+  <section>
+    <h2>集める情報について</h2>
+    <p>「ともしび」は、ペットのなまえ・写真・動画・日づけ・手紙・気分の記録などをアプリ内で扱いますが、
+    これらはすべて端末（スマートフォン・ブラウザ）の中だけに保存され、開発者を含め<b>誰にも送信されません</b>。
+    利用にあたって、氏名・メールアドレス・電話番号などの登録は一切必要ありません。アカウントという概念自体がありません。</p>
+  </section>
+
+  <section>
+    <h2>保存する場所</h2>
+    <p>記録は端末のブラウザ内蔵の保存領域（<code>localStorage</code>・<code>IndexedDB</code>）に保存されます。
+    これは、そのブラウザ（アプリ）だけが読み書きできる領域で、外部のサーバーとは一切やりとりしません。
+    アプリを削除したり、端末の保存データを消去したりすると、これらの記録も一緒に消えます。</p>
+  </section>
+
+  <section>
+    <h2>外部との通信について</h2>
+    <p>このアプリが通信する先は、画面の文字を表示するための書体（Google Fonts）<b>1つだけ</b>です。
+    それ以外の通信先へは、技術的な制限（Content-Security-Policy）でブロックされており、そもそも接続できません。
+    利用状況を計測する解析ツール・広告・クラッシュ収集などのSDKは、一切組み込んでいません。</p>
+    <p>Google Fontsの利用にともない、書体データの取得時にお使いの端末のIPアドレスがGoogleに渡ります
+    （書体を正しく表示するための一般的な仕組みです）。詳しくは
+    <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Googleのプライバシーポリシー</a>をご確認ください。</p>
+  </section>
+
+  <section>
+    <h2>ストア版アプリで使う権限（iPhone／Android）</h2>
+    <p>App Store・Google Playを通じて配信するアプリ版では、次の権限を求めることがあります。
+    いずれも、その場でアプリ内の機能として使うだけで、取得した写真や許可の状態が外部へ送信されることはありません。</p>
+    <ul>
+      <li><b>カメラ・写真ライブラリ</b>　顔写真・お骨の写真を登録するときだけ使います。</li>
+      <li><b>通知</b>　設定の「大事な日のお知らせ」をオンにした方にだけ、四十九日や月命日などをこの端末内で予定するために使います。既定はオフで、オンにするかはいつでも選べます。通知はこの端末の中だけで予定され、サーバー経由の配信（プッシュ通知）ではありません。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>バックアップの書き出しについて</h2>
+    <p>設定の「書き出す」機能で記録をファイルに書き出せますが、これはあなたの端末上でファイルを作る操作であり、
+    開発者やどこかのサーバーに送られるものではありません。書き出したファイルの保存先・共有先は、すべてあなた自身が選びます。</p>
+  </section>
+
+  <section>
+    <h2>お子さまのプライバシーについて</h2>
+    <p>このアプリは特定の年齢層を対象にしたものではありませんが、そもそも誰からもいかなる個人情報も収集しないため、
+    お子さまがご利用になった場合も同様に、情報が外部に渡ることはありません。</p>
+  </section>
+
+  <section>
+    <h2>このポリシーの変更について</h2>
+    <p>アプリの機能を追加・変更する際、その内容に合わせてこのページを更新することがあります。
+    重要な変更がある場合は、ページ上部の制定日を更新してお知らせします。</p>
+  </section>
+
+  <section>
+    <h2>お問い合わせ</h2>
+    <p>このアプリについてのご質問・ご意見は、下記までご連絡ください。</p>
+    <p><a href="mailto:halufuway@gmail.com">halufuway@gmail.com</a></p>
+  </section>
+
+  <div class="doc-foot">
+    <p style="margin:0">ともしび — 亡くなったペットのおうち</p>
+  </div>
+
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/theme-apply.js"></script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <symbol id="ic-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</defs></svg>
+
+</body>
+</html>

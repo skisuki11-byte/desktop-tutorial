@@ -1,0 +1,18 @@
+{
+  "appId": "com.tomoshibi.app",
+  "appName": "ともしび",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "backgroundColor": "#FDFAF2",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP"
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "LIGHT",
+      "backgroundColor": "#FDFAF2"
+    }
+  }
+}

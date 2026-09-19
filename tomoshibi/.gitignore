@@ -1,0 +1,15 @@
+node_modules/
+www/
+
+# Capacitor native platform projects (generated; add back deliberately if we start committing native code)
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/build/
+ios/.build/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+.DS_Store

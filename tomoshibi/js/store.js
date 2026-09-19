@@ -35,6 +35,7 @@
       chapterTitles: {},
       theme: 'light',
       openingOff: false,  // オープニング画面。既定は毎回表示、設定でoffにできる
+      notifyMilestones: false, // 大事な日のお知らせ（ネイティブ版のみ）。既定はオフ
       echoDismissedOn: '' // 手紙のこだまを、その日だけ閉じた日付。翌日以降は関係なく戻る
     };
   }

@@ -2410,3 +2410,209 @@ Playwrightで、ペットの名を登録した状態で「じぶん」画面を�
 名を登録していない場合は「あの子」に置き換わることも確認した。
 説明文の枠が、文が増えても崩れないことを昼・夜配色、320px幅の
 スクリーンショットで確認した。JSの例外が出ないことも確認した。
+
+# 追記51：ストア配信（iOS）に向けて、Capacitorでネイティブの土台を作る（2026-09-19）
+
+利用者から「ストア配信をしたい」「iPhoneで進めよう」「では、ネイティブ
+っぽくしよう。プッシュ通知機能は何か入れよう」との依頼。Appleの審査
+（ガイドライン4.2「単なるWebサイトに見えないこと」）を通りやすくする
+ため、既存の静的HTML/CSS/JSをそのまま活かしつつ、Capacitorでネイティブ
+の器に包み、ネイティブAPIを実際に使う4点を実装した。
+
+## 方針：ルート直下は今まで通り、www/はビルド成果物
+
+このアプリはGitHub Pages配信のPWAとして、ルート直下の`index.html`・
+`css/`・`js/`・`icons/`・`manifest.webmanifest`・`sw.js`がそのまま
+配信物になっている。Capacitorはこれとは別に`webDir`（ネイティブが
+読み込む場所）を必要とするため、ルート側を一切変えずに`www/`という
+ビルド出力先を新設し、そこへコピーするだけの`scripts/build-www.js`を
+書いた（`www/`はコピー先なのでgit管理外＝`.gitignore`）。これにより
+GitHub PagesのPWAは今までと完全に同じファイルのまま、影響を受けない。
+
+## npmパッケージ（@capacitor/*）をバンドラ無しのapp.jsから使う
+
+このアプリには元々ビルド工程が無く、`<script src>`でそのまま読む
+素のJSファイルだけで出来ている。Capacitorのプラグイン（Haptics・
+LocalNotifications・Camera・SplashScreen・StatusBar）はnpm/ESM前提の
+パッケージなので、直接app.jsからは読めない。
+
+そこで`capacitor-src/bridge.js`（ESMソース、npmパッケージをimportする）
+を新設し、esbuildで`js/capacitor-bridge.js`という素のIIFEにまとめる
+（`scripts/build-bridge.js`）。これを`window.TomoshibiNative`という
+ただのオブジェクトとしてindex.htmlの先頭（store.js・app.jsより前）で
+読み込む。`js/capacitor-bridge.js`はビルド成果物だが、ルート直下の
+PWAもこのファイルを直接読むため（バンドラが無いので他に方法がない）、
+`www/`とは違いgit管理する＝ルート側の「配信物」の一部として扱う。
+
+`Capacitor.isNativePlatform()`が false（ブラウザ・PWA）のときは、
+`TomoshibiNative`の全関数が何もせず`null`を返すだけのno-opになる
+（`safe()`というラッパーで統一）。app.js側は「ネイティブかどうか」を
+気にせずただ呼べばよく、ブラウザで開いたときの挙動は一切変わらない
+（Playwrightで確認済み。詳細は下）。
+
+## 実装した4点
+
+1. **触覚フィードバック**：おまいりの4つのお供えが揃った瞬間
+   （`tapOffer()`内、`rstep===4`）に`hapticSuccess()`を呼ぶ。
+2. **大事な日のお知らせ（ローカル通知）**：設定に「大事な日のお知らせ」
+   カード（`#box-notify`、ネイティブでのみ表示）を追加。既定オフ。
+   オンにすると`requestNotifyPermission()`で許可を求め、許可されたら
+   `syncMilestoneNotifications()`が`S.milestones()`（既存の.icsカレンダー
+   書き出し機能と同じ節目計算）から四十九日・百か日・月命日・お誕生日・
+   一周忌・三回忌の次回日を組み立て、端末のOSにそのままスケジュールする。
+   **サーバーは一切使わない**——このアプリの「100%ローカル・アカウント
+   不要」という一貫した約束はここでも変わらない（以前の追記46で
+   「プッシュ通知は自前サーバーが要るため使わない」としていたのは
+   サーバー配信の話で、`@capacitor/local-notifications`は端末内で完結する
+   別の仕組み）。アプリを開くたびに一旦全部キャンセルしてから今日の日付で
+   組みなおすため、日付がずれたまま残ることがない。
+3. **カメラ**：顔写真・お骨写真の「えらぶ」ボタンは、ネイティブでは
+   OS標準のカメラ／フォトライブラリ選択（`@capacitor/camera`、
+   `CameraSource.Prompt`で選択肢を出す）を使う。ブラウザ・PWAでは
+   従来通り隠しinputのまま。取得した写真はBlobから`File`に包み直し、
+   既存の`pickPortrait()`・`pickAshes()`にそのまま渡せるようにした
+   （呼び出され側の処理は一切変更していない）。
+4. **起動画面・ステータスバー**：`capacitor.config.json`で
+   SplashScreenを`launchAutoHide:false`にし、既存の起動シーケンス
+   （`S.probe()`→写真読み込み→オープニング表示）が終わったタイミングで
+   明示的に`hideSplash()`する（白い一瞬の空白を防ぐ）。背景色はアプリの
+   `--bg`（#FDFAF2）に合わせた単色画像に差し替えた（`ios/App/App/
+   Assets.xcassets/Splash.imageset/`、Node標準のzlibだけで生成）。
+   ステータスバーの文字色は`applyTheme()`の中で昼/夜と同期する
+   （`setStatusBarStyle()`）。なお本物のブランドロゴ入り起動画像は
+   今回は単色止まりとした——デザインの詰めは実機を持つ人の目で行う方が
+   よい判断だと考えたため。
+
+## iOS側の追加設定
+
+- `Info.plist`にカメラ・写真ライブラリの利用目的（`NSCameraUsage
+  Description`ほか）を追加。無いと審査どころか起動時にクラッシュする。
+- Capacitor 8はデフォルトでCocoaPodsではなくSwift Package Manager
+  （`ios/App/CapApp-SPM/`）でプラグインを解決する。そのため
+  `npx cap sync ios`はこのLinuxサンドボックスでも最後まで成功した
+  （CocoaPods特有の`pod install`が無いため）。ただし実機・シミュレータ
+  でのビルド・実行はXcodeが要るため、利用者自身のMacで行う必要がある
+  （ここでは確認できていない）。
+
+## 確かめたこと
+
+`node --check`でapp.js・store.jsの構文確認。Playwrightで、ブラウザ
+（`TomoshibiNative.isNative===false`）のとき：`#box-notify`が非表示の
+まま、おまいりの4お供えが例外なく完了できること（触覚呼び出しが
+no-opでも問題ないこと）、設定画面が壊れていないことを確認。さらに
+`window.TomoshibiNative`を差し替えてネイティブを模した状態も作り、
+「大事な日のお知らせ」カードが正しく表示・トグルでき、状態が保存
+されること、昼・夜どちらの配色でも崩れないことをスクリーンショットで
+確認した。実機・Xcodeでのビルド、実際の通知・カメラ・触覚の動作は
+このサンドボックス環境では確認できていない（利用者のMac側での確認が
+必要）。
+
+# 追記52：プライバシーポリシーページを作る（2026-09-19）
+
+App Store・Google Play双方とも、審査提出にプライバシーポリシーの
+URLが必須（App Store Connectの「App Privacy」欄、Google Playの
+「データセーフティ」欄）。利用者から「作って」との依頼を受け、
+`privacy.html`をルート直下に追加した。
+
+## 方針：一般的なひな形をそのまま使わない
+
+多くのアプリが、実態と合わない汎用テンプレート（「マーケティング
+パートナーとデータを共有することがあります」等、実際にはしていない
+ことまで書かれたもの）をそのまま貼っている。これは信頼を損なうだけで
+なく、Appleの審査でも「プライバシー表示（Nutrition Label）と実装の
+不一致」（ガイドライン5.1.1）で足を引っ張りうる。SignalやBasecampの
+プライバシーポリシーが「平文・要点先出し」で支持されているのと同じ
+考え方で、このページも一般論を書かず、実際のコードを確認した事実
+（`index.html`のCSP設定、通信先はGoogle Fontsのみ、等）だけを書いた。
+
+- 冒頭に`.tip.tip-amber`のコールアウトで「ひとことで言うと、情報を
+  一切集めません」を要点先出し（Stripe/Basecamp型の「まず結論、次に
+  詳細」の構成）
+- 各セクションは実装済みの機能単位（保存場所・外部通信・ストア版の
+  権限・バックアップの書き出し）に対応させ、書いていないことを
+  でっち上げない
+- 外部通信は実際にCSPで許可している先（Google Fontsのみ）を確認して
+  記載。それ以外へは技術的にブロックされていることも明記
+- デザインは新しいトーンを持ち込まず、`css/style.css`の既存トークン
+  （`.cardbox`は使わず、読み物として`.tip`と素の見出し階層のみ）で
+  そのまま作った。ページ自体はアプリ本体（固定高さ・タブ付きシェル）
+  とは違う、普通に縦スクロールする文書として`html,body{height:auto;
+  overflow:visible}`で上書き
+- `js/store.js`をそのまま読み込み、`Store.state.theme`を見て
+  夜テーマの人には夜配色で出す（`js/theme-apply.js`、新規追加の
+  数行のみ）。暗い画面から急に眩しい白いページへ切り替わらないため
+- 設定画面に「プライバシーポリシー」の行を追加（`.setrow`を`<a>`に
+  適用、既存のボタン行と同じ見た目）。ストア審査でのアプリ内からの
+  到達しやすさにも資する
+- `scripts/build-www.js`の`ENTRIES`に`privacy.html`を追加。ネイティブ
+  アプリ内の設定からもこのページへ遷移できるようにするため
+- 連絡先メールアドレスは、開発者本人の判断で記載してもらう欄として
+  プレースホルダのままにした（勝手に埋めない）
+
+## 確かめたこと
+
+Playwrightで、昼・夜どちらの配色でも崩れないこと（`localStorage`に
+`theme:'night'`を仕込んで`data-theme`が正しく反映されること）、
+320px幅でも崩れないこと、設定画面の「プライバシーポリシー」の行から
+実際に`privacy.html`へ遷移できること、コンソールにJSの例外が出ない
+ことをスクリーンショット付きで確認した。
+
+# 追記53：Codemagicでのビルド・提出を自動化する（2026-09-19）
+
+利用者の手元のMac（2014年・macOS Big Sur）にはClaude Codeが入らず、
+そもそも最新のXcodeも動かせないため、Mac本体に頼らずクラウドのCIで
+ビルド・署名・TestFlight配信まで自動化する方針にした（利用者の選択）。
+
+## codemagic.yamlをリポジトリのルートに置く
+
+このリポジトリはモノレポ（`tomoshibi/`はその中の1アプリ）。Codemagicの
+仕様上、設定ファイルはリポジトリのルートに置く必要がある（`tomoshibi/`
+の中には置けない）ため、`/codemagic.yaml`とし、`working_directory:
+tomoshibi`で対象を絞った。他のアプリ（cashbook・dividend等）には
+影響しない。中身は公式のCapacitorサンプル
+（`codemagic-ci-cd/codemagic-sample-projects`のionic/ionic-capacitor
+-demo-project）を土台にしたが、このプロジェクトはCapacitor 8で
+CocoaPodsではなくSwift Package Manager（SPM）を使う（追記51）ため、
+`.xcworkspace`が存在しない。そのため公式サンプルの
+`--workspace "App.xcworkspace"`ではなく`--project "ios/App/App.
+xcodeproj"`に置き換えた（WebFetchで`codemagic-cli-tools`のドキュメント
+を確認し、`--project`がworkspace無しのプロジェクト向けに用意されている
+ことを確かめた上での変更）。
+
+## ビルド前に見つけて直した、実機を持つ人がいないと気づけない2つの欠落
+
+`npx cap add ios`で生成されたプロジェクトには、誰もXcodeで一度も
+開いたことがなかったため、次の2つが欠けていた。ローカルでXcodeを
+開けば自動生成されるが、開かれるまでは存在せず、CIのような無人環境
+では通らない：
+
+1. **共有スキーム（`.xcscheme`）が無かった。** `xcodebuild -scheme App`
+   はスキームが「共有」としてgit管理されていないと動かない。Xcodeを
+   開いて手動で「共有」にチェックを入れる操作の代わりに、標準的な
+   スキームXMLを`ios/App/App.xcodeproj/xcshareddata/xcschemes/
+   App.xcscheme`として直接書いた（`project.pbxproj`内のターゲットの
+   BlueprintIdentifierを実際の値に合わせて参照）。
+2. **`VERSIONING_SYSTEM`が設定されていなかった。** codemagic.yamlの
+   ビルド番号自動採番（`agvtool new-version`）は、ビルド設定に
+   `VERSIONING_SYSTEM = "apple-generic"`が無いと動かない。Debug・
+   Release両方のビルド設定に追加した。
+
+## 安全側に倒したところ
+
+- `submit_to_app_store: false`を既定にした。審査への提出は明確な
+  意思決定なので、ここを`true`に変えるまで自動化しない（TestFlightへの
+  配信＝`submit_to_testflight: true`までは自動でよいという判断）。
+- `APP_STORE_APP_ID`はダミー値のプレースホルダのまま。App Store
+  Connectでアプリのレコードを作ったあとでないと決まらない値のため。
+- Codemagic側の設定（App Store ConnectのAPIキー登録など）は、
+  リポジトリの外（Codemagicの管理画面）で利用者本人が行う必要がある
+  手順として、yamlの冒頭コメントに残した。
+
+## 確かめたこと
+
+`codemagic.yaml`をPythonの`yaml.safe_load`で構文確認。追加した
+`App.xcscheme`をPythonの`xml.dom.minidom`で構文確認。`project.pbxproj`
+は波括弧の対応数が変更前後で保たれていること（48対48）と、差分が
+意図した2行の追加だけであることを確認した。実際のCodemagicでの
+ビルド実行そのものは、Codemagicアカウントでの連携設定が要るため、この
+セッションでは確認できていない（利用者側での初回ビルドの確認が必要）。
