@@ -690,17 +690,51 @@
      scheduleMilestoneNotifications）、それをオフにしていても・その日
      アプリを開かなくても、お参りに来たその瞬間だけそっと気づける
      演出として、これは変わらず残す。 */
+  /* 節目ごとの一言（追記70）。四十九日・百か日・一周忌・三回忌は一生に
+     一度しか来ないので1本ずつ。月命日は毎月来るため、同じ言葉が続いて
+     色あせないよう何本も用意し、毎回くじで選ぶ。お誕生日も毎年来るので
+     少しだけ選べるようにした。 */
   var MILESTONE_LINE = {
-    d49: '四十九日です。<br>ここまで、ちゃんと歩いてきましたね。',
-    d100: '百か日です。<br>やすらかな場所に、着いたころです。',
-    y1: '一周忌です。<br>1年、想い続けましたね。',
-    y3: '三回忌です。<br>ずっと、いっしょです。',
-    birthday: 'お誕生日です。<br>おめでとう。'
+    d49: ['ここまで、ちゃんと歩いてきましたね。'],
+    d100: ['やすらかな場所に、着いたころです。'],
+    monthly: [
+      'また、ひと月がすぎましたね。',
+      '今月も、思い出してくれてありがとう。',
+      '変わらず、そばにいますよ。',
+      'ひと月分、あなたは強くなりました。',
+      '今月も、ちゃんと生きていましたね。',
+      '少しずつでいい。今日はここまで。',
+      'あの子はきっと、今日も見ていますよ。',
+      '忘れないでいてくれること、それだけで十分です。',
+      '今日という日を、選んでくれてありがとう。',
+      'また会いに来てくれましたね。',
+      'ひと月、よく過ごしましたね。',
+      '今日の気持ちも、そのままでいいんです。',
+      '思い出は、色あせていませんね。',
+      'あなたのペースで、ここまで来ましたね。',
+      'あの日から、また少し進みましたね。',
+      '今月も、ここに来てくれました。'
+    ],
+    y1: ['1年、想い続けましたね。'],
+    y3: ['ずっと、いっしょです。'],
+    birthday: ['おめでとう。', '生まれてきてくれて、ありがとう。', '今日は、あの子の日ですね。', '何歳になっても、家族です。']
   };
+  function pickMilestoneLine(key) {
+    var arr = MILESTONE_LINE[key]; if (!arr) return null;
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
   function showAfter(counted) {
     var name = st.pet.name || 'あの子';
+    // 大きな節目（四十九日・百か日・一周忌・三回忌・お誕生日）を優先し、
+    // 無ければ月命日かどうかを見る。月命日は「手紙のこだま」の対象には
+    // 含めない（毎月では、こだまとしては出過ぎてしまうため）ので、
+    // S.milestoneToday()とは別に確かめる。
     var big = S.milestoneToday(S.today());
-    $('#after-line').innerHTML = (big && MILESTONE_LINE[big.key]) || 'ありがとう。<br>またね。';
+    if (!big) {
+      big = S.milestones(S.today()).filter(function (m) { return m.key === 'monthly' && m.days === 0; })[0] || null;
+    }
+    var line = big && pickMilestoneLine(big.key);
+    $('#after-line').innerHTML = (big && line) ? (big.label + 'です。<br>' + line) : 'ありがとう。<br>またね。';
     var heaven = $('.heaven'); if (heaven) heaven.classList.toggle('milestone', !!big);
     $('#after-count').textContent = S.visitCount();
     var tally = $('.tally .g');
