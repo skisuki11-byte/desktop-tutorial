@@ -335,7 +335,9 @@
       (opts.done ? ' data-done="1"' : '') +
       (opts.act ? ' data-fave="' + esc(name) + '" aria-pressed="' + !!opts.done + '"' + (opts.done ? ' disabled' : '') : ' data-favedel="' + esc(name) + '"') +
       '><svg aria-hidden="true"><use href="#of-dish"></use></svg>' + esc(name) +
-      (opts.act ? '' : ' <span style="color:var(--faint);font-weight:400">×</span>') + '</button>';
+      (opts.act
+        ? '<span class="chk"><svg width="12" height="12"><use href="#ic-check"></use></svg></span>'
+        : ' <span style="color:var(--faint);font-weight:400">×</span>') + '</button>';
   }
   function renderFaveEdit() {
     var f = st.pet.faves || [];
@@ -1709,6 +1711,7 @@
       S.putFave(t, n2);
       justOffered[n2] = true;
       renderRitual();
+      toast(n2 + '、そなえました');
     });
     $('#btn-omairi-close').onclick = function () {
       if (rstep >= 4) showAfter(rcounted); else show('home');
