@@ -318,7 +318,12 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    中身は設定（納骨の写真の見せ方）で、骨壺のイラスト（#of-urn・既定。骨の写真
    そのものは人によっては直視がつらく、あたたかいお参りの場にそぐわないため
    ＝追記43）か、登録した実物の写真かを選べる（追記44）。 */
-.reien .ashes-frame{position:absolute;left:21.8%;top:83%;width:8.7%;aspect-ratio:1;
+/* 遺影（.face-md、常に124px固定）の左端から一定の隙間をあけて右端を
+   揃えたいので、%指定だけでは画面幅によって隙間が伸び縮みしてしまう
+   （遺影は固定px・台座側は%なため）。遺影の中心(50%)から半径62px・
+   隙間3px・自分の幅8.7%ぶんを引いた位置を計算し、画面幅によらず
+   「写真に被らない程度に近い」を保つ（利用者の依頼）。 */
+.reien .ashes-frame{position:absolute;left:calc(41.3% - 65px);top:83%;width:8.7%;aspect-ratio:1;
   border-radius:4px;overflow:hidden;border:2px solid var(--panel);box-shadow:var(--shadow);
   background:var(--amber-soft);display:flex;align-items:center;justify-content:center}
 .reien .ashes-frame svg{width:62%;height:62%}
@@ -535,9 +540,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .head p{margin:4px 0 0;font-size:var(--fs-3);color:var(--muted)}
 /* 「あれから◯日」は達成でも記録でもないので、おまいりの4/4のような
-   強調色（amber）にはしない。静かな事実として、輪郭だけの地味なpillにする。 */
-.since-pill{font-family:var(--sans);font-size:var(--fs-2);font-weight:700;color:var(--muted);
-  background:var(--panel);border:2px solid var(--line);padding:4px 13px;border-radius:999px;
+   強調色（amber）にはしない。静かな事実として、輪郭だけの地味なpillにする。
+   じぶん画面では見出しの隣にひとつだけ置く数字なので、もう少し読み
+   やすい大きさにしてほしいとの依頼を受けて --fs-2 から --fs-4 に。 */
+.since-pill{font-family:var(--sans);font-size:var(--fs-4);font-weight:700;color:var(--muted);
+  background:var(--panel);border:2px solid var(--line);padding:5px 15px;border-radius:999px;
   letter-spacing:.02em}
 
 /* ---------- おまいりの4動作 ---------- */
