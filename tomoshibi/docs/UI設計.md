@@ -4003,3 +4003,18 @@ build-ipa`が実際に書き出す場所がその推測と一致していなか�
 この修正はコードの変更のみで、実際にPublishingがTestFlightへの
 アップロードまで進むかどうかは、次回のビルドで確認する必要がある
 （次回の確認事項）。
+
+### 追記：再ビルドで実際にアップロード成功（2026-09-20）
+
+`"**/*.ipa"`に直したあと再ビルドしたところ、Publishingログに
+`UPLOAD SUCCEEDED with no errors`・`Build completed successfully.`・
+`Following submissions will start shortly after App Store Connect
+completes processing of uploaded artifacts: TestFlight.`と出て、
+実際にipa（`/Users/builder/clone/tomoshibi/build/ios/ipa/App.ipa`）
+がApp Store Connectへアップロードされたことを確認した。
+
+これで、Apple Developer Portal・App Store Connect・Codemagicの
+セットアップから、実際のTestFlightへの自動アップロードまでの
+一連の流れが、はじめて最後まで通った。次はApp Store Connectの
+TestFlightタブでAppleの処理完了を待ち、実機での動作確認に進む
+段階。
