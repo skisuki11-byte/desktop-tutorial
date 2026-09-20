@@ -4055,3 +4055,47 @@ TestFlightタブでAppleの処理完了を待ち、実機での動作確認に�
 `plistlib`でパースして値（`False`）を確認した。次回のビルドで
 実際に輸出コンプライアンスのエラーが再発しないかは、次の
 確認事項。
+
+# 追記89：バックアップの書き出しがネイティブアプリで保存先を示さなかった問題（2026-09-20）
+
+## 背景
+
+ユーザーがTestFlightの実機で「バックアップを書き出す」を試したところ、
+どこに保存されたか分かる画面（Files共有シートなど）が一切出なかった。
+
+## 原因
+
+`doExport()`（`js/app.js`）の保存処理は、Web版のブラウザ向けに
+`<a download>` + Blob URLというHTML標準の仕組みだけで組んであった。
+CapacitorのネイティブアプリはSafariではなくWKWebViewという別の
+仕組みで動いており、WKWebViewはこの`<a download>`を安定して
+処理せず、共有シートも出さない（黙って何も起きないことがある）。
+Capacitor側に専用の保存プラグイン（Filesystem/Share）を組み込んで
+いなかったのが根本原因。
+
+## 対応
+
+`@capacitor/filesystem`と`@capacitor/share`を追加し、
+`capacitor-src/bridge.js`に`saveBackupFile(filename, text)`を新設した：
+
+1. `Filesystem.writeFile()`でバックアップのJSONを一時領域
+   （`Directory.Cache`）に実ファイルとして書き出す
+2. できたファイルのURIを`Share.share()`に渡し、iOS標準の
+   共有シートを開く。「"ファイル"に保存」「AirDrop」など、
+   保存先をユーザー自身が選べるようになる
+
+`js/app.js`の`doExport()`では、claude.aiプレビュー用の`S.downloader()`
+の次、Web版の`<a download>`フォールバックより前に、ネイティブ判定
+（`TomoshibiNative.isNative`）でこの新しい保存経路を使うよう分岐を
+追加した。
+
+`npx cap sync ios`を実行し、`ios/App/CapApp-SPM/Package.swift`
+（Capacitor CLIが自動生成するファイル）に`CapacitorFilesystem`・
+`CapacitorShare`が追加されたことを確認した。
+
+## 確かめたこと
+
+`npm run build`でesbuildのバンドル（`js/capacitor-bridge.js`）が
+エラーなく生成されること（57.3kb→83.0kbに増加、2プラグイン追加分
+として妥当）を確認した。実機での共有シート表示自体は、次回の
+TestFlightビルドでユーザーに確認してもらう必要がある。

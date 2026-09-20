@@ -137,7 +137,7 @@
                 callbackId
               }, callback);
             };
-            const p = new Promise((resolve) => call.then(() => resolve({ remove })));
+            const p = new Promise((resolve2) => call.then(() => resolve2({ remove })));
             p.remove = async () => {
               console.warn(`Using addListener() without 'await' is deprecated.`);
               await remove();
@@ -343,11 +343,11 @@
       CapacitorCookies = registerPlugin("CapacitorCookies", {
         web: () => new CapacitorCookiesPluginWeb()
       });
-      readBlobAsBase64 = async (blob) => new Promise((resolve, reject) => {
+      readBlobAsBase64 = async (blob) => new Promise((resolve2, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
           const base64String = reader.result;
-          resolve(base64String.indexOf(",") >= 0 ? base64String.split(",")[1] : base64String);
+          resolve2(base64String.indexOf(",") >= 0 ? base64String.split(",")[1] : base64String);
         };
         reader.onerror = (error) => reject(error);
         reader.readAsDataURL(blob);
@@ -856,6 +856,634 @@
     }
   });
 
+  // node_modules/@capacitor/filesystem/dist/esm/definitions.js
+  var Directory, Encoding;
+  var init_definitions2 = __esm({
+    "node_modules/@capacitor/filesystem/dist/esm/definitions.js"() {
+      (function(Directory2) {
+        Directory2["Documents"] = "DOCUMENTS";
+        Directory2["Data"] = "DATA";
+        Directory2["Library"] = "LIBRARY";
+        Directory2["Cache"] = "CACHE";
+        Directory2["External"] = "EXTERNAL";
+        Directory2["ExternalStorage"] = "EXTERNAL_STORAGE";
+        Directory2["ExternalCache"] = "EXTERNAL_CACHE";
+        Directory2["LibraryNoCloud"] = "LIBRARY_NO_CLOUD";
+        Directory2["Temporary"] = "TEMPORARY";
+      })(Directory || (Directory = {}));
+      (function(Encoding2) {
+        Encoding2["UTF8"] = "utf8";
+        Encoding2["ASCII"] = "ascii";
+        Encoding2["UTF16"] = "utf16";
+      })(Encoding || (Encoding = {}));
+    }
+  });
+
+  // node_modules/@capacitor/filesystem/dist/esm/web.js
+  var web_exports4 = {};
+  __export(web_exports4, {
+    FilesystemWeb: () => FilesystemWeb
+  });
+  function resolve(path) {
+    const posix = path.split("/").filter((item) => item !== ".");
+    const newPosix = [];
+    posix.forEach((item) => {
+      if (item === ".." && newPosix.length > 0 && newPosix[newPosix.length - 1] !== "..") {
+        newPosix.pop();
+      } else {
+        newPosix.push(item);
+      }
+    });
+    return newPosix.join("/");
+  }
+  function isPathParent(parent, children) {
+    parent = resolve(parent);
+    children = resolve(children);
+    const pathsA = parent.split("/");
+    const pathsB = children.split("/");
+    return parent !== children && pathsA.every((value, index) => value === pathsB[index]);
+  }
+  var FilesystemWeb;
+  var init_web4 = __esm({
+    "node_modules/@capacitor/filesystem/dist/esm/web.js"() {
+      init_dist();
+      init_definitions2();
+      FilesystemWeb = class _FilesystemWeb extends WebPlugin {
+        constructor() {
+          super(...arguments);
+          this.DB_VERSION = 1;
+          this.DB_NAME = "Disc";
+          this._writeCmds = ["add", "put", "delete"];
+          this.downloadFile = async (options) => {
+            var _a, _b;
+            const requestInit = buildRequestInit(options, options.webFetchExtra);
+            const response = await fetch(options.url, requestInit);
+            let blob;
+            if (!options.progress)
+              blob = await response.blob();
+            else if (!(response === null || response === void 0 ? void 0 : response.body))
+              blob = new Blob();
+            else {
+              const reader = response.body.getReader();
+              let bytes = 0;
+              const chunks = [];
+              const contentType = response.headers.get("content-type");
+              const contentLength = parseInt(response.headers.get("content-length") || "0", 10);
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done)
+                  break;
+                chunks.push(value);
+                bytes += (value === null || value === void 0 ? void 0 : value.length) || 0;
+                const status = {
+                  url: options.url,
+                  bytes,
+                  contentLength
+                };
+                this.notifyListeners("progress", status);
+              }
+              const allChunks = new Uint8Array(bytes);
+              let position = 0;
+              for (const chunk of chunks) {
+                if (typeof chunk === "undefined")
+                  continue;
+                allChunks.set(chunk, position);
+                position += chunk.length;
+              }
+              blob = new Blob([allChunks.buffer], { type: contentType || void 0 });
+            }
+            const result = await this.writeFile({
+              path: options.path,
+              directory: (_a = options.directory) !== null && _a !== void 0 ? _a : void 0,
+              recursive: (_b = options.recursive) !== null && _b !== void 0 ? _b : false,
+              data: blob
+            });
+            return { path: result.uri, blob };
+          };
+        }
+        readFileInChunks(_options, _callback) {
+          throw this.unavailable("Method not implemented.");
+        }
+        async initDb() {
+          if (this._db !== void 0) {
+            return this._db;
+          }
+          if (!("indexedDB" in window)) {
+            throw this.unavailable("This browser doesn't support IndexedDB");
+          }
+          return new Promise((resolve2, reject) => {
+            const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+            request.onupgradeneeded = _FilesystemWeb.doUpgrade;
+            request.onsuccess = () => {
+              this._db = request.result;
+              resolve2(request.result);
+            };
+            request.onerror = () => reject(request.error);
+            request.onblocked = () => {
+              console.warn("db blocked");
+            };
+          });
+        }
+        static doUpgrade(event) {
+          const eventTarget = event.target;
+          const db = eventTarget.result;
+          switch (event.oldVersion) {
+            case 0:
+            case 1:
+            default: {
+              if (db.objectStoreNames.contains("FileStorage")) {
+                db.deleteObjectStore("FileStorage");
+              }
+              const store = db.createObjectStore("FileStorage", { keyPath: "path" });
+              store.createIndex("by_folder", "folder");
+            }
+          }
+        }
+        async dbRequest(cmd, args) {
+          const readFlag = this._writeCmds.indexOf(cmd) !== -1 ? "readwrite" : "readonly";
+          return this.initDb().then((conn) => {
+            return new Promise((resolve2, reject) => {
+              const tx = conn.transaction(["FileStorage"], readFlag);
+              const store = tx.objectStore("FileStorage");
+              const req = store[cmd](...args);
+              req.onsuccess = () => resolve2(req.result);
+              req.onerror = () => reject(req.error);
+            });
+          });
+        }
+        async dbIndexRequest(indexName, cmd, args) {
+          const readFlag = this._writeCmds.indexOf(cmd) !== -1 ? "readwrite" : "readonly";
+          return this.initDb().then((conn) => {
+            return new Promise((resolve2, reject) => {
+              const tx = conn.transaction(["FileStorage"], readFlag);
+              const store = tx.objectStore("FileStorage");
+              const index = store.index(indexName);
+              const req = index[cmd](...args);
+              req.onsuccess = () => resolve2(req.result);
+              req.onerror = () => reject(req.error);
+            });
+          });
+        }
+        getPath(directory, uriPath) {
+          const cleanedUriPath = uriPath !== void 0 ? uriPath.replace(/^[/]+|[/]+$/g, "") : "";
+          let fsPath = "";
+          if (directory !== void 0)
+            fsPath += "/" + directory;
+          if (uriPath !== "")
+            fsPath += "/" + cleanedUriPath;
+          return fsPath;
+        }
+        async clear() {
+          const conn = await this.initDb();
+          const tx = conn.transaction(["FileStorage"], "readwrite");
+          const store = tx.objectStore("FileStorage");
+          store.clear();
+        }
+        /**
+         * Read a file from disk
+         * @param options options for the file read
+         * @return a promise that resolves with the read file data result
+         */
+        async readFile(options) {
+          const path = this.getPath(options.directory, options.path);
+          const entry = await this.dbRequest("get", [path]);
+          if (entry === void 0)
+            throw Error("File does not exist.");
+          return { data: entry.content ? entry.content : "" };
+        }
+        /**
+         * Write a file to disk in the specified location on device
+         * @param options options for the file write
+         * @return a promise that resolves with the file write result
+         */
+        async writeFile(options) {
+          const path = this.getPath(options.directory, options.path);
+          let data = options.data;
+          const encoding = options.encoding;
+          const doRecursive = options.recursive;
+          const occupiedEntry = await this.dbRequest("get", [path]);
+          if (occupiedEntry && occupiedEntry.type === "directory")
+            throw Error("The supplied path is a directory.");
+          const parentPath = path.substr(0, path.lastIndexOf("/"));
+          const parentEntry = await this.dbRequest("get", [parentPath]);
+          if (parentEntry === void 0) {
+            const subDirIndex = parentPath.indexOf("/", 1);
+            if (subDirIndex !== -1) {
+              const parentArgPath = parentPath.substr(subDirIndex);
+              await this.mkdir({
+                path: parentArgPath,
+                directory: options.directory,
+                recursive: doRecursive
+              });
+            }
+          }
+          if (!encoding && !(data instanceof Blob)) {
+            data = data.indexOf(",") >= 0 ? data.split(",")[1] : data;
+            if (!this.isBase64String(data))
+              throw Error("The supplied data is not valid base64 content.");
+          }
+          const now = Date.now();
+          const pathObj = {
+            path,
+            folder: parentPath,
+            type: "file",
+            size: data instanceof Blob ? data.size : data.length,
+            ctime: now,
+            mtime: now,
+            content: data
+          };
+          await this.dbRequest("put", [pathObj]);
+          return {
+            uri: pathObj.path
+          };
+        }
+        /**
+         * Append to a file on disk in the specified location on device
+         * @param options options for the file append
+         * @return a promise that resolves with the file write result
+         */
+        async appendFile(options) {
+          const path = this.getPath(options.directory, options.path);
+          let data = options.data;
+          const encoding = options.encoding;
+          const parentPath = path.substr(0, path.lastIndexOf("/"));
+          const now = Date.now();
+          let ctime = now;
+          const occupiedEntry = await this.dbRequest("get", [path]);
+          if (occupiedEntry && occupiedEntry.type === "directory")
+            throw Error("The supplied path is a directory.");
+          const parentEntry = await this.dbRequest("get", [parentPath]);
+          if (parentEntry === void 0) {
+            const subDirIndex = parentPath.indexOf("/", 1);
+            if (subDirIndex !== -1) {
+              const parentArgPath = parentPath.substr(subDirIndex);
+              await this.mkdir({
+                path: parentArgPath,
+                directory: options.directory,
+                recursive: true
+              });
+            }
+          }
+          if (!encoding && !this.isBase64String(data))
+            throw Error("The supplied data is not valid base64 content.");
+          if (occupiedEntry !== void 0) {
+            if (occupiedEntry.content instanceof Blob) {
+              throw Error("The occupied entry contains a Blob object which cannot be appended to.");
+            }
+            if (occupiedEntry.content !== void 0 && !encoding) {
+              data = btoa(atob(occupiedEntry.content) + atob(data));
+            } else {
+              data = occupiedEntry.content + data;
+            }
+            ctime = occupiedEntry.ctime;
+          }
+          const pathObj = {
+            path,
+            folder: parentPath,
+            type: "file",
+            size: data.length,
+            ctime,
+            mtime: now,
+            content: data
+          };
+          await this.dbRequest("put", [pathObj]);
+        }
+        /**
+         * Delete a file from disk
+         * @param options options for the file delete
+         * @return a promise that resolves with the deleted file data result
+         */
+        async deleteFile(options) {
+          const path = this.getPath(options.directory, options.path);
+          const entry = await this.dbRequest("get", [path]);
+          if (entry === void 0)
+            throw Error("File does not exist.");
+          const entries = await this.dbIndexRequest("by_folder", "getAllKeys", [IDBKeyRange.only(path)]);
+          if (entries.length !== 0)
+            throw Error("Folder is not empty.");
+          await this.dbRequest("delete", [path]);
+        }
+        /**
+         * Create a directory.
+         * @param options options for the mkdir
+         * @return a promise that resolves with the mkdir result
+         */
+        async mkdir(options) {
+          const path = this.getPath(options.directory, options.path);
+          const doRecursive = options.recursive;
+          const parentPath = path.substr(0, path.lastIndexOf("/"));
+          const depth = (path.match(/\//g) || []).length;
+          const parentEntry = await this.dbRequest("get", [parentPath]);
+          const occupiedEntry = await this.dbRequest("get", [path]);
+          if (depth === 1)
+            throw Error("Cannot create Root directory");
+          if (occupiedEntry !== void 0)
+            throw Error("Current directory does already exist.");
+          if (!doRecursive && depth !== 2 && parentEntry === void 0)
+            throw Error("Parent directory must exist");
+          if (doRecursive && depth !== 2 && parentEntry === void 0) {
+            const parentArgPath = parentPath.substr(parentPath.indexOf("/", 1));
+            await this.mkdir({
+              path: parentArgPath,
+              directory: options.directory,
+              recursive: doRecursive
+            });
+          }
+          const now = Date.now();
+          const pathObj = {
+            path,
+            folder: parentPath,
+            type: "directory",
+            size: 0,
+            ctime: now,
+            mtime: now
+          };
+          await this.dbRequest("put", [pathObj]);
+        }
+        /**
+         * Remove a directory
+         * @param options the options for the directory remove
+         */
+        async rmdir(options) {
+          const { path, directory, recursive } = options;
+          const fullPath = this.getPath(directory, path);
+          const entry = await this.dbRequest("get", [fullPath]);
+          if (entry === void 0)
+            throw Error("Folder does not exist.");
+          if (entry.type !== "directory")
+            throw Error("Requested path is not a directory");
+          const readDirResult = await this.readdir({ path, directory });
+          if (readDirResult.files.length !== 0 && !recursive)
+            throw Error("Folder is not empty");
+          for (const entry2 of readDirResult.files) {
+            const entryPath = `${path}/${entry2.name}`;
+            const entryObj = await this.stat({ path: entryPath, directory });
+            if (entryObj.type === "file") {
+              await this.deleteFile({ path: entryPath, directory });
+            } else {
+              await this.rmdir({ path: entryPath, directory, recursive });
+            }
+          }
+          await this.dbRequest("delete", [fullPath]);
+        }
+        /**
+         * Return a list of files from the directory (not recursive)
+         * @param options the options for the readdir operation
+         * @return a promise that resolves with the readdir directory listing result
+         */
+        async readdir(options) {
+          const path = this.getPath(options.directory, options.path);
+          const entry = await this.dbRequest("get", [path]);
+          if (options.path !== "" && entry === void 0)
+            throw Error("Folder does not exist.");
+          const entries = await this.dbIndexRequest("by_folder", "getAllKeys", [IDBKeyRange.only(path)]);
+          const files = await Promise.all(entries.map(async (e) => {
+            let subEntry = await this.dbRequest("get", [e]);
+            if (subEntry === void 0) {
+              subEntry = await this.dbRequest("get", [e + "/"]);
+            }
+            return {
+              name: e.substring(path.length + 1),
+              type: subEntry.type,
+              size: subEntry.size,
+              ctime: subEntry.ctime,
+              mtime: subEntry.mtime,
+              uri: subEntry.path
+            };
+          }));
+          return { files };
+        }
+        /**
+         * Return full File URI for a path and directory
+         * @param options the options for the stat operation
+         * @return a promise that resolves with the file stat result
+         */
+        async getUri(options) {
+          const path = this.getPath(options.directory, options.path);
+          let entry = await this.dbRequest("get", [path]);
+          if (entry === void 0) {
+            entry = await this.dbRequest("get", [path + "/"]);
+          }
+          return {
+            uri: (entry === null || entry === void 0 ? void 0 : entry.path) || path
+          };
+        }
+        /**
+         * Return data about a file
+         * @param options the options for the stat operation
+         * @return a promise that resolves with the file stat result
+         */
+        async stat(options) {
+          const path = this.getPath(options.directory, options.path);
+          let entry = await this.dbRequest("get", [path]);
+          if (entry === void 0) {
+            entry = await this.dbRequest("get", [path + "/"]);
+          }
+          if (entry === void 0)
+            throw Error("Entry does not exist.");
+          return {
+            name: entry.path.substring(path.length + 1),
+            type: entry.type,
+            size: entry.size,
+            ctime: entry.ctime,
+            mtime: entry.mtime,
+            uri: entry.path
+          };
+        }
+        /**
+         * Rename a file or directory
+         * @param options the options for the rename operation
+         * @return a promise that resolves with the rename result
+         */
+        async rename(options) {
+          await this._copy(options, true);
+          return;
+        }
+        /**
+         * Copy a file or directory
+         * @param options the options for the copy operation
+         * @return a promise that resolves with the copy result
+         */
+        async copy(options) {
+          return this._copy(options, false);
+        }
+        async requestPermissions() {
+          return { publicStorage: "granted" };
+        }
+        async checkPermissions() {
+          return { publicStorage: "granted" };
+        }
+        /**
+         * Function that can perform a copy or a rename
+         * @param options the options for the rename operation
+         * @param doRename whether to perform a rename or copy operation
+         * @return a promise that resolves with the result
+         */
+        async _copy(options, doRename = false) {
+          let { toDirectory } = options;
+          const { to, from, directory: fromDirectory } = options;
+          if (!to || !from) {
+            throw Error("Both to and from must be provided");
+          }
+          if (!toDirectory) {
+            toDirectory = fromDirectory;
+          }
+          const fromPath = this.getPath(fromDirectory, from);
+          const toPath = this.getPath(toDirectory, to);
+          if (fromPath === toPath) {
+            return {
+              uri: toPath
+            };
+          }
+          if (isPathParent(fromPath, toPath)) {
+            throw Error("To path cannot contain the from path");
+          }
+          let toObj;
+          try {
+            toObj = await this.stat({
+              path: to,
+              directory: toDirectory
+            });
+          } catch (e) {
+            const toPathComponents = to.split("/");
+            toPathComponents.pop();
+            const toPath2 = toPathComponents.join("/");
+            if (toPathComponents.length > 0) {
+              const toParentDirectory = await this.stat({
+                path: toPath2,
+                directory: toDirectory
+              });
+              if (toParentDirectory.type !== "directory") {
+                throw new Error("Parent directory of the to path is a file");
+              }
+            }
+          }
+          if (toObj && toObj.type === "directory") {
+            throw new Error("Cannot overwrite a directory with a file");
+          }
+          const fromObj = await this.stat({
+            path: from,
+            directory: fromDirectory
+          });
+          const updateTime = async (path, ctime2, mtime) => {
+            const fullPath = this.getPath(toDirectory, path);
+            const entry = await this.dbRequest("get", [fullPath]);
+            entry.ctime = ctime2;
+            entry.mtime = mtime;
+            await this.dbRequest("put", [entry]);
+          };
+          const ctime = fromObj.ctime ? fromObj.ctime : Date.now();
+          switch (fromObj.type) {
+            // The "from" object is a file
+            case "file": {
+              const file = await this.readFile({
+                path: from,
+                directory: fromDirectory
+              });
+              if (doRename) {
+                await this.deleteFile({
+                  path: from,
+                  directory: fromDirectory
+                });
+              }
+              let encoding;
+              if (!(file.data instanceof Blob) && !this.isBase64String(file.data)) {
+                encoding = Encoding.UTF8;
+              }
+              const writeResult = await this.writeFile({
+                path: to,
+                directory: toDirectory,
+                data: file.data,
+                encoding
+              });
+              if (doRename) {
+                await updateTime(to, ctime, fromObj.mtime);
+              }
+              return writeResult;
+            }
+            case "directory": {
+              if (toObj) {
+                throw Error("Cannot move a directory over an existing object");
+              }
+              try {
+                await this.mkdir({
+                  path: to,
+                  directory: toDirectory,
+                  recursive: false
+                });
+                if (doRename) {
+                  await updateTime(to, ctime, fromObj.mtime);
+                }
+              } catch (e) {
+              }
+              const contents = (await this.readdir({
+                path: from,
+                directory: fromDirectory
+              })).files;
+              for (const filename of contents) {
+                await this._copy({
+                  from: `${from}/${filename.name}`,
+                  to: `${to}/${filename.name}`,
+                  directory: fromDirectory,
+                  toDirectory
+                }, doRename);
+              }
+              if (doRename) {
+                await this.rmdir({
+                  path: from,
+                  directory: fromDirectory
+                });
+              }
+            }
+          }
+          return {
+            uri: toPath
+          };
+        }
+        isBase64String(str) {
+          try {
+            return btoa(atob(str)) == str;
+          } catch (err) {
+            return false;
+          }
+        }
+      };
+      FilesystemWeb._debug = true;
+    }
+  });
+
+  // node_modules/@capacitor/share/dist/esm/web.js
+  var web_exports5 = {};
+  __export(web_exports5, {
+    ShareWeb: () => ShareWeb
+  });
+  var ShareWeb;
+  var init_web5 = __esm({
+    "node_modules/@capacitor/share/dist/esm/web.js"() {
+      init_dist();
+      ShareWeb = class extends WebPlugin {
+        async canShare() {
+          if (typeof navigator === "undefined" || !navigator.share) {
+            return { value: false };
+          } else {
+            return { value: true };
+          }
+        }
+        async share(options) {
+          if (typeof navigator === "undefined" || !navigator.share) {
+            throw this.unavailable("Share API not available in this browser");
+          }
+          await navigator.share({
+            title: options.title,
+            text: options.text,
+            url: options.url
+          });
+          return {};
+        }
+      };
+    }
+  });
+
   // capacitor-src/bridge.js
   init_dist();
 
@@ -957,11 +1585,11 @@
   // node_modules/@capacitor/camera/dist/esm/web.js
   var CameraWeb = class extends WebPlugin {
     async takePhoto(options) {
-      return new Promise(async (resolve, reject) => {
+      return new Promise(async (resolve2, reject) => {
         if (options.webUseInput) {
-          this.takePhotoCameraInputExperience(options, resolve, reject);
+          this.takePhotoCameraInputExperience(options, resolve2, reject);
         } else {
-          this.takePhotoCameraExperience(options, resolve, reject);
+          this.takePhotoCameraExperience(options, resolve2, reject);
         }
       });
     }
@@ -972,8 +1600,8 @@
       throw this.unimplemented("playVideo is not implemented on Web.");
     }
     async chooseFromGallery(options) {
-      return new Promise(async (resolve, reject) => {
-        this.galleryInputExperience(options, resolve, reject);
+      return new Promise(async (resolve2, reject) => {
+        this.galleryInputExperience(options, resolve2, reject);
       });
     }
     async editPhoto(_options) {
@@ -983,9 +1611,9 @@
       throw this.unimplemented("editURIPhoto is not implemented on Web.");
     }
     async getPhoto(options) {
-      return new Promise(async (resolve, reject) => {
+      return new Promise(async (resolve2, reject) => {
         if (options.webUseInput || options.source === CameraSource.Photos) {
-          this.fileInputExperience(options, resolve, reject);
+          this.fileInputExperience(options, resolve2, reject);
         } else if (options.source === CameraSource.Prompt) {
           let actionSheet = document.querySelector("pwa-action-sheet");
           if (!actionSheet) {
@@ -1001,25 +1629,25 @@
           actionSheet.addEventListener("onSelection", async (e) => {
             const selection = e.detail;
             if (selection === 0) {
-              this.fileInputExperience(options, resolve, reject);
+              this.fileInputExperience(options, resolve2, reject);
             } else {
-              this.cameraExperience(options, resolve, reject);
+              this.cameraExperience(options, resolve2, reject);
             }
           });
         } else {
-          this.cameraExperience(options, resolve, reject);
+          this.cameraExperience(options, resolve2, reject);
         }
       });
     }
     async pickImages(_options) {
-      return new Promise(async (resolve, reject) => {
-        this.multipleFileInputExperience(resolve, reject);
+      return new Promise(async (resolve2, reject) => {
+        this.multipleFileInputExperience(resolve2, reject);
       });
     }
-    async cameraExperience(options, resolve, reject) {
-      await this._setupPWACameraModal(options.direction, (photo) => this._getCameraPhoto(photo, options), () => this.fileInputExperience(options, resolve, reject), resolve, reject);
+    async cameraExperience(options, resolve2, reject) {
+      await this._setupPWACameraModal(options.direction, (photo) => this._getCameraPhoto(photo, options), () => this.fileInputExperience(options, resolve2, reject), resolve2, reject);
     }
-    fileInputExperience(options, resolve, reject) {
+    fileInputExperience(options, resolve2, reject) {
       let input = document.querySelector("#_capacitor-camera-input");
       const cleanup = () => {
         var _a;
@@ -1043,13 +1671,13 @@
             const reader = new FileReader();
             reader.addEventListener("load", () => {
               if (options.resultType === "dataUrl") {
-                resolve({
+                resolve2({
                   dataUrl: reader.result,
                   format
                 });
               } else if (options.resultType === "base64") {
                 const b64 = reader.result.split(",")[1];
-                resolve({
+                resolve2({
                   base64String: b64,
                   format
                 });
@@ -1058,7 +1686,7 @@
             });
             reader.readAsDataURL(file);
           } else {
-            resolve({
+            resolve2({
               webPath: URL.createObjectURL(file),
               format
             });
@@ -1081,7 +1709,7 @@
       }
       input.click();
     }
-    multipleFileInputExperience(resolve, reject) {
+    multipleFileInputExperience(resolve2, reject) {
       let input = document.querySelector("#_capacitor-camera-input-multiple");
       const cleanup = () => {
         var _a;
@@ -1109,7 +1737,7 @@
               format
             });
           }
-          resolve({ photos });
+          resolve2({ photos });
           cleanup();
         });
         input.addEventListener("cancel", (_e) => {
@@ -1121,11 +1749,11 @@
       input.click();
     }
     _getCameraPhoto(photo, options) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve2, reject) => {
         const reader = new FileReader();
         const format = this._getFileFormat(photo);
         if (options.resultType === "uri") {
-          resolve({
+          resolve2({
             webPath: URL.createObjectURL(photo),
             format,
             saved: false
@@ -1135,13 +1763,13 @@
           reader.onloadend = () => {
             const r = reader.result;
             if (options.resultType === "dataUrl") {
-              resolve({
+              resolve2({
                 dataUrl: r,
                 format,
                 saved: false
               });
             } else {
-              resolve({
+              resolve2({
                 base64String: r.split(",")[1],
                 format,
                 saved: false
@@ -1154,13 +1782,13 @@
         }
       });
     }
-    async takePhotoCameraExperience(options, resolve, reject) {
+    async takePhotoCameraExperience(options, resolve2, reject) {
       await this._setupPWACameraModal(options.cameraDirection, (photo) => {
         var _a;
         return this._buildPhotoMediaResult(photo, (_a = options.includeMetadata) !== null && _a !== void 0 ? _a : false);
-      }, () => this.takePhotoCameraInputExperience(options, resolve, reject), resolve, reject);
+      }, () => this.takePhotoCameraInputExperience(options, resolve2, reject), resolve2, reject);
     }
-    takePhotoCameraInputExperience(options, resolve, reject) {
+    takePhotoCameraInputExperience(options, resolve2, reject) {
       const input = this._createFileInput("_capacitor-camera-input-takephoto");
       const cleanup = () => {
         var _a;
@@ -1172,7 +1800,7 @@
           return;
         }
         const file = input.files[0];
-        resolve(await this._buildPhotoMediaResult(file, (_a = options.includeMetadata) !== null && _a !== void 0 ? _a : false));
+        resolve2(await this._buildPhotoMediaResult(file, (_a = options.includeMetadata) !== null && _a !== void 0 ? _a : false));
         cleanup();
       };
       input.oncancel = () => {
@@ -1187,7 +1815,7 @@
       }
       input.click();
     }
-    galleryInputExperience(options, resolve, reject) {
+    galleryInputExperience(options, resolve2, reject) {
       var _a, _b;
       const input = this._createFileInput("_capacitor-camera-input-gallery");
       input.multiple = (_a = options.allowMultipleSelection) !== null && _a !== void 0 ? _a : false;
@@ -1238,7 +1866,7 @@
             results.push(result);
           }
         }
-        resolve({ results });
+        resolve2({ results });
         cleanup();
       };
       input.oncancel = () => {
@@ -1296,7 +1924,7 @@
       }
       return true;
     }
-    async _setupPWACameraModal(cameraDirection, onPhotoCallback, fallbackCallback, resolve, reject) {
+    async _setupPWACameraModal(cameraDirection, onPhotoCallback, fallbackCallback, resolve2, reject) {
       if (customElements.get("pwa-camera-modal")) {
         const cameraModal = document.createElement("pwa-camera-modal");
         cameraModal.facingMode = cameraDirection === CameraDirection.Front ? "user" : "environment";
@@ -1310,7 +1938,7 @@
             } else if (photo instanceof Error) {
               reject(photo);
             } else {
-              resolve(await onPhotoCallback(photo));
+              resolve2(await onPhotoCallback(photo));
             }
             cameraModal.dismiss();
             document.body.removeChild(cameraModal);
@@ -1347,12 +1975,12 @@
       }
     }
     _getBase64FromFile(file) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve2, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const dataUrl = reader.result;
           const base64 = dataUrl.split(",")[1];
-          resolve(base64);
+          resolve2(base64);
         };
         reader.onerror = (e) => {
           reject(e);
@@ -1361,7 +1989,7 @@
       });
     }
     _getVideoMetadata(videoFile) {
-      return new Promise((resolve) => {
+      return new Promise((resolve2) => {
         const video = document.createElement("video");
         video.preload = "metadata";
         video.muted = true;
@@ -1387,11 +2015,11 @@
             console.warn("Failed to generate video thumbnail:", e);
           }
           URL.revokeObjectURL(video.src);
-          resolve(result);
+          resolve2(result);
         };
         video.onerror = () => {
           URL.revokeObjectURL(video.src);
-          resolve({});
+          resolve2({});
         };
         video.src = URL.createObjectURL(videoFile);
       });
@@ -1455,6 +2083,69 @@
   // node_modules/@capacitor/status-bar/dist/esm/index.js
   var StatusBar = registerPlugin("StatusBar");
 
+  // node_modules/@capacitor/filesystem/dist/esm/index.js
+  init_dist();
+
+  // node_modules/@capacitor/synapse/dist/synapse.mjs
+  function s(t) {
+    t.CapacitorUtils.Synapse = new Proxy(
+      {},
+      {
+        get(e, n) {
+          return new Proxy({}, {
+            get(w, o) {
+              return (c, p, r) => {
+                const i = t.Capacitor.Plugins[n];
+                if (i === void 0) {
+                  r(new Error(`Capacitor plugin ${n} not found`));
+                  return;
+                }
+                if (typeof i[o] != "function") {
+                  r(new Error(`Method ${o} not found in Capacitor plugin ${n}`));
+                  return;
+                }
+                (async () => {
+                  try {
+                    const a = await i[o](c);
+                    p(a);
+                  } catch (a) {
+                    r(a);
+                  }
+                })();
+              };
+            }
+          });
+        }
+      }
+    );
+  }
+  function u(t) {
+    t.CapacitorUtils.Synapse = new Proxy(
+      {},
+      {
+        get(e, n) {
+          return t.cordova.plugins[n];
+        }
+      }
+    );
+  }
+  function f(t = false) {
+    typeof window > "u" || (window.CapacitorUtils = window.CapacitorUtils || {}, window.Capacitor !== void 0 && !t ? s(window) : window.cordova !== void 0 && u(window));
+  }
+
+  // node_modules/@capacitor/filesystem/dist/esm/index.js
+  init_definitions2();
+  var Filesystem = registerPlugin("Filesystem", {
+    web: () => Promise.resolve().then(() => (init_web4(), web_exports4)).then((m) => new m.FilesystemWeb())
+  });
+  f();
+
+  // node_modules/@capacitor/share/dist/esm/index.js
+  init_dist();
+  var Share = registerPlugin("Share", {
+    web: () => Promise.resolve().then(() => (init_web5(), web_exports5)).then((m) => new m.ShareWeb())
+  });
+
   // capacitor-src/bridge.js
   var isNative = Capacitor.isNativePlatform();
   function safe(fn) {
@@ -1513,6 +2204,18 @@
       });
     });
   });
+  var saveBackupFile = safe(function(filename, text) {
+    return Filesystem.writeFile({
+      path: filename,
+      data: text,
+      directory: Directory.Cache,
+      encoding: Encoding.UTF8
+    }).then(function(result) {
+      return Share.share({ url: result.uri, dialogTitle: "\u30D0\u30C3\u30AF\u30A2\u30C3\u30D7\u3092\u4FDD\u5B58" });
+    }).then(function() {
+      return true;
+    });
+  });
   function hideSplash() {
     if (!isNative) return;
     try {
@@ -1535,7 +2238,8 @@
     cancelMilestoneNotifications,
     takePhoto,
     hideSplash,
-    setStatusBarStyle
+    setStatusBarStyle,
+    saveBackupFile
   };
 })();
 /*! Bundled license information:

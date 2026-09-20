@@ -1524,6 +1524,15 @@
         });
         return;
       }
+      // ネイティブアプリでは<a download>がWKWebViewで共有シートを出さず、
+      // どこに保存されたか分からなかった（追記89）。Filesystem+Shareで
+      // 保存先をユーザーが選べる共有シートを出す。
+      if (window.TomoshibiNative && window.TomoshibiNative.isNative) {
+        window.TomoshibiNative.saveBackupFile(name, text).then(function (ok) {
+          if (ok) okMsg(); else copyOut(text, media.length);
+        });
+        return;
+      }
       var embedded = false;
       try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
       if (embedded) { copyOut(text, media.length); return; }
