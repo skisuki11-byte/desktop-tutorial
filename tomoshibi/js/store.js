@@ -29,7 +29,6 @@
       letters: [],         // 飼い主からあの子へ書いた手紙 [{at, text}]
       faveDone: {},        // { "2026-09-14": ["さつまいも"] } その日そなえたもの
       visits: [],          // お参りした日 "YYYY-MM-DD"。通算回数はこの長さ
-      videoTitles: {},     // { mediaId: "走ってるところ" }
       videoThumbs: {},     // { mediaId: "data:image/jpeg;base64,…" } 最初のコマの静止画
       chapterTitles: {},
       theme: 'light',
@@ -86,17 +85,6 @@
       // 明示的に夏を選び直した場合も同じ値になってしまうが、設定画面
       // からいつでも選び直せるので実害は小さいと判断した。
       if (v.pet && v.pet.scene === 'summer') { v.pet.scene = 'auto'; stale = true; }
-      // 以前は端末のファイル名（"_users_0484f8d0-…" のような読めない名前）を
-      // そのまま見出しにしていた版があった。残っていれば既定名に戻す。
-      if (v.videoTitles) {
-        Object.keys(v.videoTitles).forEach(function (id) {
-          var n = String(v.videoTitles[id] || '');
-          if (/^_?users?[_-]/i.test(n) || /^[0-9a-f]{8}-[0-9a-f]{4}/i.test(n)) {
-            v.videoTitles[id] = 'うごくすがた';
-            stale = true;
-          }
-        });
-      }
       // 背景を「庭・夕空・桜・雪」から、春夏秋冬の4つに作り直した。
       // 前の名のまま残っていると、どのCSSにも一致せず既定色に戻ってしまう
       // ため、対応する季節へ付け替える。

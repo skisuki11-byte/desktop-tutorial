@@ -1310,8 +1310,6 @@
             if (!r) return;
             if (r.ok) {
               okCount++;
-              st.videoTitles[id] = videoName(f);
-              S.save();
             } else fails[r.reason] = (fails[r.reason] || 0) + 1;
           });
       });
@@ -1327,16 +1325,6 @@
         keys.map(function (k) { return '<b>' + fails[k] + '本</b>：' + esc(reasonText(k)); }).join('<br><br>'),
         [{ label: 'わかりました', primary: true }]);
     });
-  }
-
-  /* iPhone はカメラロールの動画に "_users_0484f8d0-…" のようなパスを付けてくる。
-     そのまま見出しにすると意味がないので、読めない名前は既定名にする。 */
-  function videoName(f) {
-    var n = String(f && f.name || '').split(/[\\/]/).pop().replace(/\.[^.]+$/, '').trim();
-    if (!n || n.length > 40 || /^_?users?[_-]/i.test(n) || /^[0-9a-f]{8}-[0-9a-f]{4}/i.test(n)) {
-      return 'うごくすがた';
-    }
-    return n.slice(0, 24);
   }
 
   function playVideo(v) {
@@ -1874,11 +1862,10 @@
         e.stopPropagation();
         var id = menu.dataset.vmenu;
         sheet('この動画', '', [
-          { label: '名前をつける', on: function () { renameVideo(id); } },
           { label: '消す', on: function () {
               sheet('この動画を消す', '取り消せません。', [
                 { label: '消す', primary: true, on: function () {
-                    freeURL(id); delete st.videoTitles[id]; delete st.videoThumbs[id]; S.save();
+                    freeURL(id); delete st.videoThumbs[id]; S.save();
                     S.deleteMedia(id).then(renderVideos).then(renderHomeVideos);
                   } },
                 { label: 'やめる' }
@@ -2070,12 +2057,6 @@
     if (name === null) return;
     if (name.trim()) st.chapterTitles[id] = name.trim().slice(0, 24); else delete st.chapterTitles[id];
     S.save(); renderAlbum();
-  }
-  function renameVideo(id) {
-    var name = window.prompt('この動画の名前', st.videoTitles[id] || '');
-    if (name === null) return;
-    st.videoTitles[id] = (name.trim() || 'うごくすがた').slice(0, 24);
-    S.save(); renderVideos(); renderHomeVideos();
   }
   /* 端末のデータを消すのは、取り消せない・気づいたら押していた、が
      いちばん困る操作。1回の確認では押し間違いを拾いきれないため、
