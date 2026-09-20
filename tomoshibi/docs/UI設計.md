@@ -3955,8 +3955,51 @@ Codemagic側のビルドログで、それぞれのエラーメッセージの�
 
 `node: 22`に直したあと、あらためて`main`ブランチでビルドを実行。
 全ステップ（署名・`npm ci`・ビルド・`cap sync ios`・署名反映・
-ビルド番号採番・ipa書き出し・Publishing）が成功し、TestFlightへの
-アップロードまで自動で完了した。これでCodemagicのCI/CDパイプライン
-が実際に動くことを確認できた。次はApp Store ConnectのTestFlightで
-ビルドの処理完了を待ち、実機テストチェックリスト（追記80あたり）に
-沿って確認する段階。
+ビルド番号採番・ipa書き出し・Publishing）が緑（成功）になり、これで
+CodemagicのCI/CDパイプラインが実際に動くことを確認できた。
+
+**訂正：** この時点では「TestFlightへのアップロードまで自動で完了
+した」と判断したが、誤りだった。「Publishing」ステップが緑だった
+のは、ログの後始末（`desktop-tutorial_4_artifacts.zip`の公開）
+だけが成功していたためで、実際にはApp Store Connectへの登録は
+`Skip publishing to App Store Connect: no IPAs or PKGs found`で
+スキップされていた（詳細は次の追記87）。App Store ConnectのTestFlight
+タブにビルドが一件も出てこないことで発覚した。
+
+# 追記87：ipaがPublishingステップに見つからず、アップロードがスキップされていた（2026-09-20）
+
+`docs/UI設計.md`追記86で「TestFlightまで自動完了した」としたのは
+誤りだった。利用者がApp Store ConnectのTestFlightタブを見ても
+ビルドが1件も表示されず、Codemagicのビルド詳細を確認したところ、
+「ipaを書き出す」ステップ自体は成功していたが、直後の「Publishing」
+ステップで
+
+```
+Skip publishing to App Store Connect: no IPAs or PKGs found
+```
+
+と出ており、ipaファイルが見つからずアップロード自体がスキップ
+されていたことが分かった。
+
+## 原因（推定）
+
+`codemagic.yaml`の`artifacts:`に`tomoshibi/build/ios/ipa/*.ipa`
+（`working_directory: tomoshibi`からの相対だろうという推測で
+`tomoshibi/`を付けていた）と指定していたが、`xcode-project
+build-ipa`が実際に書き出す場所がその推測と一致していなかった
+可能性が高い。`artifacts:`の照合パスは常にリポジトリのルートから
+の相対だが、`xcode-project build-ipa`の既定の書き出し先が
+`working_directory`基準なのかビルドディレクトリ基準なのか、
+ドキュメントだけでは断定できなかった。
+
+## 直したこと
+
+`artifacts:`のipa指定を、固定パスの推測ではなく`"**/*.ipa"`という
+再帰マッチに変更した。これでipaがどちらの場所に書き出されても
+確実に拾える。
+
+## 確かめたこと
+
+この修正はコードの変更のみで、実際にPublishingがTestFlightへの
+アップロードまで進むかどうかは、次回のビルドで確認する必要がある
+（次回の確認事項）。

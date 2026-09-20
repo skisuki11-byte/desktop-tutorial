@@ -63,9 +63,12 @@ workflows:
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
     artifacts:
-      # working_directoryの中で作られるが、artifactsのパスはリポジトリの
-      # ルートからの相対パスで見るため、tomoshibi/を付ける
-      - tomoshibi/build/ios/ipa/*.ipa
+      # xcode-project build-ipaの書き出し先が working_directory
+      # （tomoshibi/）からの相対か、リポジトリルートからの相対か
+      # 実際には確信が持てなかったため（初回ビルドでtomoshibi/を
+      # 付けた指定だとPublishingが「no IPAs or PKGs found」でIPAを
+      # 見つけられなかった）、**の再帰マッチで両方とも拾えるようにした
+      - "**/*.ipa"
       - /tmp/xcodebuild_logs/*.log
     publishing:
       email:
