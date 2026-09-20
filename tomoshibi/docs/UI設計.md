@@ -3884,3 +3884,25 @@ JSエラーが出ないことを確認した。
 Developer Portal・App Store Connect・Codemagic側の設定は、
 このセッションのネットワーク制限で直接は確認できないため、
 利用者自身の画面操作で進めてもらっている。
+
+# 追記85：App Store Connect側の申請作業を進める（2026-09-20）
+
+利用者と画面を見ながら並走し、以下を完了した。
+
+- Apple Developer PortalでApp IDを登録（追記84の`com.tomoshibi.petmemorial`）
+- App Store Connectで新規Appのレコードを作成。アプリ名「ともしび」も
+  Bundle IDと同様すでに他者に使われていたため、
+  「**ともしび - ペットのメモリアル**」に変更して登録した
+  （App Store Connect上の管理名であり、アプリ内の表示名・アイコン名
+  とは別物）
+- 作成したAppの「Apple ID」（数字のみのApp識別番号：`6814046106`）を
+  控え、リポジトリルートの`codemagic.yaml`にあった
+  `APP_STORE_APP_ID`のプレースホルダー（`1234567890`）を実際の値に
+  差し替えた
+
+残りはApp Store Connect API キーの発行（Codemagic連携用）と、
+Codemagicへのリポジトリ接続・Integration登録。
+
+## 確かめたこと
+
+`codemagic.yaml`の該当行が実値になっていることを確認した。
