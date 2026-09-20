@@ -1342,7 +1342,7 @@
   function playVideo(v) {
     var p = $('#player');
     p.src = mediaURL(v);
-    $('#player-title').textContent = st.videoTitles[v.id] || 'うごくすがた';
+    $('#player-title').textContent = v.at ? S.formatShort(new Date(v.at)) : '';
     show('player');
     var pr = p.play();
     if (pr && pr.catch) pr.catch(function () { /* 自動再生できなければ操作で */ });
