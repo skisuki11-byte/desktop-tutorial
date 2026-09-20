@@ -43,7 +43,7 @@ workflows:
         XCODE_SCHEME: "App"
         APP_STORE_APP_ID: 6814046106
       xcode: latest
-      node: 20
+      node: 22
     scripts:
       - name: npm依存パッケージをインストール
         script: npm ci

@@ -3906,3 +3906,47 @@ Codemagicへのリポジトリ接続・Integration登録。
 ## 確かめたこと
 
 `codemagic.yaml`の該当行が実値になっていることを確認した。
+
+# 追記86：CodemagicでのiOSビルド初回セットアップと、つまずいた点（2026-09-20）
+
+利用者と画面を見ながら並走し、Codemagic側の初回ビルドまでを進めた。
+つまずいた点と直したことを記録する。
+
+## つまずいた点1：署名の自動生成が効かない
+
+`codemagic.yaml`の`ios_signing`＋`integrations.app_store_connect`
+だけでは、まだ一度も証明書・プロビジョニングプロファイルが存在しない
+Bundle IDの場合、Codemagicが自動で新規発行してはくれなかった
+（`No matching profiles found for bundle identifier
+"com.tomoshibi.petmemorial" and distribution type "app_store"`で
+ビルド開始前に失敗）。
+
+- 最初、App Store Connect APIキーの権限が「App Manager」だったが、
+  証明書の新規発行には「**Admin**」権限のキーが要ることが分かり、
+  Admin権限のキーを作り直して`tomoshibi_asc`を差し替えた
+- それでも解決せず、Codemagicの「**Settings → Code signing
+  identities**」画面から、手動で一度だけ証明書とプロビジョニング
+  プロファイルを用意する必要があると判明：
+  - iOS certificates タブ →「Generate certificate」で、Distribution
+    証明書をCodemagic上で新規発行（ローカルのMacでCSRを作る必要が
+    無く、クラウド上で完結する）
+  - Apple Developer Portal側で、その証明書を使ってApp Store用の
+    プロビジョニングプロファイルを作成・ダウンロード
+  - Codemagicの iOS provisioning profiles タブから、その
+    `.mobileprovision`ファイルをアップロードして登録
+- つまり、`ios_signing`ブロックは「既にある署名情報を**使う**」
+  設定であって、「**初めての証明書を自動で作る**」ところまでは
+  やってくれない。最初の1回だけは、この手動セットアップが要る。
+
+## つまずいた点2：Node.jsのバージョン不足
+
+署名が解決した後、`npx cap sync ios`のステップで
+`[fatal] The Capacitor CLI requires NodeJS >=22.0.0`のエラー。
+`codemagic.yaml`の`environment.node`が`20`だったため、`22`に
+引き上げた。
+
+## 確かめたこと
+
+Codemagic側のビルドログで、それぞれのエラーメッセージの全文を
+確認したうえで対応した。この追記の時点では、Node.jsバージョンを
+直した後の再ビルド結果はまだ確認できていない（次回の確認事項）。
