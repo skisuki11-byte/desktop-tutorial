@@ -1621,6 +1621,47 @@
     return any ? lines.join('\r\n') : null;
   }
 
+  // ネイティブアプリのカレンダー直接登録（addToCalendarNative）向け。
+  // buildICS()と同じ日付を、ics文字列ではなく構造化データで返す。
+  // recurrenceは開始日から先、期限なしで繰り返す（誕生日なら毎年・
+  // 月命日なら毎月——過去の日付が開始日でも、そこから将来へずっと続く）。
+  function buildEventDescriptors(selectedKeys) {
+    var death = S.parseISO(st.pet.deathISO);
+    if (!death) return [];
+    var name = st.pet.name || 'あの子';
+    var list = [];
+    function add(key, date, title, recurrence) {
+      if (selectedKeys && selectedKeys.indexOf(key) < 0) return;
+      list.push({ key: key, date: date, title: title, recurrence: recurrence || null });
+    }
+    add('d49', S.addDays(death, 48), name + 'の四十九日');
+    add('d100', S.addDays(death, 99), name + 'の百か日');
+    add('y1', S.addYears(death, 1), name + 'の一周忌');
+    add('y3', S.addYears(death, 2), name + 'の三回忌');
+    add('monthly', death, name + 'の月命日', 'monthly');
+    var birth = S.parseISO(st.pet.birthISO);
+    if (birth) add('birthday', birth, name + 'のお誕生日', 'yearly');
+    return list;
+  }
+
+  function addToCalendarNative(selectedKeys) {
+    var events = buildEventDescriptors(selectedKeys);
+    if (!events.length) return;
+    sheet('カレンダーに追加しています', '<span class="busy"></span> しばらくお待ちください', []);
+    window.TomoshibiNative.addCalendarEvents(events).then(function (ok) {
+      if (ok) {
+        sheet('カレンダーに追加しました',
+          '選んだ日を、この端末のカレンダーに追加しました。',
+          [{ label: 'とじる', primary: true }]);
+      } else {
+        sheet('追加できませんでした',
+          'カレンダーへのアクセスが許可されていないようです。<br><br>' +
+          '端末の設定アプリ →「ともしび」→「カレンダー」から、アクセスを許可してください。',
+          [{ label: 'とじる', primary: true }]);
+      }
+    });
+  }
+
   /* 「だいじな日をカレンダーに追加」ボタンから、いきなり全件を書き出して
      いたのを、確認と取捨選択をはさむように変更（ユーザー指摘）。
      チェック状態はDOMではなくこのクロージャのselectedで持つ
@@ -1645,7 +1686,9 @@
       [
         { label: '追加する', primary: true, on: function () {
           var keys = Object.keys(selected).filter(function (k) { return selected[k]; });
-          if (keys.length) downloadICS(keys);
+          if (!keys.length) return;
+          if (window.TomoshibiNative && window.TomoshibiNative.isNative) addToCalendarNative(keys);
+          else downloadICS(keys);
         } },
         { label: 'やめる' }
       ]);
@@ -1672,6 +1715,8 @@
     };
   }
 
+  // ブラウザ／PWA向け（.icsファイルの書き出し）。ネイティブアプリは
+  // addToCalendarNative() でカレンダーへ直接書き込むので、ここは通らない。
   function downloadICS(selectedKeys) {
     var ics = buildICS(selectedKeys);
     if (!ics) return;
@@ -1688,17 +1733,6 @@
       dl.save({ filename: name, data: blob }).then(okMsg).catch(function (e) {
         if (e && e.code === 'declined') return;
         icsCopyOut(ics);
-      });
-      return;
-    }
-    // ネイティブアプリではShareの共有シート（コピー・ファイルに保存・
-    // AirDropなど）にカレンダーアプリが出てこない（追記92）。かわりに
-    // openTextFileWith で「この書類を開けるアプリ」の一覧（カレンダー・
-    // Googleカレンダーなど）を出す。OS側の選択画面が案内そのものなので、
-    // ここでは重ねて「追加しました」は出さない。
-    if (window.TomoshibiNative && window.TomoshibiNative.isNative) {
-      window.TomoshibiNative.openTextFileWith(name, ics, 'text/calendar').then(function (ok) {
-        if (!ok) icsCopyOut(ics);
       });
       return;
     }
