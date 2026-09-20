@@ -592,7 +592,10 @@
         var k = localStorage.key(i);
         if (k && k.indexOf(LS_PREFIX) === 0) {
           var o = JSON.parse(localStorage.getItem(k));
-          found.push({ id: k.slice(LS_PREFIX.length), kind: o.kind || 'photo', at: o.at || 0, store: 'ls' });
+          // dataURLの文字数からのおおよそのバイト数（base64は元の約4/3倍）。
+          // 索引がなかった頃の古いデータの復旧経路なので、厳密でなくてよい。
+          var size = o.u ? Math.round(o.u.length * 0.75) : 0;
+          found.push({ id: k.slice(LS_PREFIX.length), kind: o.kind || 'photo', at: o.at || 0, store: 'ls', size: size });
         }
       }
     } catch (e) {}
@@ -602,7 +605,7 @@
     return p.then(function (list) {
       (list || []).forEach(function (r) {
         if (r.id === '__probe__') return;
-        found.push({ id: r.id, kind: r.kind || 'photo', at: r.at || 0, store: 'idb' });
+        found.push({ id: r.id, kind: r.kind || 'photo', at: r.at || 0, store: 'idb', size: r.size || 0 });
       });
       found.sort(function (x, y) { return (x.at || 0) - (y.at || 0); });
       if (found.length) setIndex(found);
@@ -627,8 +630,50 @@
              embedded: embedded, durable: durable && !embedded };
   }
 
-  /* 保存。必ず解決する。失敗は {ok:false, reason} で返す。 */
+  /* 追記96：写真・動画をたくさん入れると、バックアップの書き出しで
+     アプリが強制終了する（実機での報告に基づく）。追記95でZIP化しても、
+     書き出し時には結局「全メディアぶんの生バイナリ」をいったんまとめて
+     JSのメモリ上に載せる必要があり（entries一式＋ZIP出力バッファ）、
+     ここは構造的に減らせない。あらかじめ登録できる量に上限を設け、
+     そもそも危険な量を持たせないようにする。
+
+     目安：写真は shrink() 済みで1枚あたり1MB程度に収まるためアルバム
+     20枚は軽い（多くても20MB程度）。動画は圧縮していないため大きさが
+     読めず、本数の上限（4本）だけでは足りない可能性がある。iPhoneの
+     WKWebViewは低メモリ機種（iPhone SE など3〜4GB RAM）でも安定して
+     動くことを目指し、書き出し時のピークメモリ（元データ＋ZIP出力で
+     おおよそ2.5〜3倍）を500〜600MB程度に収めたいので、写真・動画の
+     合計を200MBに制限する。本数の上限より先にこちらに達することもある。 */
+  var PHOTO_LIMIT = 20, VIDEO_LIMIT = 4;
+  var MEDIA_BUDGET_BYTES = 200 * 1024 * 1024;
+
+  function mediaUsage() {
+    var albumPhotos = 0, videos = 0, bytes = 0;
+    getIndex().forEach(function (e) {
+      bytes += e.size || 0;
+      if (e.kind === 'video') videos++;
+      else if (e.id !== 'portrait' && e.id !== 'ashes') albumPhotos++;
+    });
+    return { albumPhotos: albumPhotos, videos: videos, bytes: bytes,
+             photoLimit: PHOTO_LIMIT, videoLimit: VIDEO_LIMIT, budgetBytes: MEDIA_BUDGET_BYTES };
+  }
+
+  /* 保存。必ず解決する。失敗は {ok:false, reason} で返す。
+     rec.bypassLimit（バックアップからの復元用）が立っていれば、上限は見ない
+     ——すでに持っていたものを取り戻すだけなので、新規追加とは扱わない。
+     既存のidを上書きする場合（顔・お骨の写真の差し替えなど）も、件数は
+     増えないので上限の対象外にする。 */
   function putMedia(rec) {
+    if (!rec.bypassLimit && !indexGet(rec.id)) {
+      var u = mediaUsage();
+      if (rec.kind === 'video') {
+        if (u.videos >= VIDEO_LIMIT) return Promise.resolve({ ok: false, reason: 'video-limit' });
+      } else if (rec.id !== 'portrait' && rec.id !== 'ashes') {
+        if (u.albumPhotos >= PHOTO_LIMIT) return Promise.resolve({ ok: false, reason: 'photo-limit' });
+      }
+      var addSize = (rec.blob && rec.blob.size) || 0;
+      if (u.bytes + addSize > MEDIA_BUDGET_BYTES) return Promise.resolve({ ok: false, reason: 'media-budget' });
+    }
     var order = rec.kind === 'video' ? ['idb'] : ['idb', 'ls'];
     return tryStores(rec, order, 0, null);
   }
@@ -646,7 +691,7 @@
                              size: rec.blob.size, at: rec.at, kind: rec.kind }));
         });
       }).then(function () {
-        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, addedAt: rec.addedAt, store: 'idb' });
+        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, addedAt: rec.addedAt, store: 'idb', size: rec.blob.size });
         return { ok: true, where: 'idb' };
       }).catch(function (e) { return next(reasonOf(e)); });
     }
@@ -655,7 +700,7 @@
       if (u.length > LS_LIMIT) return next('too-large');
       try {
         localStorage.setItem(LS_PREFIX + rec.id, JSON.stringify({ u: u, at: rec.at, kind: rec.kind }));
-        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, addedAt: rec.addedAt, store: 'ls' });
+        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, addedAt: rec.addedAt, store: 'ls', size: rec.blob.size });
         return { ok: true, where: 'ls' };
       } catch (e) { return next('quota'); }
     }).catch(function (e) { return next(reasonOf(e)); });
@@ -731,7 +776,8 @@
           // m.blob はZIP形式（追記95）、m.dataURL は旧JSON形式。両対応。
           var blob = m.blob || dataURLToBlob(m.dataURL);
           if (!blob) { fails++; return; }
-          return putMedia({ id: m.id, blob: blob, at: m.at || Date.now(), kind: m.kind, playable: true })
+          // 追記96の上限より前に作られたバックアップも、そのまま全部戻せるように。
+          return putMedia({ id: m.id, blob: blob, at: m.at || Date.now(), kind: m.kind, playable: true, bypassLimit: true })
             .then(function (r) { if (!r.ok) fails++; });
         });
       }, Promise.resolve()).then(function () {
@@ -776,6 +822,7 @@
     deleteLetter: deleteLetter, draft: draft, setDraft: setDraft, dismissEcho: dismissEcho,
     selfOn: selfOn, putSelf: putSelf, selfSeries: selfSeries,
     putMedia: putMedia, getMedia: getMedia, allMedia: allMedia, deleteMedia: deleteMedia, newId: newId,
+    mediaUsage: mediaUsage,
     chapters: chapters
   };
 })(window);

@@ -303,6 +303,9 @@
     'video-format': 'この動画は、この端末では開けませんでした。写真アプリで書き出し直すと入ることがあります。',
     'video-too-large': 'この動画を入れるだけの空きが端末にありませんでした。',
     'unreadable': 'ファイルを読み取れませんでした。',
+    'photo-limit': 'アルバムの写真は20枚までです。バックアップの書き出しが安定して行えるようにするための上限です。',
+    'video-limit': '動画は4本までです。バックアップの書き出しが安定して行えるようにするための上限です。',
+    'media-budget': '写真・動画の合計サイズが上限（200MB）に近づいています。動画を短くするか、いらないものを消してからおためしください。',
     'unknown': '保存できませんでした。'
   };
   function reasonText(r) { return REASON[r] || REASON.unknown; }
@@ -1101,8 +1104,11 @@
       var chs = S.chapters(photos);
       $('#album-empty').hidden = chs.length > 0;
       var tg = S.daysTogether();
+      // 上限（追記96）に近づいてから「／20枚」を出す。ふだんは邪魔なだけなので。
+      var limit = S.mediaUsage().photoLimit;
+      var countLabel = photos.length + (photos.length >= limit - 3 ? '／' + limit : '') + '枚';
       $('#album-sub').textContent = photos.length
-        ? photos.length + '枚 ・ ' + chs.length + 'つの章' + (tg ? ' ・ いっしょだった' + tg.toLocaleString('ja-JP') + '日' : '')
+        ? countLabel + ' ・ ' + chs.length + 'つの章' + (tg ? ' ・ いっしょだった' + tg.toLocaleString('ja-JP') + '日' : '')
         : (tg ? 'いっしょだった' + tg.toLocaleString('ja-JP') + '日' : '写真をくわえてください');
       $('#album-list').innerHTML = chs.map(function (c) {
         var range = S.formatShort(new Date(c.from)) + ' — ' + S.formatShort(new Date(c.to));
@@ -1257,7 +1263,8 @@
     $('#ugoku-h').textContent = 'うごく' + name;
     return S.allMedia('video').then(function (vs) {
       $('#vid-empty').hidden = vs.length > 0;
-      $('#ugoku-sub').textContent = vs.length ? vs.length + '本 ・ いつでも、なんども' : 'いつでも、なんども';
+      var vLimit = S.mediaUsage().videoLimit;
+      $('#ugoku-sub').textContent = vs.length ? vs.length + '／' + vLimit + '本 ・ いつでも、なんども' : 'いつでも、なんども';
       $('#vid-list').innerHTML = vs.map(function (v, i) {
         return tileHTML(v, vs.length === 1 || (i === 0 && vs.length % 2 === 1)).replace('<span class="cap">',
           '<button class="menu" data-vmenu="' + esc(v.id) + '" aria-label="この動画の設定">···</button><span class="cap">');
