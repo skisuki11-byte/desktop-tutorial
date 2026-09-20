@@ -80,13 +80,30 @@ var takePhoto = safe(function () {
 // されたか分からなかった（追記89）。Filesystemでいったんキャッシュ領域に
 // ファイルとして書き、その実ファイルをShareの共有シートに渡すことで、
 // 「ファイル」に保存・AirDropなど、行き先をユーザーが選べるようにする。
+//
+// 動画を含むバックアップは数十〜数百MBのJSON文字列になりうる。これを
+// writeFile()で一度に渡すと、その丸ごとの文字列をネイティブ橋渡しの
+// メッセージとしてシリアライズすることになり、端末のメモリを圧迫して
+// WebViewごと強制終了し、オープニング画面に戻ってしまう（追記94）。
+// 1MBずつappendFileで小分けに書くことで、橋渡し1回あたりのデータ量を
+// 抑える。
+var WRITE_CHUNK_SIZE = 1000000;
+
+function writeFileChunked(path, text, directory, encoding) {
+  function step(offset) {
+    var chunk = text.slice(offset, offset + WRITE_CHUNK_SIZE);
+    var op = offset === 0 ? Filesystem.writeFile : Filesystem.appendFile;
+    return op({ path: path, data: chunk, directory: directory, encoding: encoding }).then(function () {
+      var next = offset + WRITE_CHUNK_SIZE;
+      if (next < text.length) return step(next);
+      return Filesystem.getUri({ path: path, directory: directory });
+    });
+  }
+  return step(0);
+}
+
 var saveTextFile = safe(function (filename, text, dialogTitle) {
-  return Filesystem.writeFile({
-    path: filename,
-    data: text,
-    directory: Directory.Cache,
-    encoding: Encoding.UTF8
-  }).then(function (result) {
+  return writeFileChunked(filename, text, Directory.Cache, Encoding.UTF8).then(function (result) {
     return Share.share({ url: result.uri, dialogTitle: dialogTitle || '保存' });
   }).then(function () { return true; });
 });
