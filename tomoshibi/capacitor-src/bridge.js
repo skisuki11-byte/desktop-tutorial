@@ -14,6 +14,8 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 var isNative = Capacitor.isNativePlatform();
 
@@ -72,6 +74,21 @@ var takePhoto = safe(function () {
   });
 });
 
+// バックアップの書き出し：Web版の<a download>はWKWebViewでは共有シートを
+// 出さず、どこに保存されたか分からなかった（追記89）。Filesystemでいったん
+// キャッシュ領域にファイルとして書き、その実ファイルをShareの共有シートに
+// 渡すことで、「ファイル」に保存・AirDropなど、行き先をユーザーが選べるようにする。
+var saveBackupFile = safe(function (filename, text) {
+  return Filesystem.writeFile({
+    path: filename,
+    data: text,
+    directory: Directory.Cache,
+    encoding: Encoding.UTF8
+  }).then(function (result) {
+    return Share.share({ url: result.uri, dialogTitle: 'バックアップを保存' });
+  }).then(function () { return true; });
+});
+
 // スプラッシュ／ステータスバーは起動直後の一瞬だけの見た目なので、失敗しても
 // 何も起きなくていい（safe()と同じ理由でtry/catchのみ、Promiseの結果は使わない）。
 function hideSplash() {
@@ -91,5 +108,6 @@ window.TomoshibiNative = {
   cancelMilestoneNotifications: cancelMilestoneNotifications,
   takePhoto: takePhoto,
   hideSplash: hideSplash,
-  setStatusBarStyle: setStatusBarStyle
+  setStatusBarStyle: setStatusBarStyle,
+  saveBackupFile: saveBackupFile
 };
