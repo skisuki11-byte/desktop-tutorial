@@ -14,7 +14,7 @@ App Store Connectの各入力欄にそのまま貼れるように、項目ごと
 - **サポートURL**：`https://skisuki11-byte.github.io/desktop-tutorial/tomoshibi/`（PR #101はmainにマージ済み。GitHub Pagesの再ビルド後に有効になる）。具体的な問い合わせ先は`privacy.html`に記載のメールアドレス
 - **マーケティングURL**：同上、または空欄でも可
 - **プライバシーポリシーURL**：`https://skisuki11-byte.github.io/desktop-tutorial/tomoshibi/privacy.html`
-- **著作権**：2026 木透清一
+- **著作権**：2026 SEIICHI KISUKI
 
 ## カテゴリ
 
