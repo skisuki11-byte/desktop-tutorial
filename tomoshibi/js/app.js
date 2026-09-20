@@ -1484,33 +1484,42 @@
       '端末を変えるときは、このファイルを新しい端末で読み込ませてください。',
       [{ label: '書き出す', primary: true, on: doExport }, { label: 'やめる' }]);
   }
+  // バックアップの中身（追記95）：写真・動画をBase64にして1本のJSON文字列に
+  // 埋め込む形式（〜追記94）は、①Base64化で元サイズの約1.33倍に膨らむ、
+  // ②書き出す前にその巨大な1本の文字列をまるごとJSのメモリ上に作る必要が
+  // ある、という2つの無駄があった。メタデータだけの小さいdata.jsonと、
+  // 写真・動画は生バイナリのまま別エントリ（media/<id>）にして、ZIPひとつ
+  // にまとめる形に変えた。
   function doExport() {
     sheet('書き出しています', '<span class="busy"></span> しばらくお待ちください', []);
     S.allMedia().then(function (all) {
+      var entries = {}, mediaMeta = [];
       return all.reduce(function (p, rec) {
-        return p.then(function (acc) {
+        return p.then(function () {
           // assets に置いたものは手元に blob がないので、取り直してから書き出す
           var get = rec.blob ? Promise.resolve(rec.blob)
                              : fetch(rec.url).then(function (r) { return r.blob(); });
           return get.then(function (b) {
-            return new Promise(function (res) {
-              var r = new FileReader();
-              r.onload = function () { acc.push({ id: rec.id, at: rec.at, kind: rec.kind, dataURL: r.result }); res(acc); };
-              r.onerror = function () { res(acc); };
-              r.readAsDataURL(b);
+            return b.arrayBuffer().then(function (buf) {
+              entries['media/' + rec.id] = new Uint8Array(buf);
+              mediaMeta.push({ id: rec.id, at: rec.at, kind: rec.kind, type: b.type || '' });
             });
-          }).catch(function () { return acc; });
+          }).catch(function () {});
         });
-      }, Promise.resolve([]));
-    }).then(function (media) {
-      var out = { app: 'ともしび', exportedAt: new Date().toISOString(), data: st, media: media };
-      var text = JSON.stringify(out);
+      }, Promise.resolve()).then(function () { return { entries: entries, mediaMeta: mediaMeta }; });
+    }).then(function (packed) {
+      var meta = { app: 'ともしび', exportedAt: new Date().toISOString(), format: 2, data: st, media: packed.mediaMeta };
+      packed.entries['data.json'] = window.TomoshibiZip.strToU8(JSON.stringify(meta));
+      return window.TomoshibiZip.zip(packed.entries).then(function (zipBytes) {
+        return { zipBytes: zipBytes, count: packed.mediaMeta.length };
+      });
+    }).then(function (res) {
       closeSheet();
-      var name = 'tomoshibi-' + S.ymd(new Date()) + '.json';
-      var blob = new Blob([text], { type: 'application/json' });
+      var name = 'tomoshibi-' + S.ymd(new Date()) + '.zip';
+      var blob = new Blob([res.zipBytes], { type: 'application/zip' });
       var okMsg = function () {
         sheet('書き出しました',
-          media.length + '件の写真・動画をふくむファイルを保存しました。<br><br>' +
+          res.count + '件の写真・動画をふくむファイルを保存しました。<br><br>' +
           '新しい端末では、設定の<b>「バックアップから戻す」</b>でこのファイルを読み込ませてください。',
           [{ label: 'とじる', primary: true }]);
       };
@@ -1520,7 +1529,7 @@
       if (dl) {
         dl.save({ filename: name, data: blob }).then(okMsg).catch(function (e) {
           if (e && e.code === 'declined') return;
-          copyOut(text, media.length);
+          copyOutBinary(res.zipBytes, res.count);
         });
         return;
       }
@@ -1528,14 +1537,14 @@
       // どこに保存されたか分からなかった（追記89）。Filesystem+Shareで
       // 保存先をユーザーが選べる共有シートを出す。
       if (window.TomoshibiNative && window.TomoshibiNative.isNative) {
-        window.TomoshibiNative.saveTextFile(name, text, 'バックアップを保存').then(function (ok) {
-          if (ok) okMsg(); else copyOut(text, media.length);
+        window.TomoshibiNative.saveBinaryFile(name, res.zipBytes, 'バックアップを保存').then(function (ok) {
+          if (ok) okMsg(); else copyOutBinary(res.zipBytes, res.count);
         });
         return;
       }
       var embedded = false;
       try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
-      if (embedded) { copyOut(text, media.length); return; }
+      if (embedded) { copyOutBinary(res.zipBytes, res.count); return; }
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = name;
@@ -1543,6 +1552,18 @@
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
       okMsg();
     });
+  }
+  /* copyOut(text, n) にそのまま渡せるよう、ZIPのバイナリをBase64のテキストに
+     変える。call stack overflow を避けるため、String.fromCharCode.apply では
+     なく小分けのループで組み立てる。 */
+  function copyOutBinary(bytes, n) {
+    var CHUNK = 750000, out = '';
+    for (var i = 0; i < bytes.length; i += CHUNK) {
+      var slice = bytes.subarray(i, i + CHUNK), bin = '';
+      for (var j = 0; j < slice.length; j++) bin += String.fromCharCode(slice[j]);
+      out += btoa(bin);
+    }
+    copyOut(out, n);
   }
   /* 埋め込みで開かれているとダウンロードが働かない。
      持ち出せると約束した以上、黙って失敗させずコピーの道を出す。 */
@@ -2067,29 +2088,54 @@
         [{ label: 'ファイルをえらぶ', primary: true, on: function () { $('#in-backup').click(); } },
          { label: 'やめる' }]);
     };
+    function finishRestore(res) {
+      closeSheet();
+      if (!res.ok) {
+        sheet('戻せませんでした', 'このファイルは、ともしびのバックアップではないようです。', [{ label: 'とじる', primary: true }]);
+        return;
+      }
+      sheet('戻しました',
+        res.restored + '件の写真・動画を入れ直しました。' +
+        (res.failed ? '<br><br>' + res.failed + '件は入りませんでした（端末の空きが足りないか、開けない形式でした）。' : ''),
+        [{ label: 'はじめる', primary: true, on: function () { location.reload(); } }]);
+    }
+    function restoreFail() {
+      closeSheet();
+      sheet('戻せませんでした', 'このファイルは読み取れませんでした。', [{ label: 'とじる', primary: true }]);
+    }
     $('#in-backup').onchange = function (e) {
       var f = e.target.files && e.target.files[0];
       e.target.value = '';
       if (!f) return;
       sheet('戻しています', '<span class="busy"></span> 写真や動画の数だけ時間がかかります', []);
+      // 追記95以降はZIP形式（拡張子.zip）。それより前に書き出した.jsonの
+      // バックアップも読めるよう、両方に対応する。
+      if (/\.zip$/i.test(f.name) || f.type === 'application/zip') {
+        var zr = new FileReader();
+        zr.onload = function () {
+          window.TomoshibiZip.unzip(new Uint8Array(zr.result)).then(function (files) {
+            var metaBytes = files['data.json'];
+            if (!metaBytes) throw new Error('no-meta');
+            var pack = JSON.parse(window.TomoshibiZip.strFromU8(metaBytes));
+            pack.media = (pack.media || []).map(function (m) {
+              var bytes = files['media/' + m.id];
+              return bytes ? { id: m.id, at: m.at, kind: m.kind, blob: new Blob([bytes], { type: m.type || '' }) } : null;
+            }).filter(Boolean);
+            return S.restoreAll(pack);
+          }).then(finishRestore).catch(restoreFail);
+        };
+        zr.onerror = restoreFail;
+        zr.readAsArrayBuffer(f);
+        return;
+      }
       var r = new FileReader();
       r.onload = function () {
         var pack = null;
         try { pack = JSON.parse(r.result); } catch (x) {}
-        if (!pack) { closeSheet(); sheet('戻せませんでした', 'このファイルは読み取れませんでした。', [{ label: 'とじる', primary: true }]); return; }
-        S.restoreAll(pack).then(function (res) {
-          closeSheet();
-          if (!res.ok) {
-            sheet('戻せませんでした', 'このファイルは、ともしびのバックアップではないようです。', [{ label: 'とじる', primary: true }]);
-            return;
-          }
-          sheet('戻しました',
-            res.restored + '件の写真・動画を入れ直しました。' +
-            (res.failed ? '<br><br>' + res.failed + '件は入りませんでした（端末の空きが足りないか、開けない形式でした）。' : ''),
-            [{ label: 'はじめる', primary: true, on: function () { location.reload(); } }]);
-        });
+        if (!pack) { restoreFail(); return; }
+        S.restoreAll(pack).then(finishRestore);
       };
-      r.onerror = function () { closeSheet(); sheet('戻せませんでした', 'ファイルを読み取れませんでした。', [{ label: 'とじる', primary: true }]); };
+      r.onerror = restoreFail;
       r.readAsText(f);
     };
     $('#btn-profile').onclick = function () {

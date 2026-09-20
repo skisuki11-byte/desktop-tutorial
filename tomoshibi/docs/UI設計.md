@@ -4336,3 +4336,71 @@ WebViewごと強制終了（iOSのメモリ不足によるプロセス終了）�
 文字列そのものの生成（`JSON.stringify`）にかかる時間・メモリは変わら
 ないため、書き出しに時間がかかったり、極端に動画が多い・大きい場合は
 なお改善しきれない可能性がある点は申し送る。
+
+# 追記95：バックアップの形式を「1本のJSON文字列」から「ZIPパッケージ」に変更（2026-09-20）
+
+## 背景
+
+追記94でチャンク書き込みに変えたが、「写真・動画をすべてBase64にして
+1本の巨大なJSON文字列にまとめる」という設計自体は変えていなかった。
+ユーザーから「写真・動画は端末に保存されているものをそのまま使えない
+のか、JSONに全部組み込む必要があるのか」という指摘があり、根本的な
+設計を見直すことにした。
+
+## 検討
+
+「参照だけにする」（JSONにはファイルパスだけを書く）方式は、機種変
+対応という目的そのものと相性が悪いため採らなかった。参照先は今の端末
+のアプリ内保存領域なので、新しい端末に移した瞬間にリンク切れになる。
+
+かわりに、Day Oneのような日記アプリのバックアップと同じ考え方で、
+「メタデータだけの小さいJSON＋写真・動画は生バイナリのまま別ファイル」
+を1つのZIPにまとめる形にした。これにより、これまでの設計にあった
+2つの無駄がなくなる：
+
+1. Base64化で元サイズの約1.33倍に膨らんでいたのがなくなる
+   （ZIPエントリには生バイナリをそのまま入れられる）
+2. 書き出す前に「全メディアを含む1本の巨大な文字列」をJSのメモリ上に
+   まるごと作る必要がなくなる（各メディアはZIPエントリとして個別に
+   扱われる）
+
+## 対応
+
+- `package.json`に`fflate`（軽量なZIP実装）を追加
+- `capacitor-src/bridge.js`：
+  - `saveTextFile()`（テキスト用）を`saveBinaryFile()`（バイナリ用）に
+    差し替え。`writeFileChunked`もバイナリ版の`writeBinaryChunked`に
+    変更し、750KBずつBase64化してappendFileする（考え方は追記94と同じ）
+  - `zipSync`/`unzipSync`をラップした`zipPack`/`unzipPack`を追加し、
+    `window.TomoshibiZip`として公開。ネイティブ・Web両方で使うため、
+    他の関数と違って`safe()`では包まない（isNativeにかかわらず動く）
+- `js/app.js`の`doExport()`：写真・動画は`blob.arrayBuffer()`で生
+  バイナリのまま`entries['media/<id>']`に入れ、メタデータ
+  （`data.json`、`format: 2`）と合わせて`TomoshibiZip.zip()`でひとつの
+  `.zip`にする。claude.aiプレビュー用の保存口・ネイティブの
+  `saveBinaryFile`・Web版`<a download>`・埋め込み時のコピー用
+  フォールバック（`copyOutBinary`、Base64テキスト化）のいずれも対応
+- `js/app.js`の`#in-backup`の読み込み処理：拡張子が`.zip`なら
+  `TomoshibiZip.unzip()`で展開し、`data.json`と`media/<id>`から
+  `pack.media[].blob`を組み立てて`Store.restoreAll()`に渡す。拡張子が
+  `.json`（追記94以前に書き出した旧バックアップ）なら、これまで通り
+  dataURL埋め込みのJSONとして読む
+- `js/store.js`の`restoreAll()`：`m.blob`（ZIP形式）と`m.dataURL`
+  （旧JSON形式）の両方を受けられるようにした（`m.blob || dataURLToBlob(m.dataURL)`）。
+  旧形式のバックアップも引き続き読み込める
+- `index.html`の`#in-backup`の`accept`に`application/zip,.zip`を追加
+
+## 確かめたこと
+
+`npm install fflate`のうえで`npm run build`が問題なく通ることを確認
+した。Playwrightで実際にブラウザを操作し、①設定→書き出す→ダウンロード
+された`.zip`を取得、②その`.zip`をnode側の`fflate`で展開して
+`data.json`（`app`・`format`フィールド）と`media/<id>`の生バイト列が
+入れた写真のバイト列と完全一致することを確認、③同じ`.zip`ファイルを
+実際に`#in-backup`から読み込ませ、「戻しました」画面と、復元後に
+`Store.allMedia()`で取り出したBlobのバイト列が元と一致することを確認、
+④追記94以前の形式（dataURL埋め込みの`.json`）のバックアップも、その
+まま読み込めることを確認——の4点について、実際にUIのボタンを操作する
+一連のテストで検証した。実機での確認（実際の写真・動画での書き出し・
+読み込み、メモリ圧迫の改善効果）は、次回のTestFlightビルドでユーザー
+に確認してもらう必要がある。

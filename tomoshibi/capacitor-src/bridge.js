@@ -14,9 +14,10 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Calendar } from '@capacitor/calendar';
+import { zipSync, unzipSync, strToU8, strFromU8 } from 'fflate';
 
 var isNative = Capacitor.isNativePlatform();
 
@@ -75,38 +76,68 @@ var takePhoto = safe(function () {
   });
 });
 
-// テキストファイルの書き出し（バックアップJSON・カレンダーics共用）：
+// バックアップファイル（ZIP化したもの）の書き出し：
 // Web版の<a download>はWKWebViewでは共有シートを出さず、どこに保存
 // されたか分からなかった（追記89）。Filesystemでいったんキャッシュ領域に
 // ファイルとして書き、その実ファイルをShareの共有シートに渡すことで、
 // 「ファイル」に保存・AirDropなど、行き先をユーザーが選べるようにする。
 //
-// 動画を含むバックアップは数十〜数百MBのJSON文字列になりうる。これを
-// writeFile()で一度に渡すと、その丸ごとの文字列をネイティブ橋渡しの
-// メッセージとしてシリアライズすることになり、端末のメモリを圧迫して
-// WebViewごと強制終了し、オープニング画面に戻ってしまう（追記94）。
-// 1MBずつappendFileで小分けに書くことで、橋渡し1回あたりのデータ量を
-// 抑える。
-var WRITE_CHUNK_SIZE = 1000000;
+// 動画を含むバックアップは数十〜数百MBになりうる。これをwriteFile()で
+// 一度に渡すと、その丸ごとのデータをネイティブ橋渡しのメッセージとして
+// シリアライズすることになり、端末のメモリを圧迫してWebViewごと強制
+// 終了し、オープニング画面に戻ってしまう（追記94）。750KBずつ
+// appendFileで小分けに書くことで、橋渡し1回あたりのデータ量を抑える
+// （追記95でZIP形式に変えたことで、テキストではなくバイナリを扱う）。
+var WRITE_CHUNK_BYTES = 750000;
 
-function writeFileChunked(path, text, directory, encoding) {
+// Filesystemの data は、encoding を指定しなければbase64として書かれる。
+// 1バイトずつ文字コードへ変換してからbtoaする、素朴だが確実な方法
+// （TextDecoderの'latin1'対応など環境依存の近道は使わない）。
+function bytesToBase64(bytes) {
+  var binary = '';
+  for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+function writeBinaryChunked(path, bytes, directory) {
   function step(offset) {
-    var chunk = text.slice(offset, offset + WRITE_CHUNK_SIZE);
+    var slice = bytes.subarray(offset, offset + WRITE_CHUNK_BYTES);
     var op = offset === 0 ? Filesystem.writeFile : Filesystem.appendFile;
-    return op({ path: path, data: chunk, directory: directory, encoding: encoding }).then(function () {
-      var next = offset + WRITE_CHUNK_SIZE;
-      if (next < text.length) return step(next);
+    return op({ path: path, data: bytesToBase64(slice), directory: directory }).then(function () {
+      var next = offset + WRITE_CHUNK_BYTES;
+      if (next < bytes.length) return step(next);
       return Filesystem.getUri({ path: path, directory: directory });
     });
   }
   return step(0);
 }
 
-var saveTextFile = safe(function (filename, text, dialogTitle) {
-  return writeFileChunked(filename, text, Directory.Cache, Encoding.UTF8).then(function (result) {
+var saveBinaryFile = safe(function (filename, bytes, dialogTitle) {
+  return writeBinaryChunked(filename, bytes, Directory.Cache).then(function (result) {
     return Share.share({ url: result.uri, dialogTitle: dialogTitle || '保存' });
   }).then(function () { return true; });
 });
+
+// バックアップのZIP圧縮・展開（追記95）：写真・動画をBase64にしてJSONに
+// 埋め込む形式は、①Base64化で元サイズの約1.33倍に膨らむ、②書き出す前に
+// その巨大な1本の文字列をまるごとJSのメモリ上に作る必要がある、という
+// 2つの無駄があった。メタデータだけの小さいJSON（data.json）と、写真・
+// 動画は生バイナリのまま別エントリ（media/<id>）にして、ZIPひとつに
+// まとめる形に変える。ネイティブ・Web両方で使うため、safe()では包まず
+// （isNativeにかかわらず動く）window.TomoshibiZipとして別に出す。
+// entries: { 'data.json': Uint8Array, 'media/<id>': Uint8Array, ... }
+function zipPack(entries) {
+  return new Promise(function (resolve, reject) {
+    try { resolve(zipSync(entries, { level: 6 })); }
+    catch (e) { reject(e); }
+  });
+}
+function unzipPack(bytes) {
+  return new Promise(function (resolve, reject) {
+    try { resolve(unzipSync(bytes)); }
+    catch (e) { reject(e); }
+  });
+}
 
 // カレンダーへ直接書き込む（追記93）。.icsファイル経由の共有シート／
 // 「開く方法」はどちらもアプリの一覧を出すだけで、実際にカレンダーへ
@@ -156,6 +187,14 @@ window.TomoshibiNative = {
   takePhoto: takePhoto,
   hideSplash: hideSplash,
   setStatusBarStyle: setStatusBarStyle,
-  saveTextFile: saveTextFile,
+  saveBinaryFile: saveBinaryFile,
   addCalendarEvents: addCalendarEvents
+};
+
+// isNativeにかかわらず（Web/PWAでも）使うので、TomoshibiNativeとは別の窓口にする。
+window.TomoshibiZip = {
+  zip: zipPack,
+  unzip: unzipPack,
+  strToU8: strToU8,
+  strFromU8: strFromU8
 };
