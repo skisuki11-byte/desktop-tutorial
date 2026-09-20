@@ -2204,14 +2204,14 @@
       });
     });
   });
-  var saveBackupFile = safe(function(filename, text) {
+  var saveTextFile = safe(function(filename, text, dialogTitle) {
     return Filesystem.writeFile({
       path: filename,
       data: text,
       directory: Directory.Cache,
       encoding: Encoding.UTF8
     }).then(function(result) {
-      return Share.share({ url: result.uri, dialogTitle: "\u30D0\u30C3\u30AF\u30A2\u30C3\u30D7\u3092\u4FDD\u5B58" });
+      return Share.share({ url: result.uri, dialogTitle: dialogTitle || "\u4FDD\u5B58" });
     }).then(function() {
       return true;
     });
@@ -2239,7 +2239,7 @@
     takePhoto,
     hideSplash,
     setStatusBarStyle,
-    saveBackupFile
+    saveTextFile
   };
 })();
 /*! Bundled license information:

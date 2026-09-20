@@ -1528,7 +1528,7 @@
       // どこに保存されたか分からなかった（追記89）。Filesystem+Shareで
       // 保存先をユーザーが選べる共有シートを出す。
       if (window.TomoshibiNative && window.TomoshibiNative.isNative) {
-        window.TomoshibiNative.saveBackupFile(name, text).then(function (ok) {
+        window.TomoshibiNative.saveTextFile(name, text, 'バックアップを保存').then(function (ok) {
           if (ok) okMsg(); else copyOut(text, media.length);
         });
         return;
@@ -1579,14 +1579,29 @@
   function icsDate(d) { return d.getFullYear() + icsPad(d.getMonth() + 1) + icsPad(d.getDate()); }
   function icsText(s) { return String(s).replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n'); }
 
-  function buildICS() {
+  // どの節目を書き出せるかの一覧。確認シートのチェックリストと
+  // buildICS() の両方がここを見る（順序もここが基準）。
+  var ICS_ITEMS = [
+    { key: 'd49', label: '四十九日' },
+    { key: 'd100', label: '百か日' },
+    { key: 'monthly', label: '月命日' },
+    { key: 'birthday', label: 'お誕生日' },
+    { key: 'y1', label: '一周忌' },
+    { key: 'y3', label: '三回忌' }
+  ];
+
+  // selectedKeys省略時は全部（後方互換）。空配列を渡せば1件も書き出さない。
+  function buildICS(selectedKeys) {
     var death = S.parseISO(st.pet.deathISO);
     if (!death) return null;
     var name = st.pet.name || 'あの子';
     var stamp = icsDateStamp(new Date());
     var uidBase = 'tomoshibi-' + (st.pet.deathISO || '') + '-';
     var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//tomoshibi//ja', 'CALSCALE:GREGORIAN'];
+    var any = false;
     function vevent(key, date, summary, rrule) {
+      if (selectedKeys && selectedKeys.indexOf(key) < 0) return;
+      any = true;
       lines.push('BEGIN:VEVENT');
       lines.push('UID:' + uidBase + key + '@tomoshibi.local');
       lines.push('DTSTAMP:' + stamp);
@@ -1603,7 +1618,40 @@
     var birth = S.parseISO(st.pet.birthISO);
     if (birth) vevent('birthday', birth, name + 'のお誕生日', 'FREQ=YEARLY');
     lines.push('END:VCALENDAR');
-    return lines.join('\r\n');
+    return any ? lines.join('\r\n') : null;
+  }
+
+  /* 「だいじな日をカレンダーに追加」ボタンから、いきなり全件を書き出して
+     いたのを、確認と取捨選択をはさむように変更（ユーザー指摘）。
+     チェック状態はDOMではなくこのクロージャのselectedで持つ
+     ——sheet()のボタンはcloseSheet()でDOMを消してからon()を呼ぶため、
+     ボタンが押された時点でDOMを読みにいっても間に合わない。 */
+  function confirmAddToCalendar() {
+    var death = S.parseISO(st.pet.deathISO);
+    if (!death) return;
+    var birth = S.parseISO(st.pet.birthISO);
+    var items = ICS_ITEMS.filter(function (it) { return it.key !== 'birthday' || birth; });
+    var selected = {};
+    items.forEach(function (it) { selected[it.key] = true; });
+    var rows = items.map(function (it, i) {
+      return '<label style="display:flex;align-items:center;gap:10px;padding:10px 0;' +
+        (i ? 'border-top:1px solid var(--line);' : '') + '">' +
+        '<input type="checkbox" data-ics-key="' + it.key + '" checked style="width:20px;height:20px;accent-color:var(--amber-ink)">' +
+        '<span>' + esc(it.label) + '</span></label>';
+    }).join('');
+    sheet('カレンダーに追加する',
+      '追加する日を選んでください。この端末の中だけで書き出し、お使いのカレンダーアプリに取りこみます（どこにも送信しません）。' +
+      '<div style="margin-top:10px">' + rows + '</div>',
+      [
+        { label: '追加する', primary: true, on: function () {
+          var keys = Object.keys(selected).filter(function (k) { return selected[k]; });
+          if (keys.length) downloadICS(keys);
+        } },
+        { label: 'やめる' }
+      ]);
+    $$('#sheet-root [data-ics-key]').forEach(function (c) {
+      c.onchange = function () { selected[c.dataset.icsKey] = c.checked; };
+    });
   }
 
   function icsCopyOut(ics) {
@@ -1624,14 +1672,14 @@
     };
   }
 
-  function downloadICS() {
-    var ics = buildICS();
+  function downloadICS(selectedKeys) {
+    var ics = buildICS(selectedKeys);
     if (!ics) return;
     var name = 'tomoshibi-' + (st.pet.name || 'pet') + '.ics';
     var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
     var okMsg = function () {
       sheet('カレンダーに追加しました',
-        '月命日・お誕生日・四十九日などの日を書き出しました。<br><br>' +
+        '選んだ日を書き出しました。<br><br>' +
         'お使いのカレンダーアプリ（カレンダー・Googleカレンダーなど）で、届いたファイルを開いて取りこんでください。',
         [{ label: 'とじる', primary: true }]);
     };
@@ -1640,6 +1688,14 @@
       dl.save({ filename: name, data: blob }).then(okMsg).catch(function (e) {
         if (e && e.code === 'declined') return;
         icsCopyOut(ics);
+      });
+      return;
+    }
+    // ネイティブアプリでは<a download>がWKWebViewで共有シートを出さず、
+    // どこに保存されたか分からなかった（追記89・90と同じ理由）。
+    if (window.TomoshibiNative && window.TomoshibiNative.isNative) {
+      window.TomoshibiNative.saveTextFile(name, ics, 'カレンダーに追加').then(function (ok) {
+        if (ok) okMsg(); else icsCopyOut(ics);
       });
       return;
     }
@@ -1966,7 +2022,7 @@
       st.pet.scene = b.dataset.scene; S.save(); renderSettings();
     });
     $('#btn-export').onclick = exportAll;
-    $('#btn-ics').onclick = downloadICS;
+    $('#btn-ics').onclick = confirmAddToCalendar;
     $('#btn-import').onclick = function () {
       sheet('バックアップから戻す',
         'いま入っているものは、いったん全部消してから入れ直します。<br><br>' +
