@@ -2146,6 +2146,10 @@
     web: () => Promise.resolve().then(() => (init_web5(), web_exports5)).then((m) => new m.ShareWeb())
   });
 
+  // node_modules/@capacitor-community/file-opener/dist/esm/index.js
+  init_dist();
+  var FileOpener = registerPlugin("FileOpener");
+
   // capacitor-src/bridge.js
   var isNative = Capacitor.isNativePlatform();
   function safe(fn) {
@@ -2216,6 +2220,18 @@
       return true;
     });
   });
+  var openTextFileWith = safe(function(filename, text, mimeType) {
+    return Filesystem.writeFile({
+      path: filename,
+      data: text,
+      directory: Directory.Cache,
+      encoding: Encoding.UTF8
+    }).then(function(result) {
+      return FileOpener.open({ filePath: result.uri, contentType: mimeType, openWithDefault: true });
+    }).then(function() {
+      return true;
+    });
+  });
   function hideSplash() {
     if (!isNative) return;
     try {
@@ -2239,7 +2255,8 @@
     takePhoto,
     hideSplash,
     setStatusBarStyle,
-    saveTextFile
+    saveTextFile,
+    openTextFileWith
   };
 })();
 /*! Bundled license information:

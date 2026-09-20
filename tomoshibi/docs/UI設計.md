@@ -4174,3 +4174,45 @@ Playwrightで、おまいりの庭→「だいじな日をカレンダーに追�
 実際に読み、除いた「百か日」のVEVENTが無いことを確認）。実機での
 共有シート表示自体は、次回のTestFlightビルドでユーザーに確認して
 もらう必要がある。
+
+# 追記92：カレンダー追加の共有シートに、カレンダーアプリ自体が出ない問題（2026-09-20）
+
+## 背景
+
+追記91の修正後、実機で共有シートは出るようになったが、その中身が
+「コピー」「"ファイル"に保存」「AirDrop」「ChatGPTに聞く」など汎用の
+共有先だけで、カレンダー・Googleカレンダーが出てこない、という報告
+があった。
+
+## 原因
+
+`Share.share()`（`@capacitor/share`）はiOSの`UIActivityViewController`
+（＝共有シート）を呼ぶ。Appleのカレンダーアプリは、そもそもこの
+共有シートの拡張（Share Extension）を提供していない。
+
+Safariで「カレンダーに追加」のリンクを踏むと直接カレンダーが開く、
+という馴染みのある挙動は、共有シートとは別物の仕組み（OSが
+`.ics`ファイルを認識して、その書類を開けるアプリの一覧を出す
+「開く方法」＝`UIDocumentInteractionController`）によるもので、
+これは共有シート用の`Share`プラグインでは呼び出せない。
+
+## 対応
+
+「この書類を開けるアプリの一覧を出す」ための専用プラグイン
+`@capacitor-community/file-opener`を追加した。
+`capacitor-src/bridge.js`に`openTextFileWith(filename, text, mimeType)`
+を新設し、Filesystemで書き出したファイルを`FileOpener.open({filePath,
+contentType, openWithDefault: true})`で開くようにした。バックアップ
+JSONの書き出し（`saveTextFile`・共有シート）とは別の道として、
+カレンダーics（`downloadICS`）だけこちらに差し替えた。
+
+`npx cap sync ios`で`ios/App/CapApp-SPM/Package.swift`に
+`@capacitor-community/file-opener@8.0.1`が追加されたことを確認した。
+
+## 確かめたこと
+
+`npm run build`でバンドル生成（83.0kb→83.6kb）を確認し、Playwrightで
+確認シート〜.ics生成までの既存フロー（Web版のフォールバック経路）が
+壊れていないことを再確認した。実機でカレンダーアプリが選択肢に出る
+かどうかは、次回のTestFlightビルドでユーザーに確認してもらう必要が
+ある（このプラグインの挙動はWebView上のテストでは再現できないため）。

@@ -1691,11 +1691,14 @@
       });
       return;
     }
-    // ネイティブアプリでは<a download>がWKWebViewで共有シートを出さず、
-    // どこに保存されたか分からなかった（追記89・90と同じ理由）。
+    // ネイティブアプリではShareの共有シート（コピー・ファイルに保存・
+    // AirDropなど）にカレンダーアプリが出てこない（追記92）。かわりに
+    // openTextFileWith で「この書類を開けるアプリ」の一覧（カレンダー・
+    // Googleカレンダーなど）を出す。OS側の選択画面が案内そのものなので、
+    // ここでは重ねて「追加しました」は出さない。
     if (window.TomoshibiNative && window.TomoshibiNative.isNative) {
-      window.TomoshibiNative.saveTextFile(name, ics, 'カレンダーに追加').then(function (ok) {
-        if (ok) okMsg(); else icsCopyOut(ics);
+      window.TomoshibiNative.openTextFileWith(name, ics, 'text/calendar').then(function (ok) {
+        if (!ok) icsCopyOut(ics);
       });
       return;
     }

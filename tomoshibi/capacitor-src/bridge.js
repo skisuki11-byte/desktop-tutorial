@@ -16,6 +16,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { FileOpener } from '@capacitor-community/file-opener';
 
 var isNative = Capacitor.isNativePlatform();
 
@@ -90,6 +91,22 @@ var saveTextFile = safe(function (filename, text, dialogTitle) {
   }).then(function () { return true; });
 });
 
+// カレンダー（.ics）の場合はShareの共有シート（コピー・ファイルに保存・
+// AirDropなど、UIActivityViewController）ではなく、その書類を開ける
+// アプリの一覧（カレンダー・Googleカレンダーなど、iOSの「開く方法」＝
+// UIDocumentInteractionController）を出したい。共有シートとは別物の
+// OSの仕組みで、FileOpenerプラグインが窓口になる（追記92）。
+var openTextFileWith = safe(function (filename, text, mimeType) {
+  return Filesystem.writeFile({
+    path: filename,
+    data: text,
+    directory: Directory.Cache,
+    encoding: Encoding.UTF8
+  }).then(function (result) {
+    return FileOpener.open({ filePath: result.uri, contentType: mimeType, openWithDefault: true });
+  }).then(function () { return true; });
+});
+
 // スプラッシュ／ステータスバーは起動直後の一瞬だけの見た目なので、失敗しても
 // 何も起きなくていい（safe()と同じ理由でtry/catchのみ、Promiseの結果は使わない）。
 function hideSplash() {
@@ -110,5 +127,6 @@ window.TomoshibiNative = {
   takePhoto: takePhoto,
   hideSplash: hideSplash,
   setStatusBarStyle: setStatusBarStyle,
-  saveTextFile: saveTextFile
+  saveTextFile: saveTextFile,
+  openTextFileWith: openTextFileWith
 };
