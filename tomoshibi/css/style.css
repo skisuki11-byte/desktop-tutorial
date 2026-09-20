@@ -423,12 +423,12 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .card{background:var(--panel);border:2px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .homecard{overflow:hidden;padding-bottom:18px}
 .petname{margin:16px 0 4px;font-family:var(--round);font-weight:700;font-size:var(--fs-8);letter-spacing:.08em;text-align:center;line-height:1.4}
-.petmeta{margin:0;font-size:var(--fs-4);color:var(--ink);text-align:center;letter-spacing:.03em;font-variant-numeric:tabular-nums}
+.petmeta{margin:0;font-size:var(--fs-5);color:var(--ink);text-align:center;letter-spacing:.03em;font-variant-numeric:tabular-nums}
 /* 生年月日・いっしょにいた日数。以前は注記サイズ(--fs-1・12.5px)だったが、
    実機で「見えない」と報告があった。--faint の淡い色と組み合わさると特に読みにくい。
-   1段階だけ上の --fs-3 にし、色も --muted に上げて視認性を確保する。
-   上の享年・命日の行（--fs-4）より小さいままにして、序列は保つ。 */
-.petmeta.sub{margin-top:4px;font-size:var(--fs-3);color:var(--muted)}
+   上の享年・命日の行（--fs-5）と合わせて1段階ずつ引き上げ、--fs-4にし、
+   色も --muted に上げて視認性を確保する。上の行より小さいままにして、序列は保つ。 */
+.petmeta.sub{margin-top:4px;font-size:var(--fs-4);color:var(--muted)}
 
 /* ---------- 戒名 ----------
    縦書きの毛筆で、遺影の右に立てる。位牌と同じ構えにした。
