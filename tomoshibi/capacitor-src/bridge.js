@@ -74,18 +74,19 @@ var takePhoto = safe(function () {
   });
 });
 
-// バックアップの書き出し：Web版の<a download>はWKWebViewでは共有シートを
-// 出さず、どこに保存されたか分からなかった（追記89）。Filesystemでいったん
-// キャッシュ領域にファイルとして書き、その実ファイルをShareの共有シートに
-// 渡すことで、「ファイル」に保存・AirDropなど、行き先をユーザーが選べるようにする。
-var saveBackupFile = safe(function (filename, text) {
+// テキストファイルの書き出し（バックアップJSON・カレンダーics共用）：
+// Web版の<a download>はWKWebViewでは共有シートを出さず、どこに保存
+// されたか分からなかった（追記89）。Filesystemでいったんキャッシュ領域に
+// ファイルとして書き、その実ファイルをShareの共有シートに渡すことで、
+// 「ファイル」に保存・AirDropなど、行き先をユーザーが選べるようにする。
+var saveTextFile = safe(function (filename, text, dialogTitle) {
   return Filesystem.writeFile({
     path: filename,
     data: text,
     directory: Directory.Cache,
     encoding: Encoding.UTF8
   }).then(function (result) {
-    return Share.share({ url: result.uri, dialogTitle: 'バックアップを保存' });
+    return Share.share({ url: result.uri, dialogTitle: dialogTitle || '保存' });
   }).then(function () { return true; });
 });
 
@@ -109,5 +110,5 @@ window.TomoshibiNative = {
   takePhoto: takePhoto,
   hideSplash: hideSplash,
   setStatusBarStyle: setStatusBarStyle,
-  saveBackupFile: saveBackupFile
+  saveTextFile: saveTextFile
 };
