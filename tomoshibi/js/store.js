@@ -658,7 +658,7 @@
                              size: rec.blob.size, at: rec.at, kind: rec.kind }));
         });
       }).then(function () {
-        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, store: 'idb' });
+        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, addedAt: rec.addedAt, store: 'idb' });
         return { ok: true, where: 'idb' };
       }).catch(function (e) { return next(reasonOf(e)); });
     }
@@ -667,7 +667,7 @@
       if (u.length > LS_LIMIT) return next('too-large');
       try {
         localStorage.setItem(LS_PREFIX + rec.id, JSON.stringify({ u: u, at: rec.at, kind: rec.kind }));
-        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, store: 'ls' });
+        indexPut({ id: rec.id, kind: rec.kind, at: rec.at, addedAt: rec.addedAt, store: 'ls' });
         return { ok: true, where: 'ls' };
       } catch (e) { return next('quota'); }
     }).catch(function (e) { return next(reasonOf(e)); });
@@ -689,7 +689,7 @@
         var raw = localStorage.getItem(LS_PREFIX + e.id);
         if (!raw) return Promise.resolve(null);
         var o = JSON.parse(raw), b = dataURLToBlob(o.u);
-        return Promise.resolve(b ? { id: e.id, kind: e.kind, at: e.at, blob: b } : null);
+        return Promise.resolve(b ? { id: e.id, kind: e.kind, at: e.at, addedAt: e.addedAt, blob: b } : null);
       } catch (x) { return Promise.resolve(null); }
     }
     if (!back.idb) return Promise.resolve(null);
@@ -699,7 +699,7 @@
         // 新しい形（buf）と、古い形（blob）の両方を受ける
         var b = r.buf ? new Blob([r.buf], { type: r.type || '' }) : r.blob;
         if (!b || !b.size) { lost[e.id] = 1; return null; }   // 中身だけ失われている
-        return { id: e.id, kind: e.kind, at: e.at, blob: b };
+        return { id: e.id, kind: e.kind, at: e.at, addedAt: e.addedAt, blob: b };
       })
       .catch(function () { lost[e.id] = 1; return null; });
   }
