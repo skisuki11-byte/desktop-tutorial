@@ -4018,3 +4018,40 @@ completes processing of uploaded artifacts: TestFlight.`と出て、
 一連の流れが、はじめて最後まで通った。次はApp Store Connectの
 TestFlightタブでAppleの処理完了を待ち、実機での動作確認に進む
 段階。
+
+# 追記88：TestFlightのベータ版審査提出で、必要情報の不足に何度か
+つまずく（2026-09-20）
+
+追記87でipaのアップロード自体は成功したが、その先の
+「TestFlightベータ版審査へ提出」の段階で、Post-processingの
+「App Store distribution」が3回連続でエラーになった。1回直しては
+次のビルドで次の不足が見つかる、という形で1つずつ潰した。
+
+## つまずいた順番
+
+1. **テスト情報が未入力**：`Beta App Information`の
+   `Feedback Email`、`Beta App Review Information`の
+   氏名・電話番号・メールアドレスが未入力だった
+   （`Complete test information is required...`）。
+   App Store Connectの`.../testflight/test-info`で入力
+2. **ベータ版Appの説明が未入力**：`Beta App Description`が
+   空だった（`Beta App Description is required...`）。
+   同じ画面の別項目に入力。あわせて`プライバシーポリシーURL`
+   （`privacy.html`のGitHub Pages URL）も入力した
+3. **輸出コンプライアンスの申告が無い**：ビルドごとに
+   「暗号化を使っているか」の申告が必要で、まだ答えていな
+   かった（`The build is missing export compliance.`）。
+   `ios/App/App/Info.plist`に`ITSAppUsesNonExemptEncryption`
+   を`false`で追加し、以後のビルドでは自動的に「暗号化なし」
+   の回答になるようにした（サーバー通信を一切しないアプリ
+   なので事実に即している）
+
+`使用許諾契約`（カスタムEULA）は未入力のままでよい
+（Appleの標準ライセンスが自動適用される）。
+
+## 確かめたこと
+
+`ITSAppUsesNonExemptEncryption`が`Info.plist`に正しく追加され、
+`plistlib`でパースして値（`False`）を確認した。次回のビルドで
+実際に輸出コンプライアンスのエラーが再発しないかは、次の
+確認事項。
