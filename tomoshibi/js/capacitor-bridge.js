@@ -2257,13 +2257,21 @@
       });
     });
   });
+  var WRITE_CHUNK_SIZE = 1e6;
+  function writeFileChunked(path, text, directory, encoding) {
+    function step(offset) {
+      var chunk = text.slice(offset, offset + WRITE_CHUNK_SIZE);
+      var op = offset === 0 ? Filesystem.writeFile : Filesystem.appendFile;
+      return op({ path, data: chunk, directory, encoding }).then(function() {
+        var next = offset + WRITE_CHUNK_SIZE;
+        if (next < text.length) return step(next);
+        return Filesystem.getUri({ path, directory });
+      });
+    }
+    return step(0);
+  }
   var saveTextFile = safe(function(filename, text, dialogTitle) {
-    return Filesystem.writeFile({
-      path: filename,
-      data: text,
-      directory: Directory.Cache,
-      encoding: Encoding.UTF8
-    }).then(function(result) {
+    return writeFileChunked(filename, text, Directory.Cache, Encoding.UTF8).then(function(result) {
       return Share.share({ url: result.uri, dialogTitle: dialogTitle || "\u4FDD\u5B58" });
     }).then(function() {
       return true;
