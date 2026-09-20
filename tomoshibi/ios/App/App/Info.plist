@@ -67,6 +67,13 @@
 	<string>お顔の写真やお骨の写真を選ぶために使います。</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>撮った写真をカメラロールに保存するために使います。</string>
+	<!-- 追記90：動画の追加（in-vids、accept="video/*"）でiOS標準の
+	     写真/カメラピッカーから「ビデオを撮る」を選ぶと、録画に音声も
+	     含むためマイクへのアクセスが発生する。このキーが無いと、iOSは
+	     確認ダイアログを出す代わりにアプリを即座に強制終了させる
+	     （NSCameraUsageDescriptionと同じ種類の必須キー）。 -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>動画を撮るときの音声を録るために使います。</string>
 	<!-- 追記88：サーバー通信を一切しないアプリで、独自の暗号化も
 	     使っていない。これが無いと、ビルドをアップロードするたびに
 	     輸出コンプライアンスの申告をApp Store Connect側で毎回
