@@ -2018,9 +2018,12 @@
 
     $('#btn-store').onclick = function () {
       var i = S.storeInfo();
+      var nat = window.TomoshibiNative && window.TomoshibiNative.isNative;
       var body = '写真も動画も記録も、<b>この端末の中だけ</b>に保存しています。' +
         'どこにも送っていないので、外に漏れることはありません。<br><br>';
-      if (i.embedded) {
+      if (nat) {
+        body += '<b>消されない保存になっています。</b>アプリを消さない限り、記録が消えることはありません。';
+      } else if (i.embedded) {
         body += '<b>ただし、いまの開きかたは試し用です。</b>アプリを閉じると、入れたものが消えることがあります。' +
           '（この画面は別のページの中に埋め込まれていて、そこでの保存は一時的なものとして扱われるためです）<br><br>' +
           'ずっと残したいときは、<b>ホーム画面に追加してから開いてください。</b>';
