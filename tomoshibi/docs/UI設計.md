@@ -3860,3 +3860,27 @@ Playwrightで、`videoTitles`にわざと「IMG_0970」という名前を仕込�
 Playwrightで、動画の「···」メニューを開いて「名前をつける」が
 出ないこと（「消す」「とじる」のみ）、動画の削除が変わらず動くこと、
 JSエラーが出ないことを確認した。
+
+# 追記84：Bundle IDを com.tomoshibi.app → com.tomoshibi.petmemorial に変更（2026-09-20）
+
+利用者がApple Developer PortalでBundle IDを登録しようとしたところ、
+`com.tomoshibi.app`は既に他の開発者に使われていて登録できなかった
+（Bundle IDは全世界の開発者間で重複できない仕様）。
+`com.tomoshibi.petmemorial`で登録し直したところ通ったため、コード側の
+表記もすべて合わせた。
+
+- `tomoshibi/capacitor.config.json`：`appId`
+- `tomoshibi/ios/App/App.xcodeproj/project.pbxproj`：
+  `PRODUCT_BUNDLE_IDENTIFIER`（Debug・Release両方）
+- `codemagic.yaml`（リポジトリルート）：`bundle_identifier`と、
+  コメント中の説明文
+
+`docs/AppStore提出情報.md`には具体的なBundle IDの記載が無かった
+ため、変更不要だった。
+
+## 確かめたこと
+
+`npm run build`がエラー無く通ることを確認した。実際のApple
+Developer Portal・App Store Connect・Codemagic側の設定は、
+このセッションのネットワーク制限で直接は確認できないため、
+利用者自身の画面操作で進めてもらっている。

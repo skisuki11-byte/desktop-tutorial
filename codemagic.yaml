@@ -17,7 +17,7 @@
 #      App Store ConnectのAPIキー（Issuer ID・Key ID・.p8ファイル）を登録し、
 #      好きな名前を付ける（下のintegrations.app_store_connectと同じ名前にする。
 #      既定では tomoshibi_asc という名前にしてある）
-#   3. Apple Developer側でこのアプリ（com.tomoshibi.app）のBundle IDと、
+#   3. Apple Developer側でこのアプリ（com.tomoshibi.petmemorial）のBundle IDと、
 #      App Store Connect側でアプリのレコードを作る（アプリ名・言語などの最低限）
 #   4. App Store Connect > App > General > App Information にある
 #      「Apple ID」（数字だけの、アプリごとのID）を、下のAPP_STORE_APP_IDに入れる
@@ -37,7 +37,7 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.tomoshibi.app
+        bundle_identifier: com.tomoshibi.petmemorial
       vars:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
