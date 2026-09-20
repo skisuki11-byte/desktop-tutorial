@@ -728,7 +728,8 @@
       var fails = 0;
       return media.reduce(function (p, m) {
         return p.then(function () {
-          var blob = dataURLToBlob(m.dataURL);
+          // m.blob はZIP形式（追記95）、m.dataURL は旧JSON形式。両対応。
+          var blob = m.blob || dataURLToBlob(m.dataURL);
           if (!blob) { fails++; return; }
           return putMedia({ id: m.id, blob: blob, at: m.at || Date.now(), kind: m.kind, playable: true })
             .then(function (r) { if (!r.ok) fails++; });
