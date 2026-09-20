@@ -22,9 +22,10 @@
 #   4. App Store Connect > App > General > App Information にある
 #      「Apple ID」（数字だけの、アプリごとのID）を、下のAPP_STORE_APP_IDに入れる
 #
-# ここまで準備できれば、このブランチにpushするたびに自動でビルド・署名・
-# TestFlightへの配信までが走る。審査への提出（submit_to_app_store）は
-# 既定でfalseにしてあり、それだけは人が判断して切り替えるまで自動化しない。
+# ここまで準備できれば、mainブランチにpushするたびに自動でビルド・署名・
+# TestFlightへの配信までが走る（下のtriggeringブロック）。審査への提出
+# （submit_to_app_store）は既定でfalseにしてあり、それだけは人が判断して
+# 切り替えるまで自動化しない。
 
 workflows:
   tomoshibi-ios:
@@ -32,6 +33,14 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     working_directory: tomoshibi
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+      cancel_previous_builds: true
     integrations:
       app_store_connect: tomoshibi_asc
     environment:
