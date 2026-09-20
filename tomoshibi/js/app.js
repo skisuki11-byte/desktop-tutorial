@@ -539,7 +539,12 @@
         '<p style="margin:0;font-family:var(--round);font-weight:700;font-size:var(--fs-4)">うごく' + esc(st.pet.name || 'あの子') + '</p>' +
         '<button class="btn btn-ghost" style="width:auto;min-height:auto;font-size:var(--fs-2);font-weight:700;color:var(--sky-ink)" data-go="ugoku">ぜんぶ見る</button></div>' +
         '<div class="grid2" id="home-vid-list" style="margin-top:8px"></div>';
-      var latest = vs.slice(-2).reverse();
+      // 「最新」は動画自体の日付（撮影日など）ではなく、この端末に登録した順。
+      // addedAtを持たない古い動画（この仕組みより前に入れたもの）は、
+      // 撮影日で代用する。
+      var latest = vs.slice().sort(function (a, b) {
+        return (b.addedAt || b.at || 0) - (a.addedAt || a.at || 0);
+      }).slice(0, 2);
       $('#home-vid-list').innerHTML = latest.map(function (v) {
         return tileHTML(v, latest.length === 1);
       }).join('');
@@ -1299,7 +1304,7 @@
         var id = S.newId('v');
         return canPlay(f).then(function (playable) {
           if (!playable) { fails['video-format'] = (fails['video-format'] || 0) + 1; return null; }
-          return S.putMedia({ id: id, blob: f, at: f.lastModified || Date.now(), kind: 'video', playable: true });
+          return S.putMedia({ id: id, blob: f, at: f.lastModified || Date.now(), addedAt: Date.now() + i, kind: 'video', playable: true });
         })
           .then(function (r) {
             if (!r) return;
