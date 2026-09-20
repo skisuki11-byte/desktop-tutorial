@@ -88,12 +88,17 @@ workflows:
           failure: true
       app_store_connect:
         auth: integration
-        # 内部テストグループ（App Store Connect側で作成済みの「自分用」）にだけ配る。
-        # 内部グループはAppleのBeta App Review（外部向け審査）を必要としないため、
-        # beta_groupsだけを指定し、submit_to_testflightは付けない
-        # （両方付けると、毎回のビルドで不要な外部審査への提出まで試みて、
-        # 「Another build is in review」エラーで失敗するようになる）。
-        # 外部テスターに配りたくなったら、この下にグループを追加してsubmit_to_testflight: trueも足す
-        beta_groups:
-          - 自分用
+        # ビルドはここでApp Store Connectへアップロード・処理されるところまでが必須の動作。
+        # 内部テストグループ「自分用」は「自動配信を有効にする」がONなので、
+        # 処理が終わったビルドはApple側が自動でそのグループに配る（Codemagic側で
+        # 何も指定しなくてよい）。
+        #
+        # 以前submit_to_testflight: trueを付けていたときは、毎回不要な外部向け
+        # Beta App Reviewへの提出まで試みて「Another build is in review」で失敗し、
+        # 次にbeta_groups: [自分用]を試したときは「自動配信ONのグループには手動で
+        # 追加できない（Cannot add internal group to a build）」で失敗した。
+        # どちらも指定しないのが正解。
+        #
+        # 外部テスターに配りたくなったら、外部用のグループを別に作り、
+        # ここに submit_to_testflight: true と beta_groups: [外部グループ名] を足す
         submit_to_app_store: false # 審査への提出は、ここをtrueにするまで自動化しない
