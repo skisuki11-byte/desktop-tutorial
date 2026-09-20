@@ -580,7 +580,38 @@
       global.claude.use('downloads').then(function (d) { dlNS = d || null; done(); }, done);
     }));
 
-    return Promise.all(jobs).then(migrate);
+    return Promise.all(jobs).then(migrate).then(backfillSizes);
+  }
+
+  /* 追記97：合計サイズの上限（追記96）は索引の`size`を合計して見ている
+     が、`size`を索引に記録するようにしたのはその上限を作ったときから。
+     それより前からこの端末に入っていた写真・動画は`size`が無いまま
+     （0扱い）になり、合計を実際より少なく見積もってしまっていた
+     （実機で270MBまで書き出せてしまった原因）。IndexedDBの実レコード
+     には元から`size`が入っているので、そこから索引へ埋め直す。
+     一度埋めれば以後は対象が無くなるので、起動のたびに走っても軽い。 */
+  function backfillSizes() {
+    var idx = getIndex();
+    var missing = idx.filter(function (e) { return e.size == null; });
+    if (!missing.length) return;
+    var chain = Promise.resolve();
+    missing.forEach(function (e) {
+      chain = chain.then(function () {
+        if (e.store === 'ls') {
+          try {
+            var raw = localStorage.getItem(LS_PREFIX + e.id);
+            var o = raw ? JSON.parse(raw) : null;
+            e.size = (o && o.u) ? Math.round(o.u.length * 0.75) : 0;
+          } catch (x) { e.size = 0; }
+          return;
+        }
+        if (!back.idb) { e.size = 0; return; }
+        return tx('readonly').then(function (s) { return wrap(s.get(e.id)); })
+          .then(function (r) { e.size = (r && r.size) || 0; })
+          .catch(function () { e.size = 0; });
+      });
+    });
+    return chain.then(function () { setIndex(idx); });
   }
 
   /* 索引を入れる前に保存したものを拾う。すでに入れた写真を見失わないため。 */
