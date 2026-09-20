@@ -4216,3 +4216,71 @@ JSONの書き出し（`saveTextFile`・共有シート）とは別の道とし�
 壊れていないことを再確認した。実機でカレンダーアプリが選択肢に出る
 かどうかは、次回のTestFlightビルドでユーザーに確認してもらう必要が
 ある（このプラグインの挙動はWebView上のテストでは再現できないため）。
+
+# 追記93：カレンダー追加を、ファイル経由からEventKit直接書き込みに変更（2026-09-20）
+
+## 背景
+
+追記92の`FileOpener`でも、実機では「もこの四十九日」の詳細プレビュー
+が開くだけで、その先に登録できる選択肢（追加ボタン）が出ない、という
+報告があった。ユーザーからは「iOSカレンダーやGoogleカレンダーが選べる
+ような、実際に登録できる形にしてほしい」との要望があった。
+
+## 原因（これまでの3段階のふりかえり）
+
+1. 追記89：`<a download>`のみ→実機で無反応（共有シートすら出ない）
+2. 追記91：`Share.share()`（共有シート）に変更→シートは出るが、
+   カレンダーアプリはそもそも共有シートの拡張を提供していない
+3. 追記92：`FileOpener`（「開く方法」・`UIDocumentInteractionController`）
+   に変更→アプリの選択はできるようになったはずだが、実際に開いたのは
+   イベントの詳細プレビューのみで、登録（書き込み）操作ができなかった
+
+共通する根本原因は、**「ファイルを渡して、どこかのアプリに開かせる」**
+という発想そのものが、確実な書き込みを保証しないことだった。
+
+## 対応
+
+方針を転換し、ファイル（.ics）を経由せず、Appleの公式フレームワーク
+EventKitへ**直接書き込む**方式にした。
+
+- `@capacitor/calendar`（Capacitor/Ionicチーム公式プラグイン、EventKit
+  の薄いラッパー）を追加し、`@capacitor-community/file-opener`は削除
+- `capacitor-src/bridge.js`に`addCalendarEvents(events)`を新設。
+  `Calendar.requestPermissions({ permissions: ['writeCalendar'] })`で
+  書き込み専用の権限（iOS 17+の「イベントの追加のみ」、読み取りは
+  求めない）をリクエストしたあと、`Calendar.createEvent()`を選んだ
+  節目ぶんだけ順に呼ぶ
+- カレンダーIDを指定しないため、イベントは常に端末の既定カレンダー
+  （iOS設定 → カレンダー → デフォルトカレンダーで選んだもの。iCloud・
+  Googleなどアカウント追加していれば、それが既定にもできる）へ入る。
+  ユーザーが「Googleカレンダーで見たい」なら、iOS設定側でデフォルトを
+  Googleカレンダーにしておけば、このアプリからの追加もそこに入る
+- `js/app.js`に`buildEventDescriptors()`（構造化データ版）・
+  `addToCalendarNative()`を新設。`confirmAddToCalendar()`の「追加する」
+  ボタンは、ネイティブなら`addToCalendarNative()`、Web/PWAなら従来の
+  `downloadICS()`（.ics書き出し）に分岐するようにした
+- `ios/App/App/Info.plist`に`NSCalendarsUsageDescription`・
+  `NSCalendarsWriteOnlyAccessUsageDescription`・
+  `NSCalendarsFullAccessUsageDescription`の3キーを追加（iOSのバージョン
+  によって見るキーが違うため、まとめて入れておく）
+- `npx cap sync ios`で`Package.swift`の`@capacitor-community/file-opener`
+  を`@capacitor/calendar`に差し替えたことを確認
+
+## お誕生日を「この先も毎年」にする件について
+
+すでに`recurrence: { frequency: 'yearly' }`を開始日（実際の誕生日）
+から期限なしで設定しており、これはカレンダーの仕組み上、開始日が
+過去でもそこから将来へずっと繰り返される（ics版のRRULE:FREQ=YEARLY
+と同じ考え方）。追記91時点でもデータ自体は正しかったが、追加そのもの
+が機能していなかったため、正しく動いているように見えなかったと考え
+られる。月命日も同様に`frequency: 'monthly'`で期限なし。
+
+## 確かめたこと
+
+`npm run build`でバンドル生成（83.6kb→85.5kb、file-opener→calendar
+プラグインへの差し替え分）を確認した。Playwrightで、Web版フォール
+バック経路（確認シート〜.ics生成）が壊れていないことを再確認した。
+実機でのEventKit書き込み（権限ダイアログの表示、実際にカレンダーへ
+反映されるか）は、このプラグインの挙動がWebView上のテストでは
+再現できないため、次回のTestFlightビルドでユーザーに確認してもらう
+必要がある。

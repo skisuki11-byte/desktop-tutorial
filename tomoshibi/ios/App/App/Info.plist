@@ -74,6 +74,17 @@
 	     （NSCameraUsageDescriptionと同じ種類の必須キー）。 -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>動画を撮るときの音声を録るために使います。</string>
+	<!-- 追記93：「だいじな日をカレンダーに追加」で、四十九日・月命日・
+	     お誕生日などをこの端末のカレンダーに直接書き込むために使う
+	     （@capacitor/calendar、書き込み専用の権限のみリクエストする）。
+	     iOSのバージョンによってどのキーを見るかが違うため、3つとも
+	     入れておく（無い分は単に無視される）。 -->
+	<key>NSCalendarsUsageDescription</key>
+	<string>四十九日・月命日・お誕生日などを、あなたのカレンダーに追加するために使います。</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>四十九日・月命日・お誕生日などを、あなたのカレンダーに追加するために使います。</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>四十九日・月命日・お誕生日などを、あなたのカレンダーに追加するために使います。</string>
 	<!-- 追記88：サーバー通信を一切しないアプリで、独自の暗号化も
 	     使っていない。これが無いと、ビルドをアップロードするたびに
 	     輸出コンプライアンスの申告をApp Store Connect側で毎回

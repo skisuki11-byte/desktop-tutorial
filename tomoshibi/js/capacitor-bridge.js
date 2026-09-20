@@ -1484,6 +1484,53 @@
     }
   });
 
+  // node_modules/@capacitor/calendar/dist/esm/web.js
+  var web_exports6 = {};
+  __export(web_exports6, {
+    CalendarWeb: () => CalendarWeb
+  });
+  var CalendarWeb;
+  var init_web6 = __esm({
+    "node_modules/@capacitor/calendar/dist/esm/web.js"() {
+      init_dist();
+      CalendarWeb = class extends WebPlugin {
+        async checkPermissions() {
+          throw this.unimplemented("Not implemented on web.");
+        }
+        async requestPermissions(_options) {
+          throw this.unimplemented("Not implemented on web.");
+        }
+        async createEvent(_options) {
+          throw this.unimplemented("Not implemented on web.");
+        }
+        async createEventInteractively(_options) {
+          throw this.unimplemented("Not implemented on web.");
+        }
+        async modifyEvent(_options) {
+          throw this.unimplemented("Not implemented on web.");
+        }
+        async findEvents(_options) {
+          throw this.unimplemented("Not implemented on web.");
+        }
+        async deleteEvent(_options) {
+          throw this.unimplemented("Not implemented on web.");
+        }
+        async listCalendars() {
+          throw this.unimplemented("Not implemented on web.");
+        }
+        async createCalendar(_options) {
+          throw this.unimplemented("Not implemented on web.");
+        }
+        async deleteCalendar(_options) {
+          throw this.unimplemented("Not implemented on web.");
+        }
+        async openCalendar(_options) {
+          throw this.unimplemented("Not implemented on web.");
+        }
+      };
+    }
+  });
+
   // capacitor-src/bridge.js
   init_dist();
 
@@ -2146,9 +2193,11 @@
     web: () => Promise.resolve().then(() => (init_web5(), web_exports5)).then((m) => new m.ShareWeb())
   });
 
-  // node_modules/@capacitor-community/file-opener/dist/esm/index.js
+  // node_modules/@capacitor/calendar/dist/esm/index.js
   init_dist();
-  var FileOpener = registerPlugin("FileOpener");
+  var Calendar = registerPlugin("Calendar", {
+    web: () => Promise.resolve().then(() => (init_web6(), web_exports6)).then((m) => new m.CalendarWeb())
+  });
 
   // capacitor-src/bridge.js
   var isNative = Capacitor.isNativePlatform();
@@ -2220,16 +2269,26 @@
       return true;
     });
   });
-  var openTextFileWith = safe(function(filename, text, mimeType) {
-    return Filesystem.writeFile({
-      path: filename,
-      data: text,
-      directory: Directory.Cache,
-      encoding: Encoding.UTF8
-    }).then(function(result) {
-      return FileOpener.open({ filePath: result.uri, contentType: mimeType, openWithDefault: true });
-    }).then(function() {
-      return true;
+  var addCalendarEvents = safe(function(events) {
+    return Calendar.requestPermissions({ permissions: ["writeCalendar"] }).then(function(status) {
+      if (status.writeCalendar !== "granted") return false;
+      var chain = Promise.resolve();
+      events.forEach(function(ev) {
+        var start = ev.date.getTime();
+        var opts = {
+          title: ev.title,
+          startDate: start,
+          endDate: start + 24 * 60 * 60 * 1e3,
+          isAllDay: true
+        };
+        if (ev.recurrence) opts.recurrence = { frequency: ev.recurrence };
+        chain = chain.then(function() {
+          return Calendar.createEvent(opts);
+        });
+      });
+      return chain.then(function() {
+        return true;
+      });
     });
   });
   function hideSplash() {
@@ -2256,7 +2315,7 @@
     hideSplash,
     setStatusBarStyle,
     saveTextFile,
-    openTextFileWith
+    addCalendarEvents
   };
 })();
 /*! Bundled license information:

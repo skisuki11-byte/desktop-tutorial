@@ -16,7 +16,7 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
-import { FileOpener } from '@capacitor-community/file-opener';
+import { Calendar } from '@capacitor/calendar';
 
 var isNative = Capacitor.isNativePlatform();
 
@@ -91,20 +91,32 @@ var saveTextFile = safe(function (filename, text, dialogTitle) {
   }).then(function () { return true; });
 });
 
-// カレンダー（.ics）の場合はShareの共有シート（コピー・ファイルに保存・
-// AirDropなど、UIActivityViewController）ではなく、その書類を開ける
-// アプリの一覧（カレンダー・Googleカレンダーなど、iOSの「開く方法」＝
-// UIDocumentInteractionController）を出したい。共有シートとは別物の
-// OSの仕組みで、FileOpenerプラグインが窓口になる（追記92）。
-var openTextFileWith = safe(function (filename, text, mimeType) {
-  return Filesystem.writeFile({
-    path: filename,
-    data: text,
-    directory: Directory.Cache,
-    encoding: Encoding.UTF8
-  }).then(function (result) {
-    return FileOpener.open({ filePath: result.uri, contentType: mimeType, openWithDefault: true });
-  }).then(function () { return true; });
+// カレンダーへ直接書き込む（追記93）。.icsファイル経由の共有シート／
+// 「開く方法」はどちらもアプリの一覧を出すだけで、実際にカレンダーへ
+// 登録するところまでは委ねられなかった（追記91・92で判明）。
+// @capacitor/calendar（EventKitの薄いラッパー）でOSのカレンダーに直接
+// 書き込めば、ユーザーが端末の設定で使っているカレンダー（iCloud・
+// Googleなど、iOS設定でアカウント追加したものが既定になる）へそのまま
+// 入る。書き込み専用の権限（iOS 17+の「イベントの追加のみ」）だけを
+// リクエストする——読み取りは不要。
+// events: [{title, date(Date), recurrence: 'monthly'|'yearly'|null}]
+var addCalendarEvents = safe(function (events) {
+  return Calendar.requestPermissions({ permissions: ['writeCalendar'] }).then(function (status) {
+    if (status.writeCalendar !== 'granted') return false;
+    var chain = Promise.resolve();
+    events.forEach(function (ev) {
+      var start = ev.date.getTime();
+      var opts = {
+        title: ev.title,
+        startDate: start,
+        endDate: start + 24 * 60 * 60 * 1000,
+        isAllDay: true
+      };
+      if (ev.recurrence) opts.recurrence = { frequency: ev.recurrence };
+      chain = chain.then(function () { return Calendar.createEvent(opts); });
+    });
+    return chain.then(function () { return true; });
+  });
 });
 
 // スプラッシュ／ステータスバーは起動直後の一瞬だけの見た目なので、失敗しても
@@ -128,5 +140,5 @@ window.TomoshibiNative = {
   hideSplash: hideSplash,
   setStatusBarStyle: setStatusBarStyle,
   saveTextFile: saveTextFile,
-  openTextFileWith: openTextFileWith
+  addCalendarEvents: addCalendarEvents
 };
