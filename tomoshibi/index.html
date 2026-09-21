@@ -727,17 +727,6 @@
 
       <button class="setrow" id="btn-profile"><span>なまえ・写真・日づけ・一言・納骨</span><span class="arw">›</span></button>
 
-      <div class="cardbox">
-        <h4>バックアップ</h4>
-        <p class="cap">写真も動画も記録も、この端末の中だけにあります。<br>
-        端末を変えるときは、書き出して、新しい端末で読み込ませてください。</p>
-        <!-- 見出し「バックアップ」がすぐ上にあるので、ボタンの中で繰り返さない。
-             320px幅だと「バックアップを書き出す」がぎりぎり1行に収まらず折り返していた。 -->
-        <button class="setrow" id="btn-export" style="margin-top:10px"><span style="color:var(--amber-ink);font-weight:700">書き出す</span><span class="arw">›</span></button>
-        <button class="setrow" id="btn-import"><span>読み込む</span><span class="arw">›</span></button>
-        <input type="file" id="in-backup" accept="application/zip,.zip,application/json,.json" hidden>
-      </div>
-
       <div class="cardbox" id="box-kaimyo">
         <h4>戒名</h4>
         <p class="cap">このアプリがこの子のために選んだ名です。<b>お寺が授けたものではありません。</b><br>
@@ -787,6 +776,17 @@
         <h4>おうちの背景</h4>
         <p class="cap">いつでも変えられます。</p>
         <div class="scenepick" id="scenepick-set" style="margin-top:10px"></div>
+      </div>
+
+      <div class="cardbox">
+        <h4>バックアップ</h4>
+        <p class="cap">写真も動画も記録も、この端末の中だけにあります。<br>
+        端末を変えるときは、書き出して、新しい端末で読み込ませてください。</p>
+        <!-- 見出し「バックアップ」がすぐ上にあるので、ボタンの中で繰り返さない。
+             320px幅だと「バックアップを書き出す」がぎりぎり1行に収まらず折り返していた。 -->
+        <button class="setrow" id="btn-export" style="margin-top:10px"><span style="color:var(--amber-ink);font-weight:700">書き出す</span><span class="arw">›</span></button>
+        <button class="setrow" id="btn-import"><span>読み込む</span><span class="arw">›</span></button>
+        <input type="file" id="in-backup" accept="application/zip,.zip,application/json,.json" hidden>
       </div>
 
       <button class="setrow" id="btn-store"><span>保存のようす</span><span class="arw" id="store-state">—</span></button>
