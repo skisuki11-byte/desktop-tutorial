@@ -439,7 +439,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    実機で「見えない」と報告があった。--faint の淡い色と組み合わさると特に読みにくい。
    上の享年・命日の行（--fs-5）と合わせて1段階ずつ引き上げ、--fs-4にし、
    色も --muted に上げて視認性を確保する。上の行より小さいままにして、序列は保つ。 */
-.petmeta.sub{margin-top:4px;font-size:var(--fs-4);color:var(--muted)}
+/* 追記100：fs-4のままだと「2015.1.1 生 ・ いっしょに 3,287日」が
+   320px幅で1行に収まらず折り返していた。fs-3・fs-2でもまだ数px足り
+   ず、fs-1まで下げて収める。 */
+.petmeta.sub{margin-top:4px;font-size:var(--fs-1);color:var(--muted)}
 
 /* ---------- 戒名 ----------
    縦書きの毛筆で、遺影の右に立てる。位牌と同じ構えにした。
@@ -519,6 +522,10 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .btn-amber:active,.btn-sky:active{transform:translateY(4px);box-shadow:0 2px 0 var(--amber-dark)}
 .btn-sky:active{box-shadow:0 1px 0 var(--sky-dark)}
 .btn-line{border:2px solid var(--line);color:var(--muted);font-family:var(--sans);font-weight:500;font-size:var(--fs-4);min-height:54px}
+/* 「だいじな日をカレンダーに追加」は14字あり、320px幅だとfs-4では
+   1行に収まらず折り返していた。1段下げても数pxだけ足りなかったため、
+   文字間隔（.btnの既定.08em）も詰めて収める。 */
+#btn-ics{font-size:var(--fs-3);letter-spacing:normal}
 .btn-ghost{color:var(--muted);font-family:var(--sans);font-weight:500;font-size:var(--fs-4);min-height:50px}
 .btn-dash{border:2.5px dashed var(--line-2);background:var(--panel);color:var(--amber-ink);
   font-family:var(--sans);font-weight:700;font-size:var(--fs-4);border-radius:var(--r);min-height:60px}
@@ -864,6 +871,16 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   padding:0 var(--s4);background:var(--panel);border:2px solid var(--line);border-radius:var(--r-sm);
   margin-top:var(--s2);font-size:var(--fs-4);text-align:left;cursor:pointer;font-weight:500}
 .setrow .arw{color:var(--faint);flex:none;font-size:var(--fs-2)}
+/* 「なまえ・写真・日づけ・一言・お骨壷」は項目が多く、320px幅だと
+   setrow既定のfs-4では1行に収まらず折り返していた。1段下げて収める。 */
+#btn-profile span:first-child{font-size:var(--fs-3)}
+/* 「保存のようす」の右には「この端末の中・保護あり」など長さが変わる
+   状態文が入る。左のラベルだけが「保存のよう／す」のように変な位置で
+   割れていたので、ラベル側は必ず1行、収まりきらない右の状態文だけが
+   下に折り返すようにする。 */
+#btn-store{flex-wrap:wrap;row-gap:2px}
+#btn-store span:first-child{white-space:nowrap;flex:none}
+#btn-store .arw{flex:1 1 auto;text-align:right;white-space:normal}
 /* 押せない行（見るだけ）。バージョン表示など。 */
 .setrow-info{cursor:default}
 .seg{display:grid;gap:var(--s2);margin-top:var(--s2)}
