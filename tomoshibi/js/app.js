@@ -799,7 +799,7 @@
       var qs = box.querySelector('.qs');
       // 同じ日をもう一度押せば、後から押したほうで上書きされる。それを先に伝える。
       if (qs) qs.textContent = v ? '押しなおせば、あとから変えられます。'
-                                 : '良し悪しはありません。いまの感じに近いものを。';
+                                 : '良し悪しはありません、近い感じで。';
     });
   }
 
@@ -816,7 +816,7 @@
     // 「向き合っていく」にする。悲嘆を終わらせるべきものとして急かさない
     // ため（グラフに目標線を出さないのと同じ考え方）。
     var nw = $('#jibun-note-warm');
-    if (nw) nw.textContent = 'あなたがこの悲しみとゆっくり向き合っていく日々を、' + (st.pet.name || 'あの子') + 'もそばで見守っています。';
+    if (nw) nw.textContent = 'この悲しみとゆっくり向き合う日々を、' + (st.pet.name || 'あの子') + 'もそばで見守っています。';
     var all = S.selfSeries(0);
     // 数えるのは日数と、はじめた日だけ。良し悪しになる数は出さない。
     var first = all.length ? new Date(all[0].day.replace(/-/g, '/')) : null;
@@ -1076,7 +1076,7 @@
         ? '<button class="letter-card" id="btn-review-open" data-go="review" style="margin-top:20px">' +
           '<svg width="26" height="26"><use href="#of-light"></use></svg>' +
           '<span style="flex:1"><span class="t">' + esc(pm[0].label) + 'を迎えて</span>' +
-          '<span class="s">これまでの日々を、そっとふりかえる</span></span>' +
+          '<span class="s">これまでを、そっとふりかえる</span></span>' +
           '<span class="arw">›</span></button>'
         : '';
     }
@@ -1471,7 +1471,7 @@
         '<div class="whyrow"><b>' + esc(k.michi) + '</b><span>' + esc(k.michiWhy) + '</span></div>' +
         '<div class="whyrow"><b>' + esc(k.head) + '</b><span>' + esc(k.headWhy) + '</span></div>' +
         '<div class="whyrow"><b>' + esc(k.sue) + '</b><span>' + esc(k.sueWhy) + '</span></div>' +
-        '<div class="whyrow"><b>' + esc(k.kurai) + '</b><span>ペットの供養で広く使われる結び</span></div>' +
+        '<div class="whyrow"><b>' + esc(k.kurai) + '</b><span>ペットの供養でよく使う結び</span></div>' +
         '</div>'
       : own && !off ? '<p class="cap" style="margin:10px 0 0">あなたが書いた名です。</p>' : '';
 
