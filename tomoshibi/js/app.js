@@ -1269,7 +1269,8 @@
       $('#vid-empty').hidden = vs.length > 0;
       var vLimit = S.mediaUsage().videoLimit;
       $('#ugoku-sub').textContent = vs.length ? vs.length + '／' + vLimit + '本 ・ いつでも、なんども' : 'いつでも、なんども';
-      $('#ugoku-tip').innerHTML = 'カメラロールから選ぶだけ。<br>最大' + vLimit + '本まで、この端末にだけ残ります。';
+      $('#ugoku-tip').innerHTML = 'カメラロールから選ぶだけ。<br>最大' + vLimit + '本まで、この端末にだけ残ります。' +
+        '<br>サイズによっては本数が少なくなることも。<br>目安は1本20〜30秒ほどです。';
       $('#vid-list').innerHTML = vs.map(function (v, i) {
         return tileHTML(v, vs.length === 1 || (i === 0 && vs.length % 2 === 1)).replace('<span class="cap">',
           '<button class="menu" data-vmenu="' + esc(v.id) + '" aria-label="この動画の設定">···</button><span class="cap">');
