@@ -112,10 +112,22 @@ function writeBinaryChunked(path, bytes, directory) {
   return step(0);
 }
 
+// 共有シートを保存先を選ばずに閉じた（AirDropやファイルアプリを選ばず、
+// 外側をタップして閉じるなど）ときは、iOS側は completed:false で
+// "Share canceled" を返す。これはユーザーが自分の意思でやめただけで
+// 失敗ではないため、コピーの代替手段（copyOutBinary、追記107）を
+// 出さずに済むよう、'canceled' として区別して返す。それ以外の失敗は
+// 従来どおりsafe()がnullにする。
 var saveBinaryFile = safe(function (filename, bytes, dialogTitle) {
   return writeBinaryChunked(filename, bytes, Directory.Cache).then(function (result) {
-    return Share.share({ url: result.uri, dialogTitle: dialogTitle || '保存' });
-  }).then(function () { return true; });
+    return Share.share({ url: result.uri, dialogTitle: dialogTitle || '保存' })
+      .then(function () { return true; })
+      .catch(function (e) {
+        var msg = (e && e.message) ? String(e.message) : '';
+        if (msg.indexOf('Share canceled') >= 0) return 'canceled';
+        throw e;
+      });
+  });
 });
 
 // バックアップのZIP圧縮・展開（追記95）：写真・動画をBase64にしてJSONに
