@@ -158,7 +158,7 @@
       <div class="steps" id="onbo-steps"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
       <div class="step" data-step="0">
-        <p class="onbo-lead">この子のことを、<br>すこしだけ教えてください</p>
+        <p class="onbo-lead" id="onbo-lead-0">この子のことを教えてください</p>
         <p class="onbo-sub">あとから、いつでも変えられます。</p>
         <div class="field">
           <label for="in-name">なまえ</label>
@@ -587,8 +587,7 @@
         <svg width="21" height="21"><use href="#ic-plus"></use></svg>写真をくわえる
       </button>
       <input type="file" id="in-photos" accept="image/*" multiple hidden>
-      <p style="margin:10px 2px 0;font-size:var(--fs-2);color:var(--faint);line-height:1.9;text-align:center">
-        カメラロールから選ぶだけ。<br>どこにも送られず、この端末の中にだけ残ります。</p>
+      <p id="album-tip" style="margin:10px 2px 0;font-size:var(--fs-1);color:var(--faint);line-height:1.9;text-align:center"></p>
       <div class="spacer"></div>
     </div>
     <nav class="tabbar" data-tabs></nav>
@@ -638,8 +637,7 @@
         <svg width="21" height="21"><use href="#ic-plus"></use></svg>動画をくわえる
       </button>
       <input type="file" id="in-vids" accept="video/*" multiple hidden>
-      <p style="margin:10px 2px 0;font-size:var(--fs-2);color:var(--faint);line-height:1.9;text-align:center">
-        カメラロールから選ぶだけ。<br>どこにも送られず、この端末の中にだけ残ります。</p>
+      <p id="ugoku-tip" style="margin:10px 2px 0;font-size:var(--fs-1);color:var(--faint);line-height:1.9;text-align:center"></p>
       <div id="vid-warn"></div>
       <div class="spacer"></div>
     </div>
