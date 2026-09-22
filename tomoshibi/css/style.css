@@ -685,6 +685,12 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 
 /* ---------- おまいりの庭 ---------- */
 .garden{border:2px solid var(--line);border-radius:26px;overflow:hidden;background:#EDF6E2;box-shadow:var(--shadow)}
+/* 追記105：「四十九日を迎えて」等の節目カードを、おまいりの庭の下の方から
+   見出しのすぐ下（花畑より上）に移した。ユーザーの依頼どおり、大きな
+   節目を迎えたことにいちばん先に気づけるようにするため。.letter-cardは
+   margin-topしか持たないため、次に続く花畑との間が詰まらないよう、
+   カードが表示されているときだけ下にも余白を足す。 */
+#niwa-review:not(:empty){margin-bottom:20px}
 :root[data-theme="night"] .garden{background:#232B1E}
 .garden svg{display:block;width:100%;height:auto}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:var(--s4)}
@@ -826,9 +832,22 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
    末尾に「す）」だけの行が残っていた。文字間隔を詰めて収める。 */
 label[for="in-fave"]{letter-spacing:normal}
 .field > .count{text-align:right;font-size:var(--fs-1);color:var(--faint);margin:4px 2px 0;font-variant-numeric:tabular-nums}
-.field input[type=text],.field input[type=date]{width:100%;min-height:58px;border-radius:var(--r-sm);
+.field input[type=text],.field input[type=date]{width:100%;max-width:100%;box-sizing:border-box;
+  min-height:58px;border-radius:var(--r-sm);
   border:2px solid var(--line);background:var(--panel);padding:0 var(--s4);font-family:var(--round);
   font-size:var(--fs-6);letter-spacing:.1em}
+/* 追記104：「旅立った日」「お誕生日」のtype=date入力欄が、実機で画面の
+   右にはみ出す報告が追記103のあとも続いた。原因はflexアイテムの
+   min-width:autoだけではなく、ネイティブのdate入力欄そのものが、
+   文字サイズ設定（Dynamic Type）などによってfs-6（25px）+文字間隔.1em
+   では収まりきらない幅で描画されることがあるためと考えられる。
+   date欄だけ文字サイズを下げ、数字の並びに不要な文字間隔を外し、
+   date欄を持つ`.field`だけにoverflow:hiddenを付けて、万一ネイティブ側が
+   幅を譲らなくても画面レイアウトごと押し広げないようにした（保険。
+   他の`.field`のフォーカスリング等に影響しないよう、date欄のfieldだけに
+   絞った）。 */
+.field input[type=date]{font-size:var(--fs-4);letter-spacing:normal}
+#view-onbo .step[data-step="4"] .field{overflow:hidden}
 .kindpick{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .kindpick button{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 10px 14px;
   border:2.5px solid var(--line);border-radius:var(--r);background:var(--panel);cursor:pointer;
