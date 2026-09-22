@@ -164,7 +164,7 @@
       return !!faceURL;
     }).catch(function () { paintFaces(); return false; });
   }
-  /* ============ 納骨のときのお骨の写真 ============
+  /* ============ お骨壷の写真 ============
      任意。遺影とは別枠（kind:'ashes'）で持ち、アルバムには出さない。
      位置あわせ・大きさ調整はしない（遺影ほど頻繁に見返すものではないため）。 */
   var ashesURL = null;
@@ -189,7 +189,7 @@
     var ra = $('#reien-ashes');
     if (ra) {
       ra.hidden = !ashesURL;
-      ra.innerHTML = showPhoto ? '<img src="' + ashesURL + '" alt="お骨の写真">' : '<svg width="16" height="16"><use href="#of-urn"></use></svg>';
+      ra.innerHTML = showPhoto ? '<img src="' + ashesURL + '" alt="お骨壷の写真">' : '<svg width="16" height="16"><use href="#of-urn"></use></svg>';
     }
     var bd = $('#box-ashes-display'); if (bd) bd.hidden = !ashesURL;
   }
@@ -499,8 +499,11 @@
     // 手紙カード
     var nm = st.pet.name || 'あの子';
     var n2 = (st.letters || []).length;
-    $('#write-t').textContent = nm + 'へ てがみを書く';
-    $('#write-s').textContent = 'いま伝えたいことを、そのまま';
+    // 追記100：「◯◯へ てがみを書く」は、名前が長いと1行に収まらず
+    // 折り返していた。名前は縮めやすい下の説明文側へ移し、見出しは
+    // 名前の長さに関係なく必ず1行に収まる固定文にした。
+    $('#write-t').textContent = 'てがみを書く';
+    $('#write-s').textContent = nm + 'へ いま伝えたいことを';
     // 過去の手紙は、書く画面の中から開く。カードに2つの意味を重ねない。
     var mb = $('#btn-mails');
     mb.hidden = !n2;

@@ -22,7 +22,7 @@
         kaimyoOff: false,  // 戒名になじみのない人もいる。出さないこともできる
         scene: 'auto',     // トップの絵の配色。auto=実際の今の季節／spring/summer/autumn/winter
         message: '',       // トップいちばん上の一言。空なら既定の「いつまでも家族だよ」を出す
-        ashesShowPhoto: false, // 納骨のお骨の写真の見せ方。false=骨壺のイラスト（既定）、true=登録した実物の写真
+        ashesShowPhoto: false, // お骨壷の写真の見せ方。false=骨壺のイラスト（既定）、true=登録した実物の写真
         faceX: 0.5, faceY: 0.5, faceZoom: 1   // 遺影の位置・大きさ（0〜1・1〜2.5）。既定は中央・そのまま
       },
       selfLog: {},         // { "2026-09-14": 3 } その日の自分。1〜5
@@ -180,7 +180,10 @@
     var b = parseISO(state.pet.birthISO);
     if (b) {
       var nb = nextAnniversary(b, from);
-      push('birthday', 'お誕生日', nb, nb ? formatJP(nb, true) + '・' + b.getFullYear() + '年うまれ' : '');
+      // 追記100：曜日つきだと生まれ年もあわせて長くなり、320px幅の
+      // カードでfs-1（この画面の最小サイズ）でも1行に収まらなかった。
+      // このカードだけ曜日を省く。
+      push('birthday', 'お誕生日', nb, nb ? formatJP(nb) + '・' + b.getFullYear() + '年うまれ' : '');
     }
     out.sort(function (a, c) { return a.days - c.days; });
     // 月命日が大きい節目と重なったら、大きいほうだけ残す
@@ -692,7 +695,7 @@
   /* 保存。必ず解決する。失敗は {ok:false, reason} で返す。
      rec.bypassLimit（バックアップからの復元用）が立っていれば、上限は見ない
      ——すでに持っていたものを取り戻すだけなので、新規追加とは扱わない。
-     既存のidを上書きする場合（顔・お骨の写真の差し替えなど）も、件数は
+     既存のidを上書きする場合（顔・お骨壷の写真の差し替えなど）も、件数は
      増えないので上限の対象外にする。 */
   function putMedia(rec) {
     if (!rec.bypassLimit && !indexGet(rec.id)) {
