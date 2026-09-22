@@ -1581,6 +1581,30 @@
     }
     copyOut(out, n);
   }
+  /* コピー画面の「コピーする」の中身。バックアップは数十〜数百MBの
+     テキストになりうる。以前はtextarea全体を select()+setSelectionRange()
+     してから execCommand('copy') していたが、この「画面上で全選択する」
+     操作自体がWKWebViewで巨大テキストだと固まっていた（追記107・108）。
+     navigator.clipboard.writeText() はDOM上の選択を経由せず、JS内の
+     文字列から直接クリップボードへ書きこめるため、これを先に試す。
+     使えない・拒否された端末だけ、従来どおり選択してのコピーに落とす。 */
+  function copyTextTo(btn, ta) {
+    // 大きなバックアップだと、書きこみ自体に数秒かかることがある
+    // （計測：266MB相当で約7秒）。無反応に見えないよう、その間だけ
+    // ボタンの文字を変えておく。
+    btn.textContent = 'コピーしています…';
+    var finish = function () { btn.textContent = 'コピーしました'; };
+    var fallback = function () {
+      ta.select(); ta.setSelectionRange(0, ta.value.length);
+      try { document.execCommand('copy'); } catch (e) {}
+      finish();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(finish).catch(fallback);
+    } else {
+      fallback();
+    }
+  }
   /* 埋め込みで開かれているとダウンロードが働かない。
      持ち出せると約束した以上、黙って失敗させずコピーの道を出す。 */
   function copyOut(text, n) {
@@ -1593,14 +1617,7 @@
       [{ label: 'コピーする', primary: true, keep: true, on: function () {} }]);
     var ta = $('#export-text'); if (ta) ta.value = text;
     var btn = $('#sheet-root [data-act="0"]');
-    if (btn) btn.onclick = function () {
-      var t = $('#export-text');
-      t.select(); t.setSelectionRange(0, t.value.length);
-      var ok = false;
-      try { ok = document.execCommand('copy'); } catch (e) {}
-      if (!ok && navigator.clipboard) navigator.clipboard.writeText(t.value).catch(function () {});
-      btn.textContent = 'コピーしました';
-    };
+    if (btn) btn.onclick = function () { copyTextTo(btn, $('#export-text')); };
   }
 
   /* ============ だいじな日をカレンダーに ============
@@ -1742,14 +1759,7 @@
       [{ label: 'コピーする', primary: true, keep: true, on: function () {} }]);
     var ta = $('#ics-text'); if (ta) ta.value = ics;
     var btn = $('#sheet-root [data-act="0"]');
-    if (btn) btn.onclick = function () {
-      var t = $('#ics-text');
-      t.select(); t.setSelectionRange(0, t.value.length);
-      var ok = false;
-      try { ok = document.execCommand('copy'); } catch (e) {}
-      if (!ok && navigator.clipboard) navigator.clipboard.writeText(t.value).catch(function () {});
-      btn.textContent = 'コピーしました';
-    };
+    if (btn) btn.onclick = function () { copyTextTo(btn, $('#ics-text')); };
   }
 
   // ブラウザ／PWA向け（.icsファイルの書き出し）。ネイティブアプリは
