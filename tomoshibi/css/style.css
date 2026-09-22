@@ -792,6 +792,15 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 .onbo-foot{flex:none;padding:14px 20px calc(env(safe-area-inset-bottom,0px) + 14px);
   border-top:2px solid var(--line);background:var(--bg)}
 #view-onbo .body{padding-bottom:var(--s4)}
+/* 追記103：「日づけ」ステップで、type=date の入力欄が画面の右にはみ出す
+   報告があった。`.body` は column方向のflexで、直接の子である`.step`は
+   既定でmin-width:autoのまま。type=date のネイティブ入力欄は、機種や
+   文字サイズ設定によって中身の最小幅がせまい画面より広くなることがあり、
+   それに合わせて`.step`ごと広がってはみ出していた（`html,body`の
+   overflow:hiddenでスクロールもできず、右側が切れて見えていた）。
+   `.step`をmin-width:0にして、中身の最小幅に引っぱられず画面幅まで
+   縮められるようにした。 */
+.step{min-width:0}
 /* お顔の写真のステップだけ、他より中身が多い（写真・位置あわせ・
    大きさ調整・ボタン）。見出しや余白を少し詰めて、なるべく狭い画面でも
    スクロールなしで「つぎへ」まで届くようにした（追記38）。 */
