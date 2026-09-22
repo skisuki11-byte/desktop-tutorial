@@ -3254,9 +3254,13 @@
   }
   var saveBinaryFile = safe(function(filename, bytes, dialogTitle) {
     return writeBinaryChunked(filename, bytes, Directory.Cache).then(function(result) {
-      return Share.share({ url: result.uri, dialogTitle: dialogTitle || "\u4FDD\u5B58" });
-    }).then(function() {
-      return true;
+      return Share.share({ url: result.uri, dialogTitle: dialogTitle || "\u4FDD\u5B58" }).then(function() {
+        return true;
+      }).catch(function(e) {
+        var msg = e && e.message ? String(e.message) : "";
+        if (msg.indexOf("Share canceled") >= 0) return "canceled";
+        throw e;
+      });
     });
   });
   function zipPack(entries) {

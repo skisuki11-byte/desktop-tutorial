@@ -1551,6 +1551,9 @@
       // 保存先をユーザーが選べる共有シートを出す。
       if (window.TomoshibiNative && window.TomoshibiNative.isNative) {
         window.TomoshibiNative.saveBinaryFile(name, res.zipBytes, 'バックアップを保存').then(function (ok) {
+          // 共有シートを保存先を選ばずに閉じた（キャンセル）場合は、失敗として
+          // コピーの代替手段を出さず、何もせず終える（追記107）。
+          if (ok === 'canceled') return;
           if (ok) okMsg(); else copyOutBinary(res.zipBytes, res.count);
         });
         return;
