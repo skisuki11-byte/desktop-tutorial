@@ -1110,9 +1110,10 @@
       // 上限（追記96）に近づいてから「／20枚」を出す。ふだんは邪魔なだけなので。
       var limit = S.mediaUsage().photoLimit;
       var countLabel = photos.length + (photos.length >= limit - 3 ? '／' + limit : '') + '枚';
-      $('#album-sub').textContent = photos.length
-        ? countLabel + ' ・ ' + chs.length + 'つの章' + (tg ? ' ・ いっしょだった' + tg.toLocaleString('ja-JP') + '日' : '')
-        : (tg ? 'いっしょだった' + tg.toLocaleString('ja-JP') + '日' : '写真をくわえてください');
+      $('#album-sub').innerHTML = photos.length
+        ? esc(countLabel + ' ・ ' + chs.length + 'つの章') + (tg ? '<br>' + esc('いっしょだった' + tg.toLocaleString('ja-JP') + '日') : '')
+        : esc(tg ? 'いっしょだった' + tg.toLocaleString('ja-JP') + '日' : '写真をくわえてください');
+      $('#album-tip').innerHTML = 'カメラロールから選ぶだけ。<br>最大' + limit + '枚まで、この端末にだけ残ります。';
       $('#album-list').innerHTML = chs.map(function (c) {
         var range = S.formatShort(new Date(c.from)) + ' — ' + S.formatShort(new Date(c.to));
         return '<div class="chapter">' +
@@ -1268,6 +1269,7 @@
       $('#vid-empty').hidden = vs.length > 0;
       var vLimit = S.mediaUsage().videoLimit;
       $('#ugoku-sub').textContent = vs.length ? vs.length + '／' + vLimit + '本 ・ いつでも、なんども' : 'いつでも、なんども';
+      $('#ugoku-tip').innerHTML = 'カメラロールから選ぶだけ。<br>最大' + vLimit + '本まで、この端末にだけ残ります。';
       $('#vid-list').innerHTML = vs.map(function (v, i) {
         return tileHTML(v, vs.length === 1 || (i === 0 && vs.length % 2 === 1)).replace('<span class="cap">',
           '<button class="menu" data-vmenu="' + esc(v.id) + '" aria-label="この動画の設定">···</button><span class="cap">');

@@ -798,6 +798,11 @@ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 #view-onbo .step[data-step="2"] .onbo-lead{font-size:var(--fs-6)}
 #view-onbo .step[data-step="2"] .onbo-sub{margin-top:6px}
 #view-onbo .step[data-step="2"] .field{margin-top:10px}
+/* 追記102：最初のステップだけ見出しが「この子のことを教えてください」
+   という一文で、他ステップの2〜6字の短い見出しより長い。fs-7のままだと
+   390px幅でも2行に折り返してしまうため、この画面だけfs-5まで下げて
+   1行に収めた。 */
+#view-onbo .step[data-step="0"] .onbo-lead{font-size:var(--fs-5)}
 .steps{display:flex;gap:6px;margin-bottom:22px}
 .steps i{flex:1;height:4px;border-radius:2px;background:var(--line);display:block}
 .steps i.on{background:var(--amber)}
