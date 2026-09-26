@@ -2,8 +2,10 @@
 #
 # このリポジトリはモノレポ（tomoshibi/はその中の1アプリ）。codemagic.yamlは
 # 仕様上リポジトリのルートに置く必要があるため、この場所に置き、
-# working_directory: tomoshibi で対象をtomoshibi/に絞っている
-# （他のアプリ：cashbook・dividend・yosou等には影響しない）。
+# working_directory: tomoshibi で対象をtomoshibi/に絞っている。
+# ただし、ビルドの「きっかけ」はリポジトリ全体で共通なので、mainへのpushを
+# きっかけにすると、ほかのアプリ（souzoku等）のマージでもともしびが
+# ビルド・TestFlight配信されてしまう。そのため、きっかけはタグにしている（下記）。
 #
 # Capacitor 8はCocoaPodsではなくSwift Package Manager（SPM）でプラグインを
 # 解決するため、.xcworkspaceは存在しない（.xcodeprojのみ）。SPMの依存先は
@@ -22,8 +24,12 @@
 #   4. App Store Connect > App > General > App Information にある
 #      「Apple ID」（数字だけの、アプリごとのID）を、下のAPP_STORE_APP_IDに入れる
 #
-# ここまで準備できれば、mainブランチにpushするたびに自動でビルド・署名・
-# TestFlightへの配信までが走る（下のtriggeringブロック）。審査への提出
+# ここまで準備できれば、`tomoshibi-` で始まるタグをpushしたときに、自動で
+# ビルド・署名・TestFlightへの配信までが走る（下のtriggeringブロック）。
+#   例）git tag tomoshibi-2026-09-26 && git push origin tomoshibi-2026-09-26
+# Codemagicの管理画面の「Start new build」から手動で始めることもできる。
+# mainへのpush・マージだけではビルドしない（ほかのアプリのマージで、
+# ともしびが意図せずTestFlightへ上がるのを防ぐため）。審査への提出
 # （submit_to_app_store）は既定でfalseにしてあり、それだけは人が判断して
 # 切り替えるまで自動化しない。
 
@@ -35,11 +41,10 @@ workflows:
     working_directory: tomoshibi
     triggering:
       events:
-        - push
-      branch_patterns:
-        - pattern: main
+        - tag
+      tag_patterns:
+        - pattern: 'tomoshibi-*'
           include: true
-          source: true
       cancel_previous_builds: true
     integrations:
       app_store_connect: tomoshibi_asc
