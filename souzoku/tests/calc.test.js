@@ -81,4 +81,14 @@ t('時期の判定', function () {
   assert.strictEqual(D.stage('2026-03-01', '2026-09-26'), 'mid');
   assert.strictEqual(D.stage('2025-06-12', '2026-09-26'), 'later');
 });
+t('やることの詳細：期限の全項目に中身がある', function () {
+  global.window = {};
+  require('../js/tasks.js');
+  var T = global.window.TG_TASKS;
+  D.list('2025-06-12').forEach(function (it) {
+    var x = T[it.id];
+    assert.ok(x, it.id + ' の中身がない');
+    assert.ok(x.summary && x.steps.length >= 3 && x.bring.length && x.tip && x.facts.length, it.id + ' の中身が足りない');
+  });
+});
 console.log('\n' + n + ' tests passed');

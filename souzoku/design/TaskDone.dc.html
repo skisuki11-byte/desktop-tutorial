@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ひとつ進みました</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;color:#22213F;background:#F6F4FF}
+a{color:#5B4FE0}a:hover{color:#3F34B8}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #8C88AE; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+  <div role="dialog" aria-label="ひとつ進みました" style="background: #FFFFFF; border-radius: 32px 32px 0 0; padding: 12px 22px 34px; display: flex; flex-direction: column; gap: 16px; align-items: stretch">
+    <span aria-hidden="true" style="align-self: center; width: 44px; height: 5px; border-radius: 3px; background: #E4E0F7"></span>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center">
+      <svg width="84" height="84" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 30 L32 10 L54 30 Z" fill="#5B4FE0" stroke="#5B4FE0" stroke-width="6" stroke-linejoin="round"></path><rect x="41" y="12" width="7" height="12" rx="2" fill="#5B4FE0"></rect><rect x="15" y="27" width="34" height="29" rx="9" fill="#FFF4CF"></rect><path d="M23 40 Q26 37 29 40" fill="none" stroke="#22213F" stroke-width="2.4" stroke-linecap="round"></path><path d="M35 40 Q38 37 41 40" fill="none" stroke="#22213F" stroke-width="2.4" stroke-linecap="round"></path><ellipse cx="21" cy="46" rx="3.2" ry="2" fill="#FFB8A8"></ellipse><ellipse cx="43" cy="46" rx="3.2" ry="2" fill="#FFB8A8"></ellipse><path d="M28 46 Q32 50.5 36 46" fill="none" stroke="#22213F" stroke-width="2.2" stroke-linecap="round"></path></svg>
+      <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 24px; font-weight: 900">ひとつ進みました</h1>
+      <p style="margin: 0; font-size: 14.5px; color: #55557A">おつかれさまでした。あせらず、次もひとつずつ。</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700"><span>やることの進み具合</span><span style="font-variant-numeric: tabular-nums">5 / 7 済み</span></div>
+      <div aria-hidden="true" style="height: 14px; border-radius: 7px; background: #F0EEFA; overflow: hidden"><div style="width: 71%; height: 100%; border-radius: 7px; background: #34C08A"></div></div>
+    </div>
+    <div style="background: #F6F4FF; border-radius: 22px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+      <span style="font-size: 12px; font-weight: 700; color: #6B6B8C">次のやること</span>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="flex-shrink: 0; width: 42px; height: 42px; border-radius: 14px; background: #E0F0FF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F6FC2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21h16M6 21V10M18 21V10M12 3l9 5H3z"></path></svg></span>
+        <span style="flex-grow: 1; display: flex; flex-direction: column"><b style="font-size: 16px">相続登記の申請（義務）</b><span style="font-size: 12px; color: #6B6B8C">2028年6月12日まで</span></span>
+        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #55557A; background: #FFFFFF; border-radius: 999px; padding: 3px 10px">あと625日</span>
+      </div>
+    </div>
+    <a href="Task.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 56px; background: #5B4FE0; color: #FFFFFF; border-radius: 999px; font-family: 'Zen Maru Gothic', sans-serif; font-size: 17px; font-weight: 900; text-decoration: none; box-shadow: 0 4px 0 #3F34B8">次のやることを見る</a>
+    <div style="display: flex; justify-content: space-between">
+      <a href="Main.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 14px; font-weight: 700; text-decoration: none">ホームにもどる</a>
+      <a href="Task.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 13px; color: #6B6B8C">「済」を取り消す</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

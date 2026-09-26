@@ -2,84 +2,72 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>送信内容の確認</title>
+<title>送信前の確認</title>
 <script src="./support.js"></script>
 </head>
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap">
 <style>
-body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;color:#18202C;background:#F4F6F9}
-a{color:#27497A}a:hover{color:#1C3659}
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;color:#22213F;background:#F6F4FF}
+a{color:#5B4FE0}a:hover{color:#3F34B8}
 </style>
 </helmet>
-<div style="width: 390px; height: 1120px; box-sizing: border-box; background: #F4F6F9; display: flex; flex-direction: column; overflow: hidden">
-  <div style="flex-grow: 1; padding: 28px 20px 24px; display: flex; flex-direction: column; gap: 16px">
-    <div style="display: flex; flex-direction: column; gap: 4px">
-      <a href="Form.dc.html" style="font-size: 14px; text-decoration: none; min-height: 32px; display: flex; align-items: center">‹ 入力にもどる</a>
-      <div style="font-size: 13px; color: #27497A; font-weight: 700; letter-spacing: 0.06em">3 / 3　送信前の確認</div>
-      <h1 style="margin: 0; font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', serif; font-size: 25px; letter-spacing: 0.04em">送信内容の確認</h1>
-      <p style="margin: 0; font-size: 14px; color: #4F5A6B">まだ送信されていません。内容をご確認ください。</p>
-    </div>
+<div style="width: 390px; height: 1340px; box-sizing: border-box; background: #F6F4FF; padding: 20px 20px 32px; display: flex; flex-direction: column; gap: 18px; overflow: hidden">
+  <a href="Form.dc.html" style="align-self: flex-start; min-height: 40px; display: flex; align-items: center; font-size: 14px; font-weight: 700; text-decoration: none">‹ 入力にもどる</a>
+  <div style="display: flex; flex-direction: column; gap: 4px">
+    <span style="font-size: 13px; font-weight: 700; color: #5B4FE0">2 / 2　送信前の確認</span>
+    <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 26px; font-weight: 900">この内容で送ります</h1>
+    <p style="margin: 0; font-size: 14px; color: #55557A">まだ送信されていません。</p>
+  </div>
 
-    <div style="background: #FFFFFF; border: 1px solid #DBE1EA; border-radius: 16px; padding: 4px 16px">
-      <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #DBE1EA">
-        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #5F6979">お名前</span><span style="font-size: 15px">さとう</span></div>
-        <a href="Form.dc.html" style="font-size: 14px; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: flex-end">修正</a>
-      </div>
-      <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #DBE1EA">
-        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #5F6979">メールアドレス（返信先）</span><span style="font-size: 19px; font-weight: 700; word-break: break-all">sato.example@mail.jp</span><span style="font-size: 12px; color: #9A3A22">打ち間違いがあると返信が届きません</span></div>
-        <a href="Form.dc.html" style="font-size: 14px; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: flex-end">修正</a>
-      </div>
-      <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #DBE1EA">
-        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #5F6979">物件の場所</span><span style="font-size: 15px">静岡県 静岡市葵区</span></div>
-        <a href="Form.dc.html" style="font-size: 14px; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: flex-end">修正</a>
-      </div>
-      <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #DBE1EA">
-        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #5F6979">相談したいこと</span><span style="font-size: 15px; line-height: 1.7">売るか迷っている／特例を使えるか<br>母が住んでいた実家（築45年・木造）です。弟と2人で相続しました。売った場合に空き家特例を使えるか知りたいです。</span></div>
-        <a href="Form.dc.html" style="font-size: 14px; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: flex-end">修正</a>
-      </div>
-      <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 0">
-        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #5F6979">添える試算</span><span style="font-size: 15px">静岡の実家・手取り 1,897万円（特例あり）</span></div>
-        <a href="Form.dc.html" style="font-size: 14px; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: flex-end">修正</a>
-      </div>
+  <div style="background: #FFFFFF; border: 2px solid #E4E0F7; border-radius: 24px; padding: 4px 18px">
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 2px dashed #E4E0F7">
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #6B6B8C">返事を受け取るメール</span><span style="font-family: 'Zen Maru Gothic', sans-serif; font-size: 20px; font-weight: 900; word-break: break-all">sato.example@mail.jp</span><span style="font-size: 12px; color: #B8391F; font-weight: 700">打ち間違いがあると返事が届きません</span></div>
+      <a href="Form.dc.html" style="font-size: 14px; font-weight: 700; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: flex-end">修正</a>
     </div>
-
-    <div style="background: #FFFFFF; border: 1px solid #DBE1EA; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
-      <div style="font-size: 12px; color: #5F6979">送信先（2件）</div>
-      <div style="display: flex; flex-direction: column; gap: 2px">
-        <span style="font-size: 15px; font-weight: 700">宅建士　[提携宅建業者名]</span>
-        <span style="font-size: 12px; color: #5F6979">宅建業免許 [免許番号]・成約時に運営者へ紹介料あり（あなたの支払いは増えません）</span>
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 2px">
-        <span style="font-size: 15px; font-weight: 700">税理士　[提携税理士事務所名]</span>
-        <span style="font-size: 12px; color: #5F6979">紹介料なし</span>
-      </div>
-      <div style="font-size: 12px; line-height: 1.6; color: #4F5A6B; border-top: 1px solid #DBE1EA; padding-top: 8px">運営者は紹介するだけで、仲介や交渉はしません。</div>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 2px dashed #E4E0F7">
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #6B6B8C">聞きたいこと</span><span style="font-size: 15px; line-height: 1.75">売るか迷っている／空き家特例を使える？<br>母が住んでいた実家です。弟と2人で相続しました。売った場合に空き家特例を使えるか知りたいです。</span></div>
+      <a href="Form.dc.html" style="font-size: 14px; font-weight: 700; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: flex-end">修正</a>
     </div>
-
-    <div style="background: #E3EAF4; border: 1px solid #B9C8DE; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
-      <div style="font-size: 15px; font-weight: 700; color: #1C3659">送信したあとのこと</div>
-      <ul style="margin: 0; padding-left: 1.2em; font-size: 14px; line-height: 1.75; display: flex; flex-direction: column; gap: 4px">
-        <li>後日、選んだ専門家から、上のメールアドレスあてに<b>それぞれメールが届きます</b>。</li>
-        <li>この送信に対する<b>自動返信メール（受付完了メール）は送られません</b>。次の画面の受付番号をお控えください。</li>
-      </ul>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 2px dashed #E4E0F7">
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #6B6B8C">お名前・物件の場所</span><span style="font-size: 15px">さとう・静岡市葵区</span></div>
+      <a href="Form.dc.html" style="font-size: 14px; font-weight: 700; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: flex-end">修正</a>
     </div>
-
-    <label for="c-agree" style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.7">
-      <input id="c-agree" type="checkbox" checked="checked" style="width: 20px; height: 20px; margin: 3px 0 0; accent-color: #27497A; flex-shrink: 0">
-      <span>上の送信先に、入力した内容を送ることに同意します（<a href="Confirm.dc.html">プライバシーポリシー</a>）</span>
-    </label>
-
-    <div style="display: flex; flex-direction: column; gap: 10px">
-      <a href="Done.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 54px; border-radius: 14px; background: #27497A; color: #FFFFFF; font-size: 16px; font-weight: 700; text-decoration: none">この内容で送信する</a>
-      <a href="Form.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 14px; border: 1px solid #B9C8DE; background: #FFFFFF; font-size: 15px; font-weight: 700; text-decoration: none">入力にもどって修正する</a>
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 14px 0">
+      <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: #6B6B8C">添える試算</span><span style="font-size: 15px">静岡の実家・手取り 1,897万円（特例あり）</span></div>
+      <a href="Form.dc.html" style="font-size: 14px; font-weight: 700; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: flex-end">修正</a>
     </div>
+  </div>
+
+  <div style="background: #FFFFFF; border: 2px solid #E4E0F7; border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+    <span style="font-size: 12px; color: #6B6B8C">送信先</span>
+    <div style="display: flex; align-items: center; gap: 12px">
+      <span style="flex-shrink: 0; width: 42px; height: 42px; border-radius: 14px; background: #5B4FE0; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path></svg></span>
+      <span style="display: flex; flex-direction: column"><b style="font-size: 16px">相続の総合窓口</b><span style="font-size: 12px; color: #6B6B8C">運営：[窓口の運営会社]</span></span>
+    </div>
+    <p style="margin: 0; font-size: 13px; line-height: 1.75; color: #55557A">内容に合わせて、提携の不動産会社（宅建士）・弁護士・税理士に共有されます。運営者は紹介するだけで、仲介はしません。</p>
+  </div>
+
+  <div style="background: #ECE9FF; border-radius: 24px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px">
+    <b style="font-size: 15px; color: #3F34B8">送ったあとのこと</b>
+    <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.7"><span style="flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; color: #5B4FE0; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center">1</span><span>後日、担当の専門家から<b>メールで返事が届きます</b>。</span></div>
+    <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.7"><span style="flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; color: #5B4FE0; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center">2</span><span>この送信への<b>自動返信メール（受付完了メール）は届きません</b>。次の画面の受付番号をお控えください。</span></div>
+  </div>
+
+  <label for="c-agree" style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.7; cursor: pointer">
+    <input id="c-agree" type="checkbox" checked="checked" style="width: 22px; height: 22px; margin: 2px 0 0; accent-color: #5B4FE0; flex-shrink: 0">
+    <span>総合窓口と、提携の専門家に内容を送ることに同意します（<a href="Confirm.dc.html">プライバシーポリシー</a>）</span>
+  </label>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <a href="Sent.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 56px; background: #5B4FE0; color: #FFFFFF; border-radius: 999px; font-family: 'Zen Maru Gothic', sans-serif; font-size: 17px; font-weight: 900; text-decoration: none; box-shadow: 0 4px 0 #3F34B8">この内容で送信する</a>
+    <a href="Form.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 48px; background: #FFFFFF; color: #5B4FE0; border: 2px solid #D5CFFF; border-radius: 999px; font-size: 15px; font-weight: 700; text-decoration: none">入力にもどって直す</a>
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1120}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1340}}'>
 class Component extends DCLogic {
   renderVals() { return {}; }
 }

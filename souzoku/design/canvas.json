@@ -1,22 +1,26 @@
 {
   "v": 3,
-  "createdOnFiles": {"v": 1, "at": "2026-09-26T14:20:00Z"},
-  "title": "つぐいえ アプリデザイン",
+  "createdOnFiles": {"v": 1, "at": "2026-09-26T15:10:00Z"},
+  "title": "つぐいえ アプリデザイン v2",
   "launch": {"view": "canvas"},
   "pages": [],
   "boards": {
-    "Main.dc.html":    {"x": 0,    "y": 0,    "w": 390, "h": 844,  "title": "ホーム（期限）", "is_interactive": true},
-    "Learn.dc.html":   {"x": 470,  "y": 0,    "w": 390, "h": 844,  "title": "まなぶ", "is_interactive": true},
-    "Sim.dc.html":     {"x": 940,  "y": 0,    "w": 390, "h": 844,  "title": "はかる（試算結果）", "is_interactive": true},
-    "Experts.dc.html": {"x": 0,    "y": 1264, "w": 390, "h": 900,  "title": "1 相談先をえらぶ", "is_interactive": true},
-    "Form.dc.html":    {"x": 470,  "y": 1264, "w": 390, "h": 980,  "title": "2 相談内容の入力", "is_interactive": true},
-    "Confirm.dc.html": {"x": 940,  "y": 1264, "w": 390, "h": 1120, "title": "3 送信前の確認", "is_interactive": true},
-    "Done.dc.html":    {"x": 1410, "y": 1264, "w": 390, "h": 900,  "title": "4 送信完了", "is_interactive": true}
+    "Main.dc.html":      {"x": 0,    "y": 0,    "w": 390, "h": 1180, "title": "ホーム（やること）", "is_interactive": true},
+    "Task.dc.html":      {"x": 470,  "y": 0,    "w": 390, "h": 1640, "title": "やることの詳細（学んで→済にする）", "is_interactive": true},
+    "TaskDone.dc.html":  {"x": 940,  "y": 0,    "w": 390, "h": 844,  "title": "済にしたあと（次のやることへ）", "is_interactive": true},
+    "Parts.dc.html":     {"x": 1410, "y": 0,    "w": 960, "h": 780,  "title": "パーツ（色・文字・ボタン・いえまる）"},
+    "Sim.dc.html":       {"x": 0,    "y": 2040, "w": 390, "h": 844,  "title": "はかる（1画面1問）", "is_interactive": true},
+    "SimResult.dc.html": {"x": 470,  "y": 2040, "w": 390, "h": 1300, "title": "はかる（試算結果）", "is_interactive": true},
+    "Consult.dc.html":   {"x": 0,    "y": 3760, "w": 390, "h": 1240, "title": "総合窓口", "is_interactive": true},
+    "Form.dc.html":      {"x": 470,  "y": 3760, "w": 390, "h": 1260, "title": "1 相談内容の入力", "is_interactive": true},
+    "Confirm.dc.html":   {"x": 940,  "y": 3760, "w": 390, "h": 1340, "title": "2 送信前の確認", "is_interactive": true},
+    "Sent.dc.html":      {"x": 1410, "y": 3760, "w": 390, "h": 1040, "title": "送信完了", "is_interactive": true}
   },
-  "order": ["Main.dc.html", "Learn.dc.html", "Sim.dc.html", "Experts.dc.html", "Form.dc.html", "Confirm.dc.html", "Done.dc.html"],
+  "order": ["Main.dc.html", "Task.dc.html", "TaskDone.dc.html", "Parts.dc.html", "Sim.dc.html", "SimResult.dc.html", "Consult.dc.html", "Form.dc.html", "Confirm.dc.html", "Sent.dc.html"],
   "notes": {
-    "row1": {"x": 0, "y": -300, "text": "知る・はかる", "kind": "title1", "maxW": 1330},
-    "row2": {"x": 0, "y": 964, "text": "専門家へのそうだん（送信前に確認画面）", "kind": "title1", "maxW": 1800}
+    "row1": {"x": 0, "y": -300, "text": "やること：見る → 学ぶ → 済にする → 次へ", "kind": "title1", "maxW": 2370},
+    "row2": {"x": 0, "y": 1740, "text": "はかる：手取りのシミュレーター", "kind": "title1", "maxW": 860},
+    "row3": {"x": 0, "y": 3460, "text": "そうだん：相続の総合窓口（不動産・弁護士・税理士）", "kind": "title1", "maxW": 1800}
   },
   "designSystems": []
 }

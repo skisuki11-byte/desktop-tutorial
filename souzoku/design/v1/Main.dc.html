@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ホーム</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap">
+<style>
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;color:#18202C;background:#F4F6F9}
+a{color:#27497A}a:hover{color:#1C3659}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F6F9; display: flex; flex-direction: column; overflow: hidden">
+  <div style="flex-grow: 1; padding: 28px 20px 16px; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-size: 13px; color: #5F6979">相続開始日 2025年6月12日</div>
+      <h1 style="margin: 0; font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', serif; font-size: 26px; letter-spacing: 0.04em">ホーム</h1>
+    </div>
+
+    <div style="background: {{accent}}; color: #FFFFFF; border-radius: 18px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px">
+      <div style="font-size: 13px; opacity: 0.85">次の期限　空き家特例の売却期限</div>
+      <div style="font-size: 44px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums">あと 461<span style="font-size: 18px; font-weight: 500; margin-left: 4px">日</span></div>
+      <div style="font-size: 13px; opacity: 0.85">2027年12月31日まで・最大3,000万円の控除</div>
+    </div>
+
+    <div style="background: #FFFFFF; border: 1px solid #DBE1EA; border-radius: 16px; padding: 6px 16px">
+      <div style="font-size: 13px; color: #5F6979; padding: 8px 0 4px">手続きの進み具合</div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px solid #DBE1EA">
+        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #2D7152; background: #E1EFE8; border-radius: 8px; padding: 2px 10px">済</span>
+        <span style="font-size: 15px">相続放棄の判断（3か月）</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px solid #DBE1EA">
+        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #2D7152; background: #E1EFE8; border-radius: 8px; padding: 2px 10px">済</span>
+        <span style="font-size: 15px">相続税の申告（10か月）</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px solid #DBE1EA">
+        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #B2462B; background: #F7E6E0; border-radius: 8px; padding: 2px 10px; font-variant-numeric: tabular-nums">あと461日</span>
+        <span style="font-size: 15px">空き家特例の売却期限</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px solid #DBE1EA">
+        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #4F5A6B; background: #EEF2F7; border-radius: 8px; padding: 2px 10px; font-variant-numeric: tabular-nums">あと625日</span>
+        <span style="font-size: 15px">相続登記の申請（義務）</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px">
+        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #4F5A6B; background: #EEF2F7; border-radius: 8px; padding: 2px 10px; font-variant-numeric: tabular-nums">あと929日</span>
+        <span style="font-size: 15px">取得費加算の特例の売却期限</span>
+      </div>
+    </div>
+
+    <a href="Learn.dc.html" style="display: flex; flex-direction: column; gap: 2px; background: #FFFFFF; border: 1px solid #DBE1EA; border-radius: 16px; padding: 14px 16px; text-decoration: none; color: #18202C">
+      <span style="font-size: 13px; color: #5F6979">いまの時期に読む</span>
+      <span style="font-size: 16px; font-weight: 700">空き家特例が使える家・使えない家</span>
+      <span style="font-size: 13px; color: #5F6979">3分で読めます</span>
+    </a>
+  </div>
+
+  <nav aria-label="メインメニュー" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #DBE1EA; padding: 6px 8px 26px">
+    <a href="Main.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; font-size: 11px; font-weight: 700; color: #27497A; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>ホーム</a>
+    <a href="Learn.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; font-size: 11px; color: #5F6979; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"></path><path d="M4 19V5"></path></svg>まなぶ</a>
+    <a href="Sim.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; font-size: 11px; color: #5F6979; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8 7h8M8 12h2M12 12h2M8 16h2M12 16h2M16 12v4"></path></svg>はかる</a>
+    <a href="Experts.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; font-size: 11px; color: #5F6979; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"></path></svg>そうだん</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#27497A","options":["#27497A","#2D5E57","#4A3F6B"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#27497A' };
+  }
+}
+</script>
+</body>
+</html>
