@@ -516,12 +516,13 @@
     return num(d.ownPrice);
   }
 
-  function yn(key, q) {
+  function yn(key, q, hint) {
     var v = draft[key];
     function b(val, label) {
       return '<button type="button" data-act="yn" data-k="' + key + '" data-v="' + val + '" aria-pressed="' + (v === val) + '">' + label + '</button>';
     }
-    return '<div class="yn" role="group" aria-label="' + h(q) + '"><div class="yn-q">' + q + '</div><div class="yn-btns">' +
+    return '<div class="yn" role="group" aria-label="' + h(q) + '"><div class="yn-q">' + q + '</div>' +
+      (hint ? '<div class="yn-hint">' + hint + '</div>' : '') + '<div class="yn-btns">' +
       b(true, 'はい') + b(false, 'いいえ') + b('unk', 'わからない') + '</div></div>';
   }
   function vSimNew() {
@@ -582,11 +583,11 @@
         '<p class="hint">等分で計算します。</p>';
     } else if (step.id === 'cond') {
       body = '<div class="card flat">' +
-          yn('vacant', '相続してから、住んだり貸したり事業に使ったりしていない') +
+          yn('vacant', '相続してから、ずっと空き家のまま？', 'だれも住まず、人に貸したり、お店などに使ったりもしていない') +
           (draft.kind === 'house'
-            ? yn('builtBefore1981', '1981年（昭和56年）5月31日以前に建てた') +
-              yn('livedAlone', '亡くなる直前、ほかに住んでいる人はいなかった') +
-              yn('renovateOrDemolish', '耐震改修か取り壊しをする（買主がする場合も）')
+            ? yn('builtBefore1981', '古い家？（昭和56年5月末までに建てた）', '1981年5月31日以前の建築。登記簿や固定資産税の通知書で確かめられます') +
+              yn('livedAlone', '親は亡くなるまで、この家に一人で住んでいた？', '同居の家族がいなかったか。老人ホームに入っていた場合も、入る前に一人暮らしなら対象になることがあります') +
+              yn('renovateOrDemolish', '売るときに、取り壊すか耐震リフォームをする？', '買った人が、売った翌年2月15日までにする場合も含みます')
             : '') +
         '</div>' +
         (draft.kind !== 'house' ? '<p class="note">空き家特例は戸建てだけが対象です。</p>' : '<p class="note">「わからない」は、特例なしで計算します。</p>');

@@ -309,6 +309,7 @@ legend{padding:0;margin-bottom:10px}
 .yn{display:flex;flex-direction:column;gap:8px;padding:14px 0;border-bottom:2px dashed var(--line)}
 .yn:last-child{border-bottom:0}
 .yn-q{font-size:17px;line-height:1.6;font-weight:700}
+.yn-hint{font-size:14px;line-height:1.7;color:var(--muted);margin-top:-4px}
 .yn-btns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .yn-btns button{min-height:48px;border-radius:999px;border:2px solid var(--line);background:var(--panel);font-size:15.5px;font-weight:700;color:var(--muted);cursor:pointer}
 .yn-btns button[aria-pressed="true"]{border-color:var(--violet);background:var(--violet-soft);color:var(--violet-dark)}

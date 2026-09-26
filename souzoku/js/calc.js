@@ -60,10 +60,10 @@
   function akiyaCheck(inp) {
     var reasons = [];
     if (inp.kind !== 'house') reasons.push('戸建て（区分所有でない家）であること');
-    if (inp.builtBefore1981 !== true) reasons.push('昭和56年（1981年）5月31日以前に建てられた家であること');
-    if (inp.livedAlone !== true) reasons.push('亡くなる直前、ほかに住んでいる人がいなかったこと');
-    if (inp.unusedAfter !== true) reasons.push('相続してから、住んだり貸したり事業に使ったりしていないこと');
-    if (inp.renovateOrDemolish !== true) reasons.push('耐震改修か取り壊しをすること（買主が売却の翌年2月15日までに行う場合を含む）');
+    if (inp.builtBefore1981 !== true) reasons.push('昭和56年（1981年）5月31日以前に建てた古い家であること');
+    if (inp.livedAlone !== true) reasons.push('親が亡くなるまで、この家に一人で住んでいたこと（同居の家族がいない）');
+    if (inp.unusedAfter !== true) reasons.push('相続してから、ずっと空き家のままであること（住む・貸す・お店などに使うはNG）');
+    if (inp.renovateOrDemolish !== true) reasons.push('売るときに、取り壊すか耐震リフォームをすること（買った人が売った翌年2月15日までにする場合も含む）');
     if (inp.price > AKIYA_LIMIT_PRICE) reasons.push('売却代金が1億円以下であること');
     var deadline = akiyaDeadline(inp.deathISO);
     if (inp.saleISO && inp.saleISO > deadline) reasons.push(deadline.replace(/-/g, '/') + ' までに売ること');
