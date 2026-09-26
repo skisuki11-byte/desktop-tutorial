@@ -7,6 +7,11 @@
  *   - ユーザーへの自動返信はしない（任意のアドレスへ送れる踏み台にしないため）
  *   - 宛先はスクリプトのプロパティに置き、アプリには含めない
  *
+ * あわせて、はかる（売却シミュレーション）の「相場の目安」を返す。
+ * 国土交通省「不動産情報ライブラリ」API の取引価格を、都道府県・市区町村・地区と
+ * 種類で絞り、中央値などに集計して返すだけ（利用者の情報は受け取らない・保存しない）。
+ * API キーはスクリプトのプロパティ REINFOLIB_KEY に置き、アプリには含めない。
+ *
  * 設定は gas/README.md を参照。
  */
 
@@ -20,6 +25,8 @@ function doPost(e) {
     return json_({ ok: false, error: 'bad_request' });
   }
   if (!d || d.app !== 'tsuguie') return json_({ ok: false, error: 'bad_request' });
+  if (d.action === 'cities') return json_(cities_(d));
+  if (d.action === 'market') return json_(market_(d));
   if (d.website) return json_({ ok: true });                      // ボット（見えない欄に入力）
   var email = str_(d.email, 120);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json_({ ok: false, error: 'email' });
@@ -73,6 +80,103 @@ function format_(d, email, ref) {
     '※相談者には自動返信メールを送っていません。お手数ですが、受付番号を添えてご返信ください。',
     '※運営者はこの内容を保存していません。'
   ].join('\n');
+}
+
+/* ======================================================
+   相場の目安（不動産情報ライブラリ API）
+   ====================================================== */
+var REINFOLIB = 'https://www.reinfolib.mlit.go.jp/ex-api/external/';
+var KIND_TYPE = { house: '宅地(土地と建物)', land: '宅地(土地)', condo: '中古マンション等' };
+var MARKET_PER_HOUR = 300;
+
+function reinfolib_(api, params) {
+  var key = PropertiesService.getScriptProperties().getProperty('REINFOLIB_KEY');
+  if (!key) return { error: 'no_key' };
+  var q = Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
+  var res = UrlFetchApp.fetch(REINFOLIB + api + '?' + q, {
+    headers: { 'Ocp-Apim-Subscription-Key': key }, muteHttpExceptions: true
+  });
+  var code = res.getResponseCode();
+  if (code === 404) return { data: [] };           // 該当する取引がない
+  if (code !== 200) return { error: 'upstream_' + code };
+  try { return JSON.parse(res.getContentText('UTF-8')); } catch (e) { return { error: 'upstream_parse' }; }
+}
+
+function cities_(d) {
+  var area = String(d.pref || '');
+  if (!/^\d{2}$/.test(area)) return { ok: false, error: 'bad_request' };
+  var cache = CacheService.getScriptCache(), ck = 'cities-' + area;
+  var hit = cache.get(ck);
+  if (hit) return JSON.parse(hit);
+  if (overLimitMarket_()) return { ok: false, error: 'busy' };
+  var r = reinfolib_('XIT002', { area: area });
+  if (r.error) return { ok: false, error: r.error };
+  var out = { ok: true, cities: (r.data || []).map(function (c) { return { id: String(c.id), name: String(c.name) }; }) };
+  cache.put(ck, JSON.stringify(out), 21600);
+  return out;
+}
+
+function num_(v) {
+  var n = parseFloat(String(v == null ? '' : v).replace(/[,，]/g, ''));
+  return isFinite(n) ? n : NaN;
+}
+function quantile_(sorted, q) {
+  if (!sorted.length) return NaN;
+  var pos = (sorted.length - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+}
+
+function market_(d) {
+  var city = String(d.city || ''), kind = String(d.kind || '');
+  if (!/^\d{5}$/.test(city) || !KIND_TYPE[kind]) return { ok: false, error: 'bad_request' };
+  var district = str_(d.district, 30);
+  var cache = CacheService.getScriptCache(), ck = 'market-' + city + '-' + kind + '-' + district;
+  var hit = cache.get(ck);
+  if (hit) return JSON.parse(hit);
+  if (overLimitMarket_()) return { ok: false, error: 'busy' };
+  var y = Number(Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy'));
+  var years = [y - 1, y - 2], rows = [];
+  for (var i = 0; i < years.length; i++) {
+    var r = reinfolib_('XIT001', { year: years[i], city: city, priceClassification: '01' });
+    if (r.error) return { ok: false, error: r.error };
+    rows = rows.concat(r.data || []);
+  }
+  rows = rows.filter(function (x) { return x.Type === KIND_TYPE[kind] && num_(x.TradePrice) > 0; });
+  var scope = 'city', picked = rows;
+  if (district) {
+    var inDistrict = rows.filter(function (x) {
+      var n = String(x.DistrictName || '');
+      return n && (n.indexOf(district) >= 0 || district.indexOf(n) >= 0);
+    });
+    if (inDistrict.length >= 5) { picked = inDistrict; scope = 'district'; }
+  }
+  if (picked.length < 3) {
+    var few = { ok: true, count: picked.length, scope: scope, years: years[1] + '〜' + years[0] };
+    cache.put(ck, JSON.stringify(few), 21600);
+    return few;
+  }
+  var prices = picked.map(function (x) { return num_(x.TradePrice); }).sort(function (a, b) { return a - b; });
+  var units = picked.map(function (x) { var a = num_(x.Area); return a > 0 ? num_(x.TradePrice) / a : NaN; })
+    .filter(function (v) { return isFinite(v); }).sort(function (a, b) { return a - b; });
+  var out = {
+    ok: true, count: picked.length, scope: scope, years: years[1] + '〜' + years[0],
+    municipality: String(picked[0].Municipality || ''), district: scope === 'district' ? district : '',
+    median: Math.round(quantile_(prices, 0.5)), low: Math.round(quantile_(prices, 0.25)), high: Math.round(quantile_(prices, 0.75)),
+    unitMedian: units.length >= 3 ? Math.round(quantile_(units, 0.5)) : null,
+    unitLow: units.length >= 3 ? Math.round(quantile_(units, 0.25)) : null,
+    unitHigh: units.length >= 3 ? Math.round(quantile_(units, 0.75)) : null
+  };
+  cache.put(ck, JSON.stringify(out), 21600);
+  return out;
+}
+
+function overLimitMarket_() {
+  var cache = CacheService.getScriptCache();
+  var key = 'mk-' + Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyyMMddHH');
+  var count = Number(cache.get(key) || 0);
+  if (count + 1 > MARKET_PER_HOUR) return true;
+  cache.put(key, String(count + 1), 3700);
+  return false;
 }
 
 function overLimit_(n) {

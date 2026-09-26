@@ -89,6 +89,9 @@ h2.sec{margin:0;font-family:var(--round);font-size:21px;font-weight:900}
 .step{font-size:14.5px;font-weight:700;color:var(--violet)}
 .lead{margin:0;font-size:16.5px;line-height:1.8;color:var(--muted)}
 .note{margin:0;font-size:14px;line-height:1.7;color:var(--faint)}
+.topnav{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px}
+.home-link{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:999px;background:var(--violet-soft);color:var(--violet);font-size:15.5px;font-weight:700;text-decoration:none;flex-shrink:0}
+.home-bottom{margin-top:8px}
 .back{align-self:flex-start;min-height:44px;display:inline-flex;align-items:center;font-size:15.5px;font-weight:700;text-decoration:none}
 .sec-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:4px}
 

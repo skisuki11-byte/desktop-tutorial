@@ -34,7 +34,8 @@
     if (y < 10000) s = comma(y) + '円';
     else {
       var man = y / 10000;
-      s = man >= 100 ? comma(Math.round(man)) + '万円' : (Math.round(man * 10) / 10).toLocaleString('ja-JP') + '万円';
+      // 大きな数字（manFloor）と表示をそろえるため、切り捨てる
+      s = man >= 100 ? comma(Math.floor(man)) + '万円' : (Math.floor(man * 10) / 10).toLocaleString('ja-JP') + '万円';
     }
     return (neg ? '−' : '') + s;
   }
@@ -388,28 +389,133 @@
   }
 
   var draft = null, simStep = 0, simErr = '';
+  var PREFS = window.TG_PREFS || [];
+  function prefName(code) { for (var i = 0; i < PREFS.length; i++) if (PREFS[i][0] === code) return PREFS[i][1]; return ''; }
   function newDraft() {
-    return { name: '', kind: 'house', price: '', acqKnown: '', acqPrice: '', acqYear: '', acqYearUnknown: false,
+    return { name: '', kind: 'house', want: '', wantUndecided: false, pref: '', city: '', cityName: '', district: '', size: '',
+      market: null, marketState: 'idle', marketKey: '', basis: '', ownPrice: '',
+      price: '', acqKnown: '', acqPrice: '', acqYear: '', acqYearUnknown: false,
       heirs: '2', vacant: null, builtBefore1981: null, livedAlone: null, renovateOrDemolish: null,
       otherCost: '', holdTaxYear: '', holdOtherYear: '' };
   }
   function draftFrom(e) {
     var i = e.input;
     function man(y) { return y ? String(Math.round(y / 10000 * 10) / 10) : ''; }
-    return { name: e.name, kind: i.kind, price: man(i.price), acqKnown: i.acqKnown ? 'yes' : 'no', acqPrice: man(i.acqPrice),
+    var d = newDraft();
+    Object.assign(d, { name: e.name, kind: i.kind, want: man(i.want), wantUndecided: !i.want,
+      pref: i.pref || '', city: i.city || '', cityName: i.cityName || '', district: i.district || '', size: i.size ? String(i.size) : '',
+      basis: 'own', ownPrice: man(i.price), price: man(i.price),
+      acqKnown: i.acqKnown ? 'yes' : 'no', acqPrice: man(i.acqPrice),
       acqYear: i.acqYear ? String(i.acqYear) : '', acqYearUnknown: !i.acqYear, heirs: String(i.heirs),
       vacant: i.vacant, builtBefore1981: i.kind === 'house' ? i.builtBefore1981 : null, livedAlone: i.kind === 'house' ? i.livedAlone : null,
       renovateOrDemolish: i.kind === 'house' ? i.renovateOrDemolish : null,
-      otherCost: man(i.otherCost), holdTaxYear: man(i.holdTaxYear), holdOtherYear: man(i.holdOtherYear) };
+      otherCost: man(i.otherCost), holdTaxYear: man(i.holdTaxYear), holdOtherYear: man(i.holdOtherYear) });
+    return d;
   }
   var SIM_STEPS = [
-    { id: 'basic', q: 'どんな不動産？', say: 'まずは、どんな家か教えてね' },
-    { id: 'price', q: 'いくらで<br>売れそう？', say: 'だいたいで大丈夫。あとで直せるよ' },
+    { id: 'want', q: 'いくらくらいで<br>売りたい？', say: 'まずは希望でOK。あとで相場とくらべるよ' },
+    { id: 'area', q: 'どこにありますか', say: '相場を調べるのに使うよ' },
+    { id: 'basic', q: 'どんな不動産？', say: '広さがわかると、相場が近くなるよ' },
+    { id: 'market', q: 'この地域の相場', say: '相場は参考だよ。査定ではないからね' },
     { id: 'acq', q: '親が買ったときのこと', say: 'わからなくても計算できるよ' },
     { id: 'heirs', q: '何人で受け継いだ？', say: 'いっしょに相続した人の数だよ' },
     { id: 'cond', q: 'いまの状態は？', say: '空き家特例が使えるか、見てみよう' },
     { id: 'cost', q: '費用のこと', say: 'わかるところだけで大丈夫' }
   ];
+
+  /* ---------- 相場（中継 → 不動産情報ライブラリ） ---------- */
+  var cityCache = {}, cityState = {};
+  function relay(body) {
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
+    return fetch(CFG.endpoint, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ app: 'tsuguie', v: 2 }, body)), signal: ctrl ? ctrl.signal : undefined
+    }).then(function (r) { clearTimeout(timer); return r.json(); })
+      .catch(function (e) { clearTimeout(timer); throw e; });
+  }
+  function loadCities(pref) {
+    if (!CFG.endpoint || !pref || cityCache[pref] || cityState[pref] === 'loading') return;
+    cityState[pref] = 'loading';
+    relay({ action: 'cities', pref: pref }).then(function (j) {
+      if (j && j.ok && Array.isArray(j.cities) && j.cities.length) { cityCache[pref] = j.cities; cityState[pref] = 'ok'; }
+      else cityState[pref] = 'error';
+    }).catch(function () { cityState[pref] = 'error'; }).then(function () {
+      if (route() === 'sim/new' && draft && SIM_STEPS[simStep].id === 'area') render();
+    });
+  }
+  function loadMarket() {
+    var d = draft;
+    if (!CFG.endpoint || !/^\d{5}$/.test(d.city)) { d.marketState = 'unavailable'; return; }
+    var key = d.city + '|' + d.kind + '|' + d.district.trim();
+    if (d.marketKey === key && d.marketState !== 'idle') return;   // 同じ条件は1回だけ調べる（再試行はボタンから）
+    d.marketKey = key; d.marketState = 'loading'; d.market = null;
+    relay({ action: 'market', city: d.city, kind: d.kind, district: d.district.trim() }).then(function (j) {
+      if (!draft || draft.marketKey !== key) return;
+      if (j && j.ok && j.median) { draft.market = j; draft.marketState = 'ok'; }
+      else if (j && j.ok) { draft.market = j; draft.marketState = 'few'; }
+      else draft.marketState = j && j.error === 'no_key' ? 'unavailable' : 'error';
+    }).catch(function () { if (draft && draft.marketKey === key) draft.marketState = 'error'; }).then(function () {
+      if (route() === 'sim/new' && draft && SIM_STEPS[simStep].id === 'market') render();
+    });
+  }
+  /* 相場から、この物件の目安を出す（広さがあれば㎡単価×広さ、なければ地域の取引の中央値） */
+  function marketEstimate(m, size) {
+    if (!m || !m.median) return null;
+    var sz = num(size);
+    if (sz > 0 && m.unitMedian) {
+      return { mid: m.unitMedian * sz, low: m.unitLow * sz, high: m.unitHigh * sz, how: '㎡あたりの中央値 × 広さ ' + comma(sz) + '㎡' };
+    }
+    return { mid: m.median, low: m.low, high: m.high, how: 'この地域の取引価格の中央値' };
+  }
+  function roundMan(y) { return Math.round(y / 100000) * 100000; } // 10万円単位
+  function gapText(want, est) {
+    if (!(want > 0) || !(est > 0)) return '';
+    var g = Math.round((want - est) / est * 100);
+    if (Math.abs(g) <= 5) return '売りたい価格は、相場の目安とほぼ同じです。';
+    return '売りたい価格は、相場の目安より約' + Math.abs(g) + '%' + (g > 0 ? '高め' : '低め') + 'です。';
+  }
+  var CREDIT = 'このサービスは、国土交通省の不動産情報ライブラリのAPI機能を使用していますが、提供情報の最新性、正確性、完全性等が保証されたものではありません。';
+  function marketCard(d) {
+    var st = d.marketState, place = h(prefName(d.pref) + (d.cityName || '') + (d.district ? ' ' + d.district : ''));
+    if (st === 'loading') return '<div class="card"><b>' + place + 'の相場を調べています…</b><p class="note">数秒かかることがあります。</p></div>';
+    if (st === 'ok') {
+      var m = d.market, est = marketEstimate(m, d.size), want = num(d.want) * 10000;
+      return '<div class="card" style="display:flex;flex-direction:column;gap:8px">' +
+        '<span class="card-label">' + (m.scope === 'district' ? h(m.municipality + ' ' + m.district) : h(m.municipality || d.cityName)) + '・' + h(KIND[d.kind]) + '・' + h(m.years) + '年の取引 ' + comma(m.count) + '件</span>' +
+        '<span class="card-label">あなたの不動産の相場の目安</span>' +
+        '<span class="round num" style="font-size:34px;font-weight:900;line-height:1.2">' + manFloor(roundMan(est.mid)) + '<small style="font-size:16px">万円</small></span>' +
+        '<span class="note num">幅 ' + manFloor(roundMan(est.low)) + '万〜' + manFloor(roundMan(est.high)) + '万円（' + h(est.how) + '）</span>' +
+        (want > 0 ? '<div class="notice violet" style="padding:12px 14px"><p>' + gapText(want, est.mid) + '</p></div>' : '') +
+        (m.scope !== 'district' && d.district ? '<p class="note">地区の取引が少ないため、市区町村全体の取引で出しています。</p>' : '') +
+        '<p class="note" style="font-size:12.5px">' + CREDIT + '</p></div>';
+    }
+    if (st === 'error') return '<div class="card" style="display:flex;flex-direction:column;gap:8px"><b>相場を読み込めませんでした</b><p class="note">電波の良いところで、もう一度お試しください。</p><button class="btn ghost" data-act="market-retry">もう一度調べる</button></div>';
+    if (st === 'few') return '<div class="card"><b>' + place + 'は、最近の取引が少なく相場を出せませんでした</b><p class="note">売りたい価格か、自分で入れた価格で計算します。正確な価格は総合窓口（不動産）に聞けます。</p></div>';
+    return '<div class="card" style="display:flex;flex-direction:column;gap:8px"><b>相場の自動表示は準備中です</b>' +
+      '<p class="note">国土交通省の「不動産情報ライブラリ」で、' + (place || 'この地域') + 'の実際に売れた値段を調べられます。</p>' +
+      '<a class="btn ghost" href="https://www.reinfolib.mlit.go.jp/" target="_blank" rel="noopener">不動産情報ライブラリを開く</a></div>';
+  }
+  function basisChoices(d) {
+    var est = d.marketState === 'ok' ? marketEstimate(d.market, d.size) : null;
+    var want = num(d.want);
+    if (!d.basis) d.basis = est ? 'market' : want > 0 ? 'want' : 'own';
+    function opt(v, label) {
+      return '<label class="choice"><input type="radio" name="s-basis" data-bind="basis" value="' + v + '"' + (d.basis === v ? ' checked' : '') + '>' + label + '</label>';
+    }
+    return '<fieldset><legend class="label">計算に使う価格</legend><div class="choices">' +
+      (want > 0 ? opt('want', '売りたい価格（' + comma(want) + '万円）') : '') +
+      (est ? opt('market', '相場の目安（' + manFloor(roundMan(est.mid)) + '万円）') : '') +
+      opt('own', '自分で入れる') + '</div></fieldset>' +
+      '<div class="field" id="own-field"' + (d.basis === 'own' ? '' : ' hidden') + '><label for="s-own">価格</label>' +
+      '<div class="suffix"><input id="s-own" class="input" data-bind="ownPrice" inputmode="decimal" placeholder="2000" value="' + h(d.ownPrice) + '"><span>万円</span></div></div>';
+  }
+  function basisPriceMan(d) {
+    if (d.basis === 'want') return num(d.want);
+    if (d.basis === 'market') { var est = marketEstimate(d.market, d.size); return est ? roundMan(est.mid) / 10000 : NaN; }
+    return num(d.ownPrice);
+  }
+
   function yn(key, q) {
     var v = draft[key];
     function b(val, label) {
@@ -421,20 +527,43 @@
   function vSimNew() {
     if (!draft) { draft = newDraft(); simStep = 0; }
     var step = SIM_STEPS[simStep], body = '';
-    if (step.id === 'basic') {
-      body = '<div class="field"><label for="s-name">呼び名 <span class="tag-opt">任意</span></label>' +
-        '<input id="s-name" class="input" data-bind="name" maxlength="30" placeholder="例：静岡の実家" value="' + h(draft.name) + '"></div>' +
-        '<fieldset><legend class="label">種類</legend><div class="choices">' +
+    if (step.id === 'want') {
+      body = '<div class="field"><label for="s-want">売りたい価格</label>' +
+        '<div class="bigbox"><input id="s-want" data-bind="want" inputmode="decimal" placeholder="2000" value="' + h(draft.want) + '"' + (draft.wantUndecided ? ' disabled' : '') + '><span>万円</span></div>' +
+        '<div class="quick">' + [500, 1000, 2000, 3000].map(function (v) {
+          return '<button type="button" class="chipbtn" data-act="quick" data-v="' + v + '" aria-pressed="' + (String(num(draft.want)) === String(v)) + '">' + comma(v) + '万</button>';
+        }).join('') + '</div>' +
+        '<label class="check"><input type="checkbox" data-bind="wantUndecided"' + (draft.wantUndecided ? ' checked' : '') + '>まだ決めていない</label></div>';
+    } else if (step.id === 'area') {
+      var list = cityCache[draft.pref];
+      var cityField;
+      if (list) {
+        cityField = '<select id="s-city" class="select" data-bind="city"><option value="">選んでください</option>' +
+          list.map(function (c) { return '<option value="' + h(c.id) + '"' + (draft.city === c.id ? ' selected' : '') + '>' + h(c.name) + '</option>'; }).join('') + '</select>';
+      } else if (CFG.endpoint && draft.pref && cityState[draft.pref] !== 'error') {
+        cityField = '<div class="input" style="display:flex;align-items:center;color:var(--faint)">読み込んでいます…</div>';
+      } else {
+        cityField = '<input id="s-city" class="input" data-bind="cityName" maxlength="20" placeholder="例：静岡市葵区" value="' + h(draft.cityName) + '">';
+      }
+      body = '<div class="field"><label for="s-pref">都道府県</label><select id="s-pref" class="select" data-bind="pref"><option value="">選んでください</option>' +
+          PREFS.map(function (p) { return '<option value="' + p[0] + '"' + (draft.pref === p[0] ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('') + '</select></div>' +
+        '<div class="field"' + (draft.pref ? '' : ' hidden') + '><label for="s-city">市区町村</label>' + cityField + '</div>' +
+        '<div class="field"' + (draft.pref ? '' : ' hidden') + '><label for="s-dist">地区 <span class="tag-opt">任意</span></label>' +
+          '<input id="s-dist" class="input" data-bind="district" maxlength="20" placeholder="例：安東（町名まで）" value="' + h(draft.district) + '"></div>' +
+        '<p class="note">番地までは入れないでください。</p>';
+    } else if (step.id === 'basic') {
+      body = '<fieldset><legend class="label">種類</legend><div class="choices">' +
         ['house', 'land', 'condo'].map(function (k) {
           return '<label class="choice"><input type="radio" name="s-kind" data-bind="kind" value="' + k + '"' + (draft.kind === k ? ' checked' : '') + '>' + KIND[k] + '</label>';
-        }).join('') + '</div></fieldset>';
-    } else if (step.id === 'price') {
-      body = '<div class="field"><label for="s-price">売れそうな価格</label>' +
-        '<div class="bigbox"><input id="s-price" data-bind="price" inputmode="decimal" placeholder="2000" value="' + h(draft.price) + '"><span>万円</span></div>' +
-        '<div class="quick">' + [500, 1000, 2000, 3000].map(function (v) {
-          return '<button type="button" class="chipbtn" data-act="quick" data-v="' + v + '" aria-pressed="' + (String(num(draft.price)) === String(v)) + '">' + comma(v) + '万</button>';
-        }).join('') + '</div></div>' +
-        '<div class="notice sun">わからなければ、国土交通省の「不動産情報ライブラリ」で近所の売れた値段を調べられます。</div>';
+        }).join('') + '</div></fieldset>' +
+        '<div class="field"><label for="s-size">' + (draft.kind === 'condo' ? '部屋の広さ（専有面積）' : '土地の広さ') + ' <span class="tag-opt">任意</span></label>' +
+          '<div class="suffix"><input id="s-size" class="input" data-bind="size" inputmode="decimal" placeholder="150" value="' + h(draft.size) + '"><span>㎡</span></div>' +
+          '<p class="hint">固定資産税の通知書や登記簿に書いてあります。1坪は約3.3㎡。</p></div>' +
+        '<div class="field"><label for="s-name">呼び名 <span class="tag-opt">任意</span></label>' +
+          '<input id="s-name" class="input" data-bind="name" maxlength="30" placeholder="例：静岡の実家" value="' + h(draft.name) + '"></div>';
+    } else if (step.id === 'market') {
+      loadMarket();
+      body = marketCard(draft) + (draft.marketState === 'loading' ? '' : basisChoices(draft));
     } else if (step.id === 'acq') {
       body = '<fieldset><legend class="label">買ったときの値段を知っている？</legend><div class="choices">' +
           '<label class="choice"><input type="radio" name="s-acq" data-bind="acqKnown" value="yes"' + (draft.acqKnown === 'yes' ? ' checked' : '') + '>知っている</label>' +
@@ -465,7 +594,7 @@
       body = '<div class="field"><label for="s-other">売るときのその他の費用 <span class="tag-opt">任意</span></label>' +
           '<div class="suffix"><input id="s-other" class="input" data-bind="otherCost" inputmode="decimal" placeholder="0" value="' + h(draft.otherCost) + '"><span>万円</span></div>' +
           '<p class="hint">片付け・解体など。仲介手数料は自動で入ります。</p></div>' +
-        '<h2 class="sec" style="font-size:16px;margin-top:6px">持ち続けた場合（1年あたり）</h2>' +
+        '<h2 class="sec" style="font-size:18px;margin-top:6px">持ち続けた場合（1年あたり）</h2>' +
         '<div class="grid-2">' +
           '<div class="field"><label for="s-htax">固定資産税など</label><div class="suffix"><input id="s-htax" class="input" data-bind="holdTaxYear" inputmode="decimal" placeholder="0" value="' + h(draft.holdTaxYear) + '"><span>万円</span></div></div>' +
           '<div class="field"><label for="s-hother">管理・保険など</label><div class="suffix"><input id="s-hother" class="input" data-bind="holdOtherYear" inputmode="decimal" placeholder="0" value="' + h(draft.holdOtherYear) + '"><span>万円</span></div></div>' +
@@ -477,20 +606,31 @@
     return '' +
       '<div style="display:flex;justify-content:space-between;align-items:center"><a class="back" href="#/sim">× やめる</a><span class="step num" style="color:var(--faint)">' + (simStep + 1) + ' / ' + SIM_STEPS.length + '</span></div>' +
       dots + say(step.say, 56) +
-      '<h1 class="title" style="font-size:28px">' + step.q + '</h1>' +
+      '<h1 class="title">' + step.q + '</h1>' +
       body +
       (simErr ? '<p class="err" role="alert">' + h(simErr) + '</p>' : '') +
       '<div class="btn-col" style="margin-top:8px">' +
-        '<button class="btn" data-act="sim-next">' + (last ? '結果を見る' : '次へ') + '</button>' +
+        '<button class="btn" data-act="sim-next"' + (step.id === 'market' && draft.marketState === 'loading' ? ' disabled' : '') + '>' + (last ? '結果を見る' : '次へ') + '</button>' +
         (simStep > 0 ? '<button class="btn ghost" data-act="sim-back">もどる</button>' : '') +
       '</div>';
   }
   function simValidate() {
     var step = SIM_STEPS[simStep].id;
-    if (step === 'price') {
-      var p = num(draft.price);
-      if (!(p > 0)) return '売れそうな価格を万円で入れてください。';
-      if (p > 1000000) return '価格が大きすぎます。万円の単位で入れてください（例：2000）。';
+    if (step === 'want' && !draft.wantUndecided) {
+      var w = num(draft.want);
+      if (!(w > 0)) return '売りたい価格を万円で入れるか、「まだ決めていない」を選んでください。';
+      if (w > 1000000) return '価格が大きすぎます。万円の単位で入れてください（例：2000）。';
+    }
+    if (step === 'area') {
+      if (!draft.pref) return '都道府県を選んでください。';
+      if (!draft.city && !draft.cityName.trim()) return '市区町村を選ぶか、入れてください。';
+    }
+    if (step === 'basic' && draft.size !== '' && !(num(draft.size) > 0)) return '広さは数字（㎡）で入れてください。わからなければ空のままで大丈夫です。';
+    if (step === 'market') {
+      var p = basisPriceMan(draft);
+      if (!(p > 0)) return draft.basis === 'own' ? '計算に使う価格を万円で入れてください。' : '計算に使う価格を選んでください。';
+      if (p > 1000000) return '価格が大きすぎます。万円の単位で入れてください。';
+      draft.price = String(p);
     }
     if (step === 'acq') {
       if (!draft.acqKnown) return '買ったときの値段を知っているか、選んでください。';
@@ -509,15 +649,21 @@
   function simFinish() {
     var d = draft, st = S.get();
     function manToYen(v) { var n = num(v); return n > 0 ? Math.round(n * 10000) : 0; }
+    var est = d.marketState === 'ok' ? marketEstimate(d.market, d.size) : null;
     var input = {
       kind: d.kind, price: manToYen(d.price), acqKnown: d.acqKnown === 'yes', acqPrice: manToYen(d.acqPrice),
       acqYear: d.acqYearUnknown ? 0 : (num(d.acqYear) | 0), heirs: Number(d.heirs) || 1,
       vacant: d.vacant === true, unusedAfter: d.vacant === true,
       builtBefore1981: d.builtBefore1981 === true, livedAlone: d.livedAlone === true, renovateOrDemolish: d.renovateOrDemolish === true,
       otherCost: manToYen(d.otherCost), holdTaxYear: manToYen(d.holdTaxYear), holdOtherYear: manToYen(d.holdOtherYear),
-      deathISO: st.deathISO, saleISO: DL.todayISO()
+      deathISO: st.deathISO, saleISO: DL.todayISO(),
+      want: d.wantUndecided ? 0 : manToYen(d.want), basis: d.basis,
+      pref: d.pref, prefName: prefName(d.pref), city: d.city, cityName: d.cityName, district: d.district.trim(), size: num(d.size) > 0 ? num(d.size) : 0,
+      market: est ? { mid: roundMan(est.mid), low: roundMan(est.low), high: roundMan(est.high), how: est.how, count: d.market.count,
+        years: d.market.years, scope: d.market.scope, place: (d.market.municipality || d.cityName) + (d.market.scope === 'district' ? ' ' + d.market.district : '') } : null
     };
-    var e = { id: uid(), name: d.name.trim() || '相続した' + (d.kind === 'land' ? '土地' : KIND[d.kind]), createdISO: DL.todayISO(), input: input };
+    var place = (d.cityName || '').replace(/(市|区|町|村).*$/, '$1');
+    var e = { id: uid(), name: d.name.trim() || (place ? place + 'の' : '相続した') + (d.kind === 'land' ? '土地' : KIND[d.kind]), createdISO: DL.todayISO(), input: input };
     S.addEstimate(e);
     draft = null; simStep = 0; simErr = '';
     go('#/sim/' + e.id);
@@ -547,6 +693,16 @@
         (m.acqRough ? '<div class="kv sub"><span>買った値段は、売る値段の5%（' + yen(m.acqUsed) + '）として計算しました</span></div>' : '') +
         (inp.vacant && inp.price <= 8000000 ? '<div class="kv sub"><span>800万円以下の空き家等は、仲介手数料の上限が33万円です（事前の合意が前提）</span></div>' : '') +
       '</div>';
+    if (inp.want || inp.market) {
+      var mk = inp.market;
+      html += '<div class="card" style="display:flex;flex-direction:column;gap:8px"><b style="font-size:16.5px">売りたい価格と相場</b>' +
+        (inp.want ? '<div class="kv"><span>売りたい価格</span><b>' + yen(inp.want) + '</b></div>' : '') +
+        (mk ? '<div class="kv"><span>相場の目安</span><b>' + yen(mk.mid) + '</b></div><div class="kv sub"><span>幅 ' + yen(mk.low) + '〜' + yen(mk.high) + '・' + h(mk.place) + '・' + h(mk.years) + '年の取引' + comma(mk.count) + '件</span></div>' : '') +
+        '<div class="kv"><span>この試算で使った価格</span><b>' + yen(inp.price) + '</b></div>' +
+        (inp.want && mk ? '<p class="note" style="color:var(--ink)">' + gapText(inp.want, mk.mid) + '</p>' : '') +
+        (mk ? '<p class="note" style="font-size:12.5px">相場は参考値で、査定ではありません。' + CREDIT + '</p>' : '<p class="note">相場は、不動産会社の査定や「不動産情報ライブラリ」で確かめられます。</p>') +
+      '</div>';
+    }
     if (r.exemptionApplied) {
       var ratio = r.without.net / Math.max(1, m.net) * 100;
       html += '<div class="card" style="display:flex;flex-direction:column;gap:12px">' +
@@ -576,7 +732,10 @@
   }
   function estimateSummary(e) {
     var r = CALC.estimate(e.input);
-    return e.name + '（' + (KIND[e.input.kind] || '') + '）／売却想定 ' + yen(e.input.price) +
+    var i = e.input;
+    return e.name + '（' + (KIND[i.kind] || '') + (i.prefName ? '・' + i.prefName + (i.cityName || '') + (i.district ? ' ' + i.district : '') : '') + (i.size ? '・' + comma(i.size) + '㎡' : '') + '）' +
+      (i.want ? '／売りたい価格 ' + yen(i.want) : '') + (i.market ? '／相場の目安 ' + yen(i.market.mid) : '') +
+      '／試算に使った価格 ' + yen(i.price) +
       '／手取り 約' + manFloor(r.main.net) + '万円（' + (r.exemptionApplied ? '空き家特例あり' : '空き家特例なし') + '）' +
       '／相続人 ' + e.input.heirs + '人／' + dateJP(e.createdISO) + 'の試算';
   }
@@ -840,6 +999,30 @@
   /* ======================================================
      ルーター
      ====================================================== */
+  /* ホーム以外の画面は、上と下の両方に「ホーム」への導線を置く。
+     上：もとの「もどる」リンクの右側にホーム。下：内容の最後に「ホームにもどる」。 */
+  var HOME_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>';
+  function withHomeLinks(html) {
+    var home = '<a class="home-link" href="#/home">' + HOME_ICON + 'ホーム</a>';
+    var SIM_HEAD = '<div style="display:flex;justify-content:space-between;align-items:center">';
+    var top = '', rest = html;
+    var back = html.match(/^<a class="back"[^>]*>.*?<\/a>/);
+    if (back) {
+      rest = html.slice(back[0].length);
+      top = '<nav class="topnav" aria-label="画面の移動">' + (/href="#\/home"/.test(back[0]) ? '<span></span>' : back[0]) + home + '</nav>';
+    } else if (html.indexOf(SIM_HEAD) === 0) {
+      // はかるの質問画面：「やめる」と「◯ / 8」の行の右端にホームを足す
+      rest = html.replace(/(<span class="step num"[^>]*>[^<]*<\/span>)/, '<span style="display:flex;align-items:center;gap:10px">$1' + home + '</span>');
+    } else {
+      top = '<nav class="topnav" aria-label="画面の移動"><span></span>' + home + '</nav>';
+    }
+    var bottom = /class="btn[^"]*" href="#\/home"/.test(rest) ? '' :
+      '<a class="btn ghost home-bottom" href="#/home">' + HOME_ICON + 'ホームにもどる</a>';
+    var dockAt = rest.indexOf('<div class="dock">');   // やることの詳細：「済にする」の帯の手前に置く
+    if (dockAt >= 0) return top + rest.slice(0, dockAt) + bottom + rest.slice(dockAt);
+    return top + rest + bottom;
+  }
+
   var NO_TAB = /^(task\/.+|sim\/new|consult\/(form|confirm|done))$/;
   var lastPath = null;
   function route() { return (location.hash || '#/home').replace(/^#\/?/, '') || 'home'; }
@@ -862,6 +1045,7 @@
       default: html = vNotFound();
     }
     if (html === '') return; // go() で別の画面へ移った
+    if (parts[0] !== 'home') html = withHomeLinks(html);
     view.innerHTML = html;
     var noTab = NO_TAB.test(p);
     view.classList.toggle('no-tab', noTab && parts[0] !== 'task');
@@ -921,7 +1105,8 @@
         draft[el.getAttribute('data-k')] = raw === 'true' ? true : raw === 'false' ? false : 'unk';
         render(); break;
       }
-      case 'quick': draft.price = el.getAttribute('data-v'); render(); break;
+      case 'market-retry': draft.marketState = 'idle'; render(); break;
+      case 'quick': draft.want = el.getAttribute('data-v'); draft.wantUndecided = false; render(); break;
       case 'heirs': draft.heirs = el.getAttribute('data-v'); render(); break;
       case 'sim-next': {
         simErr = simValidate();
@@ -977,13 +1162,28 @@
       if (el.type === 'checkbox') {
         draft[k] = el.checked;
         if (k === 'acqYearUnknown') { var y = document.getElementById('s-acqy'); if (y) y.disabled = el.checked; }
+        if (k === 'wantUndecided') { var w = document.getElementById('s-want'); if (w) w.disabled = el.checked; }
       } else if (el.type === 'radio') {
         if (el.checked) draft[k] = el.value;
         if (k === 'acqKnown') { var f = document.getElementById('acq-price-field'); if (f) f.hidden = el.value !== 'yes'; }
-        if (k === 'kind' && el.value !== 'house') { draft.builtBefore1981 = null; draft.livedAlone = null; draft.renovateOrDemolish = null; }
+        if (k === 'basis') { var of = document.getElementById('own-field'); if (of) of.hidden = el.value !== 'own'; }
+        if (k === 'kind') {
+          if (el.value !== 'house') { draft.builtBefore1981 = null; draft.livedAlone = null; draft.renovateOrDemolish = null; }
+          var sl = view.querySelector('label[for="s-size"]');
+          if (sl) sl.firstChild.nodeValue = (el.value === 'condo' ? '部屋の広さ（専有面積）' : '土地の広さ') + ' ';
+        }
+      } else if (el.tagName === 'SELECT' && k === 'pref') {
+        if (ev.type !== 'change') return;
+        if (draft.pref !== el.value) { draft.pref = el.value; draft.city = ''; draft.cityName = ''; draft.basis = ''; }
+        loadCities(draft.pref); render();
+      } else if (el.tagName === 'SELECT' && k === 'city') {
+        draft.city = el.value;
+        draft.cityName = el.value ? el.options[el.selectedIndex].text : '';
+        draft.basis = '';
       } else {
         draft[k] = el.value;
-        if (k === 'price') Array.prototype.forEach.call(view.querySelectorAll('[data-act="quick"]'), function (b) {
+        if (k === 'size' || k === 'district' || k === 'cityName') draft.basis = '';
+        if (k === 'want') Array.prototype.forEach.call(view.querySelectorAll('[data-act="quick"]'), function (b) {
           b.setAttribute('aria-pressed', String(String(num(el.value)) === b.getAttribute('data-v')));
         });
       }
