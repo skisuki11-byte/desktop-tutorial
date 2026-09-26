@@ -272,14 +272,14 @@ footer{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--li
 
 <!-- ================= 表紙 ================= -->
 <header class="cover">
-  <p class="eyebrow">企画・構想書 v0.1 ／ 相続不動産アプリ</p>
+  <p class="eyebrow">企画・構想書 v0.2 ／ 相続不動産アプリ</p>
   <h1>つぐいえ<small>相続した家の「これから」を、ひとりで静かに考えられるアプリ（仮称）</small></h1>
-  <p class="lede">相続の基本知識、売却したときの手取りシミュレーション、宅建士への相談窓口の3つを、無料のスマホアプリにまとめます。アプリは端末の中だけで完結し、個人の情報を持ちません。相談が売却の成約につながったとき、提携先の不動産会社から紹介料を受け取るモデルです。</p>
-  <div class="meta"><span>作成日 2026年9月26日</span><span>対象 iOS／Android（PWA併用）</span><span>ステータス 構想案（要合意事項あり）</span></div>
+  <p class="lede">相続の基本知識、売却したときの手取りシミュレーション、相続の専門家（宅建士・弁護士・税理士）への相談窓口の3つを、無料のスマホアプリにまとめます。アプリは端末の中だけで完結し、個人の情報を持ちません。運営者は専門家を紹介するだけで、仲介はしません。収益は、宅建士への相談が売却の成約につながったときに受け取る紹介料だけです。</p>
+  <div class="meta"><span>作成日 2026年9月26日（v0.2 同日改訂）</span><span>対象 iOS／Android（PWA併用）</span><span>ステータス 構想案（要合意事項あり）</span></div>
   <div class="promises">
-    <div class="promise"><b>電話はかかってこない</b><span>連絡はメールだけ。電話番号は聞かない。相談先は1社だけ。</span></div>
+    <div class="promise"><b>電話はかかってこない</b><span>連絡はメールだけ。電話番号は聞かない。相談先は自分で選んだ専門家だけ。</span></div>
     <div class="promise"><b>情報を持たない</b><span>計算結果は端末内だけに保存。相談内容は送るだけで、アプリ側には残さない。</span></div>
-    <div class="promise"><b>お金の流れを隠さない</b><span>無料の理由（成約時の紹介料）をフォームの手前で明示する。</span></div>
+    <div class="promise"><b>紹介するだけ、お金の流れも隠さない</b><span>仲介・交渉はしない。紹介料は宅建士からだけ。弁護士・税理士からは受け取らない。</span></div>
   </div>
 </header>
 
@@ -288,18 +288,23 @@ footer{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--li
   <h2 class="sec"><span class="no">1</span>コンセプトと収益の流れ</h2>
   <p class="sec-note">相続は「期限つきの手続き」の連続です。売却を急がせるのではなく、期限と手取りを先に見せ、本人が「一度プロに聞いてみよう」と思えた時点で相談窓口を用意する。価値を先に渡し、相談は後から自然に生まれる設計にします。</p>
 
-  <div class="flow" role="list" aria-label="ユーザーから成約までの流れ">
+  <div class="flow" role="list" aria-label="ユーザーから相談までの流れ">
     <div class="node" role="listitem"><b>知る</b><span>相続の期限と基本知識</span></div>
     <div class="arrow" aria-hidden="true">→</div>
     <div class="node" role="listitem"><b>はかる</b><span>売却した場合の手取り、持ち続けた場合の費用</span></div>
     <div class="arrow" aria-hidden="true">→</div>
-    <div class="node key" role="listitem"><b>相談する</b><span>匿名OK・メール必須のフォーム</span></div>
+    <div class="node key" role="listitem"><b>専門家を選んで相談</b><span>匿名OK・メール必須。送信前に確認画面</span></div>
     <div class="arrow" aria-hidden="true">→</div>
-    <div class="node" role="listitem"><b>提携宅建業者</b><span>メールで返信、査定・媒介契約</span></div>
-    <div class="arrow" aria-hidden="true">→</div>
-    <div class="node" role="listitem"><b>成約</b><span>運営者へ紹介料</span></div>
+    <div class="node" role="listitem"><b>専門家からメール</b><span>後日、選んだ専門家が直接返信</span></div>
   </div>
-  <p class="money"><span class="pill ai">ユーザー負担 0円</span><span class="pill">紹介料は提携先の仲介手数料の中から支払われ、ユーザーの支払額は増えない（契約で明記）</span></p>
+
+  <h3 class="sub">相談先は相続の3つの専門家。紹介料は宅建士からだけ</h3>
+  <div class="grid-3">
+    <div class="panel"><p style="margin:0 0 var(--s2)"><span class="pill ai">紹介料あり（成約時）</span></p><b style="font-size:17px">宅建士（不動産会社）</b><p class="small" style="margin:var(--s2) 0 0">売るか迷っている、いくらで売れるか、売り方。<br>売買が成約したとき、運営者は提携先から紹介料を受け取る。紹介料は仲介手数料の中から支払われ、ユーザーの支払額は増えない（契約で明記）。</p></div>
+    <div class="panel"><p style="margin:0 0 var(--s2)"><span class="pill ok">紹介料なし</span></p><b style="font-size:17px">弁護士</b><p class="small" style="margin:var(--s2) 0 0">相続人どうしの話し合い、相続放棄、遺言や共有のもめごと。<br>弁護士は紹介の対価を支払うことが禁じられている（弁護士職務基本規程13条）。運営者も受け取らない。</p></div>
+    <div class="panel"><p style="margin:0 0 var(--s2)"><span class="pill ok">紹介料なし</span></p><b style="font-size:17px">税理士</b><p class="small" style="margin:var(--s2) 0 0">相続税、売ったときの税金、空き家特例が使えるか。<br>運営者は紹介料を受け取らない。紹介先を選ぶ判断に、お金の損得が入らないようにする。</p></div>
+  </div>
+  <div class="callout" style="margin-top:var(--s4)"><p><b>運営者は紹介するだけです。</b>物件の説明、価格や条件の交渉、契約や手続きの代行など、仲介にあたる行為には一切関わりません。相談の中身は、ユーザーと専門家がメールで直接やりとりします。</p></div>
 </section>
 
 <!-- ================= 2 事例分析 ================= -->
@@ -311,7 +316,7 @@ footer{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--li
       <span class="pill shu" style="align-self:flex-start">失敗に学ぶ</span>
       <h3>不動産一括査定サイトの「営業電話ラッシュ」</h3>
       <p class="what">一度の入力で複数社に情報が渡り、各社から立て続けに電話が来る。SUUMOやイエウールも自社の解説記事で「電話がしつこい」問題と対処法を扱うほど定着した不満です。送客料を払った各社が回収を急ぐ構造が原因です。</p>
-      <p class="then">相談先は<b>1社だけ</b>。<b>電話番号の欄を作らず</b>、連絡はメールのみ。「電話は来ません」を差別化の約束として前面に出す。</p>
+      <p class="then">相談先は<b>ユーザーが選んだ専門家だけ</b>（各分野1社）。<b>電話番号の欄を作らず</b>、連絡はメールのみ。「電話は来ません」を差別化の約束として前面に出す。</p>
     </article>
     <article class="case">
       <span class="pill ok" style="align-self:flex-start">成功に学ぶ</span>
@@ -338,10 +343,16 @@ footer{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--li
       <p class="then">相談の送信は事業の生命線。<b>送信結果を必ず画面で確認</b>し、失敗時はメールアプリで送る代替手段へ誘導。運営者は<b>週1回のテスト送信</b>で経路を監視する。</p>
     </article>
     <article class="case">
+      <span class="pill ok" style="align-self:flex-start">成功に学ぶ</span>
+      <h3>英国政府 GOV.UK の「回答の確認」と「完了ページ」</h3>
+      <p class="what">英国政府のデザインシステムは、送信の前に入力内容を一覧で見せ、各項目から修正に戻れる確認画面を標準にしています。完了ページには、受付番号、次に何がいつ起きるか、記録を残す方法を必ず載せるよう定めています。</p>
+      <p class="then"><b>送信前の確認画面</b>を必ず挟み、返信先のメールアドレスを大きく表示する。完了画面には<b>受付番号</b>、<b>後日メールが届くこと</b>、<b>自動返信メールは送られないこと</b>、内容をコピーして控える方法を書く。</p>
+    </article>
+    <article class="case">
       <span class="pill shu" style="align-self:flex-start">失敗に学ぶ</span>
       <h3>ステルスマーケティング規制（2023年10月施行）</h3>
       <p class="what">景品表示法の告示により、事業者の広告であることを隠した表示は不当表示になりました。中立な情報アプリに見せて特定業者へ誘導すると、この規制の趣旨に反し、信頼も失います。</p>
-      <p class="then">フォームの手前に<b>「提携先1社をご紹介します。成約時に運営者は紹介料を受け取ります」</b>と明記。知識記事の中では特定の会社を推さない。</p>
+      <p class="then">相談先を選ぶ画面で、専門家ごとに<b>「紹介料あり（宅建士・成約時のみ）」「紹介料なし（弁護士・税理士）」</b>を表示する。知識記事の中では特定の会社を推さない。</p>
     </article>
     <article class="case">
       <span class="pill shu" style="align-self:flex-start">失敗に学ぶ</span>
@@ -372,6 +383,7 @@ footer{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--li
         <li><b>期限が近づいたとき</b><span class="small">　空き家特例や取得費加算の売却期限、相続登記の義務化期限が見えると「今のうちに」と動く</span></li>
         <li><b>手取りの差が見えたとき</b><span class="small">　特例の有無で数百万円変わる試算を見ると、要件を確認したくなる</span></li>
         <li><b>持ち続けるコストが見えたとき</b><span class="small">　固定資産税・管理費が10年で積み上がる額を見ると、先送りの損に気づく</span></li>
+        <li><b>家族で話がまとまらないとき</b><span class="small">　売るか残すかで意見が割れたら弁護士、税金が心配なら税理士。売却以外の悩みも受け止めることで、アプリへの信頼が売却相談にもつながる</span></li>
       </ul>
     </div>
   </div>
@@ -412,150 +424,31 @@ footer{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--li
       <ul><li>売却した場合の手取り（仲介手数料・諸費用・譲渡所得税）</li><li>空き家特例の要件チェックと、適用あり／なしの比較</li><li>持ち続けた場合の10年間の費用</li><li>相続人の人数で割った1人あたりの目安</li></ul>
     </div>
     <div class="feat">
-      <div class="tab"><span class="ico"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></span><h3>そうだん（宅建士への相談）</h3></div>
-      <p>匿名OK・メール必須。送信したらアプリには残さない。</p>
-      <ul><li>お名前は本名でもニックネームでも可</li><li>シミュレーション結果を添付するかは本人が選ぶ</li><li>送信先の会社名・宅建業免許番号・紹介料の有無を明示</li><li>送信成功を画面で確認。失敗時はメールアプリで送る代替手段</li></ul>
+      <div class="tab"><span class="ico"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></span><h3>そうだん（相続の専門家への相談）</h3></div>
+      <p>宅建士・弁護士・税理士から選んで（複数可）相談。匿名OK・メール必須。送信したらアプリには残さない。</p>
+      <ul><li>相談先を選ぶ → 入力 → <b>送信前の確認</b> → 送信完了の4画面</li><li>専門家ごとに会社名・免許番号・紹介料の有無を明示</li><li>完了画面で受付番号を表示。自動返信メールは送らないと明記</li><li>送信成功を画面で確認。失敗時はメールアプリで送る代替手段</li></ul>
     </div>
   </div>
 </section>
 
 <!-- ================= 5 画面案 ================= -->
 <section id="screens">
-  <h2 class="sec"><span class="no">5</span>主要画面のラフ</h2>
-  <p class="sec-note">藍を唯一のアクセントにして、期限と注意だけを朱で示します。遺族が使うアプリなので、明るすぎる色、祝祭的な演出、急かす言葉は使いません。文字は本文16px相当以上、タップ領域は44px以上を基準にします。</p>
-
-  <div class="board">
-    <!-- S1 ホーム -->
-    <div class="slot">
-      <div class="phone"><div class="scr">
-        <div class="sb"><span>9:41</span><span>●●●</span></div>
-        <div class="body">
-          <p class="ttl">ホーム</p>
-          <div class="card ai">
-            <div class="lab">次の期限　空き家特例の売却期限</div>
-            <div class="big num">あと 461<small>日</small></div>
-            <div style="font-size:10.5px;opacity:.85">2027年12月31日まで</div>
-          </div>
-          <div class="card">
-            <div class="lab" style="margin-bottom:2px">手続きの進み具合</div>
-            <div class="dl"><span class="d done">済</span><span class="t">相続放棄の判断（3か月）</span></div>
-            <div class="dl"><span class="d done">済</span><span class="t">相続税の申告（10か月）</span></div>
-            <div class="dl"><span class="d shu">あと108日</span><span class="t">相続登記の申請</span></div>
-            <div class="dl"><span class="d">あと461日</span><span class="t">空き家特例の売却期限</span></div>
-          </div>
-          <div class="card">
-            <div class="lab">今の時期に読む</div>
-            <div style="font-size:11.5px;font-weight:700;margin-top:2px">空き家特例が使える家・使えない家</div>
-            <div class="note">3分で読めます</div>
-          </div>
-        </div>
-        <div class="tabbar">
-          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>ホーム</div>
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/></svg>まなぶ</div>
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/></svg>はかる</div>
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H8l-4 4z"/></svg>そうだん</div>
-        </div>
-      </div></div>
-      <div class="cap"><div class="no">S1</div><h3>ホーム：期限タイムライン</h3><p>最も知りたい「次の期限まで何日か」を最上部に最大サイズで置く。手続きは「済」にでき、進み具合が見える。</p><p class="why"><b>根拠</b> おくやみコーナー型の「自分に関係するものだけ」</p></div>
-    </div>
-
-    <!-- S2 まなぶ -->
-    <div class="slot">
-      <div class="phone"><div class="scr">
-        <div class="sb"><span>9:41</span><span>●●●</span></div>
-        <div class="body">
-          <p class="ttl">まなぶ</p>
-          <div class="seg"><span class="on">いまの時期</span><span>すべて</span></div>
-          <div class="card" style="padding:4px 12px">
-            <div class="art"><span class="n">1</span><div class="x">相続登記の義務化、何をすればいい？<span>期限あり・3分</span></div></div>
-            <div class="art"><span class="n">2</span><div class="x">空き家特例が使える家・使えない家<span>節税・4分</span></div></div>
-            <div class="art"><span class="n">3</span><div class="x">売る・貸す・持つ・手放すの比較<span>判断・5分</span></div></div>
-            <div class="art"><span class="n">4</span><div class="x">兄弟で共有した家を売るときの流れ<span>共有・4分</span></div></div>
-            <div class="art"><span class="n">5</span><div class="x">取得費がわからないときの考え方<span>税金・3分</span></div></div>
-          </div>
-          <div class="note">記事は一般的な情報です。個別の税額や法的判断は、税理士・司法書士・弁護士にご確認ください。</div>
-        </div>
-        <div class="tabbar">
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>ホーム</div>
-          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/></svg>まなぶ</div>
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/></svg>はかる</div>
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H8l-4 4z"/></svg>そうだん</div>
-        </div>
-      </div></div>
-      <div class="cap"><div class="no">S2</div><h3>まなぶ：時期で絞った記事</h3><p>既定は「いまの時期」。全記事は切り替えで見られる。記事末尾に関連するシミュレーションへの導線を置く。</p><p class="why"><b>根拠</b> 税理士法・弁護士法に触れない一般情報に限定</p></div>
-    </div>
-
-    <!-- S3 はかる 結果 -->
-    <div class="slot">
-      <div class="phone"><div class="scr">
-        <div class="sb"><span>9:41</span><span>●●●</span></div>
-        <div class="body">
-          <p class="ttl">試算結果</p>
-          <div class="card">
-            <div class="lab">売却した場合の手取り（空き家特例あり）</div>
-            <div class="big num">1,897<small>万円</small></div>
-            <div class="note num">幅 1,708万〜2,087万円（売却価格±10%）</div>
-          </div>
-          <div class="card">
-            <div class="bar" aria-hidden="true"><i style="width:94.9%;background:var(--ai)"></i><i style="width:3.6%;background:var(--ai-line)"></i><i style="width:1.5%;background:var(--faint)"></i></div>
-            <div class="row" style="margin-top:6px"><span>売却価格</span><span class="v num">2,000万円</span></div>
-            <div class="row"><span>仲介手数料（上限）</span><span class="v num">−72.6万円</span></div>
-            <div class="row"><span>測量・印紙など</span><span class="v num">−30万円</span></div>
-            <div class="row"><span>譲渡所得税</span><span class="v num">0円</span></div>
-          </div>
-          <div class="card" style="border-color:var(--shu);background:var(--shu-soft)">
-            <div class="row"><span style="font-weight:700;color:var(--shu)">特例なしの場合</span><span class="v num" style="color:var(--shu)">1,532万円</span></div>
-            <div class="note">差は約365万円。要件を満たすか、宅建士と確認できます。</div>
-          </div>
-          <div class="btn">この結果を添えて相談する</div>
-          <div class="note">端末に保存しました（アプリ外には送信されません）</div>
-        </div>
-      </div></div>
-      <div class="cap"><div class="no">S3</div><h3>はかる：結果</h3><p>手取りを最大の数字で、内訳は下に。特例の有無の差を並べて見せ、「確認したい」気持ちを相談ボタンにつなぐ。</p><p class="why"><b>根拠</b> Zillow Offersの教訓で価格は幅表示／国税庁の判定コーナー型の段階入力</p></div>
-    </div>
-
-    <!-- S4 そうだん フォーム -->
-    <div class="slot">
-      <div class="phone"><div class="scr">
-        <div class="sb"><span>9:41</span><span>●●●</span></div>
-        <div class="body" style="gap:7px">
-          <p class="ttl">宅建士にそうだん</p>
-          <div class="note" style="background:var(--ai-soft);border-radius:8px;padding:6px 8px;color:var(--ink)">送信先：提携先 ○○不動産（宅建業免許 静岡県知事(1)第00000号）1社のみ。<b>電話はかかってきません。</b>成約時、運営者は紹介料を受け取ります（ご負担は増えません）。</div>
-          <div class="field"><span class="fl">お名前 <span class="opt">ニックネーム可</span></span><div class="inp">さとう</div></div>
-          <div class="field"><span class="fl">メールアドレス <span class="req">必須</span></span><div class="inp">sato.example@mail.jp</div></div>
-          <div class="field"><span class="fl">物件の場所 <span class="opt">市区町村まで</span></span><div class="inp">静岡県 静岡市葵区</div></div>
-          <div class="field"><span class="fl">ご相談の内容 <span class="req">必須</span></span>
-            <div class="chips"><span class="chip on">売るか迷っている</span><span class="chip on">価格を知りたい</span><span class="chip">特例を使えるか</span></div>
-            <div class="inp area">母が住んでいた実家（築45年・木造）です。弟と2人で相続しました。</div></div>
-          <div class="chk"><i></i><span>試算結果（手取り1,897万円）を添付する</span></div>
-          <div class="chk"><i></i><span>入力内容を上記の提携先に送信することに同意します</span></div>
-          <div class="btn">送信する</div>
-        </div>
-      </div></div>
-      <div class="cap"><div class="no">S4</div><h3>そうだん：フォーム</h3><p>必須はメールと相談内容の2つだけ。お金の流れ、送信先の会社と免許番号、電話が来ないことを入力欄より先に示す。</p><p class="why"><b>根拠</b> 一括査定の電話ラッシュ／ステマ規制／個人情報保護法の第三者提供の同意</p></div>
-    </div>
-
-    <!-- S5 送信完了 -->
-    <div class="slot">
-      <div class="phone"><div class="scr">
-        <div class="sb"><span>9:41</span><span>●●●</span></div>
-        <div class="body" style="text-align:center">
-          <div class="done-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></div>
-          <p class="ttl" style="font-size:16px">送信しました</p>
-          <p style="margin:0;font-size:11.5px;color:var(--muted)">○○不動産から、<b style="color:var(--ink)">sato.example@mail.jp</b> あてに、通常2営業日以内にメールで返信があります。</p>
-          <div class="card" style="text-align:left">
-            <div class="lab">このアプリに残るもの</div>
-            <div style="font-size:11px">ありません。送信した内容はアプリにも運営者のサーバーにも保存されません。</div>
-          </div>
-          <div class="card" style="text-align:left">
-            <div class="lab">返信が来ないとき</div>
-            <div style="font-size:11px">迷惑メールフォルダをご確認ください。3営業日たっても届かない場合は、下のボタンからメールアプリで送り直せます。</div>
-          </div>
-          <div class="btn ghost">メールアプリで送り直す</div>
-        </div>
-      </div></div>
-      <div class="cap"><div class="no">S5</div><h3>送信完了</h3><p>次に何が起きるか（誰から・どこへ・いつ）を具体的に書く。「何も残らない」ことも言葉で伝える。</p><p class="why"><b>根拠</b> COCOAの教訓で送信結果を明示し、代替経路を用意</p></div>
-    </div>
+  <h2 class="sec"><span class="no">5</span>画面デザイン（Claude Design）</h2>
+  <p class="sec-note">画面デザインは Claude Design のキャンバスで作成しています。7画面をタップでつないだ試作になっているので、キャンバスの再生ボタンから実際の流れを確かめられます。藍を唯一のアクセントにして、期限と注意だけを朱で示します。遺族が使うアプリなので、明るすぎる色、祝祭的な演出、急かす言葉は使いません。</p>
+  <p style="margin:0 0 var(--s6)"><a href="https://claude.ai/artifact/U6DiCwkYSEEwxvcXLHuthP" target="_blank" rel="noopener">つぐいえ アプリデザイン（Claude Design）を開く</a></p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th style="width:20%">画面</th><th>内容</th><th style="width:30%">根拠</th></tr></thead>
+      <tbody>
+        <tr><td><b>ホーム</b></td><td>次の期限までの残り日数を最上部に最大サイズで表示。手続きは「済」にでき、進み具合が見える</td><td>おくやみコーナー型の「自分に関係するものだけ」</td></tr>
+        <tr><td><b>まなぶ</b></td><td>既定は「いまの時期」の記事だけ。「どの専門家に相談する？」の記事で3者の違いを説明</td><td>税理士法・弁護士法に触れない一般情報に限定</td></tr>
+        <tr><td><b>はかる（結果）</b></td><td>手取りを最大の数字で、特例なしとの差を並べる。「この結果を添えて専門家に相談する」へ</td><td>Zillow Offersの教訓で価格は幅表示</td></tr>
+        <tr><td><b>1 相談先をえらぶ</b></td><td>宅建士・弁護士・税理士をチェックで選ぶ（複数可）。各カードに会社名と紹介料の有無。「運営者は紹介するだけ」と明記</td><td>一括査定の電話ラッシュ／ステマ規制</td></tr>
+        <tr><td><b>2 相談内容の入力</b></td><td>必須はメールと相談内容だけ。ボタンは「入力内容を確認する」で、まだ送信されないと書く</td><td>入力項目を最小にして離脱を防ぐ</td></tr>
+        <tr class="pick"><td><b>3 送信前の確認</b></td><td>全項目を一覧表示し、各行から修正に戻れる。返信先メールを大きく表示。送信先ごとの紹介料の有無、「送信したあとのこと」（後日メールが届く／自動返信メールは送られない）、同意チェック</td><td>GOV.UK の回答確認パターン／個人情報保護法の第三者提供の同意</td></tr>
+        <tr class="pick"><td><b>4 送信完了</b></td><td>受付番号、後日それぞれの専門家からメールが届くこと、自動返信メールは届かないこと、内容をコピーして控えるボタン、アプリに何も残らないこと、返信が来ないときの対処</td><td>GOV.UK の完了ページ／COCOAの教訓</td></tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
@@ -588,20 +481,40 @@ footer{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--li
 <!-- ================= 7 相談フォーム ================= -->
 <section id="form">
   <h2 class="sec"><span class="no">7</span>相談フォームの項目</h2>
-  <p class="sec-note">入力項目は少ないほど送信率が上がります。宅建士が最初の返信を書くのに必要な最小限だけを聞き、電話番号と住所の番地は聞きません。</p>
+  <p class="sec-note">入力項目は少ないほど送信率が上がります。専門家が最初の返信を書くのに必要な最小限だけを聞き、電話番号と住所の番地は聞きません。</p>
   <div class="tbl-wrap">
     <table>
       <thead><tr><th style="width:22%">項目</th><th style="width:12%">必須</th><th>内容・理由</th></tr></thead>
       <tbody>
+        <tr><td><b>相談先</b></td><td><span class="pill shu">必須</span></td><td>宅建士・弁護士・税理士から1つ以上（複数可）。選んだ専門家それぞれに同じ内容を送る</td></tr>
         <tr><td><b>お名前</b></td><td>任意</td><td>本名でもニックネームでも可。空欄なら「匿名」として送る</td></tr>
-        <tr><td><b>メールアドレス</b></td><td><span class="pill shu">必須</span></td><td>返信先。形式チェックと、確認用の再入力なしで打ち間違いを防ぐため送信前の確認画面で大きく表示</td></tr>
+        <tr><td><b>メールアドレス</b></td><td><span class="pill shu">必須</span></td><td>返信先。形式チェックに加え、送信前の確認画面で大きく表示して打ち間違いに気づけるようにする</td></tr>
         <tr><td><b>物件の場所</b></td><td>任意</td><td>都道府県・市区町村まで。提携先の対応エリア外なら、送信前にその旨を表示</td></tr>
         <tr><td><b>物件の種類</b></td><td>任意</td><td>戸建て／土地／マンション／その他</td></tr>
         <tr><td><b>相談の内容</b></td><td><span class="pill shu">必須</span></td><td>よくある相談をチップで選べる（売るか迷っている、価格を知りたい、特例を使えるか、共有者と話がまとまらない、遠方で管理できない）＋自由記述（1,000字まで）</td></tr>
         <tr><td><b>試算結果の添付</b></td><td>任意</td><td>保存済みの試算から1件選んで本文に添える。既定はオフ</td></tr>
-        <tr><td><b>送信への同意</b></td><td><span class="pill shu">必須</span></td><td>送信先の会社名・免許番号・紹介料の有無・運営者が内容を保存しないことを示した上での同意（個人情報保護法の第三者提供）</td></tr>
+        <tr><td><b>送信への同意</b>（確認画面）</td><td><span class="pill shu">必須</span></td><td>送信先ごとの会社名・免許番号・紹介料の有無・運営者が内容を保存しないことを示した上での同意（個人情報保護法の第三者提供）</td></tr>
       </tbody>
     </table>
+  </div>
+  <h3 class="sub">送信前の確認画面と、送信後の表示</h3>
+  <div class="grid-2">
+    <div class="panel"><b>確認画面（送信前）</b>
+      <ul class="plain small" style="margin-top:var(--s2)">
+        <li>入力した全項目を一覧で表示し、各行の「修正」から入力に戻れる</li>
+        <li>返信先のメールアドレスを最も大きく表示し、「打ち間違いがあると返信が届きません」と添える</li>
+        <li>送信先（選んだ専門家ごと）と紹介料の有無、「運営者は紹介するだけ」を表示</li>
+        <li>「送信したあとのこと」として、後日メールが届くこと、自動返信メールは送られないことを先に伝える</li>
+        <li>同意チェックのあとに「この内容で送信する」</li>
+      </ul></div>
+    <div class="panel"><b>完了画面（送信後）</b>
+      <ul class="plain small" style="margin-top:var(--s2)">
+        <li>受付番号（例 TG-260926-0142）。専門家からの返信や紹介料の精算でも照合に使う</li>
+        <li>「後日、選んだ専門家から、それぞれメールでご連絡します（目安 ○営業日以内）」</li>
+        <li>「この送信に対する自動返信メール（受付完了メール）は送られません」</li>
+        <li>「送信内容をコピーする」ボタン（控えは端末の中だけ）</li>
+        <li>アプリに何も残らないこと、返信が来ないときの対処</li>
+      </ul></div>
   </div>
   <p class="small" style="margin-top:var(--s3)">「匿名」は本名を出さなくてよいという意味です。返信にメールアドレスが必要なため、完全な匿名ではないことをフォーム内で正直に書きます。気になる人向けに「相談用のメールアドレスを別に作る方法」の記事を用意します。</p>
 </section>
@@ -623,11 +536,11 @@ footer{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--li
     </div>
     <div class="pipe"><span class="ln">→</span>Gmail経由で<br>送信</div>
     <div class="box">
-      <h4>提携宅建業者の受信箱</h4>
-      <ul><li>返信の宛先（Reply-To）はユーザーのメール</li><li>「返信」を押すだけでユーザーに届く</li></ul>
+      <h4>選ばれた専門家の受信箱</h4>
+      <ul><li>宅建士・弁護士・税理士のうち、ユーザーが選んだ先だけに届く</li><li>返信の宛先（Reply-To）はユーザーのメール。「返信」を押すだけでユーザーに届く</li></ul>
     </div>
   </div>
-  <div class="keep"><span class="pill ok">アプリ運営側に残るもの：なし</span><span class="pill">送信元Googleアカウントの送信済みフォルダに控えが残るため、自動削除の設定を入れる</span><span class="pill">宅建業者の受信箱には残る（プライバシーポリシーに明記）</span></div>
+  <div class="keep"><span class="pill ok">アプリ運営側に残るもの：なし</span><span class="pill">送信元Googleアカウントの送信済みフォルダに控えが残るため、自動削除の設定を入れる</span><span class="pill">専門家の受信箱には残る（プライバシーポリシーに明記）</span><span class="pill">ユーザーへの自動返信メールは送らない（完了画面に明記）</span></div>
 
   <h3 class="sub">送信方式の比較</h3>
   <div class="tbl-wrap">
@@ -644,28 +557,31 @@ footer{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--li
 
   <h3 class="sub">GAS側の処理イメージ</h3>
   <div class="grid-2">
-    <pre class="code">// 受け取ったらメールを送るだけ。どこにも書き込まない。
+    <pre class="code">// 受け取ったら、選ばれた専門家にメールを送るだけ。
+// どこにも書き込まない。ユーザーへの自動返信もしない。
+const TO = ['takken', 'bengoshi', 'zeirishi']; // 宛先はスクリプト側に保存
 function doPost(e) {
   const d = JSON.parse(e.postData.contents);
   if (d.website) return ok_();            // ボット用の見えない欄
   if (!/^[^@\s]+@[^@\s]+$/.test(d.email)) return ng_('email');
   if (overLimit_()) return ng_('busy');   // 1時間あたりの上限
-  const to = PropertiesService.getScriptProperties()
-               .getProperty('TO');        // 宛先はアプリに含めない
-  MailApp.sendEmail({
-    to, replyTo: d.email,
-    subject: '【つぐいえ相談】' + (d.area || 'エリア未記入'),
-    body: format_(d)                      // 本文を組み立てる
+  const props = PropertiesService.getScriptProperties();
+  d.experts.filter(x => TO.includes(x)).forEach(x => {
+    MailApp.sendEmail({
+      to: props.getProperty(x), replyTo: d.email,
+      subject: '【つぐいえ相談 ' + d.ref + '】' + (d.area || 'エリア未記入'),
+      body: format_(d, x)                 // 本文を組み立てる
+    });
   });
-  return ok_();
+  return ok_();                           // 成功をアプリに返す
 }</pre>
     <div class="panel small" style="color:var(--ink)">
       <p style="margin:0 0 var(--s2)"><b>実装上の注意</b></p>
       <ul class="plain">
-        <li><b>ユーザーのメールアドレスに自動返信しない。</b>誰でも任意のアドレスへメールを送れる踏み台になるため。控えは送信前の確認画面で見せる</li>
+        <li><b>ユーザーのメールアドレスに自動返信しない。</b>誰でも任意のアドレスへメールを送れる踏み台になるため。代わりに確認画面と完了画面で内容を見せ、「自動返信メールは送られません」と明記する</li><li>受付番号（<code>d.ref</code>）は端末側で日付と乱数から作る。サーバーに連番を持たないので、ここでも何も保存しない</li><li>宛先は3つ（宅建士・弁護士・税理士）をスクリプトの設定に置き、アプリからは種類だけを送る</li>
         <li>アプリからは <code>Content-Type: text/plain</code> でPOSTし、ブラウザの事前確認（CORS preflight）を避ける</li>
         <li>ボット対策は、見えない入力欄・1時間あたりの送信上限・文字数上限の3つ。相談が増えたらCloudflare Turnstileを追加</li>
-        <li>GASのURLはアプリに含まれるため秘密ではない前提で設計する（悪用されても宛先1つにしか届かず、上限で止まる）</li>
+        <li>GASのURLはアプリに含まれるため秘密ではない前提で設計する（悪用されても決まった3つの宛先にしか届かず、上限で止まる）</li>
         <li>運営者は週1回テスト送信し、届かなければすぐ気づけるようにする</li>
       </ul>
     </div>
@@ -678,21 +594,21 @@ function doPost(e) {
 <!-- ================= 9 法務 ================= -->
 <section id="law">
   <h2 class="sec"><span class="no">9</span>法務・コンプライアンスの整理</h2>
-  <p class="sec-note">紹介料モデルと相続の情報提供は、複数の法律の境界にあります。リリース前に、提携先の宅建業者と、できれば弁護士に下記を確認してもらう前提です。</p>
+  <p class="sec-note">紹介料モデルと相続の情報提供は、複数の法律の境界にあります。基本方針は<b>「紹介するだけで仲介しない」「紹介料は宅建士からだけ」</b>です。リリース前に、提携先の3者と、できれば別の弁護士に下記を確認してもらう前提です。</p>
   <div class="law">
-    <div><div class="k"><b>宅地建物取引業法</b><span>紹介料の受け取り</span></div><div class="v">運営者は宅建業の免許がないため、<span class="do">「紹介」に徹する</span>。物件の説明、価格や条件の交渉、契約の調整には<span class="dont">一切関与しない</span>。この条件なら反復継続した顧客紹介でも宅建業に当たらないとの政府見解がある（経済産業省・国土交通省、グレーゾーン解消制度）。提携先と<b>顧客紹介契約書</b>を結び、紹介料の条件と、ユーザーの負担を増やさないことを明記する。</div></div>
-    <div><div class="k"><b>税理士法</b><span>税の相談</span></div><div class="v">税理士でない者は、無償でも個別の税務相談を業として行えない。アプリは<span class="do">一般的な制度説明と概算ツール</span>に留め、「あなたの場合は○○円」と断定する表現や、個別の質問への回答は<span class="dont">しない</span>。</div></div>
-    <div><div class="k"><b>弁護士法72条</b><span>法律相談</span></div><div class="v">遺産分割の交渉や、共有者間の争いへの助言は弁護士の業務。記事は一般論に留め、争いがある場合は弁護士・法テラスを案内する。宅建士への相談も「不動産の売却」に関する範囲とする。</div></div>
-    <div><div class="k"><b>個人情報保護法</b><span>第三者提供</span></div><div class="v">相談内容を提携先に渡すことは第三者提供にあたるため、送信前に<span class="do">送信先を明示した上で同意</span>を取る。プライバシーポリシーで、運営者が保存しないこと、提携先の受信箱には残ること、提携先の利用目的を説明する。</div></div>
-    <div><div class="k"><b>景品表示法</b><span>ステマ規制</span></div><div class="v">運営者が紹介料を受け取ることを、フォームの手前とアプリ説明文に明記する。記事の中で提携先を宣伝しない。</div></div>
-    <div><div class="k"><b>App Store／Google Play</b><span>プライバシー表示</span></div><div class="v">送信した内容が提携先の受信箱に残る以上、Appleの定義では「収集」に当たる。「連絡先情報（名前・メール）」「ユーザーコンテンツ」を、アプリ機能の目的・トラッキングなしとして申告する。プライバシーポリシーのURLを用意する（ともしびと同じ構成）。</div></div>
+    <div><div class="k"><b>宅地建物取引業法</b><span>宅建士からの紹介料</span></div><div class="v">運営者は宅建業の免許がないため、<span class="do">「紹介」に徹する</span>。物件の説明、価格や条件の交渉、契約の調整には<span class="dont">一切関与しない</span>。この条件なら反復継続した顧客紹介でも宅建業に当たらないとの政府見解がある（経済産業省・国土交通省、グレーゾーン解消制度）。提携先と<b>顧客紹介契約書</b>を結び、紹介料は成約時のみ、ユーザーの負担を増やさないことを明記する。</div></div>
+    <div><div class="k"><b>弁護士法・弁護士職務基本規程</b><span>弁護士の紹介</span></div><div class="v">弁護士は依頼者の紹介に対して謝礼や対価を支払ってはならない（職務基本規程13条）。弁護士法72条は、弁護士でない者が報酬を得る目的で法律事件の周旋をすることを禁じている。運営者は弁護士からも相談者からも<span class="dont">対価を一切受け取らない</span>ので、この形になる。遺産分割の交渉や争いへの助言は弁護士の業務なので、アプリの記事は一般論に留める。弁護士の紹介と、紹介料のある宅建士の紹介を同じ画面で扱う点は、提携する弁護士に確認してもらう。</div></div>
+    <div><div class="k"><b>税理士法</b><span>税理士の紹介・税の相談</span></div><div class="v">運営者は税理士から<span class="dont">紹介料を受け取らない</span>。税理士でない者は、無償でも個別の税務相談を業として行えないため、アプリは<span class="do">一般的な制度説明と概算ツール</span>に留め、「あなたの場合は○○円」と断定する表現や個別の質問への回答はしない。特例を使えるかの判断は税理士へ案内する。</div></div>
+    <div><div class="k"><b>個人情報保護法</b><span>第三者提供</span></div><div class="v">相談内容を専門家に渡すことは第三者提供にあたるため、<span class="do">送信前の確認画面で送信先を1件ずつ示した上で同意</span>を取る。プライバシーポリシーで、運営者が保存しないこと、専門家の受信箱には残ること、各専門家の利用目的を説明する。</div></div>
+    <div><div class="k"><b>景品表示法</b><span>ステマ規制</span></div><div class="v">運営者が宅建士から紹介料を受け取ることを、相談先を選ぶ画面・確認画面・アプリ説明文に明記する。弁護士・税理士には「紹介料なし」と書き、どこからお金を受け取るかを区別して示す。記事の中で提携先を宣伝しない。</div></div>
+    <div><div class="k"><b>App Store／Google Play</b><span>プライバシー表示</span></div><div class="v">送信した内容が専門家の受信箱に残る以上、Appleの定義では「収集」に当たる。「連絡先情報（名前・メール）」「ユーザーコンテンツ」を、アプリ機能の目的・トラッキングなしとして申告する。プライバシーポリシーのURLを用意する（ともしびと同じ構成）。</div></div>
   </div>
 </section>
 
 <!-- ================= 10 収益 ================= -->
 <section id="money">
   <h2 class="sec"><span class="no">10</span>収益の見立て（仮置き）</h2>
-  <p class="sec-note">以下の数字はすべて仮定です。紹介料率は提携先との交渉で決まります。検証すべきは「相談から成約までの割合」で、ここは提携先の実績値を聞いて置き換えます。</p>
+  <p class="sec-note">以下の数字はすべて仮定です。収益になるのは宅建士への相談が売却の成約につながった場合だけで、弁護士・税理士への相談は収益になりません。紹介料率は提携先との交渉で決まります。検証すべきは「相談から成約までの割合」で、ここは提携先の実績値を聞いて置き換えます。</p>
   <div class="grid-2">
     <div class="panel">
       <h3 class="sub" style="margin-top:0">1件あたりの紹介料（紹介料率を仲介手数料の25%と仮定）</h3>
@@ -712,7 +628,7 @@ function doPost(e) {
       <div class="tbl-wrap" style="border:0">
         <table style="min-width:0">
           <tbody>
-            <tr><td>相談の送信（DLの3%）</td><td class="n">30件</td></tr>
+            <tr><td>宅建士への相談（DLの3%）</td><td class="n">30件</td></tr>
             <tr><td>媒介契約（相談の30%）</td><td class="n">9件</td></tr>
             <tr><td>成約（媒介の70%）</td><td class="n">6件</td></tr>
             <tr><td><b>紹介料（1件18万円）</b></td><td class="n"><b>約108万円</b></td></tr>
@@ -722,14 +638,14 @@ function doPost(e) {
       <p class="small" style="margin:var(--s2) 0 0">運営費は、Apple Developer Program 年12,980円（税込・2026年時点の目安）と、Google Play 登録料 25ドル（初回のみ）が主。中継は無料枠内。</p>
     </div>
   </div>
-  <div class="callout" style="margin-top:var(--s4)"><p><b>計測の方針</b></p><p>アプリ内に行動トラッキングを入れない代わりに、ストアの統計（ダウンロード数）と、提携先が受け取った相談メールの件数・その後の結果を月1回共有してもらう形で計測します。紹介料の精算にも同じ記録を使うため、相談メールの件名に通し番号を入れます。</p></div>
+  <div class="callout" style="margin-top:var(--s4)"><p><b>計測の方針</b></p><p>アプリ内に行動トラッキングを入れない代わりに、ストアの統計（ダウンロード数）と、3者それぞれが受け取った相談メールの件数と、宅建士からはその後の結果を、月1回共有してもらう形で計測します。紹介料の精算には受付番号（相談メールの件名に入る）を使います。</p></div>
 </section>
 
 <!-- ================= 11 ロードマップ ================= -->
 <section id="road">
   <h2 class="sec"><span class="no">11</span>進め方</h2>
   <div class="road">
-    <div class="phase"><div class="ph">PHASE 0</div><h3>合意と準備</h3><ul><li>提携先と顧客紹介契約（紹介料率・精算方法・対応エリア・返信の目安）</li><li>宛先メールと送信用Googleアカウントを用意</li><li>アプリ名と運営者名義を決める</li></ul><div class="dur">目安 2週間</div></div>
+    <div class="phase"><div class="ph">PHASE 0</div><h3>合意と準備</h3><ul><li>宅建士と顧客紹介契約（紹介料率・精算方法・対応エリア・返信の目安）</li><li>弁護士・税理士と紹介の取り決め（紹介料なし・返信の目安・対応エリア）</li><li>宛先メールと送信用Googleアカウントを用意</li><li>アプリ名と運営者名義を決める</li></ul><div class="dur">目安 2週間</div></div>
     <div class="phase"><div class="ph">PHASE 1</div><h3>MVPを作る</h3><ul><li>期限タイムライン・記事20本・シミュレーション・相談フォーム</li><li>GAS中継と送信テスト</li><li>記事と計算の専門家チェック（税理士・司法書士）</li></ul><div class="dur">目安 6週間</div></div>
     <div class="phase"><div class="ph">PHASE 2</div><h3>公開</h3><ul><li>PWAを先に公開し、提携先の既存顧客に試してもらう</li><li>iOS／Androidをストア申請</li><li>プライバシーポリシー・利用規約を公開</li></ul><div class="dur">目安 3〜4週間</div></div>
     <div class="phase"><div class="ph">PHASE 3</div><h3>育てる</h3><ul><li>国土交通省「不動産情報ライブラリ」の取引価格データで相場の幅を表示（中継経由）</li><li>Cloudflare Workers＋Turnstileへ移行</li><li>毎年の税制改正に合わせて記事と計算を更新</li></ul><div class="dur">公開後 随時</div></div>
@@ -740,16 +656,17 @@ function doPost(e) {
 <section id="next">
   <h2 class="sec"><span class="no">12</span>次に決めていただきたいこと</h2>
   <div class="qs">
-    <div class="q"><b>提携先の対応エリアと、返信までの目安日数</b><span>フォームの「対応エリア外」表示と、送信完了画面の「通常○営業日以内」に使います。</span></div>
-    <div class="q"><b>紹介料の率と精算方法</b><span>成約の確認方法（相談番号の照合）と支払いのタイミングを契約書に入れます。</span></div>
+    <div class="q"><b>提携する弁護士・税理士の事務所</b><span>宅建士の知り合いのつながりで、相続に強い事務所を1つずつ決めます。事務所名は「相談先をえらぶ」画面と確認画面に表示します。</span></div>
+    <div class="q"><b>3者それぞれの対応エリアと、返信までの目安日数</b><span>フォームの「対応エリア外」表示と、送信完了画面の「通常○営業日以内」に使います。</span></div>
+    <div class="q"><b>紹介料の率と精算方法</b><span>成約の確認方法（受付番号の照合）と支払いのタイミングを契約書に入れます。</span></div>
     <div class="q"><b>アプリ名</b><span>仮称「つぐいえ」（家を継ぐ）。ほかの案：「相続のいえ手帖」「実家のこれから」。ストアで検索される「相続」「空き家」を名前か副題に入れるのが有利です。</span></div>
     <div class="q"><b>運営者の名義（個人／法人）</b><span>ストアの販売者名、プライバシーポリシー、紹介契約の当事者になります。</span></div>
-    <div class="q"><b>記事の監修者</b><span>税理士・司法書士の監修表記があると信頼が大きく上がります。提携先のつながりで依頼できるか確認します。</span></div>
+    <div class="q"><b>記事の監修者</b><span>提携する弁護士・税理士に監修してもらえると、紹介先と記事の内容がそろいます。監修表記があると信頼が大きく上がります。提携先のつながりで依頼できるか確認します。</span></div>
   </div>
 </section>
 
 <footer>
-  <p style="margin:0">つぐいえ 企画・構想書 v0.1（2026年9月26日）。税制・法制度は執筆時点の情報に基づきます。リリース前に専門家の確認を受けてください。</p>
+  <p style="margin:0">つぐいえ 企画・構想書 v0.2（2026年9月26日）。税制・法制度は執筆時点の情報に基づきます。リリース前に専門家の確認を受けてください。</p>
 </footer>
 
 </div>

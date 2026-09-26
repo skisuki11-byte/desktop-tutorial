@@ -1,0 +1,22 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-09-26T14:20:00Z"},
+  "title": "つぐいえ アプリデザイン",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html":    {"x": 0,    "y": 0,    "w": 390, "h": 844,  "title": "ホーム（期限）", "is_interactive": true},
+    "Learn.dc.html":   {"x": 470,  "y": 0,    "w": 390, "h": 844,  "title": "まなぶ", "is_interactive": true},
+    "Sim.dc.html":     {"x": 940,  "y": 0,    "w": 390, "h": 844,  "title": "はかる（試算結果）", "is_interactive": true},
+    "Experts.dc.html": {"x": 0,    "y": 1264, "w": 390, "h": 900,  "title": "1 相談先をえらぶ", "is_interactive": true},
+    "Form.dc.html":    {"x": 470,  "y": 1264, "w": 390, "h": 980,  "title": "2 相談内容の入力", "is_interactive": true},
+    "Confirm.dc.html": {"x": 940,  "y": 1264, "w": 390, "h": 1120, "title": "3 送信前の確認", "is_interactive": true},
+    "Done.dc.html":    {"x": 1410, "y": 1264, "w": 390, "h": 900,  "title": "4 送信完了", "is_interactive": true}
+  },
+  "order": ["Main.dc.html", "Learn.dc.html", "Sim.dc.html", "Experts.dc.html", "Form.dc.html", "Confirm.dc.html", "Done.dc.html"],
+  "notes": {
+    "row1": {"x": 0, "y": -300, "text": "知る・はかる", "kind": "title1", "maxW": 1330},
+    "row2": {"x": 0, "y": 964, "text": "専門家へのそうだん（送信前に確認画面）", "kind": "title1", "maxW": 1800}
+  },
+  "designSystems": []
+}
