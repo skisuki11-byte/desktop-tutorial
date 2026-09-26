@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>つぐいえ 企画構想書</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap">
+<style>
+/* ==========================================================
+   つぐいえ — 相続不動産アプリ 企画・構想書 v0.1
+   主題は「喪失のあとの、落ち着いた判断」。派手さより信頼。
+   アクセントは藍（あい）1色。期限・注意だけに朱を使う（意味色）。
+   トークン名は cashbook / ともしび と揃える
+   （--bg / --panel / --ink / --muted / --line / --r）。
+   ========================================================== */
+:root{
+  color-scheme: light;
+  --bg:#f4f6f9;          /* 地。わずかに藍へ寄せたグレー */
+  --panel:#ffffff;
+  --panel-2:#eef2f7;
+  --line:#dbe1ea;
+  --ink:#18202c;
+  --muted:#4f5a6b;
+  --faint:#6a7485;       /* 4.5:1 を確保した最も薄い文字 */
+  --ai:#27497a;          /* 藍：唯一のアクセント */
+  --ai-ink:#ffffff;
+  --ai-soft:#e3eaf4;
+  --ai-line:#b9c8de;
+  --shu:#b2462b;         /* 朱：期限・注意（意味色） */
+  --shu-soft:#f7e6e0;
+  --ok:#2d7152;          /* 成功事例・OK（意味色） */
+  --ok-soft:#e1efe8;
+  --r:14px; --r-sm:9px; --r-lg:22px;
+  --shadow:0 1px 2px rgba(20,30,50,.06), 0 12px 32px rgba(20,30,50,.08);
+  --serif:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",YuMincho,serif;
+  --sans:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s6:24px; --s8:32px; --s12:48px; --s16:64px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0f141c; --panel:#161d28; --panel-2:#1c2533; --line:#2a3445;
+    --ink:#e7ebf1; --muted:#a8b2c2; --faint:#8b96a8;
+    --ai:#8fb1e3; --ai-ink:#0f1a2c; --ai-soft:#1d2a3f; --ai-line:#34496b;
+    --shu:#ec9577; --shu-soft:#3a2219; --ok:#7cc3a0; --ok-soft:#18302a;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 36px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0f141c; --panel:#161d28; --panel-2:#1c2533; --line:#2a3445;
+  --ink:#e7ebf1; --muted:#a8b2c2; --faint:#8b96a8;
+  --ai:#8fb1e3; --ai-ink:#0f1a2c; --ai-soft:#1d2a3f; --ai-line:#34496b;
+  --shu:#ec9577; --shu-soft:#3a2219; --ok:#7cc3a0; --ok-soft:#18302a;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 36px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--sans); font-size:15.5px; line-height:1.85;
+  -webkit-text-size-adjust:100%;
+  padding-inline:16px; padding-block:0 96px;
+}
+.wrap{max-width:1080px;margin:0 auto}
+h1,h2,h3{text-wrap:balance}
+b,strong{font-weight:700}
+a{color:var(--ai)}
+:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- 表紙 ---------- */
+.cover{padding-block:56px 40px;border-bottom:1px solid var(--line)}
+.eyebrow{font-size:12.5px;letter-spacing:.14em;color:var(--ai);margin:0 0 var(--s3);font-weight:500}
+.cover h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,6.4vw,50px);line-height:1.3;margin:0 0 var(--s4);letter-spacing:.03em}
+.cover h1 small{display:block;font-size:.42em;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-top:var(--s2)}
+.lede{color:var(--muted);max-width:62ch;margin:0 0 var(--s6);font-size:16.5px}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s6);font-size:13px;color:var(--faint)}
+
+/* 3つの約束 */
+.promises{display:grid;gap:var(--s3);grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:var(--s8)}
+.promise{border-left:3px solid var(--ai);padding:var(--s1) 0 var(--s1) var(--s4)}
+.promise b{display:block;font-size:15.5px}
+.promise span{font-size:13.5px;color:var(--muted);line-height:1.7;display:block}
+
+/* ---------- 章見出し ---------- */
+section{margin-top:var(--s16)}
+h2.sec{font-family:var(--serif);font-size:clamp(21px,4.2vw,28px);font-weight:700;letter-spacing:.03em;margin:0 0 var(--s3);display:flex;gap:.6em;align-items:baseline}
+h2.sec .no{font-family:var(--sans);color:var(--ai);font-size:.62em;letter-spacing:.08em;font-weight:500;font-variant-numeric:tabular-nums}
+.sec-note{color:var(--muted);max-width:68ch;margin:0 0 var(--s8)}
+h3.sub{font-size:16.5px;margin:var(--s8) 0 var(--s3);letter-spacing:.02em}
+
+/* ---------- 汎用パネル ---------- */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--s6)}
+.grid-2{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.grid-3{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.callout{background:var(--ai-soft);border:1px solid var(--ai-line);border-radius:var(--r);padding:var(--s4) var(--s6);font-size:14.5px}
+.callout.warn{background:var(--shu-soft);border-color:color-mix(in srgb,var(--shu) 35%,transparent)}
+.callout p{margin:0}
+.callout p+p{margin-top:var(--s2)}
+ul.plain{margin:0;padding-left:1.2em}
+ul.plain li+li{margin-top:var(--s1)}
+.small{font-size:13.5px;color:var(--muted);line-height:1.75}
+
+/* ---------- 収益の流れ ---------- */
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:var(--s2)}
+.flow .node{flex:1 1 150px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--s3) var(--s4);font-size:14px;line-height:1.6}
+.flow .node b{display:block;font-size:14.5px;margin-bottom:2px}
+.flow .node span{color:var(--muted);font-size:12.5px}
+.flow .node.key{border-color:var(--ai);background:var(--ai-soft)}
+.flow .arrow{align-self:center;color:var(--faint);font-size:18px;flex:0 0 auto}
+.money{margin-top:var(--s3);display:flex;gap:var(--s2);align-items:center;font-size:13.5px;color:var(--muted);flex-wrap:wrap}
+.pill{display:inline-block;max-width:100%;font-size:11.5px;letter-spacing:.06em;padding:1px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);line-height:1.8}
+.pill.ai,.pill.shu,.pill.ok{white-space:nowrap}
+.money .pill:not(.ai),.keep .pill:not(.ok){border-radius:10px}
+.pill.ai{color:var(--ai);border-color:var(--ai-line);background:var(--ai-soft)}
+.pill.shu{color:var(--shu);border-color:color-mix(in srgb,var(--shu) 40%,transparent);background:var(--shu-soft)}
+.pill.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent);background:var(--ok-soft)}
+
+/* ---------- 事例カード ---------- */
+.cases{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--s6);display:flex;flex-direction:column;gap:var(--s3)}
+.case h3{margin:0;font-size:16px;line-height:1.55}
+.case .what{margin:0;color:var(--muted);font-size:14px;line-height:1.8}
+.case .then{margin:auto 0 0;padding-top:var(--s3);border-top:1px dashed var(--line);font-size:14px;line-height:1.75}
+.case .then::before{content:"→ 本アプリでは";display:block;font-size:11.5px;letter-spacing:.08em;color:var(--ai);font-weight:700}
+
+/* ---------- タイムライン ---------- */
+.tl{list-style:none;margin:0;padding:0;position:relative}
+.tl::before{content:"";position:absolute;left:92px;top:8px;bottom:8px;width:2px;background:var(--line)}
+.tl li{display:grid;grid-template-columns:80px 1fr;gap:var(--s6);padding:var(--s2) 0;position:relative}
+.tl .when{text-align:right;font-weight:700;font-size:14px;color:var(--ai);font-variant-numeric:tabular-nums;line-height:1.6;padding-top:2px}
+.tl .what{position:relative;padding-left:var(--s2)}
+.tl .what::before{content:"";position:absolute;left:-17px;top:9px;width:10px;height:10px;border-radius:50%;background:var(--panel);border:2px solid var(--ai)}
+.tl li.hot .what::before{background:var(--shu);border-color:var(--shu)}
+.tl li.hot .when{color:var(--shu)}
+.tl .what b{display:block;font-size:15px;line-height:1.6}
+.tl .what span{display:block;font-size:13.5px;color:var(--muted);line-height:1.7}
+
+/* ---------- 機能構成 ---------- */
+.feat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--s6)}
+.feat .tab{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2)}
+.feat .tab .ico{width:30px;height:30px;border-radius:9px;background:var(--ai-soft);color:var(--ai);display:grid;place-items:center;flex:0 0 auto}
+.feat h3{margin:0;font-size:17px}
+.feat p{margin:0 0 var(--s3);color:var(--muted);font-size:14px}
+.feat ul{margin:0;padding-left:1.2em;font-size:14px}
+
+/* ---------- 画面ボード ---------- */
+.board{display:grid;gap:var(--s12) var(--s6);grid-template-columns:repeat(auto-fill,minmax(270px,1fr));justify-items:center;margin-top:var(--s8)}
+.slot{width:100%;max-width:300px}
+.cap{margin-top:var(--s4)}
+.cap .no{font-size:12px;letter-spacing:.1em;color:var(--ai);font-variant-numeric:tabular-nums;font-weight:700}
+.cap h3{margin:2px 0 var(--s2);font-size:16px}
+.cap p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.8}
+.cap .why{margin-top:var(--s2);font-size:12.5px;color:var(--faint)}
+.cap .why b{color:var(--ai);font-weight:700}
+
+.phone{width:270px;max-width:100%;height:560px;margin:0 auto;padding:7px;background:#111722;border-radius:38px;box-shadow:var(--shadow);position:relative}
+.scr{height:100%;border-radius:31px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;font-size:12px;line-height:1.6;position:relative}
+.sb{height:26px;flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;padding:0 20px;font-size:10px;font-weight:700;color:var(--ink)}
+.body{flex:1;overflow:hidden;padding:4px 14px 10px;display:flex;flex-direction:column;gap:9px}
+.tabbar{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--panel);padding:6px 4px 12px}
+.tabbar div{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:9px;color:var(--faint)}
+.tabbar div.on{color:var(--ai);font-weight:700}
+.tabbar svg{width:18px;height:18px}
+.ttl{font-family:var(--serif);font-size:18px;font-weight:700;margin:2px 0 0;letter-spacing:.03em}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.card.ai{background:var(--ai);border-color:var(--ai);color:var(--ai-ink)}
+.card.ai .lab{color:var(--ai-ink);opacity:.8}
+.lab{font-size:10px;color:var(--faint);letter-spacing:.04em}
+.big{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.big small{font-size:12px;font-weight:500;margin-left:2px}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.row + .row{margin-top:3px}
+.row .v{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.dl{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.dl:last-child{border-bottom:0}
+.dl .d{flex:0 0 auto;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--panel-2);color:var(--muted);font-variant-numeric:tabular-nums}
+.dl .d.shu{background:var(--shu-soft);color:var(--shu)}
+.dl .d.done{background:var(--ok-soft);color:var(--ok)}
+.dl .t{flex:1;font-size:11.5px}
+.btn{display:block;text-align:center;background:var(--ai);color:var(--ai-ink);border-radius:10px;padding:9px;font-weight:700;font-size:12.5px}
+.btn.ghost{background:transparent;color:var(--ai);border:1px solid var(--ai-line)}
+.field{display:flex;flex-direction:column;gap:3px}
+.field .fl{font-size:10.5px;font-weight:700;display:flex;gap:6px;align-items:center}
+.req{font-size:9px;color:var(--shu);border:1px solid color-mix(in srgb,var(--shu) 45%,transparent);border-radius:4px;padding:0 4px;font-weight:700}
+.opt{font-size:9px;color:var(--faint);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.inp{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:11.5px;color:var(--ink)}
+.inp.ph{color:var(--faint)}
+.inp.area{height:44px;overflow:hidden}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:10px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--panel)}
+.chip.on{border-color:var(--ai);color:var(--ai);background:var(--ai-soft);font-weight:700}
+.chk{display:flex;gap:6px;font-size:10px;line-height:1.5;color:var(--muted);align-items:flex-start}
+.chk i{flex:0 0 auto;width:13px;height:13px;border-radius:3px;border:1.5px solid var(--ai);background:var(--ai);margin-top:1px;position:relative}
+.chk i::after{content:"";position:absolute;left:3px;top:0;width:4px;height:7px;border:solid var(--ai-ink);border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+.art{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.art:last-child{border-bottom:0}
+.art .n{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:var(--ai-soft);color:var(--ai);display:grid;place-items:center;font-weight:700;font-size:11px}
+.art .x{flex:1;font-size:11.5px;line-height:1.45}
+.art .x span{display:block;font-size:9.5px;color:var(--faint)}
+.bar{height:8px;border-radius:4px;background:var(--panel-2);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.note{font-size:9.5px;color:var(--faint);line-height:1.5}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--panel-2);border-radius:9px;padding:3px;font-size:10.5px;text-align:center}
+.seg span{padding:4px;border-radius:7px;color:var(--muted)}
+.seg span.on{background:var(--panel);color:var(--ink);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.done-ico{width:56px;height:56px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;margin:28px auto 4px}
+
+/* ---------- 表 ---------- */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{padding:var(--s3) var(--s4);text-align:left;vertical-align:top;border-bottom:1px solid var(--line);line-height:1.7}
+tr:last-child td{border-bottom:0}
+th{font-size:12.5px;color:var(--faint);font-weight:500;letter-spacing:.04em;background:var(--panel-2)}
+td.n{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+tr.pick td{background:var(--ai-soft)}
+.mk{font-weight:700}
+.mk.o{color:var(--ok)} .mk.x{color:var(--shu)} .mk.t{color:var(--muted)}
+
+/* ---------- 構成図 ---------- */
+.arch{display:grid;gap:var(--s3);grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch}
+.arch .box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4);font-size:13.5px;line-height:1.7}
+.arch .box h4{margin:0 0 var(--s2);font-size:14.5px}
+.arch .box ul{margin:0;padding-left:1.1em;color:var(--muted)}
+.arch .box.dev{border-color:var(--ai);border-width:2px}
+.arch .pipe{display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:11.5px;color:var(--faint);text-align:center;gap:2px;min-width:74px}
+.arch .pipe .ln{font-size:20px;color:var(--ai)}
+.keep{margin-top:var(--s3);display:flex;flex-wrap:wrap;gap:var(--s2)}
+pre.code{margin:0;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--s4);overflow-x:auto;font-size:12.5px;line-height:1.65;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink)}
+
+/* ---------- 法務 ---------- */
+.law{display:grid;gap:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.law > div{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:var(--s4);padding:var(--s4) var(--s6);border-bottom:1px solid var(--line)}
+.law > div:last-child{border-bottom:0}
+.law .k b{display:block;font-size:14.5px}
+.law .k span{font-size:12px;color:var(--faint)}
+.law .v{font-size:14px;line-height:1.8}
+.law .v .do{color:var(--ok);font-weight:700}
+.law .v .dont{color:var(--shu);font-weight:700}
+
+/* ---------- ロードマップ ---------- */
+.road{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.phase{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4) var(--s6)}
+.phase .ph{font-size:12px;color:var(--ai);font-weight:700;letter-spacing:.06em}
+.phase h3{margin:2px 0 var(--s2);font-size:16px}
+.phase ul{margin:0;padding-left:1.1em;font-size:13.5px;color:var(--muted)}
+.phase .dur{margin-top:var(--s3);font-size:12px;color:var(--faint)}
+
+.qs{counter-reset:q;display:grid;gap:var(--s3)}
+.q{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--s3) var(--s4) var(--s3) 52px;position:relative;font-size:14.5px}
+.q::before{counter-increment:q;content:counter(q);position:absolute;left:16px;top:12px;width:24px;height:24px;border-radius:50%;background:var(--ai);color:var(--ai-ink);font-size:12px;font-weight:700;display:grid;place-items:center}
+.q span{display:block;font-size:13px;color:var(--muted)}
+
+footer{margin-top:var(--s16);padding-top:var(--s6);border-top:1px solid var(--line);font-size:12.5px;color:var(--faint)}
+
+@media (max-width:760px){
+  .arch{grid-template-columns:1fr}
+  .arch .pipe{flex-direction:row;min-width:0;padding:2px 0}
+  .arch .pipe .ln{transform:rotate(90deg)}
+  .law > div{grid-template-columns:1fr;gap:var(--s1)}
+  .tl::before{left:74px}
+  .tl li{grid-template-columns:62px 1fr}
+  .flow .arrow{transform:rotate(90deg);flex-basis:100%;text-align:center;line-height:1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ================= 表紙 ================= -->
+<header class="cover">
+  <p class="eyebrow">企画・構想書 v0.1 ／ 相続不動産アプリ</p>
+  <h1>つぐいえ<small>相続した家の「これから」を、ひとりで静かに考えられるアプリ（仮称）</small></h1>
+  <p class="lede">相続の基本知識、売却したときの手取りシミュレーション、宅建士への相談窓口の3つを、無料のスマホアプリにまとめます。アプリは端末の中だけで完結し、個人の情報を持ちません。相談が売却の成約につながったとき、提携先の不動産会社から紹介料を受け取るモデルです。</p>
+  <div class="meta"><span>作成日 2026年9月26日</span><span>対象 iOS／Android（PWA併用）</span><span>ステータス 構想案（要合意事項あり）</span></div>
+  <div class="promises">
+    <div class="promise"><b>電話はかかってこない</b><span>連絡はメールだけ。電話番号は聞かない。相談先は1社だけ。</span></div>
+    <div class="promise"><b>情報を持たない</b><span>計算結果は端末内だけに保存。相談内容は送るだけで、アプリ側には残さない。</span></div>
+    <div class="promise"><b>お金の流れを隠さない</b><span>無料の理由（成約時の紹介料）をフォームの手前で明示する。</span></div>
+  </div>
+</header>
+
+<!-- ================= 1 コンセプト ================= -->
+<section id="concept">
+  <h2 class="sec"><span class="no">1</span>コンセプトと収益の流れ</h2>
+  <p class="sec-note">相続は「期限つきの手続き」の連続です。売却を急がせるのではなく、期限と手取りを先に見せ、本人が「一度プロに聞いてみよう」と思えた時点で相談窓口を用意する。価値を先に渡し、相談は後から自然に生まれる設計にします。</p>
+
+  <div class="flow" role="list" aria-label="ユーザーから成約までの流れ">
+    <div class="node" role="listitem"><b>知る</b><span>相続の期限と基本知識</span></div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="node" role="listitem"><b>はかる</b><span>売却した場合の手取り、持ち続けた場合の費用</span></div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="node key" role="listitem"><b>相談する</b><span>匿名OK・メール必須のフォーム</span></div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="node" role="listitem"><b>提携宅建業者</b><span>メールで返信、査定・媒介契約</span></div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="node" role="listitem"><b>成約</b><span>運営者へ紹介料</span></div>
+  </div>
+  <p class="money"><span class="pill ai">ユーザー負担 0円</span><span class="pill">紹介料は提携先の仲介手数料の中から支払われ、ユーザーの支払額は増えない（契約で明記）</span></p>
+</section>
+
+<!-- ================= 2 事例分析 ================= -->
+<section id="cases">
+  <h2 class="sec"><span class="no">2</span>成功事例・失敗事例から決めたこと</h2>
+  <p class="sec-note">この企画の主要な判断は、以下の事例の分析から導いています。どの判断がどの事例に基づくかを、各カードの下段に書きました。</p>
+  <div class="cases">
+    <article class="case">
+      <span class="pill shu" style="align-self:flex-start">失敗に学ぶ</span>
+      <h3>不動産一括査定サイトの「営業電話ラッシュ」</h3>
+      <p class="what">一度の入力で複数社に情報が渡り、各社から立て続けに電話が来る。SUUMOやイエウールも自社の解説記事で「電話がしつこい」問題と対処法を扱うほど定着した不満です。送客料を払った各社が回収を急ぐ構造が原因です。</p>
+      <p class="then">相談先は<b>1社だけ</b>。<b>電話番号の欄を作らず</b>、連絡はメールのみ。「電話は来ません」を差別化の約束として前面に出す。</p>
+    </article>
+    <article class="case">
+      <span class="pill ok" style="align-self:flex-start">成功に学ぶ</span>
+      <h3>別府市「おくやみコーナー」／英国「Tell Us Once」</h3>
+      <p class="what">別府市は2016年、死亡後の手続きを一か所で案内する窓口を始め、同様の窓口が全国の自治体に広がりました。英国政府のTell Us Onceも、死亡の届け出を一度で複数の役所に伝えられる仕組みです。共通点は、遺族に「自分に関係する手続きだけ」を順番に見せていることです。</p>
+      <p class="then">ホームは<b>「亡くなった日」から逆算した期限タイムライン</b>。記事は一覧で並べず、今の時期に必要なものだけを出す。</p>
+    </article>
+    <article class="case">
+      <span class="pill ok" style="align-self:flex-start">成功に学ぶ</span>
+      <h3>国税庁「相続税の申告要否判定コーナー」</h3>
+      <p class="what">専門用語の多い判定を、画面ごとに一問ずつ答える形式にして、一般の人でも申告が必要かを判断できるようにしています。</p>
+      <p class="then">シミュレーションは<b>1画面1問のステップ入力</b>。「取得費がわからない」「築年がわからない」にも選択肢を用意し、途中で止まらせない。</p>
+    </article>
+    <article class="case">
+      <span class="pill shu" style="align-self:flex-start">失敗に学ぶ</span>
+      <h3>Zillow Offers の撤退（2021年）</h3>
+      <p class="what">米Zillowは自社の価格推定アルゴリズムを信じて住宅を買い取り、転売する事業を拡大しましたが、推定の誤差で損失を出し事業から撤退しました。機械的な価格推定は、プロでも一点で当てることが難しいという教訓です。</p>
+      <p class="then">アプリは<b>価格を当てにいかない</b>。売却価格はユーザー入力で、結果は<b>幅（±10%）</b>で表示。正確な価格は宅建士の査定へ、という役割分担を明示する。</p>
+    </article>
+    <article class="case">
+      <span class="pill shu" style="align-self:flex-start">失敗に学ぶ</span>
+      <h3>接触確認アプリ COCOA の通知不具合</h3>
+      <p class="what">Android版で接触通知が届かない不具合が約4か月間気づかれませんでした。利用者の画面では正常に見えるため、誰も異常に気づけなかったことが問題を長引かせました。</p>
+      <p class="then">相談の送信は事業の生命線。<b>送信結果を必ず画面で確認</b>し、失敗時はメールアプリで送る代替手段へ誘導。運営者は<b>週1回のテスト送信</b>で経路を監視する。</p>
+    </article>
+    <article class="case">
+      <span class="pill shu" style="align-self:flex-start">失敗に学ぶ</span>
+      <h3>ステルスマーケティング規制（2023年10月施行）</h3>
+      <p class="what">景品表示法の告示により、事業者の広告であることを隠した表示は不当表示になりました。中立な情報アプリに見せて特定業者へ誘導すると、この規制の趣旨に反し、信頼も失います。</p>
+      <p class="then">フォームの手前に<b>「提携先1社をご紹介します。成約時に運営者は紹介料を受け取ります」</b>と明記。知識記事の中では特定の会社を推さない。</p>
+    </article>
+    <article class="case">
+      <span class="pill shu" style="align-self:flex-start">失敗に学ぶ</span>
+      <h3>App Store審査 4.2「最低限の機能」でのリジェクト</h3>
+      <p class="what">Webサイトを包んだだけのアプリや、宣伝が主目的のアプリはAppleの審査で却下されやすいことが知られています。問い合わせフォームだけのアプリでは通りません。</p>
+      <p class="then"><b>オフラインで動く計算機能と期限管理</b>を核にし、アプリ単体で役に立つ状態にする。相談窓口はその先の選択肢の1つとして置く。</p>
+    </article>
+  </div>
+</section>
+
+<!-- ================= 3 ユーザー ================= -->
+<section id="user">
+  <h2 class="sec"><span class="no">3</span>想定ユーザーと「相談したくなる瞬間」</h2>
+  <p class="sec-note">中心は、親が亡くなり実家を相続した40〜60代です。実家は遠方で空き家になっていることが多く、兄弟姉妹と共有になるケースもあります。手続きに追われながら、家をどうするかの判断を先送りにしがちです。</p>
+  <div class="grid-2">
+    <div class="panel">
+      <h3 class="sub" style="margin-top:0">主なペルソナ</h3>
+      <p style="margin:0 0 var(--s3)"><b>佐藤さん（仮名・54歳・会社員）</b><br><span class="small">東京在住。昨年、静岡の実家に一人で住んでいた母が亡くなった。弟と2人で相続。実家は築45年の木造で空き家のまま。固定資産税の通知が届き、「このままでいいのか」と気になり始めた。</span></p>
+      <ul class="plain small">
+        <li>知りたい：売ったらいくら残るか、税金はかかるか、いつまでに何をすべきか</li>
+        <li>不安：不動産会社に連絡すると営業されそう、親の家を売ることへの後ろめたさ</li>
+        <li>求めるもの：自分のペースで調べられること、しつこくされないこと</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3 class="sub" style="margin-top:0">相談が生まれるきっかけ</h3>
+      <ul class="plain">
+        <li><b>期限が近づいたとき</b><span class="small">　空き家特例や取得費加算の売却期限、相続登記の義務化期限が見えると「今のうちに」と動く</span></li>
+        <li><b>手取りの差が見えたとき</b><span class="small">　特例の有無で数百万円変わる試算を見ると、要件を確認したくなる</span></li>
+        <li><b>持ち続けるコストが見えたとき</b><span class="small">　固定資産税・管理費が10年で積み上がる額を見ると、先送りの損に気づく</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="sub">アプリのホームに出す期限タイムライン（亡くなった日から）</h3>
+  <div class="panel">
+    <ol class="tl">
+      <li><div class="when">7日以内</div><div class="what"><b>死亡届の提出</b><span>葬儀社が代行することが多い。アプリでは「済」にするだけ</span></div></li>
+      <li class="hot"><div class="when">3か月</div><div class="what"><b>相続放棄・限定承認の期限</b><span>借金が多い場合の選択肢。判断に迷う場合は弁護士・司法書士へ</span></div></li>
+      <li><div class="when">4か月</div><div class="what"><b>準確定申告</b><span>亡くなった人の所得税の申告</span></div></li>
+      <li class="hot"><div class="when">10か月</div><div class="what"><b>相続税の申告・納付</b><span>基礎控除（3,000万円＋600万円×法定相続人の数）を超える場合</span></div></li>
+      <li class="hot"><div class="when">3年</div><div class="what"><b>相続登記の義務（2024年4月から）</b><span>相続を知った日から3年以内。正当な理由なく怠ると10万円以下の過料。売却の前提にもなる</span></div></li>
+      <li class="hot"><div class="when">3年後の<br>年末</div><div class="what"><b>空き家特例（最大3,000万円控除）の売却期限</b><span>相続開始から3年を経過する日の属する年の12月31日まで。制度自体は2027年12月31日までの譲渡が対象。相続人が3人以上なら1人2,000万円</span></div></li>
+      <li><div class="when">3年10か月</div><div class="what"><b>取得費加算の特例の売却期限</b><span>相続税を納めた人が、申告期限から3年以内に売ると、相続税の一部を取得費に加算できる</span></div></li>
+    </ol>
+  </div>
+  <p class="small" style="margin-top:var(--s3)">期限は端末内の「亡くなった日」から計算し、ローカル通知（端末内のみ）で知らせます。制度は改正されるため、記事と計算ロジックは年1回以上見直します。</p>
+</section>
+
+<!-- ================= 4 機能 ================= -->
+<section id="features">
+  <h2 class="sec"><span class="no">4</span>機能構成</h2>
+  <p class="sec-note">下部タブは4つ。「ホーム・まなぶ・はかる・そうだん」。相談は常に1タップで開けるが、アプリの主役は計算と期限管理にします（審査4.2対策と、押し売り感をなくすため）。</p>
+  <div class="grid-2">
+    <div class="feat">
+      <div class="tab"><span class="ico"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg></span><h3>ホーム（期限と次の一歩）</h3></div>
+      <p>亡くなった日を入れると、残り日数つきのタイムラインが出る。</p>
+      <ul><li>次の期限までの残り日数を最上部に大きく表示</li><li>各手続きに「済」チェック（端末内保存）</li><li>今の時期に読むべき記事を2本だけ提示</li></ul>
+    </div>
+    <div class="feat">
+      <div class="tab"><span class="ico"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/><path d="M4 19V5"/></svg></span><h3>まなぶ（相続の基本知識）</h3></div>
+      <p>初版は20本前後。1本3分で読める長さ、図を1枚つける。</p>
+      <ul><li>相続の流れ／法定相続分／遺産分割協議</li><li>相続登記の義務化／空き家特例／取得費加算</li><li>売る・貸す・持つ・手放す（相続土地国庫帰属制度）の比較</li><li>記事はアプリに同梱（オフラインで読める）</li></ul>
+    </div>
+    <div class="feat">
+      <div class="tab"><span class="ico"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M8 15h2M12 15h2M16 11v4"/></svg></span><h3>はかる（売却シミュレーション）</h3></div>
+      <p>1画面1問で入力し、手取りを幅で表示。結果は端末内に複数保存できる。</p>
+      <ul><li>売却した場合の手取り（仲介手数料・諸費用・譲渡所得税）</li><li>空き家特例の要件チェックと、適用あり／なしの比較</li><li>持ち続けた場合の10年間の費用</li><li>相続人の人数で割った1人あたりの目安</li></ul>
+    </div>
+    <div class="feat">
+      <div class="tab"><span class="ico"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></span><h3>そうだん（宅建士への相談）</h3></div>
+      <p>匿名OK・メール必須。送信したらアプリには残さない。</p>
+      <ul><li>お名前は本名でもニックネームでも可</li><li>シミュレーション結果を添付するかは本人が選ぶ</li><li>送信先の会社名・宅建業免許番号・紹介料の有無を明示</li><li>送信成功を画面で確認。失敗時はメールアプリで送る代替手段</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 5 画面案 ================= -->
+<section id="screens">
+  <h2 class="sec"><span class="no">5</span>主要画面のラフ</h2>
+  <p class="sec-note">藍を唯一のアクセントにして、期限と注意だけを朱で示します。遺族が使うアプリなので、明るすぎる色、祝祭的な演出、急かす言葉は使いません。文字は本文16px相当以上、タップ領域は44px以上を基準にします。</p>
+
+  <div class="board">
+    <!-- S1 ホーム -->
+    <div class="slot">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="body">
+          <p class="ttl">ホーム</p>
+          <div class="card ai">
+            <div class="lab">次の期限　空き家特例の売却期限</div>
+            <div class="big num">あと 461<small>日</small></div>
+            <div style="font-size:10.5px;opacity:.85">2027年12月31日まで</div>
+          </div>
+          <div class="card">
+            <div class="lab" style="margin-bottom:2px">手続きの進み具合</div>
+            <div class="dl"><span class="d done">済</span><span class="t">相続放棄の判断（3か月）</span></div>
+            <div class="dl"><span class="d done">済</span><span class="t">相続税の申告（10か月）</span></div>
+            <div class="dl"><span class="d shu">あと108日</span><span class="t">相続登記の申請</span></div>
+            <div class="dl"><span class="d">あと461日</span><span class="t">空き家特例の売却期限</span></div>
+          </div>
+          <div class="card">
+            <div class="lab">今の時期に読む</div>
+            <div style="font-size:11.5px;font-weight:700;margin-top:2px">空き家特例が使える家・使えない家</div>
+            <div class="note">3分で読めます</div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>ホーム</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/></svg>まなぶ</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/></svg>はかる</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H8l-4 4z"/></svg>そうだん</div>
+        </div>
+      </div></div>
+      <div class="cap"><div class="no">S1</div><h3>ホーム：期限タイムライン</h3><p>最も知りたい「次の期限まで何日か」を最上部に最大サイズで置く。手続きは「済」にでき、進み具合が見える。</p><p class="why"><b>根拠</b> おくやみコーナー型の「自分に関係するものだけ」</p></div>
+    </div>
+
+    <!-- S2 まなぶ -->
+    <div class="slot">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="body">
+          <p class="ttl">まなぶ</p>
+          <div class="seg"><span class="on">いまの時期</span><span>すべて</span></div>
+          <div class="card" style="padding:4px 12px">
+            <div class="art"><span class="n">1</span><div class="x">相続登記の義務化、何をすればいい？<span>期限あり・3分</span></div></div>
+            <div class="art"><span class="n">2</span><div class="x">空き家特例が使える家・使えない家<span>節税・4分</span></div></div>
+            <div class="art"><span class="n">3</span><div class="x">売る・貸す・持つ・手放すの比較<span>判断・5分</span></div></div>
+            <div class="art"><span class="n">4</span><div class="x">兄弟で共有した家を売るときの流れ<span>共有・4分</span></div></div>
+            <div class="art"><span class="n">5</span><div class="x">取得費がわからないときの考え方<span>税金・3分</span></div></div>
+          </div>
+          <div class="note">記事は一般的な情報です。個別の税額や法的判断は、税理士・司法書士・弁護士にご確認ください。</div>
+        </div>
+        <div class="tabbar">
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>ホーム</div>
+          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/></svg>まなぶ</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/></svg>はかる</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H8l-4 4z"/></svg>そうだん</div>
+        </div>
+      </div></div>
+      <div class="cap"><div class="no">S2</div><h3>まなぶ：時期で絞った記事</h3><p>既定は「いまの時期」。全記事は切り替えで見られる。記事末尾に関連するシミュレーションへの導線を置く。</p><p class="why"><b>根拠</b> 税理士法・弁護士法に触れない一般情報に限定</p></div>
+    </div>
+
+    <!-- S3 はかる 結果 -->
+    <div class="slot">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="body">
+          <p class="ttl">試算結果</p>
+          <div class="card">
+            <div class="lab">売却した場合の手取り（空き家特例あり）</div>
+            <div class="big num">1,897<small>万円</small></div>
+            <div class="note num">幅 1,708万〜2,087万円（売却価格±10%）</div>
+          </div>
+          <div class="card">
+            <div class="bar" aria-hidden="true"><i style="width:94.9%;background:var(--ai)"></i><i style="width:3.6%;background:var(--ai-line)"></i><i style="width:1.5%;background:var(--faint)"></i></div>
+            <div class="row" style="margin-top:6px"><span>売却価格</span><span class="v num">2,000万円</span></div>
+            <div class="row"><span>仲介手数料（上限）</span><span class="v num">−72.6万円</span></div>
+            <div class="row"><span>測量・印紙など</span><span class="v num">−30万円</span></div>
+            <div class="row"><span>譲渡所得税</span><span class="v num">0円</span></div>
+          </div>
+          <div class="card" style="border-color:var(--shu);background:var(--shu-soft)">
+            <div class="row"><span style="font-weight:700;color:var(--shu)">特例なしの場合</span><span class="v num" style="color:var(--shu)">1,532万円</span></div>
+            <div class="note">差は約365万円。要件を満たすか、宅建士と確認できます。</div>
+          </div>
+          <div class="btn">この結果を添えて相談する</div>
+          <div class="note">端末に保存しました（アプリ外には送信されません）</div>
+        </div>
+      </div></div>
+      <div class="cap"><div class="no">S3</div><h3>はかる：結果</h3><p>手取りを最大の数字で、内訳は下に。特例の有無の差を並べて見せ、「確認したい」気持ちを相談ボタンにつなぐ。</p><p class="why"><b>根拠</b> Zillow Offersの教訓で価格は幅表示／国税庁の判定コーナー型の段階入力</p></div>
+    </div>
+
+    <!-- S4 そうだん フォーム -->
+    <div class="slot">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="body" style="gap:7px">
+          <p class="ttl">宅建士にそうだん</p>
+          <div class="note" style="background:var(--ai-soft);border-radius:8px;padding:6px 8px;color:var(--ink)">送信先：提携先 ○○不動産（宅建業免許 静岡県知事(1)第00000号）1社のみ。<b>電話はかかってきません。</b>成約時、運営者は紹介料を受け取ります（ご負担は増えません）。</div>
+          <div class="field"><span class="fl">お名前 <span class="opt">ニックネーム可</span></span><div class="inp">さとう</div></div>
+          <div class="field"><span class="fl">メールアドレス <span class="req">必須</span></span><div class="inp">sato.example@mail.jp</div></div>
+          <div class="field"><span class="fl">物件の場所 <span class="opt">市区町村まで</span></span><div class="inp">静岡県 静岡市葵区</div></div>
+          <div class="field"><span class="fl">ご相談の内容 <span class="req">必須</span></span>
+            <div class="chips"><span class="chip on">売るか迷っている</span><span class="chip on">価格を知りたい</span><span class="chip">特例を使えるか</span></div>
+            <div class="inp area">母が住んでいた実家（築45年・木造）です。弟と2人で相続しました。</div></div>
+          <div class="chk"><i></i><span>試算結果（手取り1,897万円）を添付する</span></div>
+          <div class="chk"><i></i><span>入力内容を上記の提携先に送信することに同意します</span></div>
+          <div class="btn">送信する</div>
+        </div>
+      </div></div>
+      <div class="cap"><div class="no">S4</div><h3>そうだん：フォーム</h3><p>必須はメールと相談内容の2つだけ。お金の流れ、送信先の会社と免許番号、電話が来ないことを入力欄より先に示す。</p><p class="why"><b>根拠</b> 一括査定の電話ラッシュ／ステマ規制／個人情報保護法の第三者提供の同意</p></div>
+    </div>
+
+    <!-- S5 送信完了 -->
+    <div class="slot">
+      <div class="phone"><div class="scr">
+        <div class="sb"><span>9:41</span><span>●●●</span></div>
+        <div class="body" style="text-align:center">
+          <div class="done-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></div>
+          <p class="ttl" style="font-size:16px">送信しました</p>
+          <p style="margin:0;font-size:11.5px;color:var(--muted)">○○不動産から、<b style="color:var(--ink)">sato.example@mail.jp</b> あてに、通常2営業日以内にメールで返信があります。</p>
+          <div class="card" style="text-align:left">
+            <div class="lab">このアプリに残るもの</div>
+            <div style="font-size:11px">ありません。送信した内容はアプリにも運営者のサーバーにも保存されません。</div>
+          </div>
+          <div class="card" style="text-align:left">
+            <div class="lab">返信が来ないとき</div>
+            <div style="font-size:11px">迷惑メールフォルダをご確認ください。3営業日たっても届かない場合は、下のボタンからメールアプリで送り直せます。</div>
+          </div>
+          <div class="btn ghost">メールアプリで送り直す</div>
+        </div>
+      </div></div>
+      <div class="cap"><div class="no">S5</div><h3>送信完了</h3><p>次に何が起きるか（誰から・どこへ・いつ）を具体的に書く。「何も残らない」ことも言葉で伝える。</p><p class="why"><b>根拠</b> COCOAの教訓で送信結果を明示し、代替経路を用意</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 6 シミュレーション仕様 ================= -->
+<section id="sim">
+  <h2 class="sec"><span class="no">6</span>売却シミュレーションの計算仕様</h2>
+  <p class="sec-note">計算はすべて端末内で行います。国の制度に沿った一般的な概算で、個別の税額を確定するものではない旨を結果画面に必ず表示します。</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th style="width:26%">項目</th><th>計算方法</th><th style="width:18%">例（2,000万円で売却）</th></tr></thead>
+      <tbody>
+        <tr><td><b>売却価格</b></td><td>ユーザー入力。わからない場合は近隣の成約事例を調べる方法を案内。結果は±10%の幅でも表示</td><td class="n">2,000万円</td></tr>
+        <tr><td><b>仲介手数料（上限）</b></td><td>400万円超：（価格×3%＋6万円）×1.1。800万円以下の空き家等は特例で上限33万円（2024年7月改正）</td><td class="n">72.6万円</td></tr>
+        <tr><td><b>その他の費用</b></td><td>印紙税・測量・残置物処分・解体など。既定値を置き、ユーザーが上書き</td><td class="n">30万円</td></tr>
+        <tr><td><b>取得費</b></td><td>親が買ったときの価格。不明なら売却価格の5%（概算取得費）。相続税を払った場合は取得費加算の特例を案内</td><td class="n">100万円</td></tr>
+        <tr><td><b>譲渡所得</b></td><td>売却価格 −（取得費＋譲渡費用）− 特別控除</td><td class="n">1,797.4万円</td></tr>
+        <tr><td><b>特別控除</b></td><td>空き家特例の要件チェック（昭和56年5月31日以前の建築、相続直前に亡くなった人が一人暮らし、売却価格1億円以下、期限内 等）を満たせば最大3,000万円。相続人3人以上は1人2,000万円</td><td class="n">最大3,000万円</td></tr>
+        <tr><td><b>税率</b></td><td>所有期間は亡くなった人の取得日を引き継ぐ。売った年の1月1日時点で5年超なら20.315%、5年以下なら39.63%</td><td class="n">20.315%</td></tr>
+        <tr><td><b>手取り</b></td><td>売却価格 − 仲介手数料 − その他費用 − 譲渡所得税</td><td class="n">特例あり 1,897万円<br>特例なし 1,532万円</td></tr>
+        <tr><td><b>持ち続けた場合</b></td><td>固定資産税・都市計画税、火災保険、管理（草刈り・通風）、帰省交通費を年額で入力し10年分を表示。管理不全空家に勧告されると住宅用地特例が外れ、土地の税が上がる可能性も記事で説明</td><td class="n">年額×10年</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid-2" style="margin-top:var(--s4)">
+    <div class="callout"><p><b>結果の保存先は端末内だけ</b></p><p>Capacitor Preferences（Web版は localStorage）に保存。複数件を名前つきで保存・比較・削除できる。機種変更に備え、JSONで書き出す機能を用意（既存アプリ「ともしび」と同じ方式）。</p></div>
+    <div class="callout warn"><p><b>計算で扱わないもの</b></p><p>相続税額の個別計算、遺産分割の配分の提案、特例の適否の断定。これらは税理士・弁護士の業務範囲にかかるため、アプリは「要件の一般的な説明」と「専門家への確認を促す」に留める。</p></div>
+  </div>
+</section>
+
+<!-- ================= 7 相談フォーム ================= -->
+<section id="form">
+  <h2 class="sec"><span class="no">7</span>相談フォームの項目</h2>
+  <p class="sec-note">入力項目は少ないほど送信率が上がります。宅建士が最初の返信を書くのに必要な最小限だけを聞き、電話番号と住所の番地は聞きません。</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th style="width:22%">項目</th><th style="width:12%">必須</th><th>内容・理由</th></tr></thead>
+      <tbody>
+        <tr><td><b>お名前</b></td><td>任意</td><td>本名でもニックネームでも可。空欄なら「匿名」として送る</td></tr>
+        <tr><td><b>メールアドレス</b></td><td><span class="pill shu">必須</span></td><td>返信先。形式チェックと、確認用の再入力なしで打ち間違いを防ぐため送信前の確認画面で大きく表示</td></tr>
+        <tr><td><b>物件の場所</b></td><td>任意</td><td>都道府県・市区町村まで。提携先の対応エリア外なら、送信前にその旨を表示</td></tr>
+        <tr><td><b>物件の種類</b></td><td>任意</td><td>戸建て／土地／マンション／その他</td></tr>
+        <tr><td><b>相談の内容</b></td><td><span class="pill shu">必須</span></td><td>よくある相談をチップで選べる（売るか迷っている、価格を知りたい、特例を使えるか、共有者と話がまとまらない、遠方で管理できない）＋自由記述（1,000字まで）</td></tr>
+        <tr><td><b>試算結果の添付</b></td><td>任意</td><td>保存済みの試算から1件選んで本文に添える。既定はオフ</td></tr>
+        <tr><td><b>送信への同意</b></td><td><span class="pill shu">必須</span></td><td>送信先の会社名・免許番号・紹介料の有無・運営者が内容を保存しないことを示した上での同意（個人情報保護法の第三者提供）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small" style="margin-top:var(--s3)">「匿名」は本名を出さなくてよいという意味です。返信にメールアドレスが必要なため、完全な匿名ではないことをフォーム内で正直に書きます。気になる人向けに「相談用のメールアドレスを別に作る方法」の記事を用意します。</p>
+</section>
+
+<!-- ================= 8 技術構成 ================= -->
+<section id="tech">
+  <h2 class="sec"><span class="no">8</span>技術構成：メールサーバーなしで送れるか</h2>
+  <p class="sec-note"><b>結論：自前のメールサーバーは不要です。</b>ただし、アプリ単体からメールを直接送ることはできません（送信用の認証情報をアプリに入れると抜き取られるため）。そこで「保存せずに転送するだけ」の無料の中継を1つ置きます。第一候補は Google Apps Script（GAS）です。</p>
+
+  <div class="arch">
+    <div class="box dev">
+      <h4>スマホアプリ（端末内）</h4>
+      <ul><li>記事・計算ロジック（同梱）</li><li>試算結果・期限・チェック（端末内保存）</li><li>相談フォーム（送信後に入力内容を消去）</li></ul>
+    </div>
+    <div class="pipe"><span class="ln">→</span>HTTPSで<br>フォーム内容のみ</div>
+    <div class="box">
+      <h4>中継：Google Apps Script</h4>
+      <ul><li>受け取ったらすぐメール送信</li><li>シートやDBに書かない＝保存しない</li><li>宛先はスクリプト側に置き、アプリに含めない</li></ul>
+    </div>
+    <div class="pipe"><span class="ln">→</span>Gmail経由で<br>送信</div>
+    <div class="box">
+      <h4>提携宅建業者の受信箱</h4>
+      <ul><li>返信の宛先（Reply-To）はユーザーのメール</li><li>「返信」を押すだけでユーザーに届く</li></ul>
+    </div>
+  </div>
+  <div class="keep"><span class="pill ok">アプリ運営側に残るもの：なし</span><span class="pill">送信元Googleアカウントの送信済みフォルダに控えが残るため、自動削除の設定を入れる</span><span class="pill">宅建業者の受信箱には残る（プライバシーポリシーに明記）</span></div>
+
+  <h3 class="sub">送信方式の比較</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th style="width:20%">方式</th><th>費用・上限</th><th>保存</th><th>宛先を隠せるか</th><th>確実さ</th><th style="width:16%">判定</th></tr></thead>
+      <tbody>
+        <tr class="pick"><td><b>Google Apps Script</b><br><span class="small">運営者のGoogleアカウントで動かす</span></td><td>無料。個人のGmailアカウントで1日100通まで（Google Workspaceなら1,500）</td><td><span class="mk o">保存しない設計にできる</span></td><td><span class="mk o">○</span></td><td>高い。送信成否をアプリに返せる</td><td><span class="pill ai">第一候補（MVP）</span></td></tr>
+        <tr><td><b>Cloudflare Workers＋メール送信API</b><br><span class="small">Resend など</span></td><td>無料枠あり。独自ドメインが必要</td><td><span class="mk o">保存しない</span></td><td><span class="mk o">○</span></td><td>最も高い。ボット対策（Turnstile）を組み込みやすい</td><td><span class="pill">相談が増えたら移行</span></td></tr>
+        <tr><td><b>フォーム送信サービス</b><br><span class="small">Web3Forms、Formspree など</span></td><td>無料枠あり（Web3Formsは月250件）</td><td><span class="mk x">サービス側に一定期間保存される</span>（Web3Forms無料版は30日）</td><td><span class="mk o">○</span></td><td>高い</td><td><span class="pill">「保存しない」方針と合わない</span></td></tr>
+        <tr><td><b>mailto:（メールアプリを開く）</b></td><td>無料・上限なし</td><td><span class="mk t">本人の送信済みに残る</span></td><td><span class="mk x">×宛先が見える</span></td><td>低い。本人が送信ボタンを押さないと届かない</td><td><span class="pill">失敗時の代替手段</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="sub">GAS側の処理イメージ</h3>
+  <div class="grid-2">
+    <pre class="code">// 受け取ったらメールを送るだけ。どこにも書き込まない。
+function doPost(e) {
+  const d = JSON.parse(e.postData.contents);
+  if (d.website) return ok_();            // ボット用の見えない欄
+  if (!/^[^@\s]+@[^@\s]+$/.test(d.email)) return ng_('email');
+  if (overLimit_()) return ng_('busy');   // 1時間あたりの上限
+  const to = PropertiesService.getScriptProperties()
+               .getProperty('TO');        // 宛先はアプリに含めない
+  MailApp.sendEmail({
+    to, replyTo: d.email,
+    subject: '【つぐいえ相談】' + (d.area || 'エリア未記入'),
+    body: format_(d)                      // 本文を組み立てる
+  });
+  return ok_();
+}</pre>
+    <div class="panel small" style="color:var(--ink)">
+      <p style="margin:0 0 var(--s2)"><b>実装上の注意</b></p>
+      <ul class="plain">
+        <li><b>ユーザーのメールアドレスに自動返信しない。</b>誰でも任意のアドレスへメールを送れる踏み台になるため。控えは送信前の確認画面で見せる</li>
+        <li>アプリからは <code>Content-Type: text/plain</code> でPOSTし、ブラウザの事前確認（CORS preflight）を避ける</li>
+        <li>ボット対策は、見えない入力欄・1時間あたりの送信上限・文字数上限の3つ。相談が増えたらCloudflare Turnstileを追加</li>
+        <li>GASのURLはアプリに含まれるため秘密ではない前提で設計する（悪用されても宛先1つにしか届かず、上限で止まる）</li>
+        <li>運営者は週1回テスト送信し、届かなければすぐ気づけるようにする</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="sub">アプリ本体</h3>
+  <p style="margin:0;max-width:72ch">このリポジトリの「ともしび」と同じく、依存ライブラリなしの HTML/CSS/JS を Capacitor で iOS／Android アプリにします。ビルドと TestFlight 配信は既存の Codemagic 設定にワークフローを1つ足すだけで済みます。同じコードをPWAとしてWebでも公開でき、検索からの流入口にもなります。アプリ内に解析ツール（行動トラッキング）は入れません。</p>
+</section>
+
+<!-- ================= 9 法務 ================= -->
+<section id="law">
+  <h2 class="sec"><span class="no">9</span>法務・コンプライアンスの整理</h2>
+  <p class="sec-note">紹介料モデルと相続の情報提供は、複数の法律の境界にあります。リリース前に、提携先の宅建業者と、できれば弁護士に下記を確認してもらう前提です。</p>
+  <div class="law">
+    <div><div class="k"><b>宅地建物取引業法</b><span>紹介料の受け取り</span></div><div class="v">運営者は宅建業の免許がないため、<span class="do">「紹介」に徹する</span>。物件の説明、価格や条件の交渉、契約の調整には<span class="dont">一切関与しない</span>。この条件なら反復継続した顧客紹介でも宅建業に当たらないとの政府見解がある（経済産業省・国土交通省、グレーゾーン解消制度）。提携先と<b>顧客紹介契約書</b>を結び、紹介料の条件と、ユーザーの負担を増やさないことを明記する。</div></div>
+    <div><div class="k"><b>税理士法</b><span>税の相談</span></div><div class="v">税理士でない者は、無償でも個別の税務相談を業として行えない。アプリは<span class="do">一般的な制度説明と概算ツール</span>に留め、「あなたの場合は○○円」と断定する表現や、個別の質問への回答は<span class="dont">しない</span>。</div></div>
+    <div><div class="k"><b>弁護士法72条</b><span>法律相談</span></div><div class="v">遺産分割の交渉や、共有者間の争いへの助言は弁護士の業務。記事は一般論に留め、争いがある場合は弁護士・法テラスを案内する。宅建士への相談も「不動産の売却」に関する範囲とする。</div></div>
+    <div><div class="k"><b>個人情報保護法</b><span>第三者提供</span></div><div class="v">相談内容を提携先に渡すことは第三者提供にあたるため、送信前に<span class="do">送信先を明示した上で同意</span>を取る。プライバシーポリシーで、運営者が保存しないこと、提携先の受信箱には残ること、提携先の利用目的を説明する。</div></div>
+    <div><div class="k"><b>景品表示法</b><span>ステマ規制</span></div><div class="v">運営者が紹介料を受け取ることを、フォームの手前とアプリ説明文に明記する。記事の中で提携先を宣伝しない。</div></div>
+    <div><div class="k"><b>App Store／Google Play</b><span>プライバシー表示</span></div><div class="v">送信した内容が提携先の受信箱に残る以上、Appleの定義では「収集」に当たる。「連絡先情報（名前・メール）」「ユーザーコンテンツ」を、アプリ機能の目的・トラッキングなしとして申告する。プライバシーポリシーのURLを用意する（ともしびと同じ構成）。</div></div>
+  </div>
+</section>
+
+<!-- ================= 10 収益 ================= -->
+<section id="money">
+  <h2 class="sec"><span class="no">10</span>収益の見立て（仮置き）</h2>
+  <p class="sec-note">以下の数字はすべて仮定です。紹介料率は提携先との交渉で決まります。検証すべきは「相談から成約までの割合」で、ここは提携先の実績値を聞いて置き換えます。</p>
+  <div class="grid-2">
+    <div class="panel">
+      <h3 class="sub" style="margin-top:0">1件あたりの紹介料（紹介料率を仲介手数料の25%と仮定）</h3>
+      <div class="tbl-wrap" style="border:0">
+        <table style="min-width:0">
+          <thead><tr><th>売却価格</th><th style="text-align:right">仲介手数料（上限）</th><th style="text-align:right">紹介料</th></tr></thead>
+          <tbody>
+            <tr><td class="num">800万円（低廉な空家等の特例）</td><td class="n">33万円</td><td class="n">約8万円</td></tr>
+            <tr><td class="num">2,000万円</td><td class="n">72.6万円</td><td class="n">約18万円</td></tr>
+            <tr><td class="num">3,000万円</td><td class="n">105.6万円</td><td class="n">約26万円</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <h3 class="sub" style="margin-top:0">年間の目安（ダウンロード1,000件あたり）</h3>
+      <div class="tbl-wrap" style="border:0">
+        <table style="min-width:0">
+          <tbody>
+            <tr><td>相談の送信（DLの3%）</td><td class="n">30件</td></tr>
+            <tr><td>媒介契約（相談の30%）</td><td class="n">9件</td></tr>
+            <tr><td>成約（媒介の70%）</td><td class="n">6件</td></tr>
+            <tr><td><b>紹介料（1件18万円）</b></td><td class="n"><b>約108万円</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small" style="margin:var(--s2) 0 0">運営費は、Apple Developer Program 年12,980円（税込・2026年時点の目安）と、Google Play 登録料 25ドル（初回のみ）が主。中継は無料枠内。</p>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:var(--s4)"><p><b>計測の方針</b></p><p>アプリ内に行動トラッキングを入れない代わりに、ストアの統計（ダウンロード数）と、提携先が受け取った相談メールの件数・その後の結果を月1回共有してもらう形で計測します。紹介料の精算にも同じ記録を使うため、相談メールの件名に通し番号を入れます。</p></div>
+</section>
+
+<!-- ================= 11 ロードマップ ================= -->
+<section id="road">
+  <h2 class="sec"><span class="no">11</span>進め方</h2>
+  <div class="road">
+    <div class="phase"><div class="ph">PHASE 0</div><h3>合意と準備</h3><ul><li>提携先と顧客紹介契約（紹介料率・精算方法・対応エリア・返信の目安）</li><li>宛先メールと送信用Googleアカウントを用意</li><li>アプリ名と運営者名義を決める</li></ul><div class="dur">目安 2週間</div></div>
+    <div class="phase"><div class="ph">PHASE 1</div><h3>MVPを作る</h3><ul><li>期限タイムライン・記事20本・シミュレーション・相談フォーム</li><li>GAS中継と送信テスト</li><li>記事と計算の専門家チェック（税理士・司法書士）</li></ul><div class="dur">目安 6週間</div></div>
+    <div class="phase"><div class="ph">PHASE 2</div><h3>公開</h3><ul><li>PWAを先に公開し、提携先の既存顧客に試してもらう</li><li>iOS／Androidをストア申請</li><li>プライバシーポリシー・利用規約を公開</li></ul><div class="dur">目安 3〜4週間</div></div>
+    <div class="phase"><div class="ph">PHASE 3</div><h3>育てる</h3><ul><li>国土交通省「不動産情報ライブラリ」の取引価格データで相場の幅を表示（中継経由）</li><li>Cloudflare Workers＋Turnstileへ移行</li><li>毎年の税制改正に合わせて記事と計算を更新</li></ul><div class="dur">公開後 随時</div></div>
+  </div>
+</section>
+
+<!-- ================= 12 決めること ================= -->
+<section id="next">
+  <h2 class="sec"><span class="no">12</span>次に決めていただきたいこと</h2>
+  <div class="qs">
+    <div class="q"><b>提携先の対応エリアと、返信までの目安日数</b><span>フォームの「対応エリア外」表示と、送信完了画面の「通常○営業日以内」に使います。</span></div>
+    <div class="q"><b>紹介料の率と精算方法</b><span>成約の確認方法（相談番号の照合）と支払いのタイミングを契約書に入れます。</span></div>
+    <div class="q"><b>アプリ名</b><span>仮称「つぐいえ」（家を継ぐ）。ほかの案：「相続のいえ手帖」「実家のこれから」。ストアで検索される「相続」「空き家」を名前か副題に入れるのが有利です。</span></div>
+    <div class="q"><b>運営者の名義（個人／法人）</b><span>ストアの販売者名、プライバシーポリシー、紹介契約の当事者になります。</span></div>
+    <div class="q"><b>記事の監修者</b><span>税理士・司法書士の監修表記があると信頼が大きく上がります。提携先のつながりで依頼できるか確認します。</span></div>
+  </div>
+</section>
+
+<footer>
+  <p style="margin:0">つぐいえ 企画・構想書 v0.1（2026年9月26日）。税制・法制度は執筆時点の情報に基づきます。リリース前に専門家の確認を受けてください。</p>
+</footer>
+
+</div>
+</body>
+</html>
