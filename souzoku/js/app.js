@@ -259,7 +259,8 @@
     var wrap = document.createElement('div');
     wrap.className = 'sheet-wrap';
     wrap.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">' +
-      '<span class="grabber" aria-hidden="true"></span>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center"><span style="width:88px"></span><span class="grabber" aria-hidden="true"></span>' +
+        '<button class="text-btn" data-undo="' + id + '" style="color:var(--faint);width:88px;text-align:right;font-size:14px">取り消す</button></div>' +
       '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">' + buddy(84, 'happy') +
         '<h2 id="sheet-title" class="title" style="font-size:24px">' + (next ? 'ひとつ進みました' : 'ぜんぶ済みました') + '</h2>' +
         '<p class="lead">' + (next ? 'おつかれさまでした。' : '本当におつかれさまでした。') + '</p></div>' +
@@ -272,8 +273,7 @@
             chipFor(next, next.id) + '</div></div>' +
           '<a class="btn" href="#/task/' + next.id + '" data-close>次のやることを見る</a>'
         : '<a class="btn" href="#/sim" data-close>家を売った場合の手取りをはかる</a>') +
-      '<div style="display:flex;justify-content:space-between"><a class="text-btn" href="#/home" data-close style="display:inline-flex;align-items:center;text-decoration:none">ホームにもどる</a>' +
-        '<button class="text-btn" data-undo="' + id + '" style="color:var(--faint)">「済」を取り消す</button></div>' +
+      '<a class="text-link" href="#/home" data-close>ホームにもどる</a>' +
       '</div>';
     document.body.appendChild(wrap);
     var btn = wrap.querySelector('.btn'); if (btn) btn.focus();
@@ -610,9 +610,9 @@
       '<h1 class="title">' + step.q + '</h1>' +
       body +
       (simErr ? '<p class="err" role="alert">' + h(simErr) + '</p>' : '') +
-      '<div class="btn-col" style="margin-top:8px">' +
-        '<button class="btn" data-act="sim-next"' + (step.id === 'market' && draft.marketState === 'loading' ? ' disabled' : '') + '>' + (last ? '結果を見る' : '次へ') + '</button>' +
-        (simStep > 0 ? '<button class="btn ghost" data-act="sim-back">もどる</button>' : '') +
+      '<div class="btn-pair' + (simStep > 0 ? '' : ' single') + '">' +
+        (simStep > 0 ? '<button class="btn ghost" data-act="sim-back">‹ もどる</button>' : '') +
+        '<button class="btn" data-act="sim-next"' + (step.id === 'market' && draft.marketState === 'loading' ? ' disabled' : '') + '>' + (last ? '結果を見る' : '次へ ›') + '</button>' +
       '</div>';
   }
   function simValidate() {
@@ -726,9 +726,9 @@
     html += '<div class="btn-col"><button class="btn" data-act="consult-with" data-id="' + h(e.id) + '">この結果を添えて専門家に聞く</button>' +
       '<button class="btn ghost" data-act="sim-again" data-id="' + h(e.id) + '">条件を変えてもう一度</button></div>' +
       '<p class="note">' + DISCLAIMER + '</p>' +
-      (confirmDelEst
-        ? '<div class="btn-col"><button class="btn danger" data-act="del-est-yes" data-id="' + h(e.id) + '">本当に削除する</button><button class="btn ghost" data-act="del-est-no">やめる</button></div>'
-        : '<button class="btn danger" data-act="del-est">この試算を削除</button>');
+      '<div class="minor-zone">' + (confirmDelEst
+        ? '<span class="note" style="color:var(--ink)">この試算を削除しますか？</span><div class="minor-row"><button class="text-btn" data-act="del-est-no">やめる</button><button class="text-btn danger-text" data-act="del-est-yes" data-id="' + h(e.id) + '">削除する</button></div>'
+        : '<button class="text-btn danger-text" data-act="del-est">この試算を削除</button>') + '</div>';
     return html;
   }
   function estimateSummary(e) {
@@ -865,8 +865,8 @@
       '<div class="btn-col">' +
         '<button class="btn" id="send-btn" data-act="send"' + (cs.agree && !cs.sending ? '' : ' disabled') + '>' + (cs.sending ? '送信中…' : CFG.endpoint ? 'この内容で送信する' : 'メールアプリで送信する') + '</button>' +
         (CFG.endpoint ? '' : '<p class="note center">メールアプリが開きます。宛先と本文は入力済みです。</p>') +
-        '<a class="btn ghost" href="#/consult/form">入力にもどって直す</a>' +
-      '</div>';
+      '</div>' +
+      '<a class="text-link" href="#/consult/form">‹ 入力にもどって直す</a>';
   }
 
   function makeRef() {
@@ -1018,7 +1018,7 @@
       top = '<nav class="topnav" aria-label="画面の移動"><span></span>' + home + '</nav>';
     }
     var bottom = /class="btn[^"]*" href="#\/home"/.test(rest) ? '' :
-      '<a class="btn ghost home-bottom" href="#/home">' + HOME_ICON + 'ホームにもどる</a>';
+      '<div class="page-foot"><a class="foot-home" href="#/home">' + HOME_ICON + 'ホームにもどる</a></div>';
     var dockAt = rest.indexOf('<div class="dock">');   // やることの詳細：「済にする」の帯の手前に置く
     if (dockAt >= 0) return top + rest.slice(0, dockAt) + bottom + rest.slice(dockAt);
     return top + rest + bottom;
