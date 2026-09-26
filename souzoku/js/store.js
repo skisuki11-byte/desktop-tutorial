@@ -23,7 +23,10 @@
     }
     if (Array.isArray(v.estimates)) {
       b.estimates = v.estimates.filter(function (e) {
-        return e && typeof e === 'object' && typeof e.id === 'string' && e.input && typeof e.input === 'object';
+        return e && typeof e === 'object' && typeof e.id === 'string' && /^[a-z0-9]{1,40}$/.test(e.id) &&
+          typeof e.name === 'string' && e.input && typeof e.input === 'object' &&
+          typeof e.input.price === 'number' && isFinite(e.input.price) && e.input.price > 0 &&
+          ['house', 'land', 'condo'].indexOf(e.input.kind) >= 0 && (e.input.heirs | 0) >= 1;
       });
     }
     return b;

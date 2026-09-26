@@ -118,7 +118,7 @@
     }).join('') + '</div>';
   }
 
-  var DISCLAIMER = '概算です。実際の税額や手取りは、取得費・特例の要件・売る時期などで変わります。この試算は端末にだけ保存しています。';
+  var DISCLAIMER = '概算です。この試算は端末にだけ保存しています。';
   var KIND = { house: '戸建て', land: '土地だけ', condo: 'マンション' };
 
   /* ======================================================
@@ -150,9 +150,9 @@
     var st = S.get();
     if (!st.deathISO) {
       return '' +
-        say('はじめまして、いえまるです。相続の手続きを、ひとつずつ案内するよ', 64) +
-        '<h1 class="title">まずは、亡くなった日を教えてください</h1>' +
-        '<p class="lead">これからの手続きの期限と、残りの日数を出します。日付はこの端末の中にだけ保存されます。</p>' +
+        say('いえまるです。手続きを、ひとつずつ案内するよ', 64) +
+        '<h1 class="title">亡くなった日を教えてください</h1>' +
+        '<p class="lead">期限と残り日数を出します。日付はこの端末にだけ保存します。</p>' +
         '<div class="card"><div class="field">' +
           '<label for="death">亡くなった日</label>' +
           '<input id="death" class="input" type="date" max="' + DL.todayISO() + '">' +
@@ -166,8 +166,8 @@
     var doneCount = s.items.filter(function (i) { return i.done; }).length, total = s.items.length;
     var nextId = s.next ? s.next.id : '';
     var hero = '<div class="hero">' +
-      '<div style="display:flex;justify-content:space-between;align-items:baseline"><span class="strong" style="font-size:14px;opacity:.92">やることの進み具合</span>' +
-      '<span class="round num" style="font-size:22px;font-weight:900">' + doneCount + '<span style="font-size:14px;font-weight:700;opacity:.85"> / ' + total + ' 済み</span></span></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline"><span class="strong" style="font-size:16px;opacity:.92">やることの進み具合</span>' +
+      '<span class="round num" style="font-size:22px;font-weight:900">' + doneCount + '<span style="font-size:16px;font-weight:700;opacity:.85"> / ' + total + ' 済み</span></span></div>' +
       '<div class="meter" aria-hidden="true"><i style="width:' + Math.round(doneCount / total * 100) + '%"></i></div>' +
       '<hr>' +
       (s.next
@@ -219,7 +219,7 @@
     var help = '';
     if (t.help && t.help.to === 'consult') {
       help = '<div class="help"><div style="display:flex;align-items:center;gap:10px">' + trio() + '<b style="font-size:15px">' + h(t.help.text) + '</b></div>' +
-        '<p>' + h(MADO.name) + 'に聞けば、不動産・弁護士・税理士のうち、ぴったりの専門家がメールで答えます。</p>' +
+        '<p>不動産・弁護士・税理士のうち、ぴったりの専門家が答えます。</p>' +
         '<a class="btn ghost" href="#/consult">' + h(MADO.name) + 'に相談する</a></div>';
     }
     return '' +
@@ -236,16 +236,16 @@
       '<h2 class="sec">やることの流れ</h2><ol class="steps">' + steps + '</ol>' +
       '<h2 class="sec">用意するもの</h2><div class="pills">' + t.bring.map(function (b) { return '<span class="pill">' + h(b) + '</span>'; }).join('') + '</div>' +
       '<div class="card" style="display:flex;gap:12px;align-items:flex-start"><span class="ico-box tone-sky">' + icon('pin') + '</span>' +
-        '<div style="display:flex;flex-direction:column"><span class="card-label">どこで</span><span style="font-size:14.5px;line-height:1.7">' + h(t.where) + '</span></div></div>' +
+        '<div style="display:flex;flex-direction:column"><span class="card-label">どこで</span><span style="font-size:16px;line-height:1.7">' + h(t.where) + '</span></div></div>' +
       '<div class="buddy" style="align-items:flex-start">' + buddy(44) + '<div class="bubble tail-l"><b>いえまるのひとこと</b><br>' + h(t.tip) + '</div></div>' +
       help +
-      '<p class="note">2026年9月時点の制度にもとづく一般的な説明です。制度は改正されることがあります。</p>' +
+      '<p class="note">2026年9月時点の制度です。</p>' +
       '<div class="dock"><div class="dock-in">' +
         (it.done
           ? '<div style="display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;color:var(--mint-ink);min-height:40px"><span class="check-dot" style="width:26px;height:26px">' + icon('check', 16) + '</span>「済」にしました</div>' +
             '<button class="btn ghost" data-act="undone" data-id="' + id + '">「済」を取り消す</button>'
           : '<button class="btn mint" data-act="done" data-id="' + id + '">' + icon('check', 20) + '終わったので「済」にする</button>' +
-            '<span class="note center">しないと決めた・当てはまらない場合も「済」にできます</span>') +
+            '<span class="note center">当てはまらない場合も「済」にできます</span>') +
       '</div></div>';
   }
   function showDoneSheet(id) {
@@ -261,8 +261,8 @@
       '<span class="grabber" aria-hidden="true"></span>' +
       '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">' + buddy(84, 'happy') +
         '<h2 id="sheet-title" class="title" style="font-size:24px">' + (next ? 'ひとつ進みました' : 'ぜんぶ済みました') + '</h2>' +
-        '<p class="lead" style="font-size:14.5px">' + (next ? 'おつかれさまでした。あせらず、次もひとつずつ。' : '長い道のりでしたね。本当におつかれさまでした。') + '</p></div>' +
-      '<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>やることの進み具合</span><span class="num">' + doneCount + ' / ' + total + ' 済み</span></div>' +
+        '<p class="lead">' + (next ? 'おつかれさまでした。' : '本当におつかれさまでした。') + '</p></div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700"><span>やることの進み具合</span><span class="num">' + doneCount + ' / ' + total + ' 済み</span></div>' +
         '<div class="meter light" aria-hidden="true"><i style="width:' + Math.round(doneCount / total * 100) + '%"></i></div></div>' +
       (next
         ? '<div class="next-card"><span class="card-label" style="font-weight:700">次のやること</span><div class="row">' +
@@ -381,9 +381,9 @@
       '<h1 class="title">はかる</h1>' +
       '<div class="result" style="gap:10px">' +
         '<span class="round" style="font-size:24px;font-weight:900;line-height:1.35">売ったら、<br>いくら残る？</span>' +
-        '<span style="font-size:14px;line-height:1.7">6つの質問に答えると、仲介手数料・税金・空き家特例まで入れた手取りと、持ち続けた場合の費用がわかります。</span>' +
+        '<span style="font-size:16px;line-height:1.7">6つの質問で、税金や特例まで入れた手取りがわかります。</span>' +
         '<a class="btn" href="#/sim/new" style="margin-top:6px">試算をはじめる</a></div>' +
-      '<p class="note">計算は端末の中だけで行い、結果もこの端末にだけ保存します。</p>' +
+      '<p class="note">結果はこの端末にだけ保存します。</p>' +
       (list ? '<h2 class="sec">保存した試算</h2><div class="task-list">' + list + '</div>' : '');
   }
 
@@ -434,7 +434,7 @@
         '<div class="quick">' + [500, 1000, 2000, 3000].map(function (v) {
           return '<button type="button" class="chipbtn" data-act="quick" data-v="' + v + '" aria-pressed="' + (String(num(draft.price)) === String(v)) + '">' + comma(v) + '万</button>';
         }).join('') + '</div></div>' +
-        '<div class="notice sun" style="font-size:13.5px">わからなければ、近くの似た家の売れた値段を国土交通省の「不動産情報ライブラリ」で調べられます。正確な値段は不動産会社の査定でわかります。結果は±10%の幅でも出します。</div>';
+        '<div class="notice sun">わからなければ、国土交通省の「不動産情報ライブラリ」で近所の売れた値段を調べられます。</div>';
     } else if (step.id === 'acq') {
       body = '<fieldset><legend class="label">買ったときの値段を知っている？</legend><div class="choices">' +
           '<label class="choice"><input type="radio" name="s-acq" data-bind="acqKnown" value="yes"' + (draft.acqKnown === 'yes' ? ' checked' : '') + '>知っている</label>' +
@@ -445,12 +445,12 @@
         '<div class="field"><label for="s-acqy">買った年（西暦）</label>' +
           '<div class="suffix"><input id="s-acqy" class="input" data-bind="acqYear" inputmode="numeric" maxlength="4" placeholder="1985" value="' + h(draft.acqYear) + '"' + (draft.acqYearUnknown ? ' disabled' : '') + '><span>年</span></div>' +
           '<label class="check"><input type="checkbox" data-bind="acqYearUnknown"' + (draft.acqYearUnknown ? ' checked' : '') + '>わからない（かなり前に買った）</label>' +
-          '<p class="hint">相続した家は、親が買った日を引き継ぎます。売る年の1月1日で5年を超えていれば、税率が低くなります（20.315%）。</p></div>';
+          '<p class="hint">親が買った日から数えて5年を超えると、税金が安くなります。</p></div>';
     } else if (step.id === 'heirs') {
       body = '<div class="quick" role="radiogroup" aria-label="相続した人の数">' + [1, 2, 3, 4, 5, 6].map(function (n) {
           return '<button type="button" class="chipbtn" role="radio" style="min-width:64px;justify-content:center;font-size:16px" data-act="heirs" data-v="' + n + '" aria-checked="' + (String(draft.heirs) === String(n)) + '" aria-pressed="' + (String(draft.heirs) === String(n)) + '">' + n + '人' + (n === 6 ? '以上' : '') + '</button>';
         }).join('') + '</div>' +
-        '<p class="hint">等分で受け継いだとして計算します。空き家特例の控除は1人ごとで、3人以上だと1人2,000万円になります。</p>';
+        '<p class="hint">等分で計算します。</p>';
     } else if (step.id === 'cond') {
       body = '<div class="card flat">' +
           yn('vacant', '相続してから、住んだり貸したり事業に使ったりしていない') +
@@ -460,17 +460,16 @@
               yn('renovateOrDemolish', '耐震改修か取り壊しをする（買主がする場合も）')
             : '') +
         '</div>' +
-        (draft.kind !== 'house' ? '<p class="note">空き家特例は、戸建て（マンションでない家）だけが対象です。</p>' : '') +
-        '<p class="note">「わからない」は要件を満たさないものとして計算し、結果の画面で確かめ方を案内します。</p>';
+        (draft.kind !== 'house' ? '<p class="note">空き家特例は戸建てだけが対象です。</p>' : '<p class="note">「わからない」は、特例なしで計算します。</p>');
     } else if (step.id === 'cost') {
       body = '<div class="field"><label for="s-other">売るときのその他の費用 <span class="tag-opt">任意</span></label>' +
           '<div class="suffix"><input id="s-other" class="input" data-bind="otherCost" inputmode="decimal" placeholder="0" value="' + h(draft.otherCost) + '"><span>万円</span></div>' +
-          '<p class="hint">測量、家財の片付け、解体など。仲介手数料と印紙税は自動で計算します。</p></div>' +
+          '<p class="hint">片付け・解体など。仲介手数料は自動で入ります。</p></div>' +
         '<h2 class="sec" style="font-size:16px;margin-top:6px">持ち続けた場合（1年あたり）</h2>' +
         '<div class="grid-2">' +
           '<div class="field"><label for="s-htax">固定資産税など</label><div class="suffix"><input id="s-htax" class="input" data-bind="holdTaxYear" inputmode="decimal" placeholder="0" value="' + h(draft.holdTaxYear) + '"><span>万円</span></div></div>' +
           '<div class="field"><label for="s-hother">管理・保険など</label><div class="suffix"><input id="s-hother" class="input" data-bind="holdOtherYear" inputmode="decimal" placeholder="0" value="' + h(draft.holdOtherYear) + '"><span>万円</span></div></div>' +
-        '</div><p class="hint">固定資産税は、毎年届く納税通知書に書いてあります。</p>';
+        '</div>';
     }
     var last = simStep === SIM_STEPS.length - 1;
     var dots = '<div class="dots" aria-hidden="true" style="grid-template-columns:repeat(' + SIM_STEPS.length + ',minmax(0,1fr))">' +
@@ -554,12 +553,12 @@
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:15px">空き家特例で変わる手取り</b><span class="badge">差 ' + manFloor(r.without.tax - m.tax) + '万円</span></div>' +
         '<div class="cmp"><div class="row"><span>特例あり</span><b class="num">' + manFloor(m.net) + '万円</b></div><div class="bar" style="background:var(--violet);width:100%"></div></div>' +
         '<div class="cmp"><div class="row"><span>特例なし</span><b class="num">' + manFloor(r.without.net) + '万円</b></div><div class="bar" style="background:var(--coral);width:' + Math.max(4, ratio) + '%"></div></div>' +
-        '<a href="#/task/akiya" style="font-size:13.5px;font-weight:700">空き家特例の要件を読む →</a></div>';
+        '<a href="#/task/akiya" style="font-size:15px;font-weight:700">空き家特例の要件を読む →</a></div>';
     } else if (inp.kind === 'house' && r.without.gain > 0) {
       html += '<div class="card" style="display:flex;flex-direction:column;gap:8px"><b style="font-size:15px">空き家特例は、まだ使えるか確かめられていません</b>' +
-        '<p class="note">次の要件がそろうと、最大3,000万円（相続人3人以上は1人2,000万円）を差し引けます。</p>' +
+        '<p class="note">あと、これがそろえば使えます。</p>' +
         '<ul class="reasons">' + r.akiya.reasons.map(function (x) { return '<li>' + h(x) + '</li>'; }).join('') + '</ul>' +
-        '<a href="#/task/akiya" style="font-size:13.5px;font-weight:700">空き家特例のやることを読む →</a></div>';
+        '<a href="#/task/akiya" style="font-size:15px;font-weight:700">空き家特例のやることを読む →</a></div>';
     }
     if (r.holdYear > 0) {
       html += '<div class="card" style="display:flex;align-items:center;gap:14px"><span class="ico-box big tone-coral" style="width:48px;height:48px">' + icon('clock', 24) + '</span>' +
@@ -589,7 +588,7 @@
   var cs;
   function resetConsult() {
     cs = { name: '', email: '', area: '', topics: {}, body: '', attachId: '', agree: false, website: '',
-      sending: false, error: '', errors: {}, ref: '', sentEmail: '', sentText: '' };
+      sending: false, error: '', errors: {}, ref: '', sentEmail: '', sentText: '', viaMail: false, mailHref: '' };
   }
   resetConsult();
   function topicsChosen() { return CFG.topics.filter(function (t) { return cs.topics[t.label]; }); }
@@ -607,7 +606,7 @@
     return '' +
       '<h1 class="title">そうだん</h1>' +
       '<div class="mado"><span class="free">無料</span><h2>' + h(MADO.name) + '</h2>' +
-        '<p>どこに聞けばいいか分からなくても大丈夫。内容を見て、ぴったりの専門家がメールで答えます。</p>' +
+        '<p>どこに聞けばいいか分からなくても大丈夫。ぴったりの専門家が答えます。</p>' +
         '<div class="members">' + members + '</div></div>' +
       '<div class="perks"><div class="perk"><b>電話なし</b><span>連絡はメールだけ</span></div>' +
         '<div class="perk"><b>匿名OK</b><span>名前は任意</span></div>' +
@@ -617,7 +616,7 @@
         '<li><span class="n">2</span>窓口が内容を見て、担当の専門家を決める</li>' +
         '<li><span class="n">3</span>後日、専門家からメールで返事が届く</li></ol>' +
       '<div class="notice dashed"><b style="color:var(--ink)">お金のこと</b>' +
-        '<span>相談は無料です。運営者は紹介するだけで、仲介はしません。不動産の売買が成約したときだけ、運営者は提携の不動産会社から紹介料を受け取ります（あなたの支払いは増えません）。弁護士・税理士からは受け取りません。</span></div>' +
+        '<span>相談は無料。紹介料は、不動産の売買が成約したときだけ不動産会社から受け取ります（あなたの負担なし）。弁護士・税理士からは受け取りません。運営者は仲介しません。</span></div>' +
       '<a class="btn" href="#/consult/form">相談をはじめる</a>';
   }
 
@@ -653,7 +652,7 @@
       '<div class="field"><label for="c-mail">返事を受け取るメール <span class="tag-req">必須</span></label>' +
         '<input id="c-mail" class="input" type="email" data-cbind="email" maxlength="120" autocomplete="email" inputmode="email" value="' + h(cs.email) + '"' + (er.email ? ' aria-invalid="true" aria-describedby="e-mail"' : '') + '>' +
         (er.email ? '<p class="err" id="e-mail">' + h(er.email) + '</p>' : '') +
-        '<p class="hint">返事を送るために必要です。そのため、完全な匿名ではありません。</p></div>' +
+        '<p class="hint">返事を送るために使います。</p></div>' +
       '<div class="grid-2">' +
         '<div class="field"><label for="c-name">お名前 <span class="tag-opt">任意</span></label><input id="c-name" class="input" data-cbind="name" maxlength="40" autocomplete="nickname" placeholder="ニックネーム可" value="' + h(cs.name) + '"></div>' +
         '<div class="field"><label for="c-area">物件の場所 <span class="tag-opt">任意</span></label><input id="c-area" class="input" data-cbind="area" maxlength="40" placeholder="市区町村まで" value="' + h(cs.area) + '"></div>' +
@@ -676,14 +675,14 @@
     var est = cs.attachId ? S.getEstimate(cs.attachId) : null;
     function row(k, v, cls) {
       return '<div class="review-row"><div class="review-body"><span class="k">' + k + '</span><span class="v' + (cls ? ' ' + cls : '') + '">' + v + '</span>' +
-        (cls === 'mail' ? '<span class="err" style="font-size:12px">打ち間違いがあると返事が届きません</span>' : '') +
+        (cls === 'mail' ? '<span class="err" style="font-size:16px">打ち間違いがあると返事が届きません</span>' : '') +
         '</div><a class="link-btn" href="#/consult/form">修正</a></div>';
     }
     var tp = topicsChosen().map(function (t) { return t.label; }).join('／');
     var who = whoOf(topicsChosen());
     return '' +
       '<a class="back" href="#/consult/form">‹ 入力にもどる</a>' +
-      '<div style="display:flex;flex-direction:column;gap:4px"><span class="step">2 / 2　送信前の確認</span><h1 class="title">この内容で送ります</h1><p class="lead" style="font-size:14px">まだ送信されていません。</p></div>' +
+      '<div style="display:flex;flex-direction:column;gap:4px"><span class="step">2 / 2　送信前の確認</span><h1 class="title">この内容で送ります</h1><p class="lead" style="font-size:16px">まだ送信されていません。</p></div>' +
       '<div class="card flat">' +
         row('返事を受け取るメール', h(cs.email.trim()), 'mail') +
         row('聞きたいこと', h([tp, cs.body.trim()].filter(Boolean).join('\n'))) +
@@ -693,17 +692,19 @@
       '<div class="card" style="display:flex;flex-direction:column;gap:10px"><span class="card-label">送信先</span>' +
         '<div class="dest"><span class="ico-box" style="background:var(--violet);color:var(--on-violet)">' + icon('chat') + '</span>' +
         '<span class="t"><b>' + h(MADO.name) + '</b><span>運営：' + h(MADO.org) + '</span></span></div>' +
-        '<p class="note" style="font-size:13px;color:var(--muted)">内容に合わせて、提携の不動産会社（宅建士）・弁護士・税理士に共有されます' +
-          (who.length ? '（今回はおもに' + who.map(function (m) { return m.role; }).join('・') + '）' : '') + '。運営者は紹介するだけで、仲介はしません。</p></div>' +
+        '<p class="note">内容に合わせて、不動産・弁護士・税理士に共有されます' +
+          (who.length ? '（今回はおもに' + who.map(function (m) { return m.role; }).join('・') + '）' : '') + '。</p>' +
+        '<p class="note">紹介料：不動産の売買が成約したときだけ、運営者が不動産会社から受け取ります（あなたの負担なし）。</p></div>' +
       '<div class="notice violet"><div class="notice-title">送ったあとのこと</div>' +
         '<div class="after-row"><span class="num-dot">1</span><span>後日、担当の専門家から<b>メールで返事が届きます</b>。</span></div>' +
-        '<div class="after-row"><span class="num-dot">2</span><span>この送信への<b>自動返信メール（受付完了メール）は届きません</b>。次の画面の受付番号をお控えください。</span></div></div>' +
+        '<div class="after-row"><span class="num-dot">2</span><span><b>自動返信メールは届きません</b>。</span></div></div>' +
       '<label class="check" for="c-agree"><input id="c-agree" type="checkbox" data-act-change="agree"' + (cs.agree ? ' checked' : '') + '>' +
         '<span>' + h(MADO.name) + 'と、提携の専門家に内容を送ることに同意します（<a href="privacy.html">プライバシーポリシー</a>）</span></label>' +
       (cs.error ? '<div class="notice coral" role="alert"><div class="notice-title">送信できませんでした</div><p>' + h(cs.error) + '</p>' +
         (MADO.fallbackEmail ? '<a class="btn ghost" href="' + h(mailtoHref()) + '">メールアプリで送る</a>' : '') + '</div>' : '') +
       '<div class="btn-col">' +
-        '<button class="btn" id="send-btn" data-act="send"' + (cs.agree && !cs.sending ? '' : ' disabled') + '>' + (cs.sending ? '送信中…' : 'この内容で送信する') + '</button>' +
+        '<button class="btn" id="send-btn" data-act="send"' + (cs.agree && !cs.sending ? '' : ' disabled') + '>' + (cs.sending ? '送信中…' : CFG.endpoint ? 'この内容で送信する' : 'メールアプリで送信する') + '</button>' +
+        (CFG.endpoint ? '' : '<p class="note center">メールアプリが開きます。宛先と本文は入力済みです。</p>') +
         '<a class="btn ghost" href="#/consult/form">入力にもどって直す</a>' +
       '</div>';
   }
@@ -740,6 +741,7 @@
   function send() {
     if (cs.sending) return;
     if (!CFG.endpoint) {
+      if (MADO.fallbackEmail) { sendViaMail(); return; }
       cs.error = '送信先がまだ設定されていません（運営者の設定待ちです）。時間をおいてお試しください。';
       render(); return;
     }
@@ -784,20 +786,49 @@
     });
   }
 
+  /* 中継（GAS）が未設定のあいだは、メールアプリで窓口あてに送ってもらう */
+  function sendViaMail() {
+    cs.ref = makeRef();
+    cs.mailHref = mailtoHref();
+    cs.sentText = consultText(cs.ref);
+    cs.sentEmail = cs.email.trim();
+    cs.viaMail = true;
+    cs.name = ''; cs.email = ''; cs.area = ''; cs.body = ''; cs.topics = {}; cs.attachId = '';
+    var href = cs.mailHref;
+    go('#/consult/done');
+    setTimeout(function () { location.href = href; }, 60);
+  }
+
   function vConsultDone() {
     if (!cs.ref) { go('#/consult'); return ''; }
+    if (cs.viaMail) {
+      return '' +
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;margin-top:12px">' + buddy(88) +
+          '<h1 class="title">あと少しです</h1>' +
+          '<div class="ref"><span>受付番号</span><b>' + h(cs.ref) + '</b></div></div>' +
+        '<div class="notice violet"><div class="notice-title">メールアプリで「送信」を押してください</div>' +
+          '<p>宛先と本文は入力済みです。送信すると、' + h(MADO.name) + 'に届きます。</p>' +
+          '<a class="btn" href="' + h(cs.mailHref) + '">メールアプリを開く</a></div>' +
+        '<div class="card" style="display:flex;flex-direction:column;gap:8px"><b>開かないときは</b>' +
+          '<p style="margin:0">下のあて先に、内容をコピーして送ってください。</p>' +
+          '<p class="round" style="margin:0;font-size:19px;font-weight:900;word-break:break-all">' + h(MADO.fallbackEmail) + '</p>' +
+          '<button class="btn small outline-ink" data-act="copy">内容をコピーする</button></div>' +
+        '<div class="notice sun"><div class="notice-title">自動返信メールは届きません</div>' +
+          '<p>後日、担当の専門家から返事が届きます（目安 ' + h(CFG.replyDays) + '営業日）。</p></div>' +
+        '<a class="btn ghost" href="#/home">ホームにもどる</a>';
+    }
     return '' +
       '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;margin-top:12px">' + buddy(88, 'happy') +
         '<h1 class="title">送信しました</h1>' +
         '<div class="ref"><span>受付番号</span><b>' + h(cs.ref) + '</b></div></div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">このあと</b>' +
-        '<p style="margin:0;font-size:14.5px;line-height:1.8">後日、' + h(MADO.name) + 'の担当の専門家から、<b style="word-break:break-all">' + h(cs.sentEmail) + '</b> あてにメールで返事が届きます（目安 ' + h(CFG.replyDays) + '営業日以内）。</p></div>' +
+        '<p style="margin:0">後日、担当の専門家から <b style="word-break:break-all">' + h(cs.sentEmail) + '</b> あてに返事が届きます（目安 ' + h(CFG.replyDays) + '営業日）。</p></div>' +
       '<div class="notice sun"><div class="notice-title">自動返信メールは届きません</div>' +
-        '<p>この送信への受付完了メールは送られません。受付番号と送った内容は、この画面でお控えください。</p>' +
+        '<p>受付番号と内容は、この画面でお控えください。</p>' +
         '<button class="btn small outline-ink" data-act="copy">送った内容をコピーする</button></div>' +
       '<div class="card" style="display:flex;gap:12px;align-items:center"><span class="ico-box tone-mint">' + icon('lock') + '</span>' +
-        '<span style="font-size:14px;line-height:1.7">送った内容は、このアプリにも運営者のサーバーにも残りません。</span></div>' +
-      '<p class="note" style="font-size:13px">返事が来ないときは、迷惑メールフォルダをご確認ください。' + h(CFG.replyDays) + '営業日を過ぎても届かなければ、もう一度送ってください。</p>' +
+        '<span>送った内容は、このアプリに残りません。</span></div>' +
+      '<p class="note">返事が来ないときは、迷惑メールフォルダもご確認ください。</p>' +
       (MADO.fallbackEmail ? '<a class="btn ghost" href="mailto:' + h(MADO.fallbackEmail) + '?subject=' + h(encodeURIComponent('【つぐいえ相談 ' + cs.ref + '】再送')) + '&body=' + h(encodeURIComponent(cs.sentText)) + '">メールアプリで送り直す</a>' : '') +
       '<a class="btn" href="#/home">ホームにもどる</a>';
   }
@@ -814,6 +845,7 @@
   function route() { return (location.hash || '#/home').replace(/^#\/?/, '') || 'home'; }
   function render() {
     var p = route(), parts = p.split('/'), html;
+    var sheet = document.querySelector('.sheet-wrap'); if (sheet) sheet.remove();
     if (lastPath !== p) { confirmClear = false; confirmDelEst = false; simErr = ''; }
     if (lastPath === 'consult/done' && p !== 'consult/done') resetConsult();
     if (lastPath === 'sim/new' && p !== 'sim/new') { draft = null; simStep = 0; }

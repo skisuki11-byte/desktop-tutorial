@@ -23,7 +23,7 @@ function doPost(e) {
   if (d.website) return json_({ ok: true });                      // ボット（見えない欄に入力）
   var email = str_(d.email, 120);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json_({ ok: false, error: 'email' });
-  if (!str_(d.body, 1000) && !(Array.isArray(d.topics) && d.topics.length)) return json_({ ok: false, error: 'empty' });
+  if (!text_(d.body, 1000) && !(Array.isArray(d.topics) && d.topics.length)) return json_({ ok: false, error: 'empty' });
 
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
@@ -65,7 +65,7 @@ function format_(d, email, ref) {
     '聞きたいこと：' + (topics || 'なし'),
     '',
     '―― 相談の内容 ――',
-    str_(d.body, 1000) || '（くわしい内容なし）',
+    text_(d.body, 1000) || '（くわしい内容なし）',
     '',
     '―― 添えられた試算 ――',
     str_(d.estimate, 300) || 'なし',
@@ -85,7 +85,11 @@ function overLimit_(n) {
 }
 
 function str_(v, max) {
-  return typeof v === 'string' ? v.trim().slice(0, max) : '';
+  return typeof v === 'string' ? v.replace(/[\r\n\t]+/g, ' ').trim().slice(0, max) : '';
+}
+
+function text_(v, max) {  // 相談本文だけは改行を残す
+  return typeof v === 'string' ? v.replace(/\r\n?/g, '\n').trim().slice(0, max) : '';
 }
 
 function json_(obj) {
