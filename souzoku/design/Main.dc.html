@@ -8,68 +8,100 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap">
 <style>
-body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;color:#18202C;background:#F4F6F9}
-a{color:#27497A}a:hover{color:#1C3659}
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;color:#22213F;background:#F6F4FF}
+a{color:#5B4FE0}a:hover{color:#3F34B8}
 </style>
 </helmet>
-<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F6F9; display: flex; flex-direction: column; overflow: hidden">
-  <div style="flex-grow: 1; padding: 28px 20px 16px; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
-    <div style="display: flex; flex-direction: column; gap: 2px">
-      <div style="font-size: 13px; color: #5F6979">相続開始日 2025年6月12日</div>
-      <h1 style="margin: 0; font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', serif; font-size: 26px; letter-spacing: 0.04em">ホーム</h1>
+<div style="width: 390px; height: 1180px; box-sizing: border-box; background: #F6F4FF; display: flex; flex-direction: column; overflow: hidden">
+  <div style="flex-grow: 1; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 18px">
+
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="52" height="52" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 30 L32 10 L54 30 Z" fill="{{accent}}" stroke="{{accent}}" stroke-width="6" stroke-linejoin="round"></path><rect x="41" y="12" width="7" height="12" rx="2" fill="{{accent}}"></rect><rect x="15" y="27" width="34" height="29" rx="9" fill="#FFF4CF"></rect><circle cx="26" cy="40" r="2.8" fill="#22213F"></circle><circle cx="38" cy="40" r="2.8" fill="#22213F"></circle><ellipse cx="21" cy="46" rx="3.2" ry="2" fill="#FFB8A8"></ellipse><ellipse cx="43" cy="46" rx="3.2" ry="2" fill="#FFB8A8"></ellipse><path d="M28.5 46 Q32 49.5 35.5 46" fill="none" stroke="#22213F" stroke-width="2.2" stroke-linecap="round"></path></svg>
+      <div style="flex-grow: 1; background: #FFFFFF; border: 2px solid #E4E0F7; border-radius: 18px; padding: 8px 14px; font-size: 14px; font-weight: 700; line-height: 1.5">ひとつずつ、いっしょに進めよう</div>
+      <a href="Main.dc.html" aria-label="設定" style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #55557A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg></a>
     </div>
 
-    <div style="background: {{accent}}; color: #FFFFFF; border-radius: 18px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px">
-      <div style="font-size: 13px; opacity: 0.85">次の期限　空き家特例の売却期限</div>
-      <div style="font-size: 44px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums">あと 461<span style="font-size: 18px; font-weight: 500; margin-left: 4px">日</span></div>
-      <div style="font-size: 13px; opacity: 0.85">2027年12月31日まで・最大3,000万円の控除</div>
-    </div>
-
-    <div style="background: #FFFFFF; border: 1px solid #DBE1EA; border-radius: 16px; padding: 6px 16px">
-      <div style="font-size: 13px; color: #5F6979; padding: 8px 0 4px">手続きの進み具合</div>
-      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px solid #DBE1EA">
-        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #2D7152; background: #E1EFE8; border-radius: 8px; padding: 2px 10px">済</span>
-        <span style="font-size: 15px">相続放棄の判断（3か月）</span>
+    <div style="background: {{accent}}; color: #FFFFFF; border-radius: 28px; padding: 20px 22px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <span style="font-size: 14px; font-weight: 700; opacity: 0.9">やることの進み具合</span>
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums">4<span style="font-size: 14px; font-weight: 700; opacity: 0.85"> / 7 済み</span></span>
       </div>
-      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px solid #DBE1EA">
-        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #2D7152; background: #E1EFE8; border-radius: 8px; padding: 2px 10px">済</span>
-        <span style="font-size: 15px">相続税の申告（10か月）</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px solid #DBE1EA">
-        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #B2462B; background: #F7E6E0; border-radius: 8px; padding: 2px 10px; font-variant-numeric: tabular-nums">あと461日</span>
-        <span style="font-size: 15px">空き家特例の売却期限</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px solid #DBE1EA">
-        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #4F5A6B; background: #EEF2F7; border-radius: 8px; padding: 2px 10px; font-variant-numeric: tabular-nums">あと625日</span>
-        <span style="font-size: 15px">相続登記の申請（義務）</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 12px; min-height: 48px">
-        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #4F5A6B; background: #EEF2F7; border-radius: 8px; padding: 2px 10px; font-variant-numeric: tabular-nums">あと929日</span>
-        <span style="font-size: 15px">取得費加算の特例の売却期限</span>
+      <div aria-hidden="true" style="height: 14px; border-radius: 7px; background: rgba(255,255,255,0.25); overflow: hidden"><div style="width: 57%; height: 100%; border-radius: 7px; background: #FFC940"></div></div>
+      <div style="height: 1px; background: rgba(255,255,255,0.25)"></div>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 8px">
+        <div style="display: flex; flex-direction: column">
+          <span style="font-size: 13px; opacity: 0.85">次の期限</span>
+          <span style="font-size: 16px; font-weight: 700">空き家特例の売却期限</span>
+          <span style="font-size: 12px; opacity: 0.85">2027年12月31日まで</span>
+        </div>
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-weight: 900; font-size: 40px; line-height: 1; color: #FFC940; font-variant-numeric: tabular-nums; white-space: nowrap">461<span style="font-size: 15px; color: #FFFFFF; margin-left: 2px">日</span></span>
       </div>
     </div>
 
-    <a href="Learn.dc.html" style="display: flex; flex-direction: column; gap: 2px; background: #FFFFFF; border: 1px solid #DBE1EA; border-radius: 16px; padding: 14px 16px; text-decoration: none; color: #18202C">
-      <span style="font-size: 13px; color: #5F6979">いまの時期に読む</span>
-      <span style="font-size: 16px; font-weight: 700">空き家特例が使える家・使えない家</span>
-      <span style="font-size: 13px; color: #5F6979">3分で読めます</span>
-    </a>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <a href="Sim.dc.html" style="display: flex; flex-direction: column; gap: 8px; background: #FFF4CF; border: 2px solid #FFE08A; border-radius: 24px; padding: 16px; text-decoration: none; color: #22213F; min-height: 120px">
+        <span style="width: 44px; height: 44px; border-radius: 14px; background: #FFC940; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22213F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"></rect><path d="M8 7h8M8 12h2M12 12h2M8 16h2M12 16h2M16 12v4"></path></svg></span>
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-size: 17px; font-weight: 900; line-height: 1.35">売ったら<br>いくら残る？</span>
+        <span style="font-size: 12px; color: #55557A">手取りをはかる</span>
+      </a>
+      <a href="Consult.dc.html" style="display: flex; flex-direction: column; gap: 8px; background: #ECE9FF; border: 2px solid #D5CFFF; border-radius: 24px; padding: 16px; text-decoration: none; color: #22213F; min-height: 120px">
+        <span style="width: 44px; height: 44px; border-radius: 14px; background: {{accent}}; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path></svg></span>
+        <span style="font-family: 'Zen Maru Gothic', sans-serif; font-size: 17px; font-weight: 900; line-height: 1.35">専門家に<br>聞いてみる</span>
+        <span style="font-size: 12px; color: #55557A">相続の総合窓口</span>
+      </a>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px">
+      <h2 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 20px; font-weight: 900">やること</h2>
+      <span style="font-size: 12px; color: #6B6B8C">タップでくわしく</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <a href="Task.dc.html" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 2px solid #F2654F; border-radius: 20px; padding: 12px 14px; text-decoration: none; color: #22213F; min-height: 68px">
+        <span style="flex-shrink: 0; width: 42px; height: 42px; border-radius: 14px; background: #FFF4CF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B07D00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path><circle cx="12" cy="15" r="2"></circle></svg></span>
+        <span style="flex-grow: 1; display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 700">空き家特例の売却期限</span><span style="font-size: 12px; color: #6B6B8C">2027年12月31日</span></span>
+        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #B8391F; background: #FFE6E0; border-radius: 999px; padding: 3px 10px; font-variant-numeric: tabular-nums">あと461日</span>
+      </a>
+      <a href="Task.dc.html" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 2px solid #E4E0F7; border-radius: 20px; padding: 12px 14px; text-decoration: none; color: #22213F; min-height: 68px">
+        <span style="flex-shrink: 0; width: 42px; height: 42px; border-radius: 14px; background: #E0F0FF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F6FC2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21h16M6 21V10M18 21V10M12 3l9 5H3z"></path></svg></span>
+        <span style="flex-grow: 1; display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 700">相続登記の申請（義務）</span><span style="font-size: 12px; color: #6B6B8C">2028年6月12日</span></span>
+        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #55557A; background: #F0EEFA; border-radius: 999px; padding: 3px 10px; font-variant-numeric: tabular-nums">あと625日</span>
+      </a>
+      <a href="Task.dc.html" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 2px solid #E4E0F7; border-radius: 20px; padding: 12px 14px; text-decoration: none; color: #22213F; min-height: 68px">
+        <span style="flex-shrink: 0; width: 42px; height: 42px; border-radius: 14px; background: #ECE9FF; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B4FE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"></rect><path d="M8 7h8M8 12h8M8 16h5"></path></svg></span>
+        <span style="flex-grow: 1; display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 700">取得費加算の特例の売却期限</span><span style="font-size: 12px; color: #6B6B8C">2029年4月12日</span></span>
+        <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #55557A; background: #F0EEFA; border-radius: 999px; padding: 3px 10px; font-variant-numeric: tabular-nums">あと929日</span>
+      </a>
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 13px; color: #1C7A55; font-weight: 700">
+        <span style="width: 22px; height: 22px; border-radius: 50%; background: #DCF6EA; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1C7A55" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>
+        済んだこと 4つ
+      </div>
+      <a href="Task.dc.html" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 2px solid #E4E0F7; border-radius: 20px; padding: 10px 14px; text-decoration: none; color: #6B6B8C; min-height: 56px">
+        <span style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: #DCF6EA; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C7A55" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>
+        <span style="flex-grow: 1; font-size: 14px">相続税の申告・納付</span>
+      </a>
+      <a href="Task.dc.html" style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 2px solid #E4E0F7; border-radius: 20px; padding: 10px 14px; text-decoration: none; color: #6B6B8C; min-height: 56px">
+        <span style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: #DCF6EA; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1C7A55" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>
+        <span style="flex-grow: 1; font-size: 14px">準確定申告</span>
+      </a>
+      <a href="Task.dc.html" style="font-size: 13px; text-align: center; padding: 8px; min-height: 40px">ほか2つを表示</a>
+    </div>
   </div>
 
-  <nav aria-label="メインメニュー" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #DBE1EA; padding: 6px 8px 26px">
-    <a href="Main.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; font-size: 11px; font-weight: 700; color: #27497A; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>ホーム</a>
-    <a href="Learn.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; font-size: 11px; color: #5F6979; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"></path><path d="M4 19V5"></path></svg>まなぶ</a>
-    <a href="Sim.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; font-size: 11px; color: #5F6979; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8 7h8M8 12h2M12 12h2M8 16h2M12 16h2M16 12v4"></path></svg>はかる</a>
-    <a href="Experts.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 50px; font-size: 11px; color: #5F6979; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"></path></svg>そうだん</a>
+  <nav aria-label="メインメニュー" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; background: #FFFFFF; border-top: 1px solid #E4E0F7; padding: 8px 10px 26px">
+    <a href="Main.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 16px; background: #ECE9FF; color: {{accent}}; font-size: 11px; font-weight: 700; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path></svg>ホーム</a>
+    <a href="Task.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 16px; color: #6B6B8C; font-size: 11px; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"></path><path d="M4 19V5"></path></svg>まなぶ</a>
+    <a href="Sim.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 16px; color: #6B6B8C; font-size: 11px; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"></rect><path d="M8 7h8M8 12h2M12 12h2M8 16h2M12 16h2M16 12v4"></path></svg>はかる</a>
+    <a href="Consult.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 16px; color: #6B6B8C; font-size: 11px; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path></svg>そうだん</a>
   </nav>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#27497A","options":["#27497A","#2D5E57","#4A3F6B"]},"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#5B4FE0","options":["#5B4FE0","#2F8F83","#E0584F"]},"$preview":{"width":390,"height":1180}}'>
 class Component extends DCLogic {
   renderVals() {
-    return { accent: this.props.accent ?? '#27497A' };
+    return { accent: this.props.accent ?? '#5B4FE0' };
   }
 }
 </script>

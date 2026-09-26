@@ -8,65 +8,69 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap">
 <style>
-body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;color:#18202C;background:#F4F6F9}
-a{color:#27497A}a:hover{color:#1C3659}
+body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;color:#22213F;background:#F6F4FF}
+a{color:#5B4FE0}a:hover{color:#3F34B8}
 </style>
 </helmet>
-<div style="width: 390px; height: 980px; box-sizing: border-box; background: #F4F6F9; display: flex; flex-direction: column; overflow: hidden">
-  <div style="flex-grow: 1; padding: 28px 20px 24px; display: flex; flex-direction: column; gap: 16px">
-    <div style="display: flex; flex-direction: column; gap: 4px">
-      <a href="Experts.dc.html" style="font-size: 14px; text-decoration: none; min-height: 32px; display: flex; align-items: center">‹ 相談先にもどる</a>
-      <div style="font-size: 13px; color: #27497A; font-weight: 700; letter-spacing: 0.06em">2 / 3　相談内容の入力</div>
-      <h1 style="margin: 0; font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', serif; font-size: 25px; letter-spacing: 0.04em">ご相談の内容</h1>
-    </div>
-
-    <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
-      <span style="font-size: 13px; color: #5F6979">相談先</span>
-      <span style="font-size: 13px; font-weight: 700; color: #27497A; background: #E3EAF4; border-radius: 999px; padding: 3px 12px">宅建士</span>
-      <span style="font-size: 13px; font-weight: 700; color: #27497A; background: #E3EAF4; border-radius: 999px; padding: 3px 12px">税理士</span>
-    </div>
-
-    <div style="display: flex; flex-direction: column; gap: 6px">
-      <label for="f-name" style="font-size: 14px; font-weight: 700; display: flex; gap: 8px; align-items: center">お名前 <span style="font-size: 11px; font-weight: 500; color: #4F5A6B; border: 1px solid #C9D1DC; border-radius: 5px; padding: 0 6px">任意・ニックネーム可</span></label>
-      <input id="f-name" type="text" value="さとう" style="min-height: 48px; box-sizing: border-box; border: 1px solid #C9D1DC; border-radius: 12px; padding: 0 14px; font: inherit; font-size: 16px; background: #FFFFFF; color: #18202C">
-    </div>
-
-    <div style="display: flex; flex-direction: column; gap: 6px">
-      <label for="f-mail" style="font-size: 14px; font-weight: 700; display: flex; gap: 8px; align-items: center">メールアドレス <span style="font-size: 11px; font-weight: 700; color: #9A3A22; border: 1px solid #E3B6A6; border-radius: 5px; padding: 0 6px">必須</span></label>
-      <input id="f-mail" type="email" value="sato.example@mail.jp" style="min-height: 48px; box-sizing: border-box; border: 1px solid #C9D1DC; border-radius: 12px; padding: 0 14px; font: inherit; font-size: 16px; background: #FFFFFF; color: #18202C">
-      <span style="font-size: 12px; color: #5F6979">専門家からの返信はこのアドレスに届きます</span>
-    </div>
-
-    <div style="display: flex; flex-direction: column; gap: 6px">
-      <label for="f-area" style="font-size: 14px; font-weight: 700; display: flex; gap: 8px; align-items: center">物件の場所 <span style="font-size: 11px; font-weight: 500; color: #4F5A6B; border: 1px solid #C9D1DC; border-radius: 5px; padding: 0 6px">任意・市区町村まで</span></label>
-      <input id="f-area" type="text" value="静岡県 静岡市葵区" style="min-height: 48px; box-sizing: border-box; border: 1px solid #C9D1DC; border-radius: 12px; padding: 0 14px; font: inherit; font-size: 16px; background: #FFFFFF; color: #18202C">
-    </div>
-
-    <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
-      <legend style="font-size: 14px; font-weight: 700; padding: 0; margin-bottom: 8px">相談したいこと <span style="font-size: 11px; font-weight: 700; color: #9A3A22; border: 1px solid #E3B6A6; border-radius: 5px; padding: 0 6px; margin-left: 6px">必須</span></legend>
-      <div style="display: flex; flex-wrap: wrap; gap: 8px">
-        <button type="button" aria-pressed="true" style="min-height: 40px; border-radius: 999px; border: 1.5px solid #27497A; background: #E3EAF4; color: #27497A; font: inherit; font-size: 14px; font-weight: 700; padding: 0 14px">売るか迷っている</button>
-        <button type="button" aria-pressed="true" style="min-height: 40px; border-radius: 999px; border: 1.5px solid #27497A; background: #E3EAF4; color: #27497A; font: inherit; font-size: 14px; font-weight: 700; padding: 0 14px">特例を使えるか</button>
-        <button type="button" aria-pressed="false" style="min-height: 40px; border-radius: 999px; border: 1px solid #C9D1DC; background: #FFFFFF; color: #4F5A6B; font: inherit; font-size: 14px; padding: 0 14px">価格を知りたい</button>
-        <button type="button" aria-pressed="false" style="min-height: 40px; border-radius: 999px; border: 1px solid #C9D1DC; background: #FFFFFF; color: #4F5A6B; font: inherit; font-size: 14px; padding: 0 14px">遠方で管理できない</button>
-      </div>
-      <label for="f-body" style="font-size: 13px; color: #4F5A6B; margin-top: 4px">くわしく（1,000字まで）</label>
-      <textarea id="f-body" rows="4" style="box-sizing: border-box; border: 1px solid #C9D1DC; border-radius: 12px; padding: 12px 14px; font: inherit; font-size: 16px; line-height: 1.7; background: #FFFFFF; color: #18202C; resize: none">母が住んでいた実家（築45年・木造）です。弟と2人で相続しました。売った場合に空き家特例を使えるか知りたいです。</textarea>
-    </fieldset>
-
-    <label for="f-attach" style="display: flex; gap: 10px; align-items: center; min-height: 44px; font-size: 14px">
-      <input id="f-attach" type="checkbox" checked="checked" style="width: 20px; height: 20px; margin: 0; accent-color: #27497A">
-      試算結果（手取り 1,897万円）を添える
-    </label>
-
-    <a href="Confirm.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 14px; background: #27497A; color: #FFFFFF; font-size: 16px; font-weight: 700; text-decoration: none; margin-top: 4px">入力内容を確認する</a>
-    <div style="font-size: 12px; color: #5F6979; text-align: center">まだ送信されません。次の画面で内容を確認できます。</div>
+<div style="width: 390px; height: 1260px; box-sizing: border-box; background: #F6F4FF; padding: 20px 20px 32px; display: flex; flex-direction: column; gap: 18px; overflow: hidden">
+  <a href="Consult.dc.html" style="align-self: flex-start; min-height: 40px; display: flex; align-items: center; font-size: 14px; font-weight: 700; text-decoration: none">‹ 総合窓口</a>
+  <div style="display: flex; flex-direction: column; gap: 4px">
+    <span style="font-size: 13px; font-weight: 700; color: #5B4FE0">1 / 2　入力</span>
+    <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 26px; font-weight: 900">なにを聞きたい？</h1>
   </div>
+
+  <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+    <legend style="font-size: 14px; font-weight: 700; padding: 0; margin-bottom: 10px">あてはまるものを選ぶ <span style="font-size: 11px; font-weight: 700; color: #B8391F; background: #FFE6E0; border-radius: 6px; padding: 1px 6px; margin-left: 4px">必須</span></legend>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px">
+      <button type="button" aria-pressed="true" style="display: flex; align-items: center; gap: 6px; min-height: 42px; border-radius: 999px; border: 2px solid #5B4FE0; background: #ECE9FF; color: #3F34B8; font: inherit; font-size: 14px; font-weight: 700; padding: 0 14px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #FFC940; border: 1.5px solid #22213F"></span>売るか迷っている</button>
+      <button type="button" style="display: flex; align-items: center; gap: 6px; min-height: 42px; border-radius: 999px; border: 2px solid #E4E0F7; background: #FFFFFF; color: #55557A; font: inherit; font-size: 14px; font-weight: 700; padding: 0 14px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #FFC940; border: 1.5px solid #22213F"></span>いくらで売れる？</button>
+      <button type="button" aria-pressed="true" style="display: flex; align-items: center; gap: 6px; min-height: 42px; border-radius: 999px; border: 2px solid #5B4FE0; background: #ECE9FF; color: #3F34B8; font: inherit; font-size: 14px; font-weight: 700; padding: 0 14px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #34C08A; border: 1.5px solid #22213F"></span>空き家特例を使える？</button>
+      <button type="button" style="display: flex; align-items: center; gap: 6px; min-height: 42px; border-radius: 999px; border: 2px solid #E4E0F7; background: #FFFFFF; color: #55557A; font: inherit; font-size: 14px; font-weight: 700; padding: 0 14px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #34C08A; border: 1.5px solid #22213F"></span>相続税が心配</button>
+      <button type="button" style="display: flex; align-items: center; gap: 6px; min-height: 42px; border-radius: 999px; border: 2px solid #E4E0F7; background: #FFFFFF; color: #55557A; font: inherit; font-size: 14px; font-weight: 700; padding: 0 14px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #4AA8FF; border: 1.5px solid #22213F"></span>家族で話がまとまらない</button>
+      <button type="button" style="display: flex; align-items: center; gap: 6px; min-height: 42px; border-radius: 999px; border: 2px solid #E4E0F7; background: #FFFFFF; color: #55557A; font: inherit; font-size: 14px; font-weight: 700; padding: 0 14px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #4AA8FF; border: 1.5px solid #22213F"></span>相続放棄を考えている</button>
+      <button type="button" style="display: flex; align-items: center; gap: 6px; min-height: 42px; border-radius: 999px; border: 2px solid #E4E0F7; background: #FFFFFF; color: #55557A; font: inherit; font-size: 14px; font-weight: 700; padding: 0 14px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #B9B6D3; border: 1.5px solid #22213F"></span>まだよくわからない</button>
+    </div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: #55557A">
+      <span style="display: flex; align-items: center; gap: 4px"><span style="width: 9px; height: 9px; border-radius: 50%; background: #FFC940"></span>おもに不動産</span>
+      <span style="display: flex; align-items: center; gap: 4px"><span style="width: 9px; height: 9px; border-radius: 50%; background: #4AA8FF"></span>おもに弁護士</span>
+      <span style="display: flex; align-items: center; gap: 4px"><span style="width: 9px; height: 9px; border-radius: 50%; background: #34C08A"></span>おもに税理士</span>
+    </div>
+  </fieldset>
+
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <label for="f-body" style="font-size: 14px; font-weight: 700">くわしく <span style="font-size: 11px; font-weight: 500; color: #55557A; background: #F0EEFA; border-radius: 6px; padding: 1px 6px; margin-left: 4px">任意</span></label>
+    <textarea id="f-body" rows="4" style="box-sizing: border-box; border: 2px solid #E4E0F7; border-radius: 18px; padding: 12px 14px; font: inherit; font-size: 16px; line-height: 1.7; background: #FFFFFF; color: #22213F; resize: none">母が住んでいた実家です。弟と2人で相続しました。売った場合に空き家特例を使えるか知りたいです。</textarea>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <label for="f-mail" style="font-size: 14px; font-weight: 700">返事を受け取るメール <span style="font-size: 11px; font-weight: 700; color: #B8391F; background: #FFE6E0; border-radius: 6px; padding: 1px 6px; margin-left: 4px">必須</span></label>
+    <input id="f-mail" type="email" value="sato.example@mail.jp" style="min-height: 52px; box-sizing: border-box; border: 2px solid #E4E0F7; border-radius: 18px; padding: 0 14px; font: inherit; font-size: 16px; background: #FFFFFF; color: #22213F">
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="f-name" style="font-size: 14px; font-weight: 700">お名前 <span style="font-size: 11px; font-weight: 500; color: #55557A">任意</span></label>
+      <input id="f-name" type="text" value="さとう" style="min-height: 52px; box-sizing: border-box; border: 2px solid #E4E0F7; border-radius: 18px; padding: 0 14px; font: inherit; font-size: 16px; background: #FFFFFF; color: #22213F; width: 100%">
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="f-area" style="font-size: 14px; font-weight: 700">物件の場所 <span style="font-size: 11px; font-weight: 500; color: #55557A">任意</span></label>
+      <input id="f-area" type="text" value="静岡市葵区" style="min-height: 52px; box-sizing: border-box; border: 2px solid #E4E0F7; border-radius: 18px; padding: 0 14px; font: inherit; font-size: 16px; background: #FFFFFF; color: #22213F; width: 100%">
+    </div>
+  </div>
+
+  <label for="f-attach" style="display: flex; gap: 12px; align-items: center; background: #FFF4CF; border-radius: 20px; padding: 14px 16px; cursor: pointer">
+    <input id="f-attach" type="checkbox" checked="checked" style="width: 22px; height: 22px; margin: 0; accent-color: #5B4FE0; flex-shrink: 0">
+    <span style="display: flex; flex-direction: column"><b style="font-size: 14px">試算結果を添える</b><span style="font-size: 12.5px; color: #55557A">静岡の実家・手取り 1,897万円</span></span>
+  </label>
+
+  <div style="flex-grow: 1"></div>
+  <a href="Confirm.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 56px; background: #5B4FE0; color: #FFFFFF; border-radius: 999px; font-family: 'Zen Maru Gothic', sans-serif; font-size: 17px; font-weight: 900; text-decoration: none; box-shadow: 0 4px 0 #3F34B8">入力内容を確認する</a>
+  <span style="font-size: 12px; color: #6B6B8C; text-align: center">まだ送信されません</span>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":980}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1260}}'>
 class Component extends DCLogic {
   renderVals() { return {}; }
 }

@@ -1,47 +1,40 @@
 /* config.js — 公開前に書き換える設定はここだけ。
  *
- * endpoint: 相談フォームの中継（Google Apps Script のウェブアプリURL）。
- *           設定方法は gas/README.md。空のままだと送信できず、画面にその旨が出る。
- * experts:  相談先の3者。[ ] の中は提携先が決まったら書き換える。
- *           fee は運営者が紹介料を受け取るか（宅建士の成約時だけ true）。
- *           fallbackEmail は送信に失敗したときに「メールアプリで送る」で使う宛先。
- *           空なら、その専門家には代替手段を出さない。
+ * endpoint:  相談フォームの中継（Google Apps Script のウェブアプリURL）。
+ *            設定方法は gas/README.md。空のままだと送信できず、画面にその旨が出る。
+ * madoguchi: 相続の総合窓口。相談はここ1か所に届き、窓口が内容を見て
+ *            提携の不動産会社（宅建士）・弁護士・税理士に振り分ける。
+ *            [ ] の中は提携先が決まったら書き換える。
+ *            fallbackEmail は、中継が未設定または送信に失敗したときに、メールアプリで送る宛先。
+ * topics:    相談フォームの選択肢と、おもに答える専門家（色の表示に使う）。
  * replyDays: 完了画面の「目安 ◯営業日以内」。
  */
 window.TG_CONFIG = {
   endpoint: '',
   replyDays: '[返信の目安日数]',
   operator: '[運営者名]',
-  experts: [
-    {
-      id: 'takken',
-      role: '宅建士',
-      sub: '不動産会社',
-      topics: '家を売るか迷っている／いくらで売れるか／売り方',
-      org: '[提携宅建業者名]',
-      license: '宅建業免許 [免許番号]',
-      fee: true,
-      fallbackEmail: ''
-    },
-    {
-      id: 'bengoshi',
-      role: '弁護士',
-      sub: '',
-      topics: '相続人どうしの話し合い／相続放棄／遺言・共有のもめごと',
-      org: '[提携法律事務所名]',
-      license: '',
-      fee: false,
-      fallbackEmail: ''
-    },
-    {
-      id: 'zeirishi',
-      role: '税理士',
-      sub: '',
-      topics: '相続税／売ったときの税金／空き家特例が使えるか',
-      org: '[提携税理士事務所名]',
-      license: '',
-      fee: false,
-      fallbackEmail: ''
-    }
+  madoguchi: {
+    name: '相続の総合窓口',
+    org: '準備中',           // 運営会社が決まったら書き換える
+    fallbackEmail: 'halufuway@gmail.com',  // 中継（endpoint）が未設定・失敗のときはメールアプリでここへ送る
+    members: [
+      { id: 'fudosan', role: '不動産', sub: '宅建士', topics: '売る・価格', fee: true,
+        org: '[提携宅建業者名]', license: '宅建業免許 [免許番号]' },
+      { id: 'bengoshi', role: '弁護士', sub: '', topics: '話し合い・放棄', fee: false,
+        org: '[提携法律事務所名]', license: '' },
+      { id: 'zeirishi', role: '税理士', sub: '', topics: '相続税・売却の税', fee: false,
+        org: '[提携税理士事務所名]', license: '' }
+    ]
+  },
+  topics: [
+    { label: '売るか迷っている', who: 'fudosan' },
+    { label: 'いくらで売れる？', who: 'fudosan' },
+    { label: '空き家特例を使える？', who: 'zeirishi' },
+    { label: '相続税が心配', who: 'zeirishi' },
+    { label: '家族で話がまとまらない', who: 'bengoshi' },
+    { label: '相続放棄を考えている', who: 'bengoshi' },
+    { label: '遠くて管理できない', who: 'fudosan' },
+    { label: '家族信託を知りたい', who: 'bengoshi' },
+    { label: 'まだよくわからない', who: '' }
   ]
 };
