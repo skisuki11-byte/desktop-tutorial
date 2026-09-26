@@ -1,0 +1,17 @@
+{
+  "name": "つぐいえ",
+  "short_name": "つぐいえ",
+  "description": "相続した家の「これから」を考えるアプリ。期限の管理、売却の手取り試算、相続の専門家へのメール相談",
+  "lang": "ja",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F6F9",
+  "theme_color": "#F4F6F9",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
