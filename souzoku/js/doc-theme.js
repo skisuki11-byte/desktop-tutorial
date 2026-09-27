@@ -12,6 +12,13 @@
   var me = document.currentScript;
   if (me && me.hasAttribute('data-boot')) {
     document.documentElement.classList.add('booting');
+    // 書体（Google Fonts）は、ここで読み込みを始める。<link> を head に直接書くと、
+    // 届くまで画面を一切描けない（スプラッシュも出ない）ため。そろうのを app.js が待つ
+    var fl = document.createElement('link');
+    fl.id = 'gfonts'; fl.rel = 'stylesheet';
+    fl.href = 'https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@700&display=swap';
+    fl.onload = fl.onerror = function () { fl.setAttribute('data-done', ''); };
+    document.head.appendChild(fl);
     // 万一 app.js が動かなくても、画面が隠れたままにならないように
     setTimeout(function () { document.documentElement.classList.remove('booting'); }, 3000);
   }
