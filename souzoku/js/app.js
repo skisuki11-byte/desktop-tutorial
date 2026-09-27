@@ -17,6 +17,7 @@
   var CFG = window.TG_CONFIG, S = window.TGStore, CALC = window.TGCalc,
       DL = window.TGDeadlines, ARTS = window.TG_ARTICLES, TASKS = window.TG_TASKS;
   var MADO = CFG.madoguchi;
+  var APP_VERSION = CFG.version || '1.0';   // オープニングと設定の両方に出す。変えるときは config.js の version だけ
   var view = document.getElementById('view');
 
   /* 画面の色：auto はスマホの設定に合わせる。light/dark は html に data-theme を付けて固定する。
@@ -373,7 +374,7 @@
           '<label class="check wel-skip" for="intro-skip"><input id="intro-skip" type="checkbox"' + (S.get().skipIntro ? ' checked' : '') + '>' +
             '<span>次回からこの画面を表示しない</span></label>' +
           '<p class="wel-meta"><span class="nb">無料・広告なし</span>　<span class="nb">制度の説明は2026年9月時点</span><br><a href="privacy.html">プライバシーポリシー</a></p>' +
-          '<p class="wel-ver">バージョン ' + h(CFG.version || '1.0') + '</p>' +
+          '<p class="app-ver">バージョン ' + h(APP_VERSION) + '</p>' +
         '</div>' +
       '</div>';
   }
@@ -431,7 +432,8 @@
         '<div class="card-title">このアプリについて</div>' +
         '<p class="note">つぐいえは無料です。運営者（' + h(CFG.operator) + '）は' + h(MADO.name) + 'をご紹介するだけで、仲介や交渉はしません。</p>' +
         '<a href="privacy.html">プライバシーポリシー</a>' +
-      '</div>';
+      '</div>' +
+      '<p class="app-ver">バージョン ' + h(APP_VERSION) + '</p>';
   }
 
   /* ======================================================

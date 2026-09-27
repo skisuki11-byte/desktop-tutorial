@@ -10,7 +10,7 @@
  * replyDays: 完了画面の「◯◯ほどが目安です」（返事が届くまでの目安）。
  */
 window.TG_CONFIG = {
-  version: '1.0',           // アプリのバージョン（オープニングの下に出す）
+  version: '1.0',           // アプリのバージョン（オープニングと設定の下に出す。ここだけ変えれば両方変わる）
   endpoint: 'https://script.google.com/macros/s/AKfycbx8aT7pRsfezVnl1-DaZLE5JyfCOUN0enerjNcQ41BEw6GI-QiKMMXndpTCZpMkIVbX/exec',
   replyDays: '3日',
   operator: 'SEIICHI KISUKI',
