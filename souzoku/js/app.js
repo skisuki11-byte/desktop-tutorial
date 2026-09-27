@@ -946,7 +946,7 @@
     });
   }
 
-  /* 中継（GAS）が未設定のあいだは、メールアプリで窓口あてに送ってもらう */
+  /* 中継（GAS）が未設定のときは、メールアプリで窓口あてに送ってもらう */
   function sendViaMail() {
     cs.ref = makeRef();
     cs.mailHref = mailtoHref();
