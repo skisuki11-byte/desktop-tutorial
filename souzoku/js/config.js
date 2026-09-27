@@ -12,10 +12,10 @@
 window.TG_CONFIG = {
   endpoint: 'https://script.google.com/macros/s/AKfycbx8aT7pRsfezVnl1-DaZLE5JyfCOUN0enerjNcQ41BEw6GI-QiKMMXndpTCZpMkIVbX/exec',
   replyDays: '3日',
-  operator: '[運営者名]',
+  operator: 'つぐいえ',
   madoguchi: {
     name: '相続の総合窓口',
-    org: '準備中',           // 運営会社が決まったら書き換える
+    org: '株式会社籠や',
     fallbackEmail: 'halufuway@gmail.com',  // 中継（endpoint）が未設定・失敗のときはメールアプリでここへ送る
     members: [
       { id: 'fudosan', role: '不動産', sub: '宅建士', topics: '売る・価格', fee: true,
