@@ -35,6 +35,8 @@ function doPost(e) {
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
+    // Gmail の1日の送信上限（個人アカウントは100通）に達していたら、明日以降の案内を出してもらう
+    if (MailApp.getRemainingDailyQuota && MailApp.getRemainingDailyQuota() < 1) return json_({ ok: false, error: 'quota' });
     if (overLimit_(1)) return json_({ ok: false, error: 'busy' });
     var to = PropertiesService.getScriptProperties().getProperty('TO_MADOGUCHI');
     if (!to) throw new Error('宛先が未設定: TO_MADOGUCHI');
@@ -48,6 +50,7 @@ function doPost(e) {
     });
   } catch (err) {
     console.error(err);
+    if (/quota|too many times|limit exceeded/i.test(String(err && err.message || err))) return json_({ ok: false, error: 'quota' });
     return json_({ ok: false, error: 'failed' });
   } finally {
     lock.releaseLock();
