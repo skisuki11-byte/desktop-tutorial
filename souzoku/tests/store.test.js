@@ -1,0 +1,20 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const src=fs.readFileSync(require('path').join(__dirname,'../js/store.js'),'utf8');
+const mem={}; const win={localStorage:{getItem:k=>mem[k]||null,setItem:(k,v)=>{mem[k]=v},removeItem:k=>{delete mem[k]}}};
+vm.createContext(win); win.window=win; vm.runInContext(src.replace('})(window);','})(this);'),win);
+const S=win.TGStore;
+const good={id:'abc123',name:'実家',createdISO:'2026-09-27',input:{kind:'house',price:25000000,heirs:2,acqYear:1985,vacant:true,market:{mid:2e7,low:1.8e7,high:2.2e7,count:12,years:'2024〜2025',place:'静岡市',how:'x'}}};
+const evil={id:'zzz',name:'<img src=x onerror=alert(1)>'.repeat(10),createdISO:'<b>',input:{kind:'house',price:1e20,heirs:'2<script>',acqPrice:'NaN',otherCost:-5,holdTaxYear:{},size:'9e9',district:'\u0000abc',extra:'x',market:{mid:'1'}}};
+S.importJSON(JSON.stringify({app:'tsuguie',data:{done:{a:true,'__proto__':true,'<x>':true},estimates:[good,evil,{id:'s',name:'s',input:{kind:'land',price:5e6,heirs:['3']}},{id:'t',name:'t',input:{kind:'condo',price:5e6,heirs:1e9,otherCost:NaN}}]}}));
+const st=S.get();
+assert.deepStrictEqual(Object.keys(st.done),['a']); console.log('ok done のキーは形の合うものだけ');
+assert.strictEqual(st.estimates.length,2);
+assert.strictEqual(st.estimates[0].input.market.mid,2e7); assert.strictEqual(st.estimates[0].input.acqYear,1985); console.log('ok 正しい試算はそのまま');
+const e2=st.estimates[1]; assert.strictEqual(e2.id,'t'); assert.strictEqual(e2.input.heirs,50); assert.strictEqual(e2.input.otherCost,0); console.log('ok 相続人数・金額は範囲に収める');
+// evil: heirs is string → rejected; heirs array → rejected
+S.importJSON(JSON.stringify({app:'tsuguie',data:{estimates:[Object.assign({},evil,{input:Object.assign({},evil.input,{heirs:2})})]}}));
+const x=S.get().estimates[0];
+assert.strictEqual(x.input.price,1e11); assert.strictEqual(x.input.acqPrice,0); assert.strictEqual(x.input.otherCost,0); assert.strictEqual(x.input.holdTaxYear,0);
+assert.strictEqual(x.input.size,0); assert.strictEqual(x.input.district,'abc'); assert.strictEqual(x.input.market,null); assert.ok(!('extra' in x.input));
+assert.strictEqual(x.createdISO,''); assert.ok(x.name.length<=60); console.log('ok 改ざん値は捨てる・切る（NaN/巨大値/型違い/未知の項目）');
+assert.throws(()=>S.importJSON('{"app":"other"}')); console.log('ok 別アプリのファイルは拒否');

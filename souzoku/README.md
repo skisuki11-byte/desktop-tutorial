@@ -32,12 +32,14 @@ sw.js                 オフライン対応（network-first）
 privacy.html          プライバシーポリシー
 gas/Code.gs           相談を総合窓口へメールで転送する中継（保存しない・自動返信しない）
 tests/calc.test.js    計算と期限のテスト
+tests/store.test.js   保存データ（読み込み）の検査のテスト
+tests/gas.test.js     相談の中継（GAS）のテスト
 ```
 
 ## 動かす・確かめる
 
 - ローカルで開く: `cd souzoku && python3 -m http.server 8000` → http://localhost:8000
-- テスト: `node souzoku/tests/calc.test.js`
+- テスト: `node souzoku/tests/calc.test.js && node souzoku/tests/store.test.js && node souzoku/tests/gas.test.js`
 
 ## 公開前にやること
 

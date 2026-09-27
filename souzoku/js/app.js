@@ -20,6 +20,15 @@
   var APP_VERSION = CFG.version || '1.0';   // オープニングと設定の両方に出す。変えるときは config.js の version だけ
   var view = document.getElementById('view');
 
+  /* ほかのサイトの枠（iframe）の中では動かさない。透明な枠を重ねて押させる「クリックジャッキング」対策。
+     GitHub Pages ではヘッダー（frame-ancestors）を付けられないため、画面側で止める */
+  if (window.top !== window.self) {
+    view.innerHTML = '<div style="padding:24px"><p>安全のため、つぐいえはほかのサイトの中では開けません。</p>' +
+      '<a class="btn" href="' + h(location.href) + '" target="_blank" rel="noopener">つぐいえを開く</a></div>';
+    document.getElementById('tabbar').hidden = true;
+    return;
+  }
+
   /* 画面の色：auto はスマホの設定に合わせる。light/dark は html に data-theme を付けて固定する。
      文字の大きさ：large は html に data-size を付け、画面全体を拡大する（css の zoom） */
   var THEME_BG = { light: '#FAF7F1', dark: '#14161B' };
@@ -67,6 +76,8 @@
     }));
     return isFinite(n) ? n : NaN;
   }
+  /* 中継（gas/Code.gs）と同じ形のチェック。返信先に使うので , ; < > や空白は通さない */
+  var EMAIL_RE = /^[A-Za-z0-9.!#$%&'*+\/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
   function articleById(id) {
     for (var i = 0; i < ARTS.length; i++) if (ARTS[i].id === id) return ARTS[i];
@@ -281,7 +292,7 @@
         '<a class="btn ghost" href="#/consult">総合窓口に相談する</a></div>';
     }
     return '' +
-      (returnTo ? '<a class="back" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'にもどる</a>' : '<a class="back" href="#/home">‹ ホーム</a>') +
+      (returnTo ? '<a class="back" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'に戻る</a>' : '<a class="back" href="#/home">‹ ホーム</a>') +
       '<div class="task-hero">' + scene('task') + '<div class="th-body">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start"><span class="ico-box big">' + icon(t.icon, 30) + '</span>' + chip + '</div>' +
         '<h1 class="title">' + h(it.title) + '</h1>' +
@@ -298,7 +309,7 @@
       '<div class="navi">' + buddy(44) + '<div class="navi-b tip"><b>いえまるのワンポイント</b><span>' + h(t.tip) + '</span></div></div>' +
       help +
       '<p class="note">2026年9月時点の制度です。</p>' +
-      (returnTo ? '<a class="btn ghost" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'にもどる</a>' : '') +
+      (returnTo ? '<a class="btn ghost" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'に戻る</a>' : '') +
       '<div class="dock"><div class="dock-in">' +
         (it.done
           ? '<div style="display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;color:var(--mint-ink);min-height:40px"><span class="check-dot" style="width:26px;height:26px">' + icon('check', 16) + '</span>「済」にしました</div>' +
@@ -331,7 +342,7 @@
             chipFor(next, next.id) + '</div></div>' +
           '<a class="btn" href="#/task/' + next.id + '" data-close>次のやることを見る</a>'
         : '<a class="btn" href="#/sim" data-close>家を売った場合の手取りをはかる</a>') +
-      '<a class="text-link" href="#/home" data-close>ホームにもどる</a>' +
+      '<a class="text-link" href="#/home" data-close>ホームに戻る</a>' +
       '</div>';
     document.body.appendChild(wrap);
     var btn = wrap.querySelector('.btn'); if (btn) btn.focus();
@@ -958,7 +969,7 @@
   }
   function consultValidate() {
     var e = {};
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cs.email.trim())) e.email = 'メールアドレスを正しく入れてください（例：name@example.jp）。';
+    if (!EMAIL_RE.test(cs.email.trim())) e.email = 'メールアドレスを正しく入れてください（例：name@example.jp）。';
     if (!topicsChosen().length && !cs.body.trim()) e.body = '聞きたいことを選ぶか、くわしく書いてください。';
     cs.errors = e;
     return !Object.keys(e).length;
@@ -975,7 +986,7 @@
     var tp = topicsChosen().map(function (t) { return t.label; }).join('／');
     var who = whoOf(topicsChosen());
     return '' +
-      '<a class="back" href="#/consult/form">‹ 入力にもどる</a>' +
+      '<a class="back" href="#/consult/form">‹ 入力に戻る</a>' +
       '<div style="display:flex;flex-direction:column;gap:4px"><span class="step">2 / 2　送信前の確認</span><h1 class="title">この内容で送ります</h1><p class="lead" style="font-size:16px">まだ送信されていません。</p></div>' +
       '<div class="card flat">' +
         row('返事を受け取るメール', h(cs.email.trim()), 'mail') +
@@ -1003,7 +1014,7 @@
         '<button class="btn" id="send-btn" data-act="send"' + (cs.agree && !cs.sending ? '' : ' disabled') + '>' + (cs.sending ? '送信中…' : CFG.endpoint ? 'この内容で送信する' : 'メールアプリで送信する') + '</button>' +
         (CFG.endpoint ? '' : '<p class="note center">メールアプリが開きます。宛先と本文は入力済みです。</p>') +
       '</div>' +
-      '<a class="text-link" href="#/consult/form">‹ 入力にもどって直す</a>';
+      '<a class="text-link" href="#/consult/form">‹ 入力に戻って直す</a>';
   }
 
   function makeRef() {
@@ -1114,7 +1125,7 @@
           '<button class="btn small outline-ink" data-act="copy">内容をコピーする</button></div>' +
         '<div class="notice sun"><div class="notice-title">自動返信メールは届きません</div>' +
           '<p>後日、担当の専門家から返事が届きます（' + h(CFG.replyDays) + 'ほどが目安です）。</p></div>' +
-        '<a class="btn ghost" href="#/home">ホームにもどる</a>';
+        '<a class="btn ghost" href="#/home">ホームに戻る</a>';
     }
     return '' +
       '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;margin-top:12px">' + buddy(88, 'happy') +
@@ -1128,18 +1139,18 @@
       '<div class="card" style="display:flex;gap:12px;align-items:center"><span class="ico-box tone-mint">' + icon('lock') + '</span>' +
         '<span>送った内容は、このアプリに残りません。</span></div>' +
       '<p class="note">返事が来ないときは、迷惑メールフォルダもご確認ください。</p>' +
-      '<a class="btn" href="#/home">ホームにもどる</a>';
+      '<a class="btn" href="#/home">ホームに戻る</a>';
   }
 
   function vNotFound() {
-    return '<h1 class="title">ページが見つかりません</h1><a class="btn" href="#/home">ホームにもどる</a>';
+    return '<h1 class="title">ページが見つかりません</h1><a class="btn" href="#/home">ホームに戻る</a>';
   }
 
   /* ======================================================
      ルーター
      ====================================================== */
   /* ホーム以外の画面は、上と下の両方に「ホーム」への導線を置く。
-     上：もとの「もどる」リンクの右側にホーム。下：内容の最後に「ホームにもどる」。 */
+     上：もとの「戻る」リンクの右側にホーム。下：内容の最後に「ホームに戻る」。 */
   var HOME_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>';
   function withHomeLinks(html) {
     var home = '<a class="home-link" href="#/home">' + HOME_ICON + 'ホーム</a>';
@@ -1156,7 +1167,7 @@
       top = '<nav class="topnav" aria-label="画面の移動"><span></span>' + home + '</nav>';
     }
     var bottom = /class="btn[^"]*" href="#\/home"/.test(rest) ? '' :
-      '<div class="page-foot"><a class="foot-home" href="#/home">' + HOME_ICON + 'ホームにもどる</a></div>';
+      '<div class="page-foot"><a class="foot-home" href="#/home">' + HOME_ICON + 'ホームに戻る</a></div>';
     var dockAt = rest.indexOf('<div class="dock">');   // やることの詳細：「済にする」の帯の手前に置く
     if (dockAt >= 0) return top + rest.slice(0, dockAt) + bottom + rest.slice(dockAt);
     return top + rest + bottom;
@@ -1365,6 +1376,8 @@
     if (chg === 'attach1' && !el.checked) cs.attachId = '';
     if (chg === 'intro-show') { S.setSkipIntro(!el.checked); toast(el.checked ? '次回から表示します' : '次回から表示しません'); }
     if (el.id === 'import-file' && el.files && el.files[0]) {
+      // 書き出しファイルは数KB。大きすぎるファイルは読まない（端末が固まらないように）
+      if (el.files[0].size > 1024 * 1024) { toast('つぐいえの書き出しファイルではありません'); el.value = ''; return; }
       var reader = new FileReader();
       reader.onload = function () {
         try { S.importJSON(String(reader.result)); applyTheme(); toast('読み込みました'); render(); }
