@@ -163,6 +163,8 @@ h2.sec{margin:0;font-family:var(--round);font-size:21px;font-weight:900}
 .notice.coral .notice-title{color:var(--coral-ink)}
 .notice.dashed{background:var(--panel);border:2px dashed var(--line);font-size:14px;line-height:1.75;color:var(--muted)}
 .notice-title{font-size:16.5px;font-weight:700}
+.notice.money{font-size:15.5px;color:var(--ink);gap:10px}
+.notice.money b{color:var(--ink)}
 @media (prefers-color-scheme: dark){ .notice.violet .notice-title{color:var(--violet)} }
 
 /* ---------- トーン（アイコンの色） ---------- */
