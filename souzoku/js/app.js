@@ -19,11 +19,13 @@
   var MADO = CFG.madoguchi;
   var view = document.getElementById('view');
 
-  /* 画面の色：auto はスマホの設定に合わせる。light/dark は html に data-theme を付けて固定する */
+  /* 画面の色：auto はスマホの設定に合わせる。light/dark は html に data-theme を付けて固定する。
+     文字の大きさ：large は html に data-size を付け、画面全体を拡大する（css の zoom） */
   var THEME_BG = { light: '#F6F4FF', dark: '#15142A' };
   function applyTheme() {
     var t = S.get().theme, root = document.documentElement;
     if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t); else root.removeAttribute('data-theme');
+    if (S.get().textSize === 'large') root.setAttribute('data-size', 'large'); else root.removeAttribute('data-size');
     Array.prototype.forEach.call(document.querySelectorAll('meta[name="theme-color"]'), function (m) {
       if (!m.hasAttribute('data-media')) m.setAttribute('data-media', m.getAttribute('media') || '');
       var dark = /dark/.test(m.getAttribute('data-media'));
@@ -349,6 +351,15 @@
       '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="field"><label for="death2">亡くなった方（親など）の、亡くなった日</label>' +
         '<input id="death2" class="input" type="date" max="' + DL.todayISO() + '" value="' + h(st.deathISO) + '"></div>' +
         '<button class="btn small" data-act="save-death">日付を保存する</button></div>' +
+      '<div class="card" style="display:flex;flex-direction:column;gap:10px">' +
+        '<div class="card-title">文字の大きさ</div>' +
+        '<div class="theme-seg two" role="radiogroup" aria-label="文字の大きさ">' + [['normal', '標準', 18], ['large', '大きい', 22]].map(function (o) {
+          var on = st.textSize === o[0];
+          return '<button type="button" class="chipbtn" role="radio" data-act="textsize" data-v="' + o[0] + '" aria-checked="' + on + '" aria-pressed="' + on + '">' +
+            '<span class="size-a" style="font-size:' + o[2] + 'px" aria-hidden="true">あ</span>' + o[1] + '</button>';
+        }).join('') + '</div>' +
+        '<p class="note">「大きい」にすると、文字もボタンも全体が大きくなります。</p>' +
+      '</div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:10px">' +
         '<div class="card-title">画面の色</div>' +
         '<div class="theme-seg" role="radiogroup" aria-label="画面の色">' + [['auto', '自動'], ['light', '明るい'], ['dark', '暗い']].map(function (o) {
@@ -1139,6 +1150,7 @@
     var act = el.getAttribute('data-act');
     switch (act) {
       case 'theme': S.setTheme(el.getAttribute('data-v')); applyTheme(); render(); break;
+      case 'textsize': S.setTextSize(el.getAttribute('data-v')); applyTheme(); render(); break;
       case 'intro-start': {
         var sk = document.getElementById('intro-skip');
         S.setSkipIntro(!!(sk && sk.checked));

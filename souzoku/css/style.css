@@ -319,6 +319,11 @@ legend{padding:0;margin-bottom:10px}
   background:var(--panel);color:var(--muted);font-size:15.5px;font-weight:700;padding:0 16px;cursor:pointer;
 }
 .theme-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.theme-seg.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.size-a{font-family:var(--round);font-weight:900;line-height:1}
+/* 文字の大きさ「大きい」：画面全体を 1.15 倍に（レイアウトは狭い画面として組み直される） */
+html[data-size="large"]{zoom:1.15}
+html[data-size="large"] .wel-tag{font-size:clamp(15.5px,5vw,21px)}
 .theme-seg .chipbtn{justify-content:center;min-height:52px;font-size:16.5px;padding:0 8px}
 .card .theme-seg .chipbtn.chipbtn[aria-pressed="true"]{background:var(--violet);border-color:var(--violet);color:var(--on-violet)}
 .chipbtn[aria-pressed="true"]{border-color:var(--violet);background:var(--violet-soft);color:var(--violet-dark)}
