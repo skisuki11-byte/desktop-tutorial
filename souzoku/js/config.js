@@ -12,7 +12,7 @@
 window.TG_CONFIG = {
   endpoint: 'https://script.google.com/macros/s/AKfycbx8aT7pRsfezVnl1-DaZLE5JyfCOUN0enerjNcQ41BEw6GI-QiKMMXndpTCZpMkIVbX/exec',
   replyDays: '3日',
-  operator: 'つぐいえ',
+  operator: 'SEIICHI KISUKI',
   madoguchi: {
     name: '相続の総合窓口',
     org: '株式会社籠や',
