@@ -423,21 +423,31 @@ html[data-size="large"] .wel-tag{font-size:clamp(15.5px,5vw,21px)}
 }
 /* ---------- 保存した試算のカード ---------- */
 .est-list{display:flex;flex-direction:column;gap:12px}
-.est-card{position:relative;background:var(--panel);border:2px solid var(--sun-line);border-radius:var(--r-lg);padding:16px 56px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 3px 0 var(--sun-line)}
+.est-card{position:relative;background:var(--panel);border:2px solid var(--sun-line);border-radius:20px;padding:10px 48px 10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 3px 0 var(--sun-line);min-height:72px}
 .est-card.open{z-index:5}
 .est-link{position:absolute;inset:0;border-radius:inherit;z-index:1}
 .est-link:focus-visible{outline:3px solid var(--violet);outline-offset:2px}
-.est-top{display:flex;gap:12px;align-items:center;min-width:0}
-.est-top .t{display:flex;flex-direction:column;min-width:0}
-.est-top b{font-family:var(--round);font-size:18px;font-weight:900;line-height:1.4}
-.est-top .t span{font-size:15px;color:var(--muted);line-height:1.5}
-.est-net{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding-left:54px}
-.est-net > span:first-child{font-size:15px;color:var(--muted)}
-.est-net b{font-family:var(--round);font-size:28px;font-weight:900;color:var(--violet);line-height:1.1}
-.est-net b small{font-size:16px;margin-left:2px}
-.kebab{position:absolute;top:8px;right:8px;z-index:2;width:44px;height:44px;border:0;border-radius:14px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.est-card .ico-box{width:38px;height:38px;border-radius:12px}
+.est-card .t{flex:1;display:flex;flex-direction:column;min-width:0}
+.est-card .t b{font-family:var(--round);font-size:17px;font-weight:900;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.est-card .t span{font-size:14.5px;color:var(--muted);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.est-net{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;line-height:1.2}
+.est-net > span{font-size:13.5px;color:var(--muted)}
+.est-net b{font-family:var(--round);font-size:22px;font-weight:900;color:var(--violet);white-space:nowrap}
+.est-net b small{font-size:13.5px;margin-left:1px}
+/* 狭いとき（文字「大きい」・小さい画面）は、手取りを2行目に回して名前を読めるようにする */
+html[data-size="large"] .est-card{flex-wrap:wrap;row-gap:2px}
+html[data-size="large"] .est-net{flex-basis:100%;flex-direction:row;align-items:baseline;gap:6px;padding-left:48px;justify-content:flex-start}
+html[data-size="large"] .est-net > span,.est-card .est-net > span{white-space:nowrap}
+html[data-size="large"] .est-card .ico-box{align-self:flex-start;margin-top:2px}
+@media (max-width:350px){
+  .est-card{flex-wrap:wrap;row-gap:2px}
+  .est-net{flex-basis:100%;flex-direction:row;align-items:baseline;gap:6px;padding-left:48px;justify-content:flex-start}
+  .est-card .ico-box{align-self:flex-start;margin-top:2px}
+}
+.kebab{position:absolute;top:50%;right:4px;margin-top:-22px;z-index:2;width:44px;height:44px;border:0;border-radius:14px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .kebab:active,.kebab[aria-expanded="true"]{background:var(--panel-2);color:var(--ink)}
-.kebab-pop{position:absolute;top:54px;right:8px;z-index:3;min-width:210px;background:var(--panel);border:1.5px solid var(--line);border-radius:18px;box-shadow:0 12px 32px rgba(20,16,90,.22);padding:6px;display:flex;flex-direction:column}
+.kebab-pop{position:absolute;top:calc(50% + 26px);right:4px;z-index:3;min-width:210px;background:var(--panel);border:1.5px solid var(--line);border-radius:18px;box-shadow:0 12px 32px rgba(20,16,90,.22);padding:6px;display:flex;flex-direction:column}
 .kebab-pop a,.kebab-pop > button{display:flex;align-items:center;min-height:48px;padding:0 14px;border:0;border-radius:12px;background:transparent;font:inherit;font-size:16.5px;font-weight:700;color:var(--ink);text-decoration:none;text-align:left;cursor:pointer}
 .kebab-pop a:active,.kebab-pop > button:active{background:var(--panel-2)}
 .kebab-pop > button.danger-text{color:var(--coral-ink)}
