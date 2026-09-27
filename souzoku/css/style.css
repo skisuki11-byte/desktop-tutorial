@@ -421,6 +421,30 @@ html[data-size="large"] .wel-tag{font-size:clamp(15.5px,5vw,21px)}
   transform:translateX(-50%);background:var(--ink);color:var(--bg);
   padding:12px 20px;border-radius:999px;font-size:15.5px;font-weight:700;z-index:40;max-width:90vw;animation:fade .2s ease;
 }
+/* ---------- 保存した試算のカード ---------- */
+.est-list{display:flex;flex-direction:column;gap:12px}
+.est-card{position:relative;background:var(--panel);border:2px solid var(--sun-line);border-radius:var(--r-lg);padding:16px 56px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 3px 0 var(--sun-line)}
+.est-card.open{z-index:5}
+.est-link{position:absolute;inset:0;border-radius:inherit;z-index:1}
+.est-link:focus-visible{outline:3px solid var(--violet);outline-offset:2px}
+.est-top{display:flex;gap:12px;align-items:center;min-width:0}
+.est-top .t{display:flex;flex-direction:column;min-width:0}
+.est-top b{font-family:var(--round);font-size:18px;font-weight:900;line-height:1.4}
+.est-top .t span{font-size:15px;color:var(--muted);line-height:1.5}
+.est-net{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding-left:54px}
+.est-net > span:first-child{font-size:15px;color:var(--muted)}
+.est-net b{font-family:var(--round);font-size:28px;font-weight:900;color:var(--violet);line-height:1.1}
+.est-net b small{font-size:16px;margin-left:2px}
+.kebab{position:absolute;top:8px;right:8px;z-index:2;width:44px;height:44px;border:0;border-radius:14px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.kebab:active,.kebab[aria-expanded="true"]{background:var(--panel-2);color:var(--ink)}
+.kebab-pop{position:absolute;top:54px;right:8px;z-index:3;min-width:210px;background:var(--panel);border:1.5px solid var(--line);border-radius:18px;box-shadow:0 12px 32px rgba(20,16,90,.22);padding:6px;display:flex;flex-direction:column}
+.kebab-pop a,.kebab-pop > button{display:flex;align-items:center;min-height:48px;padding:0 14px;border:0;border-radius:12px;background:transparent;font:inherit;font-size:16.5px;font-weight:700;color:var(--ink);text-decoration:none;text-align:left;cursor:pointer}
+.kebab-pop a:active,.kebab-pop > button:active{background:var(--panel-2)}
+.kebab-pop > button.danger-text{color:var(--coral-ink)}
+.kebab-pop p{margin:8px 12px 4px;font-size:16px;font-weight:700}
+.kebab-row{display:flex;justify-content:flex-end;gap:4px;padding:4px}
+.kebab-row .text-btn.danger-text{color:var(--coral-ink)}
+
 /* ---------- だれの日付？ ---------- */
 .start-card{display:flex;flex-direction:column;gap:16px;padding:18px}
 .who-line{display:flex;flex-direction:column;align-items:flex-start;gap:4px;background:var(--violet-soft);border-radius:18px;padding:14px 16px}

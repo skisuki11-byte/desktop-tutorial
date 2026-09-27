@@ -62,7 +62,14 @@
       if (state.done[id]) delete state.done[id]; else state.done[id] = true;
       save();
     },
-    addEstimate: function (e) { state.estimates.unshift(e); save(); },
+    MAX_ESTIMATES: 20,
+    /* 20件を超えたら、いちばん古いもの（末尾）を消して入れる。消したものを返す */
+    addEstimate: function (e) {
+      state.estimates.unshift(e);
+      var dropped = state.estimates.length > 20 ? state.estimates.splice(20) : [];
+      save();
+      return dropped;
+    },
     getEstimate: function (id) {
       for (var i = 0; i < state.estimates.length; i++) if (state.estimates[i].id === id) return state.estimates[i];
       return null;
