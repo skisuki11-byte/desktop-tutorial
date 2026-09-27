@@ -3,7 +3,7 @@
  * つながらないときだけキャッシュを使う（記事・試算・期限は圏外でも使える）。
  * 相談の送信（POST）には一切触れない。
  */
-var CACHE = 'tsuguie-v27';
+var CACHE = 'tsuguie-v28';
 var ASSETS = [
   './',
   './index.html',
@@ -19,6 +19,7 @@ var ASSETS = [
   './js/store.js',
   './js/app.js',
   './js/register-sw.js',
+  './js/doc-theme.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png'
@@ -50,10 +51,16 @@ self.addEventListener('fetch', function (e) {
     caches.open(CACHE).then(function (cache) {
       // no-store：ブラウザのHTTPキャッシュの古い応答を「最新」として掴まないため
       return fetch(req, { cache: 'no-store' }).then(function (res) {
-        if (res && res.ok) cache.put(req, res.clone());
+        // 転送（リダイレクト）を経た応答は残さない（Safari はそれを画面の表示に使うと失敗する）
+        if (res && res.ok && !res.redirected && res.type === 'basic') cache.put(req, res.clone());
         return res;
       }).catch(function () {
-        return cache.match(req).then(function (c) { return c || cache.match('./index.html'); });
+        return cache.match(req, { ignoreSearch: req.mode === 'navigate' }).then(function (c) {
+          if (c) return c;
+          // 画面そのもの（ページ）のときだけ、アプリの入口を返す。画像やJSに HTML を返さない
+          if (req.mode === 'navigate') return cache.match('./index.html');
+          return Response.error();
+        });
       });
     })
   );

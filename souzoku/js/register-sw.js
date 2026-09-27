@@ -8,11 +8,14 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     }).catch(function () { /* 未対応でも動く */ });
   });
   var swPending = false;
+  // 初めて開いたときも controllerchange が起きる（clients.claim のため）。そのときは読み込み直さない
+  var hadController = !!navigator.serviceWorker.controller;
   function resting() {
     var h = location.hash || '#/home';
     return !/^#\/(sim\/new|consult\/(form|confirm))/.test(h);
   }
   function reloadWhenSafe() {
+    if (!hadController) { hadController = true; return; }
     if (!resting()) { swPending = true; return; }
     location.reload();
   }

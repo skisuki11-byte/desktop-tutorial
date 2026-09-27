@@ -15,23 +15,54 @@
     return { deathISO: '', done: {}, estimates: [], skipIntro: false, theme: 'auto', textSize: 'normal' };
   }
 
+  /* 読み込んだ試算を、決まった形・型・範囲に作り直す（改ざんされたファイルでも画面や計算が壊れないように）。
+     知らない項目は捨て、数字は有限の範囲に収め、文字は長さを切る。形が合わなければ null。 */
+  var YEN_MAX = 1e11;   // 1,000億円。これより大きい金額は入力ミスか改ざん
+  function yenOf(n) { return typeof n === 'number' && isFinite(n) && n > 0 ? Math.min(Math.round(n), YEN_MAX) : 0; }
+  function txt(s, max) { return typeof s === 'string' ? s.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, max) : ''; }
+  function iso(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : ''; }
+  function cleanEstimate(e) {
+    if (!e || typeof e !== 'object' || typeof e.id !== 'string' || !/^[a-z0-9]{1,40}$/.test(e.id)) return null;
+    var i = e.input;
+    if (!i || typeof i !== 'object' || ['house', 'land', 'condo'].indexOf(i.kind) < 0) return null;
+    var price = yenOf(i.price), heirs = typeof i.heirs === 'number' ? Math.floor(i.heirs) : NaN;
+    if (!price || !(heirs >= 1)) return null;
+    var house = i.kind === 'house', y = typeof i.acqYear === 'number' ? Math.floor(i.acqYear) : 0;
+    var input = {
+      kind: i.kind, price: price, acqKnown: i.acqKnown === true, acqPrice: yenOf(i.acqPrice),
+      acqYear: y >= 1900 && y <= 2100 ? y : 0, heirs: Math.min(heirs, 50),
+      vacant: i.vacant === true, unusedAfter: i.unusedAfter === true,
+      builtBefore1981: house && i.builtBefore1981 === true, livedAlone: house && i.livedAlone === true,
+      renovateOrDemolish: house && i.renovateOrDemolish === true,
+      otherCost: yenOf(i.otherCost), holdTaxYear: yenOf(i.holdTaxYear), holdOtherYear: yenOf(i.holdOtherYear),
+      deathISO: iso(i.deathISO), saleISO: iso(i.saleISO), want: yenOf(i.want),
+      basis: ['market', 'want', 'own'].indexOf(i.basis) >= 0 ? i.basis : '',
+      pref: typeof i.pref === 'string' && /^\d{2}$/.test(i.pref) ? i.pref : '', prefName: txt(i.prefName, 10),
+      city: typeof i.city === 'string' && /^\d{5}$/.test(i.city) ? i.city : '', cityName: txt(i.cityName, 30),
+      district: txt(i.district, 30), size: typeof i.size === 'number' && isFinite(i.size) && i.size > 0 ? Math.min(i.size, 1e7) : 0,
+      market: null
+    };
+    var m = i.market;
+    if (m && typeof m === 'object' && yenOf(m.mid)) {
+      input.market = { mid: yenOf(m.mid), low: yenOf(m.low), high: yenOf(m.high), how: txt(m.how, 60),
+        count: typeof m.count === 'number' && isFinite(m.count) ? Math.max(0, Math.min(Math.floor(m.count), 1e6)) : 0,
+        years: txt(m.years, 20), scope: m.scope === 'district' ? 'district' : 'city', place: txt(m.place, 60) };
+    }
+    return { id: e.id, name: txt(e.name, 60) || '試算', createdISO: iso(e.createdISO), input: input };
+  }
+
   function coerce(v) {
     var b = blank();
     if (!v || typeof v !== 'object') return b;
     if (typeof v.deathISO === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.deathISO)) b.deathISO = v.deathISO;
     if (v.done && typeof v.done === 'object' && !Array.isArray(v.done)) {
-      Object.keys(v.done).forEach(function (k) { if (v.done[k] === true) b.done[k] = true; });
+      Object.keys(v.done).forEach(function (k) { if (v.done[k] === true && /^[a-z0-9_-]{1,40}$/.test(k)) b.done[k] = true; });
     }
     if (v.skipIntro === true) b.skipIntro = true;
     if (v.theme === 'light' || v.theme === 'dark') b.theme = v.theme;
     if (v.textSize === 'large') b.textSize = 'large';
     if (Array.isArray(v.estimates)) {
-      b.estimates = v.estimates.filter(function (e) {
-        return e && typeof e === 'object' && typeof e.id === 'string' && /^[a-z0-9]{1,40}$/.test(e.id) &&
-          typeof e.name === 'string' && e.input && typeof e.input === 'object' &&
-          typeof e.input.price === 'number' && isFinite(e.input.price) && e.input.price > 0 &&
-          ['house', 'land', 'condo'].indexOf(e.input.kind) >= 0 && (e.input.heirs | 0) >= 1;
-      });
+      b.estimates = v.estimates.map(cleanEstimate).filter(Boolean);
     }
     b.estimates = b.estimates.slice(0, MAX_EST);
     return b;

@@ -16,10 +16,13 @@
  */
 
 var MAX_PER_HOUR = 30;   // 1時間あたりの送信上限（悪用されても止まるように）
+var EMAIL_RE = /^[A-Za-z0-9.!#$%&'*+\/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
 
 function doPost(e) {
   var d;
   try {
+    // アプリが送るのは数KB。大きすぎる本文は読まずに断る
+    if (e.postData.contents.length > 20000) return json_({ ok: false, error: 'bad_request' });
     d = JSON.parse(e.postData.contents);
   } catch (err) {
     return json_({ ok: false, error: 'bad_request' });
@@ -29,11 +32,13 @@ function doPost(e) {
   if (d.action === 'market') return json_(market_(d));
   if (d.website) return json_({ ok: true });                      // ボット（見えない欄に入力）
   var email = str_(d.email, 120);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json_({ ok: false, error: 'email' });
+  // 返信先（Reply-To）に使うので、宛先を増やせる , ; < > " や空白を含むものは受け付けない
+  if (!EMAIL_RE.test(email)) return json_({ ok: false, error: 'email' });
   if (!text_(d.body, 1000) && !(Array.isArray(d.topics) && d.topics.length)) return json_({ ok: false, error: 'empty' });
 
   var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
+  // 待ちきれないときは例外にせず「混み合っています」を返す（例外だとアプリに HTML のエラー画面が返る）
+  if (!lock.tryLock(10000)) return json_({ ok: false, error: 'busy' });
   try {
     // Gmail の1日の送信上限（個人アカウントは100通）に達していたら、明日以降の案内を出してもらう
     if (MailApp.getRemainingDailyQuota && MailApp.getRemainingDailyQuota() < 1) return json_({ ok: false, error: 'quota' });
@@ -78,7 +83,7 @@ function format_(d, email, ref) {
     text_(d.body, 1000) || '（くわしい内容なし）',
     '',
     '―― 添えられた試算 ――',
-    str_(d.estimate, 300) || 'なし',
+    str_(d.estimate, 600) || 'なし',
     '',
     '※相談者には自動返信メールを送っていません。お手数ですが、受付番号を添えてご返信ください。',
     '※運営者はこの内容を保存していません。'
@@ -107,7 +112,7 @@ function reinfolib_(api, params) {
 
 function cities_(d) {
   var area = String(d.pref || '');
-  if (!/^\d{2}$/.test(area)) return { ok: false, error: 'bad_request' };
+  if (!/^\d{2}$/.test(area) || Number(area) < 1 || Number(area) > 47) return { ok: false, error: 'bad_request' };
   var cache = CacheService.getScriptCache(), ck = 'cities-' + area;
   var hit = cache.get(ck);
   if (hit) return JSON.parse(hit);
