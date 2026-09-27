@@ -110,8 +110,9 @@ h2.sec{margin:0;font-family:var(--round);font-size:21px;font-weight:900}
 .foot-home{display:inline-flex;align-items:center;gap:6px;min-height:48px;padding:0 20px;border-radius:999px;color:var(--violet);font-size:15.5px;font-weight:700;text-decoration:none}
 .foot-home:active{background:var(--violet-soft)}
 /* もどる（左・小）と進む（右・大）を横並びに：役割を形と位置で分ける */
-.btn-pair{display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-top:8px}
+.btn-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px;margin-top:8px}
 .btn-pair.single{grid-template-columns:1fr}
+.btn-pair .btn{white-space:nowrap;padding:0 12px}
 .btn-pair .btn.ghost{min-height:56px}
 .text-link{align-self:center;display:inline-flex;align-items:center;min-height:48px;padding:0 16px;margin-top:10px;font-size:15.5px;font-weight:700;text-decoration:none}
 .minor-zone{margin-top:12px;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
@@ -202,9 +203,10 @@ h2.sec{margin:0;font-family:var(--round);font-size:21px;font-weight:900}
 .btn{
   display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;width:100%;
   border-radius:999px;border:0;background:var(--violet);color:var(--on-violet);
-  font-family:var(--round);font-size:18px;font-weight:900;text-decoration:none;cursor:pointer;padding:0 20px;
+  font-family:var(--round);font-size:18px;font-weight:900;text-decoration:none;cursor:pointer;padding:0 16px;white-space:nowrap;
   box-shadow:0 4px 0 var(--violet-dark);transition:transform .08s ease, box-shadow .08s ease, opacity .15s ease;
 }
+.btn svg{flex-shrink:0}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--violet-dark)}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .btn.mint{background:var(--mint);color:var(--on-mint);box-shadow:0 4px 0 var(--mint-dark)}
@@ -324,7 +326,7 @@ legend{padding:0;margin-bottom:10px}
 /* 文字の大きさ「大きい」：画面全体を 1.15 倍に（レイアウトは狭い画面として組み直される） */
 html[data-size="large"]{zoom:1.15}
 html[data-size="large"] .wel-tag{font-size:clamp(15.5px,5vw,21px)}
-.theme-seg .chipbtn{justify-content:center;min-height:52px;font-size:16.5px;padding:0 8px}
+.theme-seg .chipbtn{justify-content:center;min-height:52px;font-size:16.5px;padding:0 6px;white-space:nowrap;gap:4px}
 .card .theme-seg .chipbtn.chipbtn[aria-pressed="true"]{background:var(--violet);border-color:var(--violet);color:var(--on-violet)}
 .chipbtn[aria-pressed="true"]{border-color:var(--violet);background:var(--violet-soft);color:var(--violet-dark)}
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .chipbtn[aria-pressed="true"]{color:var(--violet)} }

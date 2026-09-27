@@ -245,7 +245,7 @@
     if (t.help && t.help.to === 'consult') {
       help = '<div class="help"><div style="display:flex;align-items:center;gap:10px">' + trio() + '<b style="font-size:15px">' + h(t.help.text) + '</b></div>' +
         '<p>不動産・弁護士・税理士のうち、ぴったりの専門家が答えます。</p>' +
-        '<a class="btn ghost" href="#/consult">' + h(MADO.name) + 'に相談する</a></div>';
+        '<a class="btn ghost" href="#/consult">総合窓口に相談する</a></div>';
     }
     return '' +
       '<a class="back" href="#/home">‹ ホーム</a>' +
@@ -269,7 +269,7 @@
         (it.done
           ? '<div style="display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;color:var(--mint-ink);min-height:40px"><span class="check-dot" style="width:26px;height:26px">' + icon('check', 16) + '</span>「済」にしました</div>' +
             '<button class="btn ghost" data-act="undone" data-id="' + id + '">「済」を取り消す</button>'
-          : '<button class="btn mint" data-act="done" data-id="' + id + '">' + icon('check', 20) + '終わったので「済」にする</button>' +
+          : '<button class="btn mint" data-act="done" data-id="' + id + '">' + icon('check', 20) + '「済」にする</button>' +
             '<span class="note center">当てはまらない場合も「済」にできます</span>') +
       '</div></div>';
   }
@@ -359,10 +359,10 @@
         '<button class="btn small" data-act="save-death">日付を保存する</button></div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:10px">' +
         '<div class="card-title">文字の大きさ</div>' +
-        '<div class="theme-seg two" role="radiogroup" aria-label="文字の大きさ">' + [['normal', '標準', 18], ['large', '大きい', 22]].map(function (o) {
+        '<div class="theme-seg two" role="radiogroup" aria-label="文字の大きさ">' + [['normal', '標準', 1], ['large', '大きい', 1.3]].map(function (o) {
           var on = st.textSize === o[0];
           return '<button type="button" class="chipbtn" role="radio" data-act="textsize" data-v="' + o[0] + '" aria-checked="' + on + '" aria-pressed="' + on + '">' +
-            '<span class="size-a" style="font-size:' + o[2] + 'px" aria-hidden="true">あ</span>' + o[1] + '</button>';
+            '<span class="size-a" style="font-size:' + o[2] + 'em" aria-hidden="true">あ</span>' + o[1] + '</button>';
         }).join('') + '</div>' +
         '<p class="note">「大きい」にすると、文字もボタンも全体が大きくなります。</p>' +
       '</div>' +
@@ -437,7 +437,7 @@
     if (!a) return vNotFound();
     var cta = '';
     if (a.cta === 'sim') cta = '<a class="btn" href="#/sim/new">手取りを試算する</a>';
-    if (a.cta === 'consult') cta = '<a class="btn" href="#/consult">' + h(MADO.name) + 'に相談する</a>';
+    if (a.cta === 'consult') cta = '<a class="btn" href="#/consult">総合窓口に相談する</a>';
     return '' +
       '<a class="back" href="#/learn">‹ まなぶ</a>' +
       '<div style="display:flex;flex-direction:column;gap:4px"><span class="eyebrow">' + h(a.tag) + '・' + a.min + '分で読めます</span><h1 class="title">' + h(a.title) + '</h1></div>' +
@@ -689,7 +689,7 @@
       body +
       (simErr ? '<p class="err" role="alert">' + h(simErr) + '</p>' : '') +
       '<div class="btn-pair' + (simStep > 0 ? '' : ' single') + '">' +
-        (simStep > 0 ? '<button class="btn ghost" data-act="sim-back">‹ もどる</button>' : '') +
+        (simStep > 0 ? '<button class="btn ghost" data-act="sim-back">‹ 戻る</button>' : '') +
         '<button class="btn" data-act="sim-next"' + (step.id === 'market' && draft.marketState === 'loading' ? ' disabled' : '') + '>' + (last ? '結果を見る' : '次へ ›') + '</button>' +
       '</div>';
   }
