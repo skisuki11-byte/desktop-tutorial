@@ -1074,7 +1074,7 @@
           '<p class="round" style="margin:0;font-size:19px;font-weight:900;word-break:break-all">' + h(MADO.fallbackEmail) + '</p>' +
           '<button class="btn small outline-ink" data-act="copy">内容をコピーする</button></div>' +
         '<div class="notice sun"><div class="notice-title">自動返信メールは届きません</div>' +
-          '<p>後日、担当の専門家から返事が届きます（目安 ' + h(CFG.replyDays) + '営業日）。</p></div>' +
+          '<p>後日、担当の専門家から返事が届きます（' + h(CFG.replyDays) + 'ほどが目安です）。</p></div>' +
         '<a class="btn ghost" href="#/home">ホームにもどる</a>';
     }
     return '' +
@@ -1082,14 +1082,13 @@
         '<h1 class="title">送信しました</h1>' +
         '<div class="ref"><span>受付番号</span><b>' + h(cs.ref) + '</b></div></div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">このあと</b>' +
-        '<p style="margin:0">後日、担当の専門家から <b style="word-break:break-all">' + h(cs.sentEmail) + '</b> あてに返事が届きます（目安 ' + h(CFG.replyDays) + '営業日）。</p></div>' +
+        '<p style="margin:0">後日、担当の専門家から <b style="word-break:break-all">' + h(cs.sentEmail) + '</b> あてに返事が届きます（' + h(CFG.replyDays) + 'ほどが目安です）。</p></div>' +
       '<div class="notice sun"><div class="notice-title">自動返信メールは届きません</div>' +
         '<p>受付番号と内容は、この画面でお控えください。</p>' +
         '<button class="btn small outline-ink" data-act="copy">送った内容をコピーする</button></div>' +
       '<div class="card" style="display:flex;gap:12px;align-items:center"><span class="ico-box tone-mint">' + icon('lock') + '</span>' +
         '<span>送った内容は、このアプリに残りません。</span></div>' +
       '<p class="note">返事が来ないときは、迷惑メールフォルダもご確認ください。</p>' +
-      (MADO.fallbackEmail ? '<a class="btn ghost" href="mailto:' + h(MADO.fallbackEmail) + '?subject=' + h(encodeURIComponent('【つぐいえ相談 ' + cs.ref + '】再送')) + '&body=' + h(encodeURIComponent(cs.sentText)) + '">メールアプリで送り直す</a>' : '') +
       '<a class="btn" href="#/home">ホームにもどる</a>';
   }
 
