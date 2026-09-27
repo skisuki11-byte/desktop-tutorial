@@ -373,6 +373,7 @@
           '<label class="check wel-skip" for="intro-skip"><input id="intro-skip" type="checkbox"' + (S.get().skipIntro ? ' checked' : '') + '>' +
             '<span>次回からこの画面を表示しない</span></label>' +
           '<p class="wel-meta"><span class="nb">無料・広告なし</span>　<span class="nb">制度の説明は2026年9月時点</span><br><a href="privacy.html">プライバシーポリシー</a></p>' +
+          '<p class="wel-ver">バージョン ' + h(CFG.version || '1.0') + '</p>' +
         '</div>' +
       '</div>';
   }
