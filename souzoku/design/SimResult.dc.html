@@ -2,76 +2,63 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>試算結果</title>
+<title>はかる 結果</title>
 <script src="./support.js"></script>
 </head>
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&amp;family=Zen+Maru+Gothic:wght@700&amp;display=swap">
 <style>
-body{margin:0;font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;color:#22213F;background:#F6F4FF}
-a{color:#5B4FE0}a:hover{color:#3F34B8}
+body{margin:0;font-family:"BIZ UDPGothic",sans-serif;background:#FAF7F1;color:#23272F}
+a{color:#2A5594}a:hover{color:#1E4274}
 </style>
 </helmet>
-<div style="width: 390px; height: 1300px; box-sizing: border-box; background: #F6F4FF; padding: 20px 20px 32px; display: flex; flex-direction: column; gap: 18px; overflow: hidden">
-  <a href="Main.dc.html" style="align-self: flex-start; min-height: 40px; display: flex; align-items: center; font-size: 14px; font-weight: 700; text-decoration: none">‹ はかる</a>
-  <div style="display: flex; flex-direction: column; gap: 2px">
-    <span style="font-size: 13px; color: #6B6B8C">静岡の実家・2026年9月26日</span>
-    <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 26px; font-weight: 900">試算の結果</h1>
+<div style="width: 390px; height: 1180px; box-sizing: border-box; background: #FAF7F1; padding: 16px 20px 32px; display: flex; flex-direction: column; gap: 16px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; min-height: 44px;">
+    <a href="Sim.dc.html" style="font-size: 16px; font-weight: 700; text-decoration: none;">‹ はかる</a>
+    <a href="Main.dc.html" style="font-size: 16px; font-weight: 700; text-decoration: none;">ホーム</a>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 2px;">
+    <span style="font-size: 15px; color: #5B5F69;">静岡市の戸建て・2026年9月27日</span>
+    <h1 style="margin: 0; font-family: 'Zen Maru Gothic', sans-serif; font-size: 26px;">試算の結果</h1>
   </div>
 
-  <div style="background: #FFC940; border-radius: 28px; padding: 20px 22px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 5px 0 #D9A400">
-    <span style="font-size: 14px; font-weight: 700">売ったときの手取り（空き家特例あり）</span>
-    <span style="font-family: 'Zen Maru Gothic', sans-serif; font-size: 52px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums">1,897<span style="font-size: 20px; margin-left: 4px">万円</span></span>
-    <span style="font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums">幅 1,704万〜2,090万円（売却価格±10%）</span>
-  </div>
-
-  <div style="background: #FFFFFF; border: 2px solid #E4E0F7; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
-    <b style="font-size: 15px">2,000万円のうちわけ</b>
-    <div aria-hidden="true" style="display: flex; height: 18px; border-radius: 9px; overflow: hidden; gap: 3px">
-      <span style="width: 94.9%; background: #5B4FE0"></span>
-      <span style="width: 5.1%; background: #4AA8FF"></span>
+  <div style="background: #FFFFFF; border: 2px solid #2A5594; border-radius: 20px; overflow: hidden;">
+    <div style="padding: 18px 20px 14px; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 15.5px; font-weight: 700;">売ったときの手取り（空き家特例あり）</span>
+      <span style="font-family: 'Zen Maru Gothic', sans-serif; font-size: 50px; font-weight: 700; color: #2A5594; line-height: 1.15;">2,409<small style="font-size: 20px; margin-left: 4px;">万円</small></span>
+      <span style="font-size: 15px; color: #5B5F69;">幅 2,168万〜2,651万円（売却価格±10%）</span>
     </div>
-    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px"><span style="display: flex; align-items: center; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 4px; background: #5B4FE0"></span>手取り</span><b style="font-variant-numeric: tabular-nums">1,897万円</b></div>
-    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px"><span style="display: flex; align-items: center; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 4px; background: #4AA8FF"></span>仲介手数料・印紙・その他</span><b style="font-variant-numeric: tabular-nums">102.6万円</b></div>
-    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px"><span style="display: flex; align-items: center; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 4px; background: #F2654F"></span>税金（長期 20.315%）</span><b style="font-variant-numeric: tabular-nums">0円</b></div>
-    <div style="display: flex; justify-content: space-between; font-size: 14px; border-top: 2px dashed #E4E0F7; padding-top: 10px"><span>1人あたり（2人で等分）</span><b style="font-variant-numeric: tabular-nums">948.7万円</b></div>
-  </div>
-
-  <div style="background: #FFFFFF; border: 2px solid #E4E0F7; border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
-    <div style="display: flex; justify-content: space-between; align-items: center">
-      <b style="font-size: 15px">空き家特例で変わる手取り</b>
-      <span style="font-size: 13px; font-weight: 900; background: #FFF4CF; border-radius: 999px; padding: 4px 12px; font-variant-numeric: tabular-nums">差 365万円</span>
-    </div>
-    <div style="display: flex; flex-direction: column; gap: 4px">
-      <div style="display: flex; justify-content: space-between; font-size: 13px"><span>特例あり</span><b style="font-variant-numeric: tabular-nums">1,897万円</b></div>
-      <div aria-hidden="true" style="height: 16px; border-radius: 8px; background: #5B4FE0; width: 100%"></div>
-    </div>
-    <div style="display: flex; flex-direction: column; gap: 4px">
-      <div style="display: flex; justify-content: space-between; font-size: 13px"><span>特例なし</span><b style="font-variant-numeric: tabular-nums">1,532万円</b></div>
-      <div aria-hidden="true" style="height: 16px; border-radius: 8px; background: #F2654F; width: 80.8%"></div>
-    </div>
-    <a href="Task.dc.html" style="font-size: 13.5px; font-weight: 700">空き家特例の要件を読む →</a>
-  </div>
-
-  <div style="background: #FFFFFF; border: 2px solid #E4E0F7; border-radius: 24px; padding: 18px; display: flex; align-items: center; gap: 14px">
-    <span style="flex-shrink: 0; width: 48px; height: 48px; border-radius: 16px; background: #FFE6E0; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B8391F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>
-    <div style="display: flex; flex-direction: column">
-      <span style="font-size: 13px; color: #55557A">売らずに持ち続けると</span>
-      <span style="font-family: 'Zen Maru Gothic', sans-serif; font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums">10年で約300万円</span>
-      <span style="font-size: 12px; color: #6B6B8C">固定資産税・管理など 年30万円</span>
+    <div style="display: flex; align-items: center; gap: 10px; background: #EAF0F8; padding: 12px 16px;">
+      <svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true" style="flex-shrink: 0;"><path d="M10 30 L32 10 L54 30 Z" fill="#2A5594" stroke="#2A5594" stroke-width="6" stroke-linejoin="round"></path><rect x="15" y="27" width="34" height="29" rx="9" fill="#FFF3D6"></rect><path d="M23 40 Q26 37 29 40" fill="none" stroke="#23272F" stroke-width="2.4" stroke-linecap="round"></path><path d="M35 40 Q38 37 41 40" fill="none" stroke="#23272F" stroke-width="2.4" stroke-linecap="round"></path><ellipse cx="21" cy="46" rx="3.2" ry="2" fill="#F2A58A"></ellipse><ellipse cx="43" cy="46" rx="3.2" ry="2" fill="#F2A58A"></ellipse></svg>
+      <span style="font-size: 15.5px; line-height: 1.6;">特例を使うと、税金が<b>464万円</b>少なくなります。</span>
     </div>
   </div>
 
-  <div style="display: flex; flex-direction: column; gap: 10px">
-    <a href="Consult.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 56px; background: #5B4FE0; color: #FFFFFF; border-radius: 999px; font-family: 'Zen Maru Gothic', sans-serif; font-size: 16px; font-weight: 900; text-decoration: none; box-shadow: 0 4px 0 #3F34B8">この結果を添えて専門家に聞く</a>
-    <a href="Sim.dc.html" style="display: flex; align-items: center; justify-content: center; min-height: 48px; background: #FFFFFF; color: #5B4FE0; border: 2px solid #D5CFFF; border-radius: 999px; font-size: 15px; font-weight: 700; text-decoration: none">条件を変えてもう一度</a>
+  <div style="background: #FFFFFF; border: 1px solid #E8E1D5; border-radius: 18px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px;">
+    <b style="font-size: 16px;">2,500万円のうちわけ</b>
+    <div style="display: flex; height: 16px; border-radius: 8px; overflow: hidden; gap: 3px; background: #F1ECE3;"><span style="width: 96%; background: #2A5594;"></span><span style="width: 3.5%; background: #8DAAD2;"></span><span style="width: 0.5%; background: #C0392B;"></span></div>
+    <div style="display: flex; justify-content: space-between; font-size: 16.5px;"><span>手取り</span><b>2,409万円</b></div>
+    <div style="display: flex; justify-content: space-between; font-size: 16.5px;"><span>仲介手数料（上限）</span><b>89.1万円</b></div>
+    <div style="display: flex; justify-content: space-between; font-size: 16.5px;"><span>印紙税</span><b>1万円</b></div>
+    <div style="display: flex; justify-content: space-between; font-size: 16.5px;"><span>税金（長期 20.315%）</span><b>0円</b></div>
+    <div style="display: flex; justify-content: space-between; font-size: 16px; border-top: 1px solid #E8E1D5; padding-top: 10px;"><span>1人あたり（2人で等分）</span><b>1,204万円</b></div>
   </div>
-  <p style="margin: 0; font-size: 12px; line-height: 1.7; color: #6B6B8C">概算です。実際の税額は、取得費や特例の要件で変わります。この試算は端末にだけ保存しています。</p>
+
+  <div style="background: #FFFFFF; border: 1px solid #E8E1D5; border-radius: 18px; padding: 16px 18px; display: flex; gap: 14px; align-items: center;">
+    <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true" style="flex-shrink: 0;"><rect width="56" height="56" rx="14" fill="#FBEDE4"></rect><rect x="14" y="24" width="28" height="20" rx="3" fill="#FFFFFF" stroke="#B4541F" stroke-width="2"></rect><path d="M10 26 L28 12 L46 26" fill="none" stroke="#B4541F" stroke-width="2.4" stroke-linejoin="round"></path><path d="M22 34h12" stroke="#B4541F" stroke-width="2" stroke-linecap="round"></path></svg>
+    <div style="display: flex; flex-direction: column;"><span style="font-size: 15px; color: #5B5F69;">売らずに持ち続けると</span><b style="font-family: 'Zen Maru Gothic', sans-serif; font-size: 22px;">10年で約120万円</b><span style="font-size: 14.5px; color: #5B5F69;">固定資産税・管理など 年12万円</span></div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <a href="Consult.dc.html" style="min-height: 56px; display: flex; align-items: center; justify-content: center; background: #2A5594; color: #FFFFFF; border-radius: 14px; font-size: 18px; font-weight: 700; text-decoration: none;">この結果を添えて専門家に聞く</a>
+    <a href="Sim.dc.html" style="min-height: 52px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1.5px solid #2A5594; border-radius: 14px; font-size: 17px; font-weight: 700; text-decoration: none;">条件を変えてもう一度</a>
+  </div>
+  <span style="font-size: 14.5px; color: #5B5F69;">概算です。この試算は端末にだけ保存しています。</span>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1300}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1180}}'>
 class Component extends DCLogic {
   renderVals() { return {}; }
 }

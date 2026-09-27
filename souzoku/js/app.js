@@ -21,7 +21,7 @@
 
   /* 画面の色：auto はスマホの設定に合わせる。light/dark は html に data-theme を付けて固定する。
      文字の大きさ：large は html に data-size を付け、画面全体を拡大する（css の zoom） */
-  var THEME_BG = { light: '#F4F5F7', dark: '#101318' };
+  var THEME_BG = { light: '#FAF7F1', dark: '#14161B' };
   function applyTheme() {
     var t = S.get().theme, root = document.documentElement;
     if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t); else root.removeAttribute('data-theme');
@@ -114,20 +114,49 @@
   /* いえまる：案内役。mood = 'calm' | 'happy' */
   function buddy(size, mood) {
     var eyes = mood === 'happy'
-      ? '<path d="M23 40 Q26 37 29 40" fill="none" stroke="#1B2130" stroke-width="2.4" stroke-linecap="round"/><path d="M35 40 Q38 37 41 40" fill="none" stroke="#1B2130" stroke-width="2.4" stroke-linecap="round"/>'
-      : '<circle cx="26" cy="40" r="2.8" fill="#1B2130"/><circle cx="38" cy="40" r="2.8" fill="#1B2130"/>';
+      ? '<path d="M23 40 Q26 37 29 40" fill="none" stroke="#23272F" stroke-width="2.4" stroke-linecap="round"/><path d="M35 40 Q38 37 41 40" fill="none" stroke="#23272F" stroke-width="2.4" stroke-linecap="round"/>'
+      : '<circle cx="26" cy="40" r="2.8" fill="#23272F"/><circle cx="38" cy="40" r="2.8" fill="#23272F"/>';
     var mouth = mood === 'happy'
-      ? '<path d="M28 46 Q32 50.5 36 46" fill="none" stroke="#1B2130" stroke-width="2.2" stroke-linecap="round"/>'
-      : '<path d="M28.5 46 Q32 49.5 35.5 46" fill="none" stroke="#1B2130" stroke-width="2.2" stroke-linecap="round"/>';
+      ? '<path d="M28 46 Q32 50.5 36 46" fill="none" stroke="#23272F" stroke-width="2.2" stroke-linecap="round"/>'
+      : '<path d="M28.5 46 Q32 49.5 35.5 46" fill="none" stroke="#23272F" stroke-width="2.2" stroke-linecap="round"/>';
     return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true">' +
-      '<path d="M10 30 L32 10 L54 30 Z" fill="#1F4E8C" stroke="#1F4E8C" stroke-width="6" stroke-linejoin="round"/>' +
-      '<rect x="41" y="12" width="7" height="12" rx="2" fill="#1F4E8C"/>' +
-      '<rect x="15" y="27" width="34" height="29" rx="9" fill="#FFF4CF"/>' + eyes +
-      '<ellipse cx="21" cy="46" rx="3.2" ry="2" fill="#FFB8A8"/><ellipse cx="43" cy="46" rx="3.2" ry="2" fill="#FFB8A8"/>' + mouth + '</svg>';
+      '<path d="M10 30 L32 10 L54 30 Z" fill="#2A5594" stroke="#2A5594" stroke-width="6" stroke-linejoin="round"/>' +
+      '<rect x="41" y="12" width="7" height="12" rx="2" fill="#2A5594"/>' +
+      '<rect x="15" y="27" width="34" height="29" rx="9" fill="#FFF3D6"/>' + eyes +
+      '<ellipse cx="21" cy="46" rx="3.2" ry="2" fill="#F2A58A"/><ellipse cx="43" cy="46" rx="3.2" ry="2" fill="#F2A58A"/>' + mouth + '</svg>';
   }
-  /* 画面の説明の一言。いえまる（案内役）はホームとオープニングだけに出し、ほかの画面は文字だけにする */
-  function say(text) {
-    return '<p class="lead">' + text + '</p>';
+  /* いえまるのナビ：その画面で何をするかを一言で。1画面1回・1〜2文まで（勝手に飛び出さない） */
+  function say(text, mood) {
+    return '<div class="navi">' + buddy(44, mood) + '<p class="navi-b">' + text + '</p></div>';
+  }
+  /* 画面の頭に置く小さなイラスト。丘・家・木・お日さまの平らな絵。色は css の --ill-* で、ダークモードにも合わせる */
+  function scene(kind) {
+    var house = function (x, y, s) {
+      return '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')">' +
+        '<rect x="8" y="24" width="56" height="40" rx="4" style="fill:var(--ill-wall)"/>' +
+        '<path d="M0 28 L36 0 L72 28 Z" fill="#2A5594"/>' +
+        '<rect x="30" y="40" width="14" height="24" rx="2" fill="#D2693C"/>' +
+        '<rect x="14" y="34" width="11" height="10" rx="2" style="fill:var(--ill-window)"/><rect x="48" y="34" width="11" height="10" rx="2" style="fill:var(--ill-window)"/></g>';
+    };
+    var tree = function (x, y, r) {
+      return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#6F9C7F"/><rect x="' + (x - 2) + '" y="' + (y + r * 0.5) + '" width="4" height="' + (r * 0.9) + '" fill="#6B5B4B"/>';
+    };
+    var sky = '<rect width="350" height="104" style="fill:var(--ill-sky)"/>';
+    var hills = '<path d="M0 78 Q70 52 150 70 T350 62 V104 H0 Z" style="fill:var(--ill-hill1)"/><path d="M0 90 Q90 74 190 88 T350 84 V104 H0 Z" style="fill:var(--ill-hill2)"/>';
+    var body;
+    if (kind === 'task') {
+      body = '<rect width="350" height="104" style="fill:var(--ill-sand)"/><path d="M0 82 Q90 60 180 76 T350 70 V104 H0 Z" style="fill:var(--ill-sand2)"/>' +
+        house(126, 36, 0.8) + '<rect x="200" y="56" width="62" height="26" rx="3" style="fill:var(--ill-wall)" stroke="#2A5594" stroke-width="2"/><path d="M210 65h42M210 72h26" stroke="#2A5594" stroke-width="2" stroke-linecap="round"/>';
+    } else if (kind === 'consult') {
+      var circ = function (cx, inner) { return '<circle cx="' + cx + '" cy="52" r="26" style="fill:var(--ill-wall)"/>' + inner; };
+      body = sky + '<path d="M0 90 Q90 74 175 86 T350 82 V104 H0 Z" style="fill:var(--ill-hill1)"/>' +
+        circ(80, '<path d="M66 54 L80 42 L94 54 M70 52 v12 h20 v-12" fill="none" stroke="#2A5594" stroke-width="2.6" stroke-linejoin="round"/>') +
+        circ(175, '<path d="M175 38 v28 M161 44 h28 M163 44 l-6 12 h12 z M187 44 l-6 12 h12 z" fill="none" stroke="#2A5594" stroke-width="2.4" stroke-linejoin="round"/>') +
+        circ(270, '<rect x="259" y="40" width="22" height="26" rx="3" fill="none" stroke="#2A5594" stroke-width="2.4"/><path d="M263 48h14M263 54h4M270 54h4M263 60h4M270 60h4" stroke="#2A5594" stroke-width="2.2" stroke-linecap="round"/>');
+    } else {
+      body = sky + '<circle cx="292" cy="30" r="14" fill="#F1C36A"/>' + hills + house(118, 26, 1) + tree(222, 72, 14) + tree(86, 76, 10);
+    }
+    return '<svg class="scene" viewBox="0 0 350 104" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + body + '</svg>';
   }
   /* 日付の入力。iPhone では空のとき何も表示されないので、案内の文字を重ねる */
   function dateInput(id, value) {
@@ -177,7 +206,7 @@
     var st = S.get();
     if (!st.deathISO) {
       return '' +
-        '<div class="buddy">' + buddy(56) + '<div class="bubble">いっしょに、ひとつずつ進めよう</div></div>' +
+        say('はじめまして、いえまるです。いっしょに、ひとつずつ進めましょう。', 'happy') +
         '<h1 class="title">亡くなった日を<br>入れてください</h1>' +
         '<div class="card start-card">' +
           '<div class="who-line"><span class="who-tag">だれの日付？</span>' +
@@ -195,25 +224,23 @@
     var s = DL.status(st.deathISO, st.done);
     var doneCount = s.items.filter(function (i) { return i.done; }).length, total = s.items.length;
     var nextId = s.next ? s.next.id : '';
-    var hero = '<div class="hero">' +
-      '<div style="display:flex;justify-content:space-between;align-items:baseline"><span class="strong" style="font-size:16px;opacity:.92">やることの進み具合</span>' +
-      '<span class="round num" style="font-size:22px;font-weight:900">' + doneCount + '<span style="font-size:16px;font-weight:700;opacity:.85"> / ' + total + ' 済み</span></span></div>' +
-      '<div class="meter" aria-hidden="true"><i style="width:' + Math.round(doneCount / total * 100) + '%"></i></div>' +
-      '<hr>' +
-      (s.next
-        ? '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px"><div style="display:flex;flex-direction:column"><span class="sub">次の期限</span><span class="strong">' + h(s.next.title) + '</span><span class="sub">' + dateJP(s.next.date) + 'まで</span></div>' +
-          '<span class="days">' + (s.next.left === 0 ? '今日' : comma(s.next.left) + '<small>日</small>') + '</span></div>'
-        : '<div class="strong">期限のある手続きは、ひととおり過ぎました</div>') +
-      '</div>';
+    var hero = '<div class="card progress-card">' + scene('home') +
+      '<div class="pc-body"><div class="pc-row"><span class="pc-k">やることの進み具合</span>' +
+        '<span class="pc-v"><b class="round num">' + doneCount + '</b> / ' + total + ' 済み</span></div>' +
+        '<div class="meter" aria-hidden="true"><i style="width:' + Math.round(doneCount / total * 100) + '%"></i></div></div></div>';
+    var navi = s.next
+      ? '<div class="navi navi-card">' + buddy(44, 'happy') + '<div class="navi-b"><span class="navi-k">次にやること</span>' +
+          '<b class="round">' + h(s.next.title) + '</b>' +
+          '<span class="navi-s">' + dateJP(s.next.date) + 'まで・' + (s.next.left === 0 ? '今日が期限です' : 'あと' + comma(s.next.left) + '日') + '。まずは中身を読んでみましょう。</span>' +
+          '<a class="btn small" href="#/task/' + s.next.id + '">読んでみる ›</a></div></div>'
+      : say(doneCount === total ? 'ぜんぶ済みました。本当におつかれさまでした。' : '期限のある手続きは、ひととおり過ぎました。残りも、できるところから進めましょう。', 'happy');
     var open = s.items.filter(function (i) { return !i.done; });
     var done = s.items.filter(function (i) { return i.done; });
-    var bubble = s.next && s.next.left <= 60 ? '次の期限が近いよ。まずは中身を読んでみよう'
-      : doneCount === total ? 'ぜんぶ済みました。本当におつかれさまでした' : 'ひとつずつ、いっしょに進めよう';
     return '' +
-      '<div class="buddy">' + buddy(52) + '<div class="bubble">' + bubble + '</div>' +
+      '<div class="home-head">' + buddy(48) + '<div class="hh-t"><span>いえまる</span><b class="round">ひとつずつ、進めましょう</b></div>' +
         '<a class="icon-btn labeled" href="#/settings">' + icon('gear') + '<span>設定</span></a></div>' +
-      hero + tilesHTML() +
-      '<div class="sec-row"><h2 class="sec">やること</h2><span class="note">タップでくわしく</span></div>' +
+      hero + navi + tilesHTML() +
+      '<div class="sec-row"><h2 class="sec">やること</h2><span class="note">期限の近い順</span></div>' +
       '<div class="task-list">' + open.map(function (it) { return taskRow(it, nextId); }).join('') +
         (done.length
           ? '<button class="done-head" data-act="toggle-done" aria-expanded="' + showDone + '"><span class="check-dot">' + icon('check', 14) + '</span>済んだこと ' + done.length + 'つ' + (showDone ? '（とじる）' : '（ひらく）') + '</button>' +
@@ -254,11 +281,11 @@
     }
     return '' +
       (returnTo ? '<a class="back" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'にもどる</a>' : '<a class="back" href="#/home">‹ ホーム</a>') +
-      '<div class="task-hero tone-' + t.tone + '">' +
+      '<div class="task-hero">' + scene('task') + '<div class="th-body">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start"><span class="ico-box big">' + icon(t.icon, 30) + '</span>' + chip + '</div>' +
         '<h1 class="title">' + h(it.title) + '</h1>' +
         '<div class="meta">' + (it.date ? dateJP(it.date) + 'まで・' : '') + '読むのに' + t.min + '分</div>' +
-        '<p>' + h(t.summary) + '</p></div>' +
+        '<p>' + h(t.summary) + '</p></div></div>' +
       '<h2 class="sec">まず知っておきたいこと</h2>' +
       '<div class="fact-grid">' + t.facts.map(function (f) {
         return '<div class="fact"><b>' + h(f.big) + '<small>' + h(f.unit) + '</small></b><span>' + h(f.text) + '</span></div>';
@@ -267,7 +294,7 @@
       '<h2 class="sec">用意するもの</h2><div class="pills">' + t.bring.map(function (b) { return '<span class="pill">' + h(b) + '</span>'; }).join('') + '</div>' +
       '<div class="card" style="display:flex;gap:12px;align-items:flex-start"><span class="ico-box tone-sky">' + icon('pin') + '</span>' +
         '<div style="display:flex;flex-direction:column"><span class="card-label">どこで</span><span style="font-size:16px;line-height:1.7">' + h(t.where) + '</span></div></div>' +
-      '<div class="point"><b>ポイント</b><p>' + h(t.tip) + '</p></div>' +
+      '<div class="navi">' + buddy(44) + '<div class="navi-b tip"><b>いえまるのワンポイント</b><span>' + h(t.tip) + '</span></div></div>' +
       help +
       '<p class="note">2026年9月時点の制度です。</p>' +
       (returnTo ? '<a class="btn ghost" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'にもどる</a>' : '') +
@@ -332,9 +359,9 @@
     return '' +
       '<div class="welcome">' +
         '<div class="wel-hero">' +
-          '<div class="wel-buddy">' + buddy(104, 'happy') + '</div>' +
           '<h1 class="wel-logo">つぐいえ</h1>' +
           '<p class="wel-tag"><span aria-hidden="true">〜</span>' + TAGLINE + '<span aria-hidden="true">〜</span></p>' +
+          '<div class="wel-scene">' + scene('home') + '<div class="wel-buddy">' + buddy(64, 'happy') + '</div></div>' +
         '</div>' +
         '<p class="wel-lead"><span class="nb">相続した家の</span><span class="nb"><b>やること</b>・<b>売ったらいくら</b>・</span><span class="nb"><b>だれに相談</b>を、</span><span class="nb">ひとつのアプリで。</span></p>' +
         '<ul class="wel-points">' + pts.map(function (p, i) {
@@ -706,8 +733,8 @@
       SIM_STEPS.map(function (_, i) { return '<span' + (i <= simStep ? ' class="on"' : '') + '></span>'; }).join('') + '</div>';
     return '' +
       '<div style="display:flex;justify-content:space-between;align-items:center"><a class="back" href="#/sim">× やめる</a><span class="step num" style="color:var(--faint)">' + (simStep + 1) + ' / ' + SIM_STEPS.length + '</span></div>' +
-      dots +
-      '<div style="display:flex;flex-direction:column;gap:6px"><h1 class="title">' + step.q + '</h1>' + say(step.say) + '</div>' +
+      dots + say(step.say) +
+      '<h1 class="title">' + step.q + '</h1>' +
       body +
       (simErr ? '<p class="err" role="alert">' + h(simErr) + '</p>' : '') +
       '<div class="btn-pair' + (simStep > 0 ? '' : ' single') + '">' +
@@ -783,7 +810,9 @@
       '<div style="display:flex;flex-direction:column;gap:2px"><span class="eyebrow">' + h(e.name) + '・' + dateJP(e.createdISO) + '</span><h1 class="title">試算の結果</h1></div>' +
       '<div class="result"><span class="k">売ったときの手取り' + (r.exemptionApplied ? '（空き家特例あり）' : '') + '</span>' +
         '<span class="v">' + manFloor(m.net) + '<small>万円</small></span>' +
-        '<span class="r">幅 ' + manFloor(r.rangeLow) + '万〜' + manFloor(r.rangeHigh) + '万円（売却価格±10%）</span></div>' +
+        '<span class="r">幅 ' + manFloor(r.rangeLow) + '万〜' + manFloor(r.rangeHigh) + '万円（売却価格±10%）</span>' +
+        (r.exemptionApplied && r.without.tax - m.tax > 0 ? '<div class="result-navi">' + buddy(40, 'happy') + '<span>特例を使うと、税金が<b>' + manFloor(r.without.tax - m.tax) + '万円</b>少なくなります。</span></div>' : '') +
+        '</div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:8px">' +
         '<b style="font-size:15px">' + yen(m.price) + 'のうちわけ</b>' +
         '<div class="stack" aria-hidden="true"><i style="width:' + pNet + '%;background:var(--violet)"></i><i style="width:' + pCost + '%;background:var(--sky)"></i><i style="width:' + pTax + '%;background:var(--coral)"></i></div>' +
@@ -866,12 +895,10 @@
     }).join('');
     return '' +
       '<h1 class="title">そうだん</h1>' +
-      '<div class="mado"><span class="free">無料</span><h2>' + h(MADO.name) + '</h2>' +
-        '<p>どこに聞けばいいか分からなくても大丈夫。ぴったりの専門家が答えます。</p>' +
+      '<div class="card mado">' + scene('home') + '<div class="mado-b"><span class="free">相談は無料</span><h2>' + h(MADO.name) + '</h2>' +
+        '<p>どこに聞けばいいか分からなくても大丈夫。不動産・弁護士・税理士のうち、ぴったりの専門家がメールで答えます。</p></div>' +
         '<div class="members">' + members + '</div></div>' +
-      '<div class="perks"><div class="perk"><b>電話なし</b><span>連絡はメールだけ</span></div>' +
-        '<div class="perk"><b>匿名OK</b><span>名前は任意</span></div>' +
-        '<div class="perk"><b>残さない</b><span>アプリに保存なし</span></div></div>' +
+      say('電話はかかってきません。返事はメールだけ。名前はニックネームでも大丈夫です。送った内容は、このアプリに残りません。') +
       '<h2 class="sec">相談の流れ</h2>' +
       '<ol class="card flow"><li><span class="n">1</span>アプリから相談を送る</li>' +
         '<li><span class="n">2</span>窓口が内容を見て、担当の専門家を決める</li>' +
