@@ -846,7 +846,7 @@
   var cs;
   function resetConsult() {
     cs = { name: '', email: '', area: '', topics: {}, body: '', attachId: '', agree: false, website: '',
-      sending: false, error: '', errors: {}, ref: '', sentEmail: '', sentText: '', viaMail: false, mailHref: '' };
+      sending: false, error: '', errorKind: '', errors: {}, ref: '', sentEmail: '', sentText: '', viaMail: false, mailHref: '' };
   }
   resetConsult();
   function topicsChosen() { return CFG.topics.filter(function (t) { return cs.topics[t.label]; }); }
@@ -960,7 +960,11 @@
         '<div class="after-row"><span class="num-dot">2</span><span><b>自動返信メールは届きません</b>。</span></div></div>' +
       '<label class="check" for="c-agree"><input id="c-agree" type="checkbox" data-act-change="agree"' + (cs.agree ? ' checked' : '') + '>' +
         '<span>' + h(MADO.name) + 'と、提携の専門家に内容を送ることに同意します（<a href="privacy.html">プライバシーポリシー</a>）</span></label>' +
-      (cs.error ? '<div class="notice coral" role="alert"><div class="notice-title">送信できませんでした</div><p>' + h(cs.error) + '</p>' +
+      (cs.error && cs.errorKind === 'quota'
+        ? '<div class="notice sun" role="alert"><div class="notice-title">ただいま混み合っています</div><p>' + h(cs.error) + '</p>' +
+          '<p>入力した内容は、アプリを閉じると消えます。コピーしておくと、明日すぐに送れます。</p>' +
+          '<button class="btn small outline-ink" data-act="copy-draft">入力した内容をコピーする</button></div>'
+        : cs.error ? '<div class="notice coral" role="alert"><div class="notice-title">送信できませんでした</div><p>' + h(cs.error) + '</p>' +
         (MADO.fallbackEmail ? '<a class="btn ghost" href="' + h(mailtoHref()) + '">メールアプリで送る</a>' : '') + '</div>' : '') +
       '<div class="btn-col">' +
         '<button class="btn" id="send-btn" data-act="send"' + (cs.agree && !cs.sending ? '' : ' disabled') + '>' + (cs.sending ? '送信中…' : CFG.endpoint ? 'この内容で送信する' : 'メールアプリで送信する') + '</button>' +
@@ -1015,7 +1019,7 @@
       name: cs.name.trim(), email: cs.email.trim(), area: cs.area.trim(), body: cs.body.trim(),
       estimate: est ? estimateSummary(est) : '', website: cs.website
     };
-    cs.sending = true; cs.error = ''; render();
+    cs.sending = true; cs.error = ''; cs.errorKind = ''; render();
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
     fetch(CFG.endpoint, {
@@ -1039,7 +1043,9 @@
       clearTimeout(timer);
       cs.sending = false;
       var code = err && err.message;
-      cs.error = code === 'busy' ? '送信が混み合っています。少し時間をおいてから、もう一度お試しください。'
+      cs.errorKind = code;
+      cs.error = code === 'quota' ? '本日の受付がいっぱいになりました。お手数ですが、明日以降にもう一度お送りください。'
+        : code === 'busy' ? '送信が混み合っています。少し時間をおいてから、もう一度お試しください。'
         : code === 'email' ? 'メールアドレスの形式を確認してください。'
         : '通信できませんでした。電波の良いところで、もう一度「この内容で送信する」を押してください。';
       render();
@@ -1254,8 +1260,9 @@
         else { render(); var bad = view.querySelector('.err'); if (bad) bad.scrollIntoView({ block: 'center' }); }
         break;
       case 'send': send(); break;
+      case 'copy-draft':
       case 'copy': {
-        var text = cs.sentText;
+        var text = act === 'copy-draft' ? consultText(cs.ref || '（未送信）') : cs.sentText;
         var ok = function () { toast('コピーしました'); };
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(ok, function () { fallbackCopy(text) ? ok() : toast('コピーできませんでした'); });
