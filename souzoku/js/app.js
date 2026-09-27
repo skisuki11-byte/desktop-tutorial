@@ -26,6 +26,7 @@
     view.innerHTML = '<div style="padding:24px"><p>安全のため、つぐいえはほかのサイトの中では開けません。</p>' +
       '<a class="btn" href="' + h(location.href) + '" target="_blank" rel="noopener">つぐいえを開く</a></div>';
     document.getElementById('tabbar').hidden = true;
+    document.documentElement.classList.remove('booting');
     return;
   }
 
@@ -1440,5 +1441,20 @@
   view.addEventListener('change', onInput);
 
   window.addEventListener('hashchange', render);
+  /* 起動：隠したまま最初の画面を組み立て、使う書体が届いたら（最大1.2秒）見せる。
+     見せるときにもう一度組み立てて、オープニングの動きを頭から始める */
+  var booted = false;
+  function reveal() {
+    if (booted) return;
+    booted = true;
+    document.documentElement.classList.remove('booting');
+    render();
+  }
   render();
+  if (!view.innerHTML) render();   // オープニングへ切り替えた直後は、ここで組み立てる
+  if (document.documentElement.classList.contains('booting') && document.fonts && document.fonts.ready) {
+    void view.offsetHeight;   // 組み立てた画面の文字に合わせて、書体の読み込みを始めさせる
+    document.fonts.ready.then(reveal, reveal);
+    setTimeout(reveal, 1200);
+  } else reveal();
 })();
