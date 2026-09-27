@@ -775,8 +775,11 @@
       '<ol class="card flow"><li><span class="n">1</span>アプリから相談を送る</li>' +
         '<li><span class="n">2</span>窓口が内容を見て、担当の専門家を決める</li>' +
         '<li><span class="n">3</span>後日、専門家からメールで返事が届く</li></ol>' +
-      '<div class="notice dashed"><b style="color:var(--ink)">お金のこと</b>' +
-        '<span>相談は無料です。運営者は窓口をご紹介するだけで、仲介はしません。</span></div>' +
+      '<div class="notice dashed money"><b class="notice-title">お金のこと</b>' +
+        '<p><b>相談は無料です。</b>不動産（宅建士）への相談は、何度でも無料です。</p>' +
+        '<p>弁護士・税理士は、書類づくりや手続きなど<b>実際のお仕事をお願いするときに、所定の費用</b>がかかります。</p>' +
+        '<p>費用がかかる前に、<b>必ず金額をお伝えします</b>。知らないうちに費用が発生することはありません。</p>' +
+        '<p class="note" style="margin:0">運営者は窓口をご紹介するだけで、仲介はしません。</p></div>' +
       '<a class="btn" href="#/consult/form">相談をはじめる</a>';
   }
 
