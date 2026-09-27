@@ -89,7 +89,7 @@
     bank: '<path d="M4 21h16M6 21V10M18 21V10M12 3l9 5H3z"/>',
     scale: '<path d="M12 3v18M5 7h14M5 7l-3 7h6zM19 7l-3 7h6zM8 21h8"/>',
     check: '<path d="M5 12l5 5 9-10"/>',
-    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+    gear: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
     pin: '<path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>'
@@ -161,7 +161,7 @@
         '</div></div>' +
         '<button class="btn" data-act="set-death">やることを出す</button>' +
         '<div class="sec-row"><h2 class="sec">日付を入れずに使う</h2></div>' + tilesHTML() +
-        '<p class="note">このアプリは無料です。<a href="#/learn/senmonka">運営のしくみ（紹介料について）</a></p>';
+        '<p class="note">このアプリは無料です。</p>';
     }
     var s = DL.status(st.deathISO, st.done);
     var doneCount = s.items.filter(function (i) { return i.done; }).length, total = s.items.length;
@@ -182,7 +182,7 @@
       : doneCount === total ? 'ぜんぶ済みました。本当におつかれさまでした' : 'ひとつずつ、いっしょに進めよう';
     return '' +
       '<div class="buddy">' + buddy(52) + '<div class="bubble">' + bubble + '</div>' +
-        '<a class="icon-btn" href="#/settings" aria-label="設定">' + icon('gear') + '</a></div>' +
+        '<a class="icon-btn labeled" href="#/settings">' + icon('gear') + '<span>設定</span></a></div>' +
       hero + tilesHTML() +
       '<div class="sec-row"><h2 class="sec">やること</h2><span class="note">タップでくわしく</span></div>' +
       '<div class="task-list">' + open.map(function (it) { return taskRow(it, nextId); }).join('') +
@@ -317,7 +317,7 @@
       '</div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:6px">' +
         '<div class="card-title">このアプリについて</div>' +
-        '<p class="note">つぐいえは無料です。運営者（' + h(CFG.operator) + '）は' + h(MADO.name) + 'をご紹介するだけで、仲介や交渉はしません。不動産の売買が成約したときだけ、提携の不動産会社から紹介料を受け取ります（あなたの支払いは増えません）。弁護士・税理士からは受け取りません。</p>' +
+        '<p class="note">つぐいえは無料です。運営者（' + h(CFG.operator) + '）は' + h(MADO.name) + 'をご紹介するだけで、仲介や交渉はしません。</p>' +
         '<a href="privacy.html">プライバシーポリシー</a>' +
       '</div>';
   }
@@ -776,7 +776,7 @@
         '<li><span class="n">2</span>窓口が内容を見て、担当の専門家を決める</li>' +
         '<li><span class="n">3</span>後日、専門家からメールで返事が届く</li></ol>' +
       '<div class="notice dashed"><b style="color:var(--ink)">お金のこと</b>' +
-        '<span>相談は無料。紹介料は、不動産の売買が成約したときだけ不動産会社から受け取ります（あなたの負担なし）。弁護士・税理士からは受け取りません。運営者は仲介しません。</span></div>' +
+        '<span>相談は無料です。運営者は窓口をご紹介するだけで、仲介はしません。</span></div>' +
       '<a class="btn" href="#/consult/form">相談をはじめる</a>';
   }
 
