@@ -853,8 +853,7 @@
         '<div class="dest"><span class="ico-box" style="background:var(--violet);color:var(--on-violet)">' + icon('chat') + '</span>' +
         '<span class="t"><b>' + h(MADO.name) + '</b><span>運営：' + h(MADO.org) + '</span></span></div>' +
         '<p class="note">内容に合わせて、不動産・弁護士・税理士に共有されます' +
-          (who.length ? '（今回はおもに' + who.map(function (m) { return m.role; }).join('・') + '）' : '') + '。</p>' +
-        '<p class="note">紹介料：不動産の売買が成約したときだけ、運営者が不動産会社から受け取ります（あなたの負担なし）。</p></div>' +
+          (who.length ? '（今回はおもに' + who.map(function (m) { return m.role; }).join('・') + '）' : '') + '。</p></div>' +
       '<div class="notice violet"><div class="notice-title">送ったあとのこと</div>' +
         '<div class="after-row"><span class="num-dot">1</span><span>後日、担当の専門家から<b>メールで返事が届きます</b>。</span></div>' +
         '<div class="after-row"><span class="num-dot">2</span><span><b>自動返信メールは届きません</b>。</span></div></div>' +
