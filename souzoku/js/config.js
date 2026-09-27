@@ -10,7 +10,7 @@
  * replyDays: 完了画面の「目安 ◯営業日以内」。
  */
 window.TG_CONFIG = {
-  endpoint: '',
+  endpoint: 'https://script.google.com/macros/s/AKfycbx8aT7pRsfezVnl1-DaZLE5JyfCOUN0enerjNcQ41BEw6GI-QiKMMXndpTCZpMkIVbX/exec',
   replyDays: '[返信の目安日数]',
   operator: '[運営者名]',
   madoguchi: {
