@@ -118,6 +118,8 @@ h2.sec{margin:0;font-family:var(--round);font-size:21px;font-weight:900}
 .bubble b{font-weight:700}
 .icon-btn{width:44px;height:44px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0;text-decoration:none}
 .icon-btn svg{width:22px;height:22px}
+.icon-btn.labeled{width:auto;flex-direction:column;gap:2px;padding:0 6px;height:52px;color:var(--ink)}
+.icon-btn.labeled span{font-size:12px;font-weight:700;line-height:1}
 
 /* ---------- 面 ---------- */
 .card{background:var(--panel);border:1.5px solid var(--line);border-radius:var(--r-lg);padding:16px 18px}
