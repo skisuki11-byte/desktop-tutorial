@@ -7,11 +7,11 @@
  *            [ ] の中は提携先が決まったら書き換える。
  *            fallbackEmail は、中継が未設定または送信に失敗したときに、メールアプリで送る宛先。
  * topics:    相談フォームの選択肢と、おもに答える専門家（色の表示に使う）。
- * replyDays: 完了画面の「目安 ◯営業日以内」。
+ * replyDays: 完了画面の「◯◯ほどが目安です」（返事が届くまでの目安）。
  */
 window.TG_CONFIG = {
   endpoint: 'https://script.google.com/macros/s/AKfycbx8aT7pRsfezVnl1-DaZLE5JyfCOUN0enerjNcQ41BEw6GI-QiKMMXndpTCZpMkIVbX/exec',
-  replyDays: '[返信の目安日数]',
+  replyDays: '3日',
   operator: '[運営者名]',
   madoguchi: {
     name: '相続の総合窓口',

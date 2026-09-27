@@ -9,6 +9,7 @@
   'use strict';
 
   var KEY = 'tsuguie.v1';
+  var MAX_EST = 2;   // 試算の保存は2件まで（比較用）
 
   function blank() {
     return { deathISO: '', done: {}, estimates: [], skipIntro: false, theme: 'auto', textSize: 'normal' };
@@ -32,6 +33,7 @@
           ['house', 'land', 'condo'].indexOf(e.input.kind) >= 0 && (e.input.heirs | 0) >= 1;
       });
     }
+    b.estimates = b.estimates.slice(0, MAX_EST);
     return b;
   }
 
@@ -62,11 +64,11 @@
       if (state.done[id]) delete state.done[id]; else state.done[id] = true;
       save();
     },
-    MAX_ESTIMATES: 20,
-    /* 20件を超えたら、いちばん古いもの（末尾）を消して入れる。消したものを返す */
+    MAX_ESTIMATES: MAX_EST,
+    /* 比較用に2件まで。超えたら、古いもの（末尾）を消して入れる。消したものを返す */
     addEstimate: function (e) {
       state.estimates.unshift(e);
-      var dropped = state.estimates.length > 20 ? state.estimates.splice(20) : [];
+      var dropped = state.estimates.length > MAX_EST ? state.estimates.splice(MAX_EST) : [];
       save();
       return dropped;
     },

@@ -455,7 +455,6 @@
   var returnTo = null;                    // 試算の結果 → やることの説明 → 戻る、のための戻り先   // 保存カードの「⋮」メニュー
   function estCard(e) {
     var r = CALC.estimate(e.input), i = e.input, open = menuId === e.id;
-    var place = i.prefName ? i.prefName + (i.cityName || '') : '';
     var menu = !open ? '' : '<div class="kebab-pop" role="menu">' + (menuConfirm
       ? '<p>この試算を削除しますか？</p><div class="kebab-row"><button class="text-btn" data-act="menu-close">やめる</button>' +
         '<button class="text-btn danger-text" data-act="menu-del-yes" data-id="' + h(e.id) + '">削除する</button></div>'
@@ -464,10 +463,9 @@
         '<button role="menuitem" class="danger-text" data-act="menu-del">削除する</button>') + '</div>';
     return '<div class="est-card' + (open ? ' open' : '') + '">' +
       '<a class="est-link" href="#/sim/' + h(e.id) + '" aria-label="' + h(e.name) + 'の結果を見る"></a>' +
-      '<div class="est-top"><span class="ico-box tone-sun">' + icon('house') + '</span>' +
-        '<span class="t"><b>' + h(e.name) + '</b><span>' + dateJP(e.createdISO) + '・' + h(KIND[i.kind] || '') + (place ? '・' + h(place) : '') + '</span></span></div>' +
-      '<div class="est-net"><span>手取り</span><b class="num">' + manFloor(r.main.net) + '<small>万円</small></b>' +
-        (r.exemptionApplied ? '<span class="badge">空き家特例あり</span>' : '') + '</div>' +
+      '<span class="ico-box tone-sun">' + icon('house') + '</span>' +
+      '<span class="t"><b>' + h(e.name) + '</b><span>' + dateJP(e.createdISO).replace(/^\d+年/, '') + '・' + h(KIND[i.kind] || '') + (r.exemptionApplied ? '・特例あり' : '') + '</span></span>' +
+      '<span class="est-net"><span>手取り</span><b class="num">' + manFloor(r.main.net) + '<small>万円</small></b></span>' +
       '<button class="kebab" data-act="menu" data-id="' + h(e.id) + '" aria-label="' + h(e.name) + 'のメニュー" aria-expanded="' + open + '">' + icon('more', 22) + '</button>' +
       menu + '</div>';
   }
@@ -484,7 +482,7 @@
         '<span class="round" style="font-size:24px;font-weight:900;line-height:1.35">' + (ests.length ? '新しく試算する' : '売ったら、<br>いくら残る？') + '</span>' +
         '<span style="font-size:16px;line-height:1.7">6つの質問で、税金や特例まで入れた手取りがわかります。</span>' +
         '<a class="btn" href="#/sim/new" style="margin-top:6px">試算をはじめる</a></div>' +
-      '<p class="note">結果はこの端末にだけ保存します（' + S.MAX_ESTIMATES + '件まで。超えると、いちばん古いものから消えます）。</p>';
+      '<p class="note">結果はこの端末にだけ保存します。くらべられるように' + S.MAX_ESTIMATES + '件まで。新しく保存すると、古いほうから消えます。</p>';
   }
 
   var draft = null, simStep = 0, simErr = '';
@@ -765,7 +763,7 @@
     var place = (d.cityName || '').replace(/(市|区|町|村).*$/, '$1');
     var e = { id: uid(), name: d.name.trim() || (place ? place + 'の' : '相続した') + (d.kind === 'land' ? '土地' : KIND[d.kind]), createdISO: DL.todayISO(), input: input };
     var dropped = S.addEstimate(e);
-    if (dropped.length) toast('保存は' + S.MAX_ESTIMATES + '件までなので、いちばん古い「' + dropped[0].name + '」を消しました');
+    if (dropped.length) toast('保存は' + S.MAX_ESTIMATES + '件までなので、古い「' + dropped[0].name + '」を消しました');
     draft = null; simStep = 0; simErr = '';
     go('#/sim/' + e.id);
   }
@@ -1076,7 +1074,7 @@
           '<p class="round" style="margin:0;font-size:19px;font-weight:900;word-break:break-all">' + h(MADO.fallbackEmail) + '</p>' +
           '<button class="btn small outline-ink" data-act="copy">内容をコピーする</button></div>' +
         '<div class="notice sun"><div class="notice-title">自動返信メールは届きません</div>' +
-          '<p>後日、担当の専門家から返事が届きます（目安 ' + h(CFG.replyDays) + '営業日）。</p></div>' +
+          '<p>後日、担当の専門家から返事が届きます（' + h(CFG.replyDays) + 'ほどが目安です）。</p></div>' +
         '<a class="btn ghost" href="#/home">ホームにもどる</a>';
     }
     return '' +
@@ -1084,14 +1082,13 @@
         '<h1 class="title">送信しました</h1>' +
         '<div class="ref"><span>受付番号</span><b>' + h(cs.ref) + '</b></div></div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:6px"><b style="font-size:15px">このあと</b>' +
-        '<p style="margin:0">後日、担当の専門家から <b style="word-break:break-all">' + h(cs.sentEmail) + '</b> あてに返事が届きます（目安 ' + h(CFG.replyDays) + '営業日）。</p></div>' +
+        '<p style="margin:0">後日、担当の専門家から <b style="word-break:break-all">' + h(cs.sentEmail) + '</b> あてに返事が届きます（' + h(CFG.replyDays) + 'ほどが目安です）。</p></div>' +
       '<div class="notice sun"><div class="notice-title">自動返信メールは届きません</div>' +
         '<p>受付番号と内容は、この画面でお控えください。</p>' +
         '<button class="btn small outline-ink" data-act="copy">送った内容をコピーする</button></div>' +
       '<div class="card" style="display:flex;gap:12px;align-items:center"><span class="ico-box tone-mint">' + icon('lock') + '</span>' +
         '<span>送った内容は、このアプリに残りません。</span></div>' +
       '<p class="note">返事が来ないときは、迷惑メールフォルダもご確認ください。</p>' +
-      (MADO.fallbackEmail ? '<a class="btn ghost" href="mailto:' + h(MADO.fallbackEmail) + '?subject=' + h(encodeURIComponent('【つぐいえ相談 ' + cs.ref + '】再送')) + '&body=' + h(encodeURIComponent(cs.sentText)) + '">メールアプリで送り直す</a>' : '') +
       '<a class="btn" href="#/home">ホームにもどる</a>';
   }
 
