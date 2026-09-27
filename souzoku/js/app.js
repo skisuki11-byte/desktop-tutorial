@@ -18,6 +18,19 @@
       DL = window.TGDeadlines, ARTS = window.TG_ARTICLES, TASKS = window.TG_TASKS;
   var MADO = CFG.madoguchi;
   var view = document.getElementById('view');
+
+  /* 画面の色：auto はスマホの設定に合わせる。light/dark は html に data-theme を付けて固定する */
+  var THEME_BG = { light: '#F6F4FF', dark: '#15142A' };
+  function applyTheme() {
+    var t = S.get().theme, root = document.documentElement;
+    if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t); else root.removeAttribute('data-theme');
+    Array.prototype.forEach.call(document.querySelectorAll('meta[name="theme-color"]'), function (m) {
+      if (!m.hasAttribute('data-media')) m.setAttribute('data-media', m.getAttribute('media') || '');
+      var dark = /dark/.test(m.getAttribute('data-media'));
+      m.setAttribute('content', t === 'auto' ? THEME_BG[dark ? 'dark' : 'light'] : THEME_BG[t]);
+    });
+  }
+  applyTheme();
   var tabbar = document.getElementById('tabbar');
 
   /* ---------- 小さな道具 ---------- */
@@ -153,9 +166,12 @@
       return '' +
         say('いえまるです。手続きを、ひとつずつ案内するよ', 64) +
         '<h1 class="title">亡くなった日を教えてください</h1>' +
+        '<div class="who-card"><span class="ico-box tone-violet">' + icon('home') + '</span>' +
+          '<span class="t"><b>だれの日付？</b><span>家や財産をのこして亡くなった方（親など）の日付です。</span>' +
+          '<small>書類では「被相続人（ひそうぞくにん）」と書かれている方です。</small></span></div>' +
         '<p class="lead">期限と残り日数を出します。日付はこの端末にだけ保存します。</p>' +
         '<div class="card"><div class="field">' +
-          '<label for="death">亡くなった日</label>' +
+          '<label for="death">亡くなった方の、亡くなった日</label>' +
           '<input id="death" class="input" type="date" max="' + DL.todayISO() + '">' +
           '<p class="err" id="death-err" hidden>日付を入れてください。</p>' +
         '</div></div>' +
@@ -295,7 +311,7 @@
   var introShown = false;
   function vWelcome() {
     var pts = [
-      ['clock', 'violet', '期限がひと目でわかる', '亡くなった日を入れるだけで、手続きを期限の順に並べます'],
+      ['clock', 'violet', '期限がひと目でわかる', '親などが亡くなった日を入れるだけで、手続きを期限の順に並べます'],
       ['lock', 'mint', '登録なし・端末の中だけ', '会員登録はいりません。入力はこのスマホの中にだけ保存します'],
       ['chat', 'sun', '専門家の総合窓口', '不動産（宅建士）・弁護士・税理士に、まとめて相談できます']
     ];
@@ -330,9 +346,16 @@
       '<a class="back" href="#/home">‹ ホーム</a>' +
       '<h1 class="title">設定</h1>' +
       (S.isPersistent() ? '' : '<div class="notice coral"><p>この環境では端末に保存できません。アプリを閉じると入力が消えます。</p></div>') +
-      '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="field"><label for="death2">亡くなった日（相続開始日）</label>' +
+      '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="field"><label for="death2">亡くなった方（親など）の、亡くなった日</label>' +
         '<input id="death2" class="input" type="date" max="' + DL.todayISO() + '" value="' + h(st.deathISO) + '"></div>' +
         '<button class="btn small" data-act="save-death">日付を保存する</button></div>' +
+      '<div class="card" style="display:flex;flex-direction:column;gap:10px">' +
+        '<div class="card-title">画面の色</div>' +
+        '<div class="theme-seg" role="radiogroup" aria-label="画面の色">' + [['auto', '自動'], ['light', '明るい'], ['dark', '暗い']].map(function (o) {
+          return '<button type="button" class="chipbtn" role="radio" data-act="theme" data-v="' + o[0] + '" aria-checked="' + (st.theme === o[0]) + '" aria-pressed="' + (st.theme === o[0]) + '">' + o[1] + '</button>';
+        }).join('') + '</div>' +
+        '<p class="note">「自動」は、スマホの設定（ダークモード）に合わせます。</p>' +
+      '</div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:10px">' +
         '<div class="card-title">オープニング画面</div>' +
         '<label class="check" for="intro-show"><input id="intro-show" type="checkbox" data-act-change="intro-show"' + (st.skipIntro ? '' : ' checked') + '>' +
@@ -1115,6 +1138,7 @@
     if (!el || !(view.contains(el))) return;
     var act = el.getAttribute('data-act');
     switch (act) {
+      case 'theme': S.setTheme(el.getAttribute('data-v')); applyTheme(); render(); break;
       case 'intro-start': {
         var sk = document.getElementById('intro-skip');
         S.setSkipIntro(!!(sk && sk.checked));
@@ -1150,7 +1174,7 @@
       }
       case 'clear': confirmClear = true; render(); break;
       case 'clear-no': confirmClear = false; render(); break;
-      case 'clear-yes': S.clearAll(); confirmClear = false; toast('すべて消しました'); go('#/home'); break;
+      case 'clear-yes': S.clearAll(); applyTheme(); confirmClear = false; toast('すべて消しました'); go('#/home'); break;
       case 'yn': {
         var raw = el.getAttribute('data-v');
         draft[el.getAttribute('data-k')] = raw === 'true' ? true : raw === 'false' ? false : 'unk';
@@ -1255,7 +1279,7 @@
     if (el.id === 'import-file' && el.files && el.files[0]) {
       var reader = new FileReader();
       reader.onload = function () {
-        try { S.importJSON(String(reader.result)); toast('読み込みました'); render(); }
+        try { S.importJSON(String(reader.result)); applyTheme(); toast('読み込みました'); render(); }
         catch (e) { toast(e.message || '読み込めませんでした'); }
       };
       reader.readAsText(el.files[0]);

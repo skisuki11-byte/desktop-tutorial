@@ -1,6 +1,6 @@
 /* store.js — 端末の中だけに保存する。通信は一切しない。
  *
- * 保存するのは「相続開始日」「手続きの済」「試算結果」と、オープニングを出すかどうかだけ。
+ * 保存するのは「相続開始日」「手続きの済」「試算結果」と、オープニング・画面の色の設定だけ。
  * 相談フォームの入力は保存しない（送ったら消える。app.js がメモリに持つだけ）。
  * localStorage が使えない環境（プライベートブラウズ等）でも落ちないよう、
  * 読み書きはすべて try で包み、失敗したらメモリだけで動かす。
@@ -11,7 +11,7 @@
   var KEY = 'tsuguie.v1';
 
   function blank() {
-    return { deathISO: '', done: {}, estimates: [], skipIntro: false };
+    return { deathISO: '', done: {}, estimates: [], skipIntro: false, theme: 'auto' };
   }
 
   function coerce(v) {
@@ -22,6 +22,7 @@
       Object.keys(v.done).forEach(function (k) { if (v.done[k] === true) b.done[k] = true; });
     }
     if (v.skipIntro === true) b.skipIntro = true;
+    if (v.theme === 'light' || v.theme === 'dark') b.theme = v.theme;
     if (Array.isArray(v.estimates)) {
       b.estimates = v.estimates.filter(function (e) {
         return e && typeof e === 'object' && typeof e.id === 'string' && /^[a-z0-9]{1,40}$/.test(e.id) &&
@@ -54,6 +55,7 @@
     isPersistent: function () { return persistent; },
     setDeath: function (iso) { state.deathISO = iso; save(); },
     setSkipIntro: function (on) { state.skipIntro = !!on; save(); },
+    setTheme: function (t) { state.theme = (t === 'light' || t === 'dark') ? t : 'auto'; save(); },
     toggleDone: function (id) {
       if (state.done[id]) delete state.done[id]; else state.done[id] = true;
       save();
