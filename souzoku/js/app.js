@@ -127,6 +127,12 @@
   function say(text, size) {
     return '<div class="buddy">' + buddy(size || 52) + '<div class="bubble">' + text + '</div></div>';
   }
+  /* 日付の入力。iPhone では空のとき何も表示されないので、案内の文字を重ねる */
+  function dateInput(id, value) {
+    return '<div class="date-wrap' + (value ? '' : ' is-empty') + '">' +
+      '<input id="' + id + '" class="input" type="date" max="' + DL.todayISO() + '" value="' + h(value) + '">' +
+      '<span class="date-ph" aria-hidden="true">日付をえらぶ</span></div>';
+  }
   var AV = { fudosan: ['av-sun', 'home'], bengoshi: ['av-sky', 'scale'], zeirishi: ['av-mint', 'calc'] };
   function trio() {
     return '<div class="trio">' + MADO.members.map(function (m) {
@@ -166,17 +172,17 @@
     var st = S.get();
     if (!st.deathISO) {
       return '' +
-        say('いえまるです。手続きを、ひとつずつ案内するよ', 64) +
-        '<h1 class="title">亡くなった日を教えてください</h1>' +
-        '<div class="who-card"><span class="ico-box tone-violet">' + icon('home') + '</span>' +
-          '<span class="t"><b>だれの日付？</b><span>家や財産をのこして亡くなった方（親など）の日付です。</span>' +
-          '<small>書類では「被相続人（ひそうぞくにん）」と書かれている方です。</small></span></div>' +
-        '<p class="lead">期限と残り日数を出します。日付はこの端末にだけ保存します。</p>' +
-        '<div class="card"><div class="field">' +
-          '<label for="death">亡くなった方の、亡くなった日</label>' +
-          '<input id="death" class="input" type="date" max="' + DL.todayISO() + '">' +
-          '<p class="err" id="death-err" hidden>日付を入れてください。</p>' +
-        '</div></div>' +
+        say('いっしょに、ひとつずつ進めよう', 56) +
+        '<h1 class="title">亡くなった日を<br>入れてください</h1>' +
+        '<div class="card start-card">' +
+          '<div class="who-line"><span class="who-tag">だれの日付？</span>' +
+            '<b>家をのこした方（親など）</b><small>書類では「被相続人」</small></div>' +
+          '<div class="field">' +
+            '<label for="death">亡くなった日</label>' + dateInput('death', '') +
+            '<p class="err" id="death-err" hidden>日付を入れてください。</p>' +
+          '</div>' +
+          '<p class="note">日付はこの端末にだけ保存します。</p>' +
+        '</div>' +
         '<button class="btn" data-act="set-death">やることを出す</button>' +
         '<div class="sec-row"><h2 class="sec">日付を入れずに使う</h2></div>' + tilesHTML() +
         '<p class="note">このアプリは無料です。</p>';
@@ -349,7 +355,7 @@
       '<h1 class="title">設定</h1>' +
       (S.isPersistent() ? '' : '<div class="notice coral"><p>この環境では端末に保存できません。アプリを閉じると入力が消えます。</p></div>') +
       '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="field"><label for="death2">亡くなった方（親など）の、亡くなった日</label>' +
-        '<input id="death2" class="input" type="date" max="' + DL.todayISO() + '" value="' + h(st.deathISO) + '"></div>' +
+        dateInput('death2', st.deathISO) + '</div>' +
         '<button class="btn small" data-act="save-death">日付を保存する</button></div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:10px">' +
         '<div class="card-title">文字の大きさ</div>' +
@@ -1243,6 +1249,9 @@
 
   /* 入力：画面を描き直さずに状態だけ更新する（フォーカスを失わないため） */
   function onInput(ev) {
+    if (ev.target && ev.target.type === 'date' && ev.target.parentNode.classList.contains('date-wrap')) {
+      ev.target.parentNode.classList.toggle('is-empty', !ev.target.value);
+    }
     var el = ev.target;
     var k = el.getAttribute('data-bind');
     if (k && draft) {
