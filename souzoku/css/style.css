@@ -552,6 +552,7 @@ input[type="date"].input::-webkit-calendar-picker-indicator{opacity:0;position:a
 .wel-skip input{margin:0;width:26px;height:26px}
 .wel-meta{margin:0;padding:0 8px;text-align:center;font-size:15px;line-height:1.9;color:var(--muted)}
 .wel-meta a{color:var(--muted)}
+.wel-ver{margin:0;text-align:center;font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
 .wel-points .tone-mint{background:var(--mint-soft);color:var(--mint-ink)}
 .wel-points .tone-sun{background:var(--kaki-soft);color:var(--kaki)}
 .wel-points .ico-box{border-radius:50%}
