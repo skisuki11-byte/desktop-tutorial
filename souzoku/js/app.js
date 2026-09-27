@@ -107,7 +107,8 @@
     gear: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
-    pin: '<path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>'
+    pin: '<path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+    more: '<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>'
   };
   function icon(name, size) { return svg(PATHS[name] || PATHS.doc, size); }
   /* いえまる：案内役。mood = 'calm' | 'happy' */
@@ -164,7 +165,8 @@
   }
   function tilesHTML() {
     return '<div class="tiles">' +
-      '<a class="tile sun" href="#/sim"><span class="ico">' + icon('calc', 24) + '</span><b>売ったら<br>いくら残る？</b><span class="s">手取りをはかる</span></a>' +
+      '<a class="tile sun" href="#/sim"><span class="ico">' + icon('calc', 24) + '</span><b>売ったら<br>いくら残る？</b><span class="s">' +
+        (S.get().estimates.length ? '保存した試算 ' + S.get().estimates.length + '件' : '手取りをはかる') + '</span></a>' +
       '<a class="tile violet" href="#/consult"><span class="ico">' + icon('chat', 24) + '</span><b>専門家に<br>聞いてみる</b><span class="s">' + h(MADO.name) + '</span></a>' +
       '</div>';
   }
@@ -248,7 +250,7 @@
         '<a class="btn ghost" href="#/consult">総合窓口に相談する</a></div>';
     }
     return '' +
-      '<a class="back" href="#/home">‹ ホーム</a>' +
+      (returnTo ? '<a class="back" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'にもどる</a>' : '<a class="back" href="#/home">‹ ホーム</a>') +
       '<div class="task-hero tone-' + t.tone + '">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start"><span class="ico-box big">' + icon(t.icon, 30) + '</span>' + chip + '</div>' +
         '<h1 class="title">' + h(it.title) + '</h1>' +
@@ -265,6 +267,7 @@
       '<div class="buddy" style="align-items:flex-start">' + buddy(44) + '<div class="bubble tail-l"><b>いえまるのひとこと</b><br>' + h(t.tip) + '</div></div>' +
       help +
       '<p class="note">2026年9月時点の制度です。</p>' +
+      (returnTo ? '<a class="btn ghost" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'にもどる</a>' : '') +
       '<div class="dock"><div class="dock-in">' +
         (it.done
           ? '<div style="display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;color:var(--mint-ink);min-height:40px"><span class="check-dot" style="width:26px;height:26px">' + icon('check', 16) + '</span>「済」にしました</div>' +
@@ -448,22 +451,40 @@
   /* ======================================================
      はかる
      ====================================================== */
+  var menuId = '', menuConfirm = false;
+  var returnTo = null;                    // 試算の結果 → やることの説明 → 戻る、のための戻り先   // 保存カードの「⋮」メニュー
+  function estCard(e) {
+    var r = CALC.estimate(e.input), i = e.input, open = menuId === e.id;
+    var place = i.prefName ? i.prefName + (i.cityName || '') : '';
+    var menu = !open ? '' : '<div class="kebab-pop" role="menu">' + (menuConfirm
+      ? '<p>この試算を削除しますか？</p><div class="kebab-row"><button class="text-btn" data-act="menu-close">やめる</button>' +
+        '<button class="text-btn danger-text" data-act="menu-del-yes" data-id="' + h(e.id) + '">削除する</button></div>'
+      : '<a role="menuitem" href="#/sim/' + h(e.id) + '">結果を見る</a>' +
+        '<button role="menuitem" data-act="sim-again" data-id="' + h(e.id) + '">条件を変えて試算</button>' +
+        '<button role="menuitem" class="danger-text" data-act="menu-del">削除する</button>') + '</div>';
+    return '<div class="est-card' + (open ? ' open' : '') + '">' +
+      '<a class="est-link" href="#/sim/' + h(e.id) + '" aria-label="' + h(e.name) + 'の結果を見る"></a>' +
+      '<div class="est-top"><span class="ico-box tone-sun">' + icon('house') + '</span>' +
+        '<span class="t"><b>' + h(e.name) + '</b><span>' + dateJP(e.createdISO) + '・' + h(KIND[i.kind] || '') + (place ? '・' + h(place) : '') + '</span></span></div>' +
+      '<div class="est-net"><span>手取り</span><b class="num">' + manFloor(r.main.net) + '<small>万円</small></b>' +
+        (r.exemptionApplied ? '<span class="badge">空き家特例あり</span>' : '') + '</div>' +
+      '<button class="kebab" data-act="menu" data-id="' + h(e.id) + '" aria-label="' + h(e.name) + 'のメニュー" aria-expanded="' + open + '">' + icon('more', 22) + '</button>' +
+      menu + '</div>';
+  }
   function vSimList() {
     var ests = S.get().estimates;
-    var list = ests.map(function (e) {
-      var r = CALC.estimate(e.input);
-      return '<a class="task-row" href="#/sim/' + h(e.id) + '"><span class="ico-box tone-sun">' + icon('house') + '</span>' +
-        '<span class="t"><b>' + h(e.name) + '</b><span>' + dateJP(e.createdISO) + '・' + h(KIND[e.input.kind] || '') + '</span></span>' +
-        '<span style="text-align:right"><span class="card-label">手取り</span><br><b class="round num" style="font-size:18px">' + manFloor(r.main.net) + '万円</b></span></a>';
-    }).join('');
+    var saved = ests.length
+      ? '<div class="sec-row"><h2 class="sec">保存した試算</h2><span class="note">' + ests.length + ' / ' + S.MAX_ESTIMATES + '件</span></div>' +
+        '<div class="est-list">' + ests.map(estCard).join('') + '</div>'
+      : '';
     return '' +
       '<h1 class="title">はかる</h1>' +
+      saved +
       '<div class="result" style="gap:10px">' +
-        '<span class="round" style="font-size:24px;font-weight:900;line-height:1.35">売ったら、<br>いくら残る？</span>' +
+        '<span class="round" style="font-size:24px;font-weight:900;line-height:1.35">' + (ests.length ? '新しく試算する' : '売ったら、<br>いくら残る？') + '</span>' +
         '<span style="font-size:16px;line-height:1.7">6つの質問で、税金や特例まで入れた手取りがわかります。</span>' +
         '<a class="btn" href="#/sim/new" style="margin-top:6px">試算をはじめる</a></div>' +
-      '<p class="note">結果はこの端末にだけ保存します。</p>' +
-      (list ? '<h2 class="sec">保存した試算</h2><div class="task-list">' + list + '</div>' : '');
+      '<p class="note">結果はこの端末にだけ保存します（' + S.MAX_ESTIMATES + '件まで。超えると、いちばん古いものから消えます）。</p>';
   }
 
   var draft = null, simStep = 0, simErr = '';
@@ -743,7 +764,8 @@
     };
     var place = (d.cityName || '').replace(/(市|区|町|村).*$/, '$1');
     var e = { id: uid(), name: d.name.trim() || (place ? place + 'の' : '相続した') + (d.kind === 'land' ? '土地' : KIND[d.kind]), createdISO: DL.todayISO(), input: input };
-    S.addEstimate(e);
+    var dropped = S.addEstimate(e);
+    if (dropped.length) toast('保存は' + S.MAX_ESTIMATES + '件までなので、いちばん古い「' + dropped[0].name + '」を消しました');
     draft = null; simStep = 0; simErr = '';
     go('#/sim/' + e.id);
   }
@@ -788,12 +810,12 @@
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:15px">空き家特例で変わる手取り</b><span class="badge">差 ' + manFloor(r.without.tax - m.tax) + '万円</span></div>' +
         '<div class="cmp"><div class="row"><span>特例あり</span><b class="num">' + manFloor(m.net) + '万円</b></div><div class="bar" style="background:var(--violet);width:100%"></div></div>' +
         '<div class="cmp"><div class="row"><span>特例なし</span><b class="num">' + manFloor(r.without.net) + '万円</b></div><div class="bar" style="background:var(--coral);width:' + Math.max(4, ratio) + '%"></div></div>' +
-        '<a href="#/task/akiya" style="font-size:15px;font-weight:700">空き家特例の要件を読む →</a></div>';
+        '<a href="#/task/akiya" data-return="#/sim/' + h(e.id) + '" style="font-size:15px;font-weight:700">空き家特例の要件を読む →</a></div>';
     } else if (inp.kind === 'house' && r.without.gain > 0) {
       html += '<div class="card" style="display:flex;flex-direction:column;gap:8px"><b style="font-size:15px">空き家特例は、まだ使えるか確かめられていません</b>' +
         '<p class="note">あと、これがそろえば使えます。</p>' +
         '<ul class="reasons">' + r.akiya.reasons.map(function (x) { return '<li>' + h(x) + '</li>'; }).join('') + '</ul>' +
-        '<a href="#/task/akiya" style="font-size:15px;font-weight:700">空き家特例のやることを読む →</a></div>';
+        '<a href="#/task/akiya" data-return="#/sim/' + h(e.id) + '" style="font-size:15px;font-weight:700">空き家特例のやることを読む →</a></div>';
     }
     if (r.holdYear > 0) {
       html += '<div class="card" style="display:flex;align-items:center;gap:14px"><span class="ico-box big tone-coral" style="width:48px;height:48px">' + icon('clock', 24) + '</span>' +
@@ -1112,7 +1134,8 @@
     if (!introShown && p === 'home' && !S.get().skipIntro) { introShown = true; location.replace('#/welcome'); return; }
     introShown = true;
     var sheet = document.querySelector('.sheet-wrap'); if (sheet) sheet.remove();
-    if (lastPath !== p) { confirmClear = false; confirmDelEst = false; simErr = ''; }
+    if (lastPath !== p) { confirmClear = false; confirmDelEst = false; simErr = ''; menuId = ''; menuConfirm = false; }
+    if (returnTo && parts[0] !== 'task') returnTo = null;
     if (lastPath === 'consult/done' && p !== 'consult/done') resetConsult();
     if (lastPath === 'sim/new' && p !== 'sim/new') { draft = null; simStep = 0; }
     switch (parts[0]) {
@@ -1151,6 +1174,9 @@
      操作
      ====================================================== */
   document.addEventListener('click', function (ev) {
+    var ret = ev.target.closest('a[data-return]');
+    if (ret) returnTo = { href: ret.getAttribute('data-return'), label: '試算の結果' };
+    if (menuId && !ev.target.closest('.kebab-pop') && !ev.target.closest('.kebab')) { menuId = ''; menuConfirm = false; render(); if (!ev.target.closest('a')) return; }
     var el = ev.target.closest('[data-act]');
     if (!el || !(view.contains(el))) return;
     var act = el.getAttribute('data-act');
@@ -1212,6 +1238,10 @@
         var src = S.getEstimate(el.getAttribute('data-id'));
         draft = src ? draftFrom(src) : newDraft(); simStep = 1; go('#/sim/new'); break;
       }
+      case 'menu': { var mid = el.getAttribute('data-id'); menuId = menuId === mid ? '' : mid; menuConfirm = false; render(); break; }
+      case 'menu-close': menuId = ''; menuConfirm = false; render(); break;
+      case 'menu-del': menuConfirm = true; render(); break;
+      case 'menu-del-yes': S.removeEstimate(el.getAttribute('data-id')); menuId = ''; menuConfirm = false; toast('削除しました'); render(); break;
       case 'del-est': confirmDelEst = true; render(); break;
       case 'del-est-no': confirmDelEst = false; render(); break;
       case 'del-est-yes': S.removeEstimate(el.getAttribute('data-id')); toast('削除しました'); go('#/sim'); break;
