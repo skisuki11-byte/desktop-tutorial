@@ -27,6 +27,7 @@
       '<a class="btn" href="' + h(location.href) + '" target="_blank" rel="noopener">つぐいえを開く</a></div>';
     document.getElementById('tabbar').hidden = true;
     document.documentElement.classList.remove('booting');
+    var sp0 = document.querySelector('.splash'); if (sp0) sp0.remove();
     return;
   }
 
@@ -1443,18 +1444,34 @@
   window.addEventListener('hashchange', render);
   /* 起動：隠したまま最初の画面を組み立て、使う書体が届いたら（最大1.2秒）見せる。
      見せるときにもう一度組み立てて、オープニングの動きを頭から始める */
-  var booted = false;
+  /* スプラッシュ（いえまる）は、ふわっと出きるまで（0.7秒）は見せ、そのあと書体がそろいしだい入れ替える。
+     通信が遅くても、起動から1.6秒で必ず入れ替える */
+  var SPLASH_MIN = 700, BOOT_MAX = 1600;
+  var root = document.documentElement, booted = false;
+  function elapsed() { return window.performance && performance.now ? performance.now() : SPLASH_MIN; }   // 開き始めてからの時間
   function reveal() {
     if (booted) return;
     booted = true;
-    document.documentElement.classList.remove('booting');
+    var sp = document.querySelector('.splash');
+    if (sp) { sp.classList.add('leaving'); setTimeout(function () { sp.remove(); }, 400); }
+    root.classList.remove('booting');
+    root.classList.add('revealing');
     render();
+    setTimeout(function () { root.classList.remove('revealing'); }, 400);
+  }
+  function whenFontsReady(cb) {
+    var link = document.getElementById('gfonts');
+    function afterCss() {
+      void view.offsetHeight;   // 組み立てた画面の文字に合わせて、書体の読み込みを始めさせる
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(cb, cb); else cb();
+    }
+    if (!link || link.hasAttribute('data-done')) afterCss();
+    else { link.addEventListener('load', afterCss); link.addEventListener('error', afterCss); }
   }
   render();
   if (!view.innerHTML) render();   // オープニングへ切り替えた直後は、ここで組み立てる
-  if (document.documentElement.classList.contains('booting') && document.fonts && document.fonts.ready) {
-    void view.offsetHeight;   // 組み立てた画面の文字に合わせて、書体の読み込みを始めさせる
-    document.fonts.ready.then(reveal, reveal);
-    setTimeout(reveal, 1200);
+  if (root.classList.contains('booting')) {
+    whenFontsReady(function () { setTimeout(reveal, Math.max(0, SPLASH_MIN - elapsed())); });
+    setTimeout(reveal, BOOT_MAX);
   } else reveal();
 })();
