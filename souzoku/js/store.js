@@ -1,6 +1,6 @@
 /* store.js — 端末の中だけに保存する。通信は一切しない。
  *
- * 保存するのは「相続開始日」「手続きの済」「試算結果」だけ。
+ * 保存するのは「相続開始日」「手続きの済」「試算結果」と、オープニングを出すかどうかだけ。
  * 相談フォームの入力は保存しない（送ったら消える。app.js がメモリに持つだけ）。
  * localStorage が使えない環境（プライベートブラウズ等）でも落ちないよう、
  * 読み書きはすべて try で包み、失敗したらメモリだけで動かす。
@@ -11,7 +11,7 @@
   var KEY = 'tsuguie.v1';
 
   function blank() {
-    return { deathISO: '', done: {}, estimates: [] };
+    return { deathISO: '', done: {}, estimates: [], skipIntro: false };
   }
 
   function coerce(v) {
@@ -21,6 +21,7 @@
     if (v.done && typeof v.done === 'object' && !Array.isArray(v.done)) {
       Object.keys(v.done).forEach(function (k) { if (v.done[k] === true) b.done[k] = true; });
     }
+    if (v.skipIntro === true) b.skipIntro = true;
     if (Array.isArray(v.estimates)) {
       b.estimates = v.estimates.filter(function (e) {
         return e && typeof e === 'object' && typeof e.id === 'string' && /^[a-z0-9]{1,40}$/.test(e.id) &&
@@ -52,6 +53,7 @@
     get: function () { return state; },
     isPersistent: function () { return persistent; },
     setDeath: function (iso) { state.deathISO = iso; save(); },
+    setSkipIntro: function (on) { state.skipIntro = !!on; save(); },
     toggleDone: function (id) {
       if (state.done[id]) delete state.done[id]; else state.done[id] = true;
       save();

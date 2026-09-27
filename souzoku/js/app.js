@@ -289,6 +289,38 @@
   }
 
   /* ======================================================
+     オープニング（起動時に一度。設定で出す・出さないを選べる）
+     ====================================================== */
+  var TAGLINE = '実家の相続を、ひとつずつ';
+  var introShown = false;
+  function vWelcome() {
+    var pts = [
+      ['clock', 'violet', '期限がひと目でわかる', '亡くなった日を入れるだけで、手続きを期限の順に並べます'],
+      ['lock', 'mint', '登録なし・端末の中だけ', '会員登録はいりません。入力はこのスマホの中にだけ保存します'],
+      ['chat', 'sun', '専門家の総合窓口', '不動産（宅建士）・弁護士・税理士に、まとめて相談できます']
+    ];
+    return '' +
+      '<div class="welcome">' +
+        '<div class="wel-hero">' +
+          '<div class="wel-buddy">' + buddy(104, 'happy') + '</div>' +
+          '<h1 class="wel-logo">つぐいえ</h1>' +
+          '<p class="wel-tag"><span aria-hidden="true">〜</span>' + TAGLINE + '<span aria-hidden="true">〜</span></p>' +
+        '</div>' +
+        '<p class="wel-lead"><span class="nb">相続した家の</span><span class="nb"><b>やること</b>・<b>売ったらいくら</b>・</span><span class="nb"><b>だれに相談</b>を、</span><span class="nb">ひとつのアプリで。</span></p>' +
+        '<ul class="wel-points">' + pts.map(function (p, i) {
+          return '<li style="animation-delay:' + (0.15 + i * 0.08) + 's"><span class="ico-box tone-' + p[1] + '">' + icon(p[0]) + '</span>' +
+            '<span class="t"><b>' + p[2] + '</b><span>' + p[3] + '</span></span></li>';
+        }).join('') + '</ul>' +
+        '<div class="wel-foot">' +
+          '<button class="btn" data-act="intro-start">はじめる</button>' +
+          '<label class="check wel-skip" for="intro-skip"><input id="intro-skip" type="checkbox"' + (S.get().skipIntro ? ' checked' : '') + '>' +
+            '<span>次回からこの画面を表示しない</span></label>' +
+          '<p class="wel-meta"><span class="nb">無料・広告なし</span>　<span class="nb">制度の説明は2026年9月時点</span><br><a href="privacy.html">プライバシーポリシー</a></p>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ======================================================
      設定
      ====================================================== */
   var confirmClear = false;
@@ -301,6 +333,12 @@
       '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="field"><label for="death2">亡くなった日（相続開始日）</label>' +
         '<input id="death2" class="input" type="date" max="' + DL.todayISO() + '" value="' + h(st.deathISO) + '"></div>' +
         '<button class="btn small" data-act="save-death">日付を保存する</button></div>' +
+      '<div class="card" style="display:flex;flex-direction:column;gap:10px">' +
+        '<div class="card-title">オープニング画面</div>' +
+        '<label class="check" for="intro-show"><input id="intro-show" type="checkbox" data-act-change="intro-show"' + (st.skipIntro ? '' : ' checked') + '>' +
+          '<span>アプリを開いたときに表示する</span></label>' +
+        '<a class="btn ghost small" href="#/welcome">いま見る</a>' +
+      '</div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:10px">' +
         '<div class="card-title">バックアップ</div>' +
         '<p class="note">機種変更に備えて、試算結果とやることの記録をファイルに書き出せます。相談の内容は保存していないので含まれません。</p>' +
@@ -1026,17 +1064,20 @@
     return top + rest + bottom;
   }
 
-  var NO_TAB = /^(task\/.+|sim\/new|consult\/(form|confirm|done))$/;
+  var NO_TAB = /^(welcome|task\/.+|sim\/new|consult\/(form|confirm|done))$/;
   var lastPath = null;
   function route() { return (location.hash || '#/home').replace(/^#\/?/, '') || 'home'; }
   function render() {
     var p = route(), parts = p.split('/'), html;
+    if (!introShown && p === 'home' && !S.get().skipIntro) { introShown = true; location.replace('#/welcome'); return; }
+    introShown = true;
     var sheet = document.querySelector('.sheet-wrap'); if (sheet) sheet.remove();
     if (lastPath !== p) { confirmClear = false; confirmDelEst = false; simErr = ''; }
     if (lastPath === 'consult/done' && p !== 'consult/done') resetConsult();
     if (lastPath === 'sim/new' && p !== 'sim/new') { draft = null; simStep = 0; }
     switch (parts[0]) {
       case 'home': html = vHome(); break;
+      case 'welcome': html = vWelcome(); break;
       case 'task': html = vTask(parts[1]); break;
       case 'settings': html = vSettings(); break;
       case 'learn': html = parts[1] ? vArticle(parts[1]) : vLearn(); break;
@@ -1048,13 +1089,14 @@
       default: html = vNotFound();
     }
     if (html === '') return; // go() で別の画面へ移った
-    if (parts[0] !== 'home') html = withHomeLinks(html);
+    if (parts[0] !== 'home' && parts[0] !== 'welcome') html = withHomeLinks(html);
     view.innerHTML = html;
     var noTab = NO_TAB.test(p);
     view.classList.toggle('no-tab', noTab && parts[0] !== 'task');
+    view.classList.toggle('is-welcome', parts[0] === 'welcome');
     view.classList.toggle('has-dock', parts[0] === 'task');
     tabbar.hidden = noTab;
-    var tab = parts[0] === 'settings' || parts[0] === 'task' ? 'home' : parts[0];
+    var tab = parts[0] === 'settings' || parts[0] === 'task' || parts[0] === 'welcome' ? 'home' : parts[0];
     Array.prototype.forEach.call(tabbar.querySelectorAll('a'), function (a) {
       if (a.getAttribute('data-tab') === tab) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
@@ -1073,6 +1115,12 @@
     if (!el || !(view.contains(el))) return;
     var act = el.getAttribute('data-act');
     switch (act) {
+      case 'intro-start': {
+        var sk = document.getElementById('intro-skip');
+        S.setSkipIntro(!!(sk && sk.checked));
+        location.replace('#/home');
+        break;
+      }
       case 'set-death': {
         var v = document.getElementById('death').value;
         if (!v) { document.getElementById('death-err').hidden = false; return; }
@@ -1203,6 +1251,7 @@
       if (sb) sb.disabled = !cs.agree || cs.sending;
     }
     if (chg === 'attach1' && !el.checked) cs.attachId = '';
+    if (chg === 'intro-show') { S.setSkipIntro(!el.checked); toast(el.checked ? '次回から表示します' : '次回から表示しません'); }
     if (el.id === 'import-file' && el.files && el.files[0]) {
       var reader = new FileReader();
       reader.onload = function () {
