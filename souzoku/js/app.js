@@ -384,7 +384,7 @@
         '<div class="wel-foot">' +
           '<button class="btn" data-act="intro-start">はじめる</button>' +
           '<label class="check wel-skip" for="intro-skip"><input id="intro-skip" type="checkbox"' + (S.get().skipIntro ? ' checked' : '') + '>' +
-            '<span>次回からこの画面を表示しない</span></label>' +
+            '<span>次回からオープニングを表示しない</span></label>' +
           '<p class="wel-meta"><span class="nb">無料・広告なし</span>　<span class="nb">制度の説明は2026年9月時点</span><br><a href="privacy.html">プライバシーポリシー</a></p>' +
           '<p class="app-ver">バージョン ' + h(APP_VERSION) + '</p>' +
         '</div>' +
@@ -424,6 +424,7 @@
         '<div class="card-title">オープニング画面</div>' +
         '<label class="check" for="intro-show"><input id="intro-show" type="checkbox" data-act-change="intro-show"' + (st.skipIntro ? '' : ' checked') + '>' +
           '<span>アプリを開いたときに表示する</span></label>' +
+        '<p class="note" style="margin:0">いえまるのあいさつ（約2秒）と、はじめの案内です。</p>' +
         '<a class="btn ghost small" href="#/welcome">いま見る</a>' +
       '</div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:10px">' +
@@ -1425,7 +1426,7 @@
       if (sb) sb.disabled = !cs.agree || cs.sending;
     }
     if (chg === 'attach1' && !el.checked) cs.attachId = '';
-    if (chg === 'intro-show') { S.setSkipIntro(!el.checked); toast(el.checked ? '次回から表示します' : '次回から表示しません'); }
+    if (chg === 'intro-show') { S.setSkipIntro(!el.checked); document.documentElement.classList.toggle('no-splash', !el.checked); toast(el.checked ? '次回から表示します' : '次回から表示しません'); }
     if (el.id === 'import-file' && el.files && el.files[0]) {
       // 書き出しファイルは数KB。大きすぎるファイルは読まない（端末が固まらないように）
       if (el.files[0].size > 1024 * 1024) { toast('つぐいえの書き出しファイルではありません'); el.value = ''; return; }
@@ -1444,10 +1445,12 @@
   window.addEventListener('hashchange', render);
   /* 起動：隠したまま最初の画面を組み立て、使う書体が届いたら（最大1.2秒）見せる。
      見せるときにもう一度組み立てて、オープニングの動きを頭から始める */
-  /* スプラッシュ（いえまる）は、ふわっと出きるまで（0.7秒）は見せ、そのあと書体がそろいしだい入れ替える。
-     通信が遅くても、起動から1.6秒で必ず入れ替える */
-  var SPLASH_MIN = 700, BOOT_MAX = 1600;
+  /* スプラッシュ（いえまる）は決まった演出として約2秒見せ、書体がそろっていれば画面と入れ替える
+     （通信が遅くても2.6秒で必ず入れ替える。タップすればすぐ入れ替える）。
+     オープニングを表示しない人はスプラッシュを出さず、書体がそろいしだい（最大1.6秒）見せる */
   var root = document.documentElement, booted = false;
+  var withSplash = !root.classList.contains('no-splash');
+  var SPLASH_MIN = withSplash ? 2000 : 0, BOOT_MAX = withSplash ? 2600 : 1600;
   function elapsed() { return window.performance && performance.now ? performance.now() : SPLASH_MIN; }   // 開き始めてからの時間
   function reveal() {
     if (booted) return;
@@ -1471,6 +1474,8 @@
   render();
   if (!view.innerHTML) render();   // オープニングへ切り替えた直後は、ここで組み立てる
   if (root.classList.contains('booting')) {
+    var sp1 = document.querySelector('.splash');
+    if (sp1) sp1.addEventListener('click', reveal);
     whenFontsReady(function () { setTimeout(reveal, Math.max(0, SPLASH_MIN - elapsed())); });
     setTimeout(reveal, BOOT_MAX);
   } else reveal();

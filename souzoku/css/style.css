@@ -560,20 +560,34 @@ input[type="date"].input::-webkit-calendar-picker-indicator{opacity:0;position:a
 @keyframes wel-pop{from{opacity:0}to{opacity:1}}
 @keyframes wel-up{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
-/* スプラッシュ：起動中（書体と最初の画面の準備）だけ、いえまるがふわっと出る。
+/* スプラッシュ：アプリを開くたびに約2秒、いえまるがあいさつする（決まった演出）。
+   相続の場面で使うアプリなので、はしゃいだ動き（跳ねる・回る）はせず、静かで丁寧なあいさつにする。
+   0〜0.7秒 家に灯りがともるように、後ろの光とともにふわっと出る → 0.8秒 まばたき
+   → 1.05秒「ぺこり」とおじぎ → 顔を上げてにっこり → 2秒で画面へ。
+   タップで飛ばせる。オープニングを「表示しない」にした人には出さない（html.no-splash）。
    文字は置かない（書体の入れ替わりが見えないように）。JS が無いときは出さない */
 .splash{display:none}
-html.booting .splash,.splash.leaving{display:flex;position:fixed;inset:0;z-index:100;align-items:center;justify-content:center;background:var(--bg)}
-.splash.leaving{opacity:0;transform:scale(1.04);transition:opacity .25s ease,transform .25s ease;pointer-events:none}
-.splash-in{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:-6vh}
-.splash-buddy{animation:splash-pop .7s cubic-bezier(.2,.8,.2,1) both, splash-float 2.4s ease-in-out .7s infinite}
-.splash-shadow{width:64px;height:10px;border-radius:50%;background:var(--ink);opacity:.08;animation:splash-shadow .7s cubic-bezier(.2,.8,.2,1) both}
-.splash-eyes{transform-origin:32px 40px;animation:splash-blink .35s ease-in-out .75s 1}
-@keyframes splash-pop{from{opacity:0;transform:translateY(14px) scale(.86)}to{opacity:1;transform:none}}
-@keyframes splash-float{0%,100%{transform:none}50%{transform:translateY(-4px)}}
+html.booting .splash,.splash.leaving{display:flex;position:fixed;inset:0;z-index:100;align-items:center;justify-content:center;background:var(--bg);cursor:pointer}
+html.no-splash .splash{display:none !important}
+.splash.leaving{opacity:0;transition:opacity .35s ease;pointer-events:none}
+.splash-in{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:-6vh}
+.splash-glow{position:absolute;left:50%;top:58px;width:220px;height:220px;margin:-110px 0 0 -110px;border-radius:50%;
+  background:radial-gradient(circle,rgba(241,195,106,.42) 0%,rgba(241,195,106,.18) 45%,rgba(241,195,106,0) 70%);animation:splash-glow 1s ease-out both}
+.splash-buddy{position:relative;transform-origin:50% 88%;animation:splash-pop .7s cubic-bezier(.2,.8,.2,1) both, splash-bow .6s ease-in-out 1.05s both}
+.splash-shadow{position:relative;width:70px;height:10px;border-radius:50%;background:var(--ink);opacity:.08;animation:splash-shadow .7s cubic-bezier(.2,.8,.2,1) both}
+.splash-eyes{transform-origin:32px 40px;animation:splash-blink .28s ease-in-out .8s 1, splash-shut .2s ease-in 1.15s both}   /* おじぎのあいだは目を閉じる */
+.splash-calm{animation:splash-out .12s ease 1.5s both}
+.splash-happy{opacity:0;animation:splash-in .12s ease 1.5s both}
+@keyframes splash-glow{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:none}}
+@keyframes splash-pop{from{opacity:0;transform:translateY(16px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes splash-bow{0%,100%{transform:none}40%,55%{transform:translateY(5px) rotate(0) scaleY(.9)}}
 @keyframes splash-shadow{from{opacity:0;transform:scale(.6)}to{opacity:.08;transform:none}}
 @keyframes splash-blink{0%,100%{transform:none}50%{transform:scaleY(.1)}}
+@keyframes splash-shut{to{transform:scaleY(.1)}}
+@keyframes splash-out{to{opacity:0}}
+@keyframes splash-in{to{opacity:1}}
 /* 画面はスプラッシュと入れ替わりに、ふわっと出す */
 html.revealing #view{animation:fade .35s ease .12s both}
 /* 起動中（最初の画面と書体がそろうまで）は隠す。スプラッシュだけ見える */
 html.booting #view,html.booting #tabbar{visibility:hidden}
+@media (prefers-reduced-motion:reduce){.splash-calm{opacity:0}.splash-happy{opacity:1}}
