@@ -21,7 +21,7 @@
 
   /* 画面の色：auto はスマホの設定に合わせる。light/dark は html に data-theme を付けて固定する。
      文字の大きさ：large は html に data-size を付け、画面全体を拡大する（css の zoom） */
-  var THEME_BG = { light: '#F6F4FF', dark: '#15142A' };
+  var THEME_BG = { light: '#F4F5F7', dark: '#101318' };
   function applyTheme() {
     var t = S.get().theme, root = document.documentElement;
     if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t); else root.removeAttribute('data-theme');
@@ -114,19 +114,20 @@
   /* いえまる：案内役。mood = 'calm' | 'happy' */
   function buddy(size, mood) {
     var eyes = mood === 'happy'
-      ? '<path d="M23 40 Q26 37 29 40" fill="none" stroke="#22213F" stroke-width="2.4" stroke-linecap="round"/><path d="M35 40 Q38 37 41 40" fill="none" stroke="#22213F" stroke-width="2.4" stroke-linecap="round"/>'
-      : '<circle cx="26" cy="40" r="2.8" fill="#22213F"/><circle cx="38" cy="40" r="2.8" fill="#22213F"/>';
+      ? '<path d="M23 40 Q26 37 29 40" fill="none" stroke="#1B2130" stroke-width="2.4" stroke-linecap="round"/><path d="M35 40 Q38 37 41 40" fill="none" stroke="#1B2130" stroke-width="2.4" stroke-linecap="round"/>'
+      : '<circle cx="26" cy="40" r="2.8" fill="#1B2130"/><circle cx="38" cy="40" r="2.8" fill="#1B2130"/>';
     var mouth = mood === 'happy'
-      ? '<path d="M28 46 Q32 50.5 36 46" fill="none" stroke="#22213F" stroke-width="2.2" stroke-linecap="round"/>'
-      : '<path d="M28.5 46 Q32 49.5 35.5 46" fill="none" stroke="#22213F" stroke-width="2.2" stroke-linecap="round"/>';
+      ? '<path d="M28 46 Q32 50.5 36 46" fill="none" stroke="#1B2130" stroke-width="2.2" stroke-linecap="round"/>'
+      : '<path d="M28.5 46 Q32 49.5 35.5 46" fill="none" stroke="#1B2130" stroke-width="2.2" stroke-linecap="round"/>';
     return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true">' +
-      '<path d="M10 30 L32 10 L54 30 Z" fill="#5B4FE0" stroke="#5B4FE0" stroke-width="6" stroke-linejoin="round"/>' +
-      '<rect x="41" y="12" width="7" height="12" rx="2" fill="#5B4FE0"/>' +
+      '<path d="M10 30 L32 10 L54 30 Z" fill="#1F4E8C" stroke="#1F4E8C" stroke-width="6" stroke-linejoin="round"/>' +
+      '<rect x="41" y="12" width="7" height="12" rx="2" fill="#1F4E8C"/>' +
       '<rect x="15" y="27" width="34" height="29" rx="9" fill="#FFF4CF"/>' + eyes +
       '<ellipse cx="21" cy="46" rx="3.2" ry="2" fill="#FFB8A8"/><ellipse cx="43" cy="46" rx="3.2" ry="2" fill="#FFB8A8"/>' + mouth + '</svg>';
   }
-  function say(text, size) {
-    return '<div class="buddy">' + buddy(size || 52) + '<div class="bubble">' + text + '</div></div>';
+  /* 画面の説明の一言。いえまる（案内役）はホームとオープニングだけに出し、ほかの画面は文字だけにする */
+  function say(text) {
+    return '<p class="lead">' + text + '</p>';
   }
   /* 日付の入力。iPhone では空のとき何も表示されないので、案内の文字を重ねる */
   function dateInput(id, value) {
@@ -151,7 +152,9 @@
   function chipFor(it, nextId) {
     if (it.done) return '<span class="chip done">済</span>';
     if (it.passed) return '<span class="chip past">過ぎました</span>';
-    return '<span class="chip ' + (it.id === nextId ? 'next' : 'wait') + '">あと' + comma(it.left) + '日</span>';
+    // 赤は本当に急ぐとき（30日以内）だけ。次の期限でも余裕があれば藍色
+    var cls = it.left <= 30 ? 'urgent' : it.id === nextId ? 'next' : 'wait';
+    return '<span class="chip ' + cls + '">あと' + comma(it.left) + '日</span>';
   }
   function taskRow(it, nextId) {
     var t = TASKS[it.id] || {};
@@ -174,7 +177,7 @@
     var st = S.get();
     if (!st.deathISO) {
       return '' +
-        say('いっしょに、ひとつずつ進めよう', 56) +
+        '<div class="buddy">' + buddy(56) + '<div class="bubble">いっしょに、ひとつずつ進めよう</div></div>' +
         '<h1 class="title">亡くなった日を<br>入れてください</h1>' +
         '<div class="card start-card">' +
           '<div class="who-line"><span class="who-tag">だれの日付？</span>' +
@@ -264,7 +267,7 @@
       '<h2 class="sec">用意するもの</h2><div class="pills">' + t.bring.map(function (b) { return '<span class="pill">' + h(b) + '</span>'; }).join('') + '</div>' +
       '<div class="card" style="display:flex;gap:12px;align-items:flex-start"><span class="ico-box tone-sky">' + icon('pin') + '</span>' +
         '<div style="display:flex;flex-direction:column"><span class="card-label">どこで</span><span style="font-size:16px;line-height:1.7">' + h(t.where) + '</span></div></div>' +
-      '<div class="buddy" style="align-items:flex-start">' + buddy(44) + '<div class="bubble tail-l"><b>いえまるのひとこと</b><br>' + h(t.tip) + '</div></div>' +
+      '<div class="point"><b>ポイント</b><p>' + h(t.tip) + '</p></div>' +
       help +
       '<p class="note">2026年9月時点の制度です。</p>' +
       (returnTo ? '<a class="btn ghost" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'にもどる</a>' : '') +
@@ -423,7 +426,7 @@
     }).join('');
     return '' +
       '<h1 class="title">まなぶ</h1>' +
-      say('やることごとに、手順と用意するものをまとめたよ', 48) +
+      say('やることごとに、手順と用意するものをまとめています。') +
       '<h2 class="sec">やることガイド</h2>' +
       '<div class="card flat">' + guides + '</div>' +
       '<h2 class="sec">知っておきたいこと</h2>' +
@@ -510,14 +513,14 @@
     return d;
   }
   var SIM_STEPS = [
-    { id: 'want', q: 'いくらくらいで<br>売りたい？', say: 'まずは希望でOK。あとで相場とくらべるよ' },
-    { id: 'area', q: 'どこにありますか', say: '相場を調べるのに使うよ' },
-    { id: 'basic', q: 'どんな不動産？', say: '広さがわかると、相場が近くなるよ' },
-    { id: 'market', q: 'この地域の相場', say: '相場は参考だよ。査定ではないからね' },
-    { id: 'acq', q: '親が買ったときのこと', say: 'わからなくても計算できるよ' },
-    { id: 'heirs', q: '何人で受け継いだ？', say: 'いっしょに相続した人の数だよ' },
-    { id: 'cond', q: 'いまの状態は？', say: '空き家特例が使えるか、見てみよう' },
-    { id: 'cost', q: '費用のこと', say: 'わかるところだけで大丈夫' }
+    { id: 'want', q: 'いくらくらいで<br>売りたい？', say: 'まずは希望で大丈夫です。あとで相場とくらべます。' },
+    { id: 'area', q: 'どこにありますか', say: '相場を調べるのに使います。' },
+    { id: 'basic', q: 'どんな不動産？', say: '広さがわかると、相場の目安が近くなります。' },
+    { id: 'market', q: 'この地域の相場', say: '相場は参考の値で、査定ではありません。' },
+    { id: 'acq', q: '親が買ったときのこと', say: 'わからなくても計算できます。' },
+    { id: 'heirs', q: '何人で受け継いだ？', say: 'いっしょに相続した人の数です。' },
+    { id: 'cond', q: 'いまの状態は？', say: '空き家特例が使えるかを確かめます。' },
+    { id: 'cost', q: '費用のこと', say: 'わかるところだけで大丈夫です。' }
   ];
 
   /* ---------- 相場（中継 → 不動産情報ライブラリ） ---------- */
@@ -703,8 +706,8 @@
       SIM_STEPS.map(function (_, i) { return '<span' + (i <= simStep ? ' class="on"' : '') + '></span>'; }).join('') + '</div>';
     return '' +
       '<div style="display:flex;justify-content:space-between;align-items:center"><a class="back" href="#/sim">× やめる</a><span class="step num" style="color:var(--faint)">' + (simStep + 1) + ' / ' + SIM_STEPS.length + '</span></div>' +
-      dots + say(step.say, 56) +
-      '<h1 class="title">' + step.q + '</h1>' +
+      dots +
+      '<div style="display:flex;flex-direction:column;gap:6px"><h1 class="title">' + step.q + '</h1>' + say(step.say) + '</div>' +
       body +
       (simErr ? '<p class="err" role="alert">' + h(simErr) + '</p>' : '') +
       '<div class="btn-pair' + (simStep > 0 ? '' : ' single') + '">' +
