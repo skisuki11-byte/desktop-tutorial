@@ -7,4 +7,12 @@
     if (v.theme === 'light' || v.theme === 'dark') root.setAttribute('data-theme', v.theme);
     if (v.textSize === 'large') root.setAttribute('data-size', 'large');
   } catch (e) { /* 使えない環境ではスマホの設定のまま */ }
+  // アプリ本体（index.html）では、最初の画面ができて書体がそろうまで隠す（app.js が外す）。
+  // 先に古い形（書体の入れ替わり・下のタブ）が一瞬見える「ちらつき」を防ぐ
+  var me = document.currentScript;
+  if (me && me.hasAttribute('data-boot')) {
+    document.documentElement.classList.add('booting');
+    // 万一 app.js が動かなくても、画面が隠れたままにならないように
+    setTimeout(function () { document.documentElement.classList.remove('booting'); }, 3000);
+  }
 })();

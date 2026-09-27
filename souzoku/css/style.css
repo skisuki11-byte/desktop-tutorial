@@ -560,3 +560,5 @@ input[type="date"].input::-webkit-calendar-picker-indicator{opacity:0;position:a
 @keyframes wel-pop{from{opacity:0}to{opacity:1}}
 @keyframes wel-up{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+/* 起動中（最初の画面と書体がそろうまで）は隠す。背景色だけ見える */
+html.booting #view,html.booting #tabbar{visibility:hidden}
