@@ -962,10 +962,10 @@
         '<span>' + h(MADO.name) + 'と、提携の専門家に内容を送ることに同意します（<a href="privacy.html">プライバシーポリシー</a>）</span></label>' +
       (cs.error && cs.errorKind === 'quota'
         ? '<div class="notice sun" role="alert"><div class="notice-title">ただいま混み合っています</div><p>' + h(cs.error) + '</p>' +
-          '<p>入力した内容は、アプリを閉じると消えます。コピーしておくと、明日すぐに送れます。</p>' +
+          (MADO.fallbackEmail ? '<p>急ぎのときは、お使いのメールアプリからも送れます（宛先と本文は入力済みです）。</p>' +
+            '<a class="btn ghost" href="' + h(mailtoHref()) + '">メールアプリで送る</a>' : '') +
           '<button class="btn small outline-ink" data-act="copy-draft">入力した内容をコピーする</button></div>'
-        : cs.error ? '<div class="notice coral" role="alert"><div class="notice-title">送信できませんでした</div><p>' + h(cs.error) + '</p>' +
-        (MADO.fallbackEmail ? '<a class="btn ghost" href="' + h(mailtoHref()) + '">メールアプリで送る</a>' : '') + '</div>' : '') +
+        : cs.error ? '<div class="notice coral" role="alert"><div class="notice-title">送信できませんでした</div><p>' + h(cs.error) + '</p></div>' : '') +
       '<div class="btn-col">' +
         '<button class="btn" id="send-btn" data-act="send"' + (cs.agree && !cs.sending ? '' : ' disabled') + '>' + (cs.sending ? '送信中…' : CFG.endpoint ? 'この内容で送信する' : 'メールアプリで送信する') + '</button>' +
         (CFG.endpoint ? '' : '<p class="note center">メールアプリが開きます。宛先と本文は入力済みです。</p>') +
