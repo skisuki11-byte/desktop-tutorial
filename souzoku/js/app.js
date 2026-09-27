@@ -292,7 +292,7 @@
         '<a class="btn ghost" href="#/consult">総合窓口に相談する</a></div>';
     }
     return '' +
-      (returnTo ? '<a class="back" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'に戻る</a>' : '<a class="back" href="#/home">‹ ホーム</a>') +
+      '<a class="back" href="#/home">‹ ホーム</a>' +
       '<div class="task-hero">' + scene('task') + '<div class="th-body">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start"><span class="ico-box big">' + icon(t.icon, 30) + '</span>' + chip + '</div>' +
         '<h1 class="title">' + h(it.title) + '</h1>' +
@@ -309,7 +309,6 @@
       '<div class="navi">' + buddy(44) + '<div class="navi-b tip"><b>いえまるのワンポイント</b><span>' + h(t.tip) + '</span></div></div>' +
       help +
       '<p class="note">2026年9月時点の制度です。</p>' +
-      (returnTo ? '<a class="btn ghost" href="' + h(returnTo.href) + '">‹ ' + h(returnTo.label) + 'に戻る</a>' : '') +
       '<div class="dock"><div class="dock-in">' +
         (it.done
           ? '<div style="display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;color:var(--mint-ink);min-height:40px"><span class="check-dot" style="width:26px;height:26px">' + icon('check', 16) + '</span>「済」にしました</div>' +
@@ -496,7 +495,7 @@
      はかる
      ====================================================== */
   var menuId = '', menuConfirm = false;
-  var returnTo = null;                    // 試算の結果 → やることの説明 → 戻る、のための戻り先   // 保存カードの「⋮」メニュー
+  // 保存カードの「⋮」メニュー
   function estCard(e) {
     var r = CALC.estimate(e.input), i = e.input, open = menuId === e.id;
     var menu = !open ? '' : '<div class="kebab-pop" role="menu">' + (menuConfirm
@@ -854,12 +853,12 @@
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:15px">空き家特例で変わる手取り</b><span class="badge">差 ' + manFloor(r.without.tax - m.tax) + '万円</span></div>' +
         '<div class="cmp"><div class="row"><span>特例あり</span><b class="num">' + manFloor(m.net) + '万円</b></div><div class="bar" style="background:var(--violet);width:100%"></div></div>' +
         '<div class="cmp"><div class="row"><span>特例なし</span><b class="num">' + manFloor(r.without.net) + '万円</b></div><div class="bar" style="background:var(--coral);width:' + Math.max(4, ratio) + '%"></div></div>' +
-        '<a href="#/task/akiya" data-return="#/sim/' + h(e.id) + '" style="font-size:15px;font-weight:700">空き家特例の要件を読む →</a></div>';
+        '<a href="#/task/akiya" style="font-size:15px;font-weight:700">空き家特例の要件を読む →</a></div>';
     } else if (inp.kind === 'house' && r.without.gain > 0) {
       html += '<div class="card" style="display:flex;flex-direction:column;gap:8px"><b style="font-size:15px">空き家特例は、まだ使えるか確かめられていません</b>' +
         '<p class="note">あと、これがそろえば使えます。</p>' +
         '<ul class="reasons">' + r.akiya.reasons.map(function (x) { return '<li>' + h(x) + '</li>'; }).join('') + '</ul>' +
-        '<a href="#/task/akiya" data-return="#/sim/' + h(e.id) + '" style="font-size:15px;font-weight:700">空き家特例のやることを読む →</a></div>';
+        '<a href="#/task/akiya" style="font-size:15px;font-weight:700">空き家特例のやることを読む →</a></div>';
     }
     if (r.holdYear > 0) {
       html += '<div class="card" style="display:flex;align-items:center;gap:14px"><span class="ico-box big tone-coral" style="width:48px;height:48px">' + icon('clock', 24) + '</span>' +
@@ -1149,6 +1148,54 @@
   /* ======================================================
      ルーター
      ====================================================== */
+  /* ---------- 読みかけに戻る ----------
+     やることの説明・記事・試算の結果（＝読む画面）から、試算や相談などへ移ったとき、
+     移る前の画面と読んでいた位置を覚えておき、行った先から同じ所へ戻れるようにする。
+     ・行った先：左上の戻るを「‹ 〇〇」に替え、下に「〇〇に戻る」ボタンを置く（試算の「やめる」も元の画面へ）
+     ・戻ったら、読んでいた位置までスクロールを戻す（端末の戻る操作でも同じ）
+     ・ホームや下のタブへ移ったら忘れる
+     入れ子（説明 → 試算の結果 → 別の説明）にも対応するため、5件まで積み重ねる。 */
+  var journey = [];
+  var pendingScroll = 0;
+  var SOURCE = /^(task\/[a-z0-9_-]+|learn\/[a-z0-9_-]+|sim\/(?!new$)[a-z0-9]+)$/;
+  function pageLabel(p) {
+    var parts = p.split('/');
+    if (parts[0] === 'task') { var l = DL.list('2000-01-01'); for (var i = 0; i < l.length; i++) if (l[i].id === parts[1]) return l[i].title; }
+    if (parts[0] === 'learn') { var a = articleById(parts[1]); if (a) return a.title; }
+    if (parts[0] === 'sim') return '試算の結果';
+    return '前の画面';
+  }
+  function shortLabel(t) { t = t.split(/\s+—\s+/)[0]; return t.length > 11 ? t.slice(0, 10).trim() + '…' : t; }
+  function noteJourney(ev) {
+    var a = ev.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (!/^#\//.test(href)) return;
+    if (href === '#/home' || tabbar.contains(a)) { journey = []; return; }   // ホーム・タブへ移ったら忘れる
+    if (!view.contains(a)) return;                                            // 「済」のシートなどからは覚えない
+    var p = route(), cur = '#/' + p, top = journey[journey.length - 1];
+    if (href === cur || (top && href === top.href)) return;                   // 戻るリンクは render が処理する
+    if (!SOURCE.test(p)) return;
+    journey.push({ href: cur, label: pageLabel(p), y: window.scrollY || 0 });
+    if (journey.length > 5) journey.shift();
+  }
+  function withReturn(html, p) {
+    var top = journey[journey.length - 1];
+    if (!top || top.href === '#/' + p) return html;
+    if (p === 'sim/new') return html.replace('<a class="back" href="#/sim">× やめる</a>', '<a class="back" href="' + h(top.href) + '">× やめる</a>');
+    if (/^(consult|sim\/[a-z0-9]+|learn\/.+|task\/.+)$/.test(p)) {
+      var back = '<a class="back" href="' + h(top.href) + '">‹ ' + h(shortLabel(top.label)) + '</a>';
+      html = /^<a class="back"/.test(html) ? html.replace(/^<a class="back"[^>]*>.*?<\/a>/, back) : back + html;
+    }
+    if (/^consult\/(form|confirm)$/.test(p)) return html;   // 入力の途中は、下にボタンを足さない
+    var btn = '<a class="btn ghost return-btn" href="' + h(top.href) + '">‹ 「' + h(top.label) + '」に戻る</a>';
+    var m = html.match(/<a class="btn[^"]*" href="#\/home">/);
+    if (m) return html.replace(m[0], btn + m[0]);
+    var dockAt = html.indexOf('<div class="dock">');
+    if (dockAt >= 0) return html.slice(0, dockAt) + btn + html.slice(dockAt);
+    return html + btn;
+  }
+
   /* ホーム以外の画面は、上と下の両方に「ホーム」への導線を置く。
      上：もとの「戻る」リンクの右側にホーム。下：内容の最後に「ホームに戻る」。 */
   var HOME_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>';
@@ -1182,9 +1229,11 @@
     introShown = true;
     var sheet = document.querySelector('.sheet-wrap'); if (sheet) sheet.remove();
     if (lastPath !== p) { confirmClear = false; confirmDelEst = false; simErr = ''; menuId = ''; menuConfirm = false; }
-    if (returnTo && parts[0] !== 'task') returnTo = null;
     if (lastPath === 'consult/done' && p !== 'consult/done') resetConsult();
     if (lastPath === 'sim/new' && p !== 'sim/new') { draft = null; simStep = 0; }
+    if (p === 'home' || p === 'welcome') journey = [];
+    var jt = journey[journey.length - 1];
+    if (lastPath !== p && jt && jt.href === '#/' + p) { pendingScroll = jt.y; journey.pop(); }
     switch (parts[0]) {
       case 'home': html = vHome(); break;
       case 'welcome': html = vWelcome(); break;
@@ -1199,7 +1248,7 @@
       default: html = vNotFound();
     }
     if (html === '') return; // go() で別の画面へ移った
-    if (parts[0] !== 'home' && parts[0] !== 'welcome') html = withHomeLinks(html);
+    if (parts[0] !== 'home' && parts[0] !== 'welcome') html = withHomeLinks(withReturn(html, p));
     view.innerHTML = html;
     var noTab = NO_TAB.test(p);
     view.classList.toggle('no-tab', noTab && parts[0] !== 'task');
@@ -1211,7 +1260,8 @@
       if (a.getAttribute('data-tab') === tab) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     if (lastPath !== p) {
-      window.scrollTo(0, 0);
+      window.scrollTo(0, pendingScroll);   // 読みかけに戻ったときは、読んでいた位置へ
+      pendingScroll = 0;
       try { view.focus({ preventScroll: true }); } catch (e) { /* 古い端末 */ }
     }
     lastPath = p;
@@ -1221,8 +1271,7 @@
      操作
      ====================================================== */
   document.addEventListener('click', function (ev) {
-    var ret = ev.target.closest('a[data-return]');
-    if (ret) returnTo = { href: ret.getAttribute('data-return'), label: '試算の結果' };
+    noteJourney(ev);
     if (menuId && !ev.target.closest('.kebab-pop') && !ev.target.closest('.kebab')) { menuId = ''; menuConfirm = false; render(); if (!ev.target.closest('a')) return; }
     var el = ev.target.closest('[data-act]');
     if (!el || !(view.contains(el))) return;
