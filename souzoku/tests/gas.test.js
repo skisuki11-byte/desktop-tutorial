@@ -35,3 +35,4 @@ r=call(e,JSON.stringify(Object.assign({},base,{body:'x'.repeat(30000)}))); asser
 const e4=env('m@x.jp'); e4.ctx.LockService={getScriptLock:()=>({tryLock(){return false},releaseLock(){throw new Error('not held')}})};
 r=call(e4,base); assert.strictEqual(r.error,'busy'); assert.strictEqual(e4.sent.length,0); console.log('ok ロックを取れないときは busy（例外にしない）');
 r=call(e,{app:'tsuguie',action:'cities',pref:'99'}); assert.strictEqual(r.error,'bad_request'); console.log('ok 存在しない都道府県コードは拒否');
+r=call(e,{app:'tsuguie',action:'ping'}); assert.deepStrictEqual(r,{ok:true}); console.log('ok 温め（ping）は何もせず ok を返す');
