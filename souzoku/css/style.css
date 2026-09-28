@@ -288,7 +288,10 @@ h2.sec{margin:0;font-family:var(--round);font-size:20px;font-weight:700;letter-s
   width:100%;max-width:560px;background:var(--panel);border-radius:20px 20px 0 0;
   padding:12px 22px calc(28px + env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column;gap:16px;
   animation:rise .25s ease;
+  max-height:92vh;overflow-y:auto;overscroll-behavior:contain;   /* 文字が大きいときも、シートの上下が切れずにスクロールできるように */
 }
+/* 文字「大きい」は画面全体を 1.15 倍にしているので、高さの上限もその分だけ小さくする */
+html[data-size=large] .sheet{max-height:calc(92vh / 1.15)}
 .grabber{align-self:center;width:44px;height:5px;border-radius:3px;background:var(--line)}
 .next-card{background:var(--bg);border-radius:var(--r-lg);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .next-card .row{display:flex;align-items:center;gap:12px}
