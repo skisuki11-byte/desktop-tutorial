@@ -3,7 +3,7 @@
  * つながらないときだけキャッシュを使う（記事・試算・期限は圏外でも使える）。
  * 相談の送信（POST）には一切触れない。
  */
-var CACHE = 'tsuguie-v37';
+var CACHE = 'tsuguie-v38';
 var ASSETS = [
   './',
   './index.html',
