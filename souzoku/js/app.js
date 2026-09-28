@@ -185,7 +185,8 @@
     }).join('') + '</div>';
   }
 
-  var DISCLAIMER = '概算です。この試算は端末にだけ保存しています。';
+  var DISCLAIMER = '一般的な計算式による概算で、税額を保証するものではありません。相続人で等分し、全員が同じ条件で売ったとして計算しています。' +
+    'あなたの場合の税額は、税理士にご確認ください。この試算は端末にだけ保存しています。';
   var KIND = { house: '戸建て', land: '土地だけ', condo: 'マンション' };
 
   /* ======================================================
@@ -745,7 +746,7 @@
         '<div class="field"><label for="s-acqy">買った年（西暦）</label>' +
           '<div class="suffix"><input id="s-acqy" class="input" data-bind="acqYear" inputmode="numeric" maxlength="4" placeholder="1985" value="' + h(draft.acqYear) + '"' + (draft.acqYearUnknown ? ' disabled' : '') + '><span>年</span></div>' +
           '<label class="check"><input type="checkbox" data-bind="acqYearUnknown"' + (draft.acqYearUnknown ? ' checked' : '') + '>わからない（かなり前に買った）</label>' +
-          '<p class="hint">親が買った日から数えて5年を超えると、税金が安くなります。</p></div>';
+          '<p class="hint">売る年の1月1日の時点で、親が買ってから5年を超えていると、税金が安くなります（相続した家は、親が持っていた期間も数えます）。</p></div>';
     } else if (step.id === 'heirs') {
       body = '<div class="quick" role="radiogroup" aria-label="相続した人の数">' + [1, 2, 3, 4, 5, 6].map(function (n) {
           return '<button type="button" class="chipbtn" role="radio" style="min-width:64px;justify-content:center;font-size:16px" data-act="heirs" data-v="' + n + '" aria-checked="' + (String(draft.heirs) === String(n)) + '" aria-pressed="' + (String(draft.heirs) === String(n)) + '">' + n + '人' + (n === 6 ? '以上' : '') + '</button>';
@@ -865,6 +866,7 @@
         '<div class="kv"><span><i class="sw" style="background:var(--coral)"></i>税金（' + (m.longTerm ? '長期 20.315%' : '短期 39.63%') + '）</span><b>' + (m.tax ? yen(m.tax) : '0円') + '</b></div>' +
         (inp.heirs > 1 ? '<div class="kv total"><span>1人あたり（' + inp.heirs + '人で等分）</span><b>' + yen(m.perHeir) + '</b></div>' : '') +
         (m.acqRough ? '<div class="kv sub"><span>買った値段は、売る値段の5%（' + yen(m.acqUsed) + '）として計算しました</span></div>' : '') +
+        (!m.acqRough && inp.acqKnown && inp.kind !== 'land' ? '<div class="kv sub"><span>建物の分は、本来は古くなった分（減価償却）を差し引くため、実際の税金はこれより高くなることがあります</span></div>' : '') +
         (inp.price <= 8000000 ? '<div class="kv sub"><span>800万円以下の売買は、仲介手数料の上限が33万円です（不動産会社からの説明と合意が前提）</span></div>' : '') +
       '</div>';
     if (inp.want || inp.market) {
@@ -883,6 +885,7 @@
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:15px">空き家特例で変わる手取り</b><span class="badge">差 ' + manFloor(r.without.tax - m.tax) + '万円</span></div>' +
         '<div class="cmp"><div class="row"><span>特例あり</span><b class="num">' + manFloor(m.net) + '万円</b></div><div class="bar" style="background:var(--violet);width:100%"></div></div>' +
         '<div class="cmp"><div class="row"><span>特例なし</span><b class="num">' + manFloor(r.without.net) + '万円</b></div><div class="bar" style="background:var(--coral);width:' + Math.max(4, ratio) + '%"></div></div>' +
+        '<p class="note" style="margin:0">使うには、市区町村の確認書を添えた確定申告が必要です。親族など特別な関係の人に売る場合は使えません。</p>' +
         '<a href="#/task/akiya" style="font-size:15px;font-weight:700">空き家特例の要件を読む →</a></div>';
     } else if (inp.kind === 'house' && r.without.gain > 0) {
       html += '<div class="card" style="display:flex;flex-direction:column;gap:8px"><b style="font-size:15px">空き家特例は、まだ使えるか確かめられていません</b>' +
