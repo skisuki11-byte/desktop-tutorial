@@ -41,3 +41,5 @@ const c1=e.calls.length; r=call(e,{action:'market',city:'22101',kind:'house',dis
 r=call(e,{action:'market',city:'22101',kind:'house',district:'安東一丁目'}); assert.ok(r.scope==='district'&&r.district==='安東'); console.log('ok 手で入れた「安東一丁目」も「安東」に合わせる');
 e=env('KEY',rows); r=call(e,{action:'market',city:'22101',kind:'house',district:'安東'}); assert.ok(r.scope==='district'&&r.count===5); console.log('ok いきなり町名つきで聞いても答えられる');
 r=call(e,{action:'market',city:'22101',kind:'house',district:'安東'}); assert.ok(r.districts&&r.districts.length===3); console.log('ok 町名の相場にも一覧がつく');
+e=env('KEY',rows); e.ctx.CacheService.getScriptCache().put('market-v2-22101-house-',JSON.stringify({ok:true,count:8,scope:'city',years:'2024〜2025',median:1}));
+const c0=e.calls.length; r=call(e,{action:'market',city:'22101',kind:'house'}); assert.ok(Array.isArray(r.districts)&&r.districts.length===3&&e.calls.length>c0); console.log('ok 町名の一覧がない古い形式の保存は使わず取り直す');

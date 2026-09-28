@@ -153,7 +153,10 @@ function quantile_(sorted, q) {
 var DISTRICT_MIN = 5;      // 町名の相場を出すのに必要な取引の件数（少ないとぶれるため、市区町村全体で出す）
 var DISTRICT_LIST_MAX = 150;
 
-function marketKey_(city, kind, district) { return 'market-' + city + '-' + kind + '-' + district; }
+/* キャッシュの名前に形式の版をつける。形式を変えたら版を上げると、古い形式の保存分（最大6時間残る）を使わずに取り直す。
+   v2：市区町村全体の相場に町名の一覧（districts）がつく形式 */
+var MARKET_CACHE_VER = 'v2';
+function marketKey_(city, kind, district) { return 'market-' + MARKET_CACHE_VER + '-' + city + '-' + kind + '-' + district; }
 
 function stats_(picked, years, scope, district) {
   if (picked.length < 3) return { ok: true, count: picked.length, scope: scope, years: years[1] + '〜' + years[0] };
@@ -206,7 +209,7 @@ function market_(d) {
   var wholeRaw = cache.get(marketKey_(city, kind, ''));
   var whole;
   if (wholeRaw) whole = JSON.parse(wholeRaw);
-  else {
+  if (!whole || !Array.isArray(whole.districts)) {   // 保存がない、または町名の一覧がない古い形式なら取り直す
     if (overLimitMarket_()) return { ok: false, error: 'busy' };
     whole = buildMarket_(city, kind, cache);
     if (!whole.ok) return whole;
