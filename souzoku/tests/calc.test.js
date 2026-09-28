@@ -7,9 +7,9 @@ var n = 0;
 function t(name, fn) { fn(); n++; console.log('ok  ' + name); }
 
 t('仲介手数料：2,000万円は72.6万円', function () { assert.strictEqual(C.brokerFee(20000000, false), 726000); });
-t('仲介手数料：300万円は（4%+2万）×1.1', function () { assert.strictEqual(C.brokerFee(3000000, false), 154000); });
-t('仲介手数料：800万円以下の空き家は上限33万円', function () { assert.strictEqual(C.brokerFee(8000000, true), 330000); });
-t('仲介手数料：800万円超の空き家は通常計算', function () { assert.strictEqual(C.brokerFee(8000001, true), Math.floor((8000001 * 0.03 + 60000) * 1.1)); });
+t('仲介手数料：800万円以下は空き家でなくても上限33万円（2024年7月からの特例）', function () { assert.strictEqual(C.brokerFee(3000000), 330000); assert.strictEqual(C.brokerFee(8000000), 330000); });
+t('仲介手数料：800万円超は通常計算', function () { assert.strictEqual(C.brokerFee(8000001), Math.floor((8000001 * 0.03 + 60000) * 1.1)); });
+t('印紙税：軽減後の上位区分（5億超・10億超・50億超）', function () { assert.strictEqual(C.stampTax(600000000), 160000); assert.strictEqual(C.stampTax(2000000000), 320000); assert.strictEqual(C.stampTax(6000000000), 480000); });
 t('印紙税：2,000万円は1万円', function () { assert.strictEqual(C.stampTax(20000000), 10000); });
 t('長期・短期：売却年−取得年が6以上で長期', function () {
   assert.strictEqual(C.isLongTerm(2020, 2026), true);

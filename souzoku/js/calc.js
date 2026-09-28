@@ -11,14 +11,15 @@
   var RATE_SHORT = 0.39630;  // 所有5年以下（同30%＋0.63%＋9%）
   var AKIYA_LIMIT_PRICE = 100000000;   // 空き家特例：売却代金1億円以下
   var AKIYA_SYSTEM_END = '2027-12-31'; // 空き家特例：制度の適用期限（延長されることがある）
-  var LOWCOST_PRICE = 8000000;         // 低廉な空家等の媒介特例：800万円以下
+  var LOWCOST_PRICE = 8000000;         // 低廉な空家等の媒介特例：800万円以下（空き家に限らず、800万円以下の宅地建物すべて）
   var LOWCOST_FEE_CAP = 330000;        // 同：30万円＋消費税
 
   /* 仲介手数料の上限（宅建業法の報酬規程、消費税10%込み）。
-     800万円以下の空き家等は、2024年7月からの特例で上限33万円（事前の合意が前提）。 */
-  function brokerFee(price, vacant) {
+     売買価格800万円以下は、2024年7月からの「低廉な空家等」の特例で上限33万円（事前の説明と合意が前提）。
+     名前は「空家等」だが、空き家に限らず800万円以下の宅地・建物すべてが対象（国土交通省告示）。 */
+  function brokerFee(price) {
     if (price <= 0) return 0;
-    if (vacant && price <= LOWCOST_PRICE) return LOWCOST_FEE_CAP;
+    if (price <= LOWCOST_PRICE) return LOWCOST_FEE_CAP;
     var base;
     if (price <= 2000000) base = price * 0.05;
     else if (price <= 4000000) base = price * 0.04 + 20000;
@@ -36,7 +37,9 @@
     if (price <= 50000000) return 10000;
     if (price <= 100000000) return 30000;
     if (price <= 500000000) return 60000;
-    return 160000;
+    if (price <= 1000000000) return 160000;
+    if (price <= 5000000000) return 320000;
+    return 480000;
   }
 
   /* 長期か短期か。相続した不動産は、亡くなった人の取得日を引き継ぐ。
@@ -93,7 +96,7 @@
     var acq = inp.acqKnown ? Math.max(0, Math.round(inp.acqPrice || 0)) : 0;
     var roughAcq = Math.floor(price * 0.05);          // 概算取得費：売却価格の5%
     var acqUsed = Math.max(acq, roughAcq);            // 実額が5%より小さいときも5%を使える
-    var fee = brokerFee(price, !!inp.vacant);
+    var fee = brokerFee(price);
     var stamp = stampTax(price);
     var other = Math.max(0, Math.round(inp.otherCost || 0));
     var saleYear = Number((inp.saleISO || '').slice(0, 4)) || new Date().getFullYear();

@@ -865,7 +865,7 @@
         '<div class="kv"><span><i class="sw" style="background:var(--coral)"></i>税金（' + (m.longTerm ? '長期 20.315%' : '短期 39.63%') + '）</span><b>' + (m.tax ? yen(m.tax) : '0円') + '</b></div>' +
         (inp.heirs > 1 ? '<div class="kv total"><span>1人あたり（' + inp.heirs + '人で等分）</span><b>' + yen(m.perHeir) + '</b></div>' : '') +
         (m.acqRough ? '<div class="kv sub"><span>買った値段は、売る値段の5%（' + yen(m.acqUsed) + '）として計算しました</span></div>' : '') +
-        (inp.vacant && inp.price <= 8000000 ? '<div class="kv sub"><span>800万円以下の空き家等は、仲介手数料の上限が33万円です（事前の合意が前提）</span></div>' : '') +
+        (inp.price <= 8000000 ? '<div class="kv sub"><span>800万円以下の売買は、仲介手数料の上限が33万円です（不動産会社からの説明と合意が前提）</span></div>' : '') +
       '</div>';
     if (inp.want || inp.market) {
       var mk = inp.market;
