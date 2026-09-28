@@ -155,7 +155,21 @@ var DISTRICT_LIST_MAX = 150;
 
 /* キャッシュの名前に形式の版をつける。形式を変えたら版を上げると、古い形式の保存分（最大6時間残る）を使わずに取り直す。
    v2：市区町村全体の相場に町名の一覧（districts）がつく形式 */
-var MARKET_CACHE_VER = 'v2';
+var AGE_RANGE = 10;        // 建てた年の前後何年の取引で相場を出すか
+var PACK_MAX_CHARS = 90000; // キャッシュ1件の上限（100KB）より小さく
+var MARKET_CACHE_VER = 'v3';   // v3：建てた年で絞り込むための取引の要約（#rows）を追加
+/* 国のデータの建築年（「1985年」「昭和60年」「平成2年」「令和元年」「戦前」など）を西暦に。わからなければ 0 */
+function yearOf_(s) {
+  s = String(s || '');
+  var m = s.match(/(\d{4})/);
+  if (m) return Number(m[1]);
+  if (/戦前/.test(s)) return 1940;
+  var era = { '明治': 1867, '大正': 1911, '昭和': 1925, '平成': 1988, '令和': 2018 };
+  var w = s.match(/(明治|大正|昭和|平成|令和)\s*(元|\d+)\s*年/);
+  if (w) return era[w[1]] + (w[2] === '元' ? 1 : Number(w[2]));
+  return 0;
+}
+
 function marketKey_(city, kind, district) { return 'market-' + MARKET_CACHE_VER + '-' + city + '-' + kind + '-' + district; }
 
 function stats_(picked, years, scope, district) {
@@ -197,6 +211,20 @@ function buildMarket_(city, kind, cache) {
   names.forEach(function (n) {
     if (byName[n].length >= DISTRICT_MIN) put[marketKey_(city, kind, n)] = JSON.stringify(stats_(byName[n], years, 'district', n));
   });
+  // 建てた年で絞り込むための要約（価格・面積・建築年・町名の番号）。土地は建物がないので作らない
+  if (kind !== 'land') {
+    var idx = {};
+    names.forEach(function (n, i) { idx[n] = i; });
+    var pack = {
+      muni: rows.length ? String(rows[0].Municipality || '') : '', years: years, names: names,
+      rows: rows.map(function (x) {
+        var n = String(x.DistrictName || '').trim();
+        return [num_(x.TradePrice), num_(x.Area) || 0, yearOf_(x.BuildingYear), n in idx ? idx[n] : -1];
+      })
+    };
+    var packText = JSON.stringify(pack);
+    if (packText.length <= PACK_MAX_CHARS) put[marketKey_(city, kind, '#rows')] = packText;
+  }
   cache.putAll(put, 21600);
   return whole;
 }
@@ -205,8 +233,41 @@ function market_(d) {
   var city = String(d.city || ''), kind = String(d.kind || '');
   if (!/^\d{5}$/.test(city) || !KIND_TYPE[kind]) return { ok: false, error: 'bad_request' };
   var district = str_(d.district, 30);
+  var by = Math.floor(Number(d.builtYear) || 0);
+  var thisYear = Number(Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy'));
+  if (kind === 'land' || by < 1900 || by > thisYear) by = 0;
   var cache = CacheService.getScriptCache();
-  var wholeRaw = cache.get(marketKey_(city, kind, ''));
+  // 必要な保存分を1回でまとめて読む（読み出しの往復を減らす）
+  var keys = [marketKey_(city, kind, '')];
+  if (district) keys.push(marketKey_(city, kind, district));
+  if (by) keys.push(marketKey_(city, kind, '#rows'));
+  var got = cache.getAll(keys);
+  var base = marketBase_(city, kind, district, cache, got);
+  if (!by || !base.ok) return base;
+  var packRaw = got[marketKey_(city, kind, '#rows')] || cache.get(marketKey_(city, kind, '#rows'));
+  if (!packRaw) return base;   // 大きな市などで要約を保存できなかったときは、築年数では絞らない
+  return byAge_(base, JSON.parse(packRaw), by);
+}
+
+/* 建てた年の前後 AGE_RANGE 年の取引で相場を出す。町名×築年 → 町名だけ → 市区町村×築年 → 市区町村全体 の順で、5件以上そろったもの */
+function byAge_(base, pack, by) {
+  var from = by - AGE_RANGE, to = by + AGE_RANGE;
+  function near(r) { return r[2] >= from && r[2] <= to; }
+  function asRows(list) { return list.map(function (r) { return { TradePrice: r[0], Area: r[1], Municipality: pack.muni }; }); }
+  function withAge(r) { r.age = { from: from, to: to }; r.districts = base.districts || []; return r; }
+  if (base.scope === 'district') {
+    var di = pack.names.indexOf(base.district);
+    var inD = pack.rows.filter(function (r) { return r[3] === di && near(r); });
+    if (inD.length >= DISTRICT_MIN) return withAge(stats_(asRows(inD), pack.years, 'district', base.district));
+    return base;
+  }
+  var inC = pack.rows.filter(near);
+  if (inC.length >= DISTRICT_MIN) return withAge(stats_(asRows(inC), pack.years, 'city', ''));
+  return base;
+}
+
+function marketBase_(city, kind, district, cache, got) {
+  var wholeRaw = got[marketKey_(city, kind, '')];
   var whole;
   if (wholeRaw) whole = JSON.parse(wholeRaw);
   if (!whole || !Array.isArray(whole.districts)) {   // 保存がない、または町名の一覧がない古い形式なら取り直す
@@ -217,7 +278,7 @@ function market_(d) {
   if (!district) return whole;
   // 町名の相場にも、町名の一覧を添える（アプリがいつでもリストを出せるように）
   function withList(r) { r.districts = whole.districts || []; return r; }
-  var hit = cache.get(marketKey_(city, kind, district));
+  var hit = got[marketKey_(city, kind, district)] || cache.get(marketKey_(city, kind, district));
   if (hit) return withList(JSON.parse(hit));
   // 手で入れた町名（「安東一丁目」など）は、一覧の町名と部分一致で探す。見つからないか件数が少なければ市区町村全体
   var list = whole.districts || [];

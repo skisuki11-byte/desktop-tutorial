@@ -567,7 +567,7 @@
       market: null, marketState: 'idle', marketKey: '', basis: '', ownPrice: '',
       price: '', acqKnown: '', acqPrice: '', acqYear: '', acqYearUnknown: false,
       heirs: '2', vacant: null, builtBefore1981: null, livedAlone: null, renovateOrDemolish: null,
-      otherCost: '', holdTaxYear: '', holdOtherYear: '' };
+      otherCost: '', holdTaxYear: '', holdOtherYear: '', builtYear: '' };
   }
   function draftFrom(e) {
     var i = e.input;
@@ -580,13 +580,14 @@
       acqYear: i.acqYear ? String(i.acqYear) : '', acqYearUnknown: !i.acqYear, heirs: String(i.heirs),
       vacant: i.vacant, builtBefore1981: i.kind === 'house' ? i.builtBefore1981 : null, livedAlone: i.kind === 'house' ? i.livedAlone : null,
       renovateOrDemolish: i.kind === 'house' ? i.renovateOrDemolish : null,
-      otherCost: man(i.otherCost), holdTaxYear: man(i.holdTaxYear), holdOtherYear: man(i.holdOtherYear) });
+      otherCost: man(i.otherCost), holdTaxYear: man(i.holdTaxYear), holdOtherYear: man(i.holdOtherYear),
+      builtYear: i.builtYear ? String(i.builtYear) : '' });
     return d;
   }
   var SIM_STEPS = [
     { id: 'want', q: 'いくらくらいで<br>売りたい？', say: 'まずは希望で大丈夫です。あとで相場とくらべます。' },
     { id: 'area', q: 'どこにありますか', say: '相場を調べるのに使います。' },
-    { id: 'basic', q: 'どんな不動産？', say: '広さがわかると、相場の目安が近くなります。' },
+    { id: 'basic', q: 'どんな不動産？', say: '広さや建てた年がわかると、相場の目安が近くなります。' },
     { id: 'market', q: 'この地域の相場', say: '相場は参考の値で、査定ではありません。' },
     { id: 'acq', q: '親が買ったときのこと', say: 'わからなくても計算できます。' },
     { id: 'heirs', q: '何人で受け継いだ？', say: 'いっしょに相続した人の数です。' },
@@ -629,11 +630,32 @@
     warmed = true;
     relay({ action: 'ping' }).catch(function () { warmed = false; });
   }
+  /* 市区町村の一覧と相場（国の公開データ）は、1日だけこの端末に覚えておく。
+     2回目以降や、同じ地域で条件を変えたときは、中継に問い合わせずにすぐ出せる。個人の情報は入れない */
+  var MEMO_KEY = 'tsuguie.memo.v1', MEMO_TTL = 24 * 3600 * 1000, MEMO_MAX = 60;
+  function memoGet(k) {
+    try {
+      var all = JSON.parse(localStorage.getItem(MEMO_KEY) || '{}'), x = all[k];
+      return x && Date.now() - x.t < MEMO_TTL ? x.v : null;
+    } catch (e) { return null; }
+  }
+  function memoPut(k, v) {
+    try {
+      var all = JSON.parse(localStorage.getItem(MEMO_KEY) || '{}'), now = Date.now();
+      all[k] = { t: now, v: v };
+      var keys = Object.keys(all).filter(function (x) { return now - all[x].t < MEMO_TTL; })
+        .sort(function (a, b) { return all[b].t - all[a].t; }).slice(0, MEMO_MAX);
+      var keep = {}; keys.forEach(function (x) { keep[x] = all[x]; });
+      localStorage.setItem(MEMO_KEY, JSON.stringify(keep));
+    } catch (e) { /* 保存できない端末では、毎回問い合わせる */ }
+  }
   function loadCities(pref) {
     if (!CFG.endpoint || !pref || cityCache[pref] || cityState[pref] === 'loading') return;
+    var memo = memoGet('cities|' + pref);
+    if (memo) { cityCache[pref] = memo; cityState[pref] = 'ok'; return; }
     cityState[pref] = 'loading';
     relay({ action: 'cities', pref: pref }).then(function (j) {
-      if (j && j.ok && Array.isArray(j.cities) && j.cities.length) { cityCache[pref] = tidyCities(j.cities); cityState[pref] = 'ok'; }
+      if (j && j.ok && Array.isArray(j.cities) && j.cities.length) { cityCache[pref] = tidyCities(j.cities); cityState[pref] = 'ok'; memoPut('cities|' + pref, cityCache[pref]); }
       else cityState[pref] = 'error';
     }).catch(function () { cityState[pref] = 'error'; }).then(function () {
       if (route() === 'sim/new' && draft && SIM_STEPS[simStep].id === 'area') render();
@@ -642,18 +664,38 @@
   function loadMarket() {
     var d = draft;
     if (!CFG.endpoint || !/^\d{5}$/.test(d.city)) { d.marketState = 'unavailable'; return; }
-    var key = d.city + '|' + d.kind + '|' + d.district.trim();
+    var by = builtYearOf(d);
+    var key = d.city + '|' + d.kind + '|' + d.district.trim() + '|' + (by || '');
     if (d.marketKey === key && d.marketState !== 'idle') return;   // 同じ条件は1回だけ調べる（再試行はボタンから）
-    d.marketKey = key; d.marketState = 'loading'; d.market = null;
-    relay({ action: 'market', city: d.city, kind: d.kind, district: d.district.trim() }).then(function (j) {
-      if (!draft || draft.marketKey !== key) return;
+    d.marketKey = key; d.market = null;
+    function take(j) {
       if (j && j.ok && Array.isArray(j.districts)) draft.districtList = { city: d.city, kind: d.kind, list: j.districts };
       if (j && j.ok && j.median) { draft.market = j; draft.marketState = 'ok'; }
       else if (j && j.ok) { draft.market = j; draft.marketState = 'few'; }
+    }
+    var memo = memoGet('market|' + key);
+    if (memo) { take(memo); return; }   // 端末に覚えている相場は、すぐ出す
+    d.marketState = 'loading';
+    var body = { action: 'market', city: d.city, kind: d.kind, district: d.district.trim() };
+    if (by) body.builtYear = by;
+    relay(body).then(function (j) {
+      if (j && j.ok) memoPut('market|' + key, j);   // 条件が変わって使わなかった返事も、覚えておく
+      if (!draft || draft.marketKey !== key) return;
+      if (j && j.ok) take(j);
       else draft.marketState = j && j.error === 'no_key' ? 'unavailable' : 'error';
     }).catch(function () { if (draft && draft.marketKey === key) draft.marketState = 'error'; }).then(function () {
       if (route() === 'sim/new' && draft && /^(area|market)$/.test(SIM_STEPS[simStep].id)) render();
     });
+  }
+  /* 建てた年（西暦）。土地や、ありえない年は 0 */
+  function builtYearOf(d) {
+    var y = num(d.builtYear);
+    return d.kind !== 'land' && y >= 1900 && y <= new Date().getFullYear() ? Math.floor(y) : 0;
+  }
+  var byTimer = null;
+  function prefetchSoon() {   // 建てた年を入れ終わったころに、相場を調べ始める（「次へ」を押したときには出ているように）
+    clearTimeout(byTimer);
+    byTimer = setTimeout(function () { if (draft && route() === 'sim/new' && SIM_STEPS[simStep].id === 'basic') loadMarket(); }, 700);
   }
   /* 相場から、この物件の目安を出す（広さがあれば㎡単価×広さ、なければ地域の取引の中央値） */
   function marketEstimate(m, size) {
@@ -678,12 +720,14 @@
     if (st === 'ok') {
       var m = d.market, est = marketEstimate(m, d.size), want = num(d.want) * 10000;
       return '<div class="card" style="display:flex;flex-direction:column;gap:8px">' +
-        '<span class="card-label">' + (m.scope === 'district' ? h(m.municipality + ' ' + m.district) : h(m.municipality || d.cityName)) + '・' + h(KIND[d.kind]) + '・' + h(m.years) + '年の取引 ' + comma(m.count) + '件</span>' +
+        '<span class="card-label">' + (m.scope === 'district' ? h(m.municipality + ' ' + m.district) : h(m.municipality || d.cityName)) + '・' + h(KIND[d.kind]) + '・' +
+          (m.age ? h(m.age.from + '〜' + m.age.to + '年築') + '・' : '') + h(m.years) + '年の取引 ' + comma(m.count) + '件</span>' +
         '<span class="card-label">あなたの不動産の相場の目安</span>' +
         '<span class="round num" style="font-size:34px;font-weight:900;line-height:1.2">' + manFloor(roundMan(est.mid)) + '<small style="font-size:16px">万円</small></span>' +
         '<span class="note num">幅 ' + manFloor(roundMan(est.low)) + '万〜' + manFloor(roundMan(est.high)) + '万円（' + h(est.how) + '）</span>' +
         (want > 0 ? '<div class="notice violet" style="padding:12px 14px"><p>' + gapText(want, est.mid) + '</p></div>' : '') +
         (m.scope !== 'district' && d.district ? '<p class="note">地区の取引が少ないため、市区町村全体の取引で出しています。</p>' : '') +
+        (builtYearOf(d) && !m.age ? '<p class="note">建てた年が近い取引が少ないため、築年数では絞っていません。</p>' : '') +
         '<p class="note" style="font-size:12.5px">' + CREDIT + '</p></div>';
     }
     if (st === 'error') return '<div class="card" style="display:flex;flex-direction:column;gap:8px"><b>相場を読み込めませんでした</b><p class="note">電波の良いところで、もう一度お試しください。</p><button class="btn ghost" data-act="market-retry">もう一度調べる</button></div>';
@@ -774,6 +818,9 @@
         '<div class="field"><label for="s-size">' + (draft.kind === 'condo' ? '部屋の広さ（専有面積）' : '土地の広さ') + ' <span class="tag-opt">任意</span></label>' +
           '<div class="suffix"><input id="s-size" class="input" data-bind="size" inputmode="decimal" placeholder="150" value="' + h(draft.size) + '"><span>㎡</span></div>' +
           '<p class="hint">固定資産税の通知書や登記簿に書いてあります。1坪は約3.3㎡。</p></div>' +
+        '<div class="field" id="by-field"' + (draft.kind === 'land' ? ' hidden' : '') + '><label for="s-by">建てた年 <span class="tag-opt">任意</span></label>' +
+          '<div class="suffix"><input id="s-by" class="input" data-bind="builtYear" inputmode="numeric" maxlength="4" placeholder="1978" value="' + h(draft.builtYear) + '"><span>年</span></div>' +
+          '<p class="hint">登記簿や固定資産税の通知書に載っています（昭和53年＝1978年）。近い年に建った家の取引で相場を出します。</p></div>' +
         '<div class="field"><label for="s-name">呼び名 <span class="tag-opt">任意</span></label>' +
           '<input id="s-name" class="input" data-bind="name" maxlength="30" placeholder="例：静岡の実家" value="' + h(draft.name) + '"></div>';
     } else if (step.id === 'market') {
@@ -841,6 +888,7 @@
       if (!draft.city && !draft.cityName.trim()) return '市区町村を選ぶか、入れてください。';
     }
     if (step === 'basic' && draft.size !== '' && !(num(draft.size) > 0)) return '広さは数字（㎡）で入れてください。わからなければ空のままで大丈夫です。';
+    if (step === 'basic' && draft.kind !== 'land' && String(draft.builtYear).trim() !== '' && !builtYearOf(draft)) return '建てた年は西暦4けた（例：1978）で入れてください。わからなければ空のままで大丈夫です。';
     if (step === 'market') {
       var p = basisPriceMan(draft);
       if (!(p > 0)) return draft.basis === 'own' ? '計算に使う価格を万円で入れてください。' : '計算に使う価格を選んでください。';
@@ -874,6 +922,7 @@
       deathISO: st.deathISO, saleISO: DL.todayISO(),
       want: d.wantUndecided ? 0 : manToYen(d.want), basis: d.basis,
       pref: d.pref, prefName: prefName(d.pref), city: d.city, cityName: d.cityName, district: d.district.trim(), size: num(d.size) > 0 ? num(d.size) : 0,
+      builtYear: builtYearOf(d),
       market: est ? { mid: roundMan(est.mid), low: roundMan(est.low), high: roundMan(est.high), how: est.how, count: d.market.count,
         years: d.market.years, scope: d.market.scope, place: (d.market.municipality || d.cityName) + (d.market.scope === 'district' ? ' ' + d.market.district : '') } : null
     };
@@ -953,7 +1002,7 @@
   function estimateSummary(e) {
     var r = CALC.estimate(e.input);
     var i = e.input;
-    return e.name + '（' + (KIND[i.kind] || '') + (i.prefName ? '・' + i.prefName + (i.cityName || '') + (i.district ? ' ' + i.district : '') : '') + (i.size ? '・' + comma(i.size) + '㎡' : '') + '）' +
+    return e.name + '（' + (KIND[i.kind] || '') + (i.prefName ? '・' + i.prefName + (i.cityName || '') + (i.district ? ' ' + i.district : '') : '') + (i.size ? '・' + comma(i.size) + '㎡' : '') + (i.builtYear ? '・' + i.builtYear + '年築' : '') + '）' +
       (i.want ? '／売りたい価格 ' + yen(i.want) : '') + (i.market ? '／相場の目安 ' + yen(i.market.mid) : '') +
       '／試算に使った価格 ' + yen(i.price) +
       '／手取り 約' + manFloor(r.main.net) + '万円（' + (r.exemptionApplied ? '空き家特例あり' : '空き家特例なし') + '）' +
@@ -1409,6 +1458,12 @@
         if (simStep === SIM_STEPS.length - 1) { simFinish(); return; }
         // 地域を入れたら、次の「種類・広さ」を答えているあいだに相場を調べ始める（種類が変わったら調べ直す）
         if (SIM_STEPS[simStep].id === 'area') loadMarket();
+        if (SIM_STEPS[simStep].id === 'basic') {
+          var byv = builtYearOf(draft);
+          // 1981年は5月31日より前か後かで分かれるので、自動では決めない
+          if (draft.kind === 'house' && byv && byv !== 1981) draft.builtBefore1981 = byv <= 1980;
+          loadMarket();
+        }
         simStep++; render(); window.scrollTo(0, 0); break;
       }
       case 'sim-back': simErr = ''; simStep = Math.max(0, simStep - 1); render(); break;
@@ -1476,6 +1531,8 @@
           if (el.value !== 'house') { draft.builtBefore1981 = null; draft.livedAlone = null; draft.renovateOrDemolish = null; }
           var sl = view.querySelector('label[for="s-size"]');
           if (sl) sl.firstChild.nodeValue = (el.value === 'condo' ? '部屋の広さ（専有面積）' : '土地の広さ') + ' ';
+          var bf = document.getElementById('by-field'); if (bf) bf.hidden = el.value === 'land';
+          prefetchSoon();
         }
       } else if (el.tagName === 'SELECT' && k === 'pref') {
         if (ev.type !== 'change') return;
@@ -1491,6 +1548,7 @@
       } else {
         draft[k] = el.value;
         if (k === 'size' || k === 'district' || k === 'cityName') draft.basis = '';
+        if (k === 'builtYear') { draft.basis = ''; prefetchSoon(); }
         if (k === 'want') Array.prototype.forEach.call(view.querySelectorAll('[data-act="quick"]'), function (b) {
           b.setAttribute('aria-pressed', String(String(num(el.value)) === b.getAttribute('data-v')));
         });

@@ -39,6 +39,7 @@
       basis: ['market', 'want', 'own'].indexOf(i.basis) >= 0 ? i.basis : '',
       pref: typeof i.pref === 'string' && /^\d{2}$/.test(i.pref) ? i.pref : '', prefName: txt(i.prefName, 10),
       city: typeof i.city === 'string' && /^\d{5}$/.test(i.city) ? i.city : '', cityName: txt(i.cityName, 30),
+      builtYear: typeof i.builtYear === 'number' && i.builtYear >= 1900 && i.builtYear <= 2100 ? Math.floor(i.builtYear) : 0,
       district: txt(i.district, 30), size: typeof i.size === 'number' && isFinite(i.size) && i.size > 0 ? Math.min(i.size, 1e7) : 0,
       market: null
     };
@@ -122,7 +123,7 @@
     },
     clearAll: function () {
       state = blank();
-      try { global.localStorage.removeItem(KEY); } catch (e) { /* 使えない環境 */ }
+      try { global.localStorage.removeItem(KEY); global.localStorage.removeItem('tsuguie.memo.v1'); } catch (e) { /* 使えない環境 */ }
     }
   };
 })(window);

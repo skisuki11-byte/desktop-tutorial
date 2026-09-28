@@ -4,7 +4,7 @@ function env(key, rowsByYear, opts){
   opts=opts||{}; const calls=[]; const cache={};
   const ctx={console:{log:console.log,error(){}},JSON,Date,Number,String,Array,Math,isFinite,parseFloat,encodeURIComponent,
     PropertiesService:{getScriptProperties:()=>({getProperty:k=>k==='REINFOLIB_KEY'?key:null})},
-    CacheService:{getScriptCache:()=>({get:k=>cache[k]||null,put:(k,v)=>{cache[k]=v},putAll:(o)=>{Object.assign(cache,o)}})},
+    CacheService:{getScriptCache:()=>({get:k=>cache[k]||null,put:(k,v)=>{cache[k]=v},putAll:(o)=>{Object.assign(cache,o)},getAll:(ks)=>{const o={};ks.forEach(k=>{if(cache[k])o[k]=cache[k]});return o}})},
     Utilities:{formatDate:(d,tz,f)=> f==='yyyy'?'2026':'2026092615'},
     UrlFetchApp:{fetchAll:function(reqs){return reqs.map(r=>this.fetch(r.url,r));},fetch:(url,o)=>{calls.push({url,o}); const m=url.match(/year=(\d+)/); const api=url.match(/external\/(\w+)/)[1];
       if (opts.code) return {getResponseCode:()=>opts.code,getContentText:()=>''};
@@ -41,5 +41,17 @@ const c1=e.calls.length; r=call(e,{action:'market',city:'22101',kind:'house',dis
 r=call(e,{action:'market',city:'22101',kind:'house',district:'安東一丁目'}); assert.ok(r.scope==='district'&&r.district==='安東'); console.log('ok 手で入れた「安東一丁目」も「安東」に合わせる');
 e=env('KEY',rows); r=call(e,{action:'market',city:'22101',kind:'house',district:'安東'}); assert.ok(r.scope==='district'&&r.count===5); console.log('ok いきなり町名つきで聞いても答えられる');
 r=call(e,{action:'market',city:'22101',kind:'house',district:'安東'}); assert.ok(r.districts&&r.districts.length===3); console.log('ok 町名の相場にも一覧がつく');
-e=env('KEY',rows); e.ctx.CacheService.getScriptCache().put('market-v2-22101-house-',JSON.stringify({ok:true,count:8,scope:'city',years:'2024〜2025',median:1}));
+e=env('KEY',rows); e.ctx.CacheService.getScriptCache().put('market-v3-22101-house-',JSON.stringify({ok:true,count:8,scope:'city',years:'2024〜2025',median:1}));
 const c0=e.calls.length; r=call(e,{action:'market',city:'22101',kind:'house'}); assert.ok(Array.isArray(r.districts)&&r.districts.length===3&&e.calls.length>c0); console.log('ok 町名の一覧がない古い形式の保存は使わず取り直す');
+// ---- 建てた年で絞り込む ----
+const mkY=(price,area,dist,by)=>({Type:H,TradePrice:String(price),Area:String(area),DistrictName:dist,Municipality:'静岡市葵区',BuildingYear:by});
+const rowsY={'2025':[mkY(8000000,100,'安東','昭和50年'),mkY(9000000,100,'安東','1978年'),mkY(10000000,100,'安東','昭和55年'),mkY(11000000,100,'安東','1972年'),mkY(12000000,100,'安東','1980年'),
+  mkY(40000000,100,'安東','2015年'),mkY(42000000,100,'安東','2018年'),mkY(45000000,100,'安東','令和2年')],
+  '2024':[mkY(7000000,100,'城東','戦前'),mkY(9500000,100,'城東','1976年'),mkY(38000000,100,'千代田','平成30年')]};
+e=env('KEY',rowsY);
+r=call(e,{action:'market',city:'22101',kind:'house',district:'安東',builtYear:1976});
+assert.ok(r.scope==='district'&&r.age&&r.age.from===1966&&r.age.to===1986&&r.count===5&&r.median===10000000); console.log('ok 町名×建てた年±10年で絞る（和暦も読む）: 中央値',r.median,'件数',r.count);
+const cA=e.calls.length; r=call(e,{action:'market',city:'22101',kind:'house',district:'安東',builtYear:2016}); assert.strictEqual(e.calls.length,cA); assert.ok(!r.age&&r.scope==='district'&&r.count===8); console.log('ok 近い築年が5件未満なら町名だけに戻す（国のAPIは呼ばない）');
+r=call(e,{action:'market',city:'22101',kind:'house',builtYear:1975}); assert.ok(r.scope==='city'&&r.age&&r.count===6); console.log('ok 市区町村×建てた年（戦前＝1940は範囲外）: 件数',r.count);
+r=call(e,{action:'market',city:'22101',kind:'house',builtYear:1800}); assert.ok(!r.age); console.log('ok ありえない年は無視');
+r=call(e,{action:'market',city:'22101',kind:'land',builtYear:1976}); assert.ok(!r.age); console.log('ok 土地は建てた年で絞らない');
