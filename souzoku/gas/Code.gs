@@ -146,14 +146,32 @@ function quantile_(sorted, q) {
   return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
 }
 
-function market_(d) {
-  var city = String(d.city || ''), kind = String(d.kind || '');
-  if (!/^\d{5}$/.test(city) || !KIND_TYPE[kind]) return { ok: false, error: 'bad_request' };
-  var district = str_(d.district, 30);
-  var cache = CacheService.getScriptCache(), ck = 'market-' + city + '-' + kind + '-' + district;
-  var hit = cache.get(ck);
-  if (hit) return JSON.parse(hit);
-  if (overLimitMarket_()) return { ok: false, error: 'busy' };
+/* 相場の目安。市区町村・種類ごとに国の API から2年分を1回だけ取り、
+   ・市区町村全体の相場（町名の一覧と件数つき：アプリで町名をリストから選べるように）
+   ・取引が5件以上ある町名ごとの相場
+   をまとめてキャッシュに入れる。町名を選び直しても、国の API はもう呼ばない。 */
+var DISTRICT_MIN = 5;      // 町名の相場を出すのに必要な取引の件数（少ないとぶれるため、市区町村全体で出す）
+var DISTRICT_LIST_MAX = 150;
+
+function marketKey_(city, kind, district) { return 'market-' + city + '-' + kind + '-' + district; }
+
+function stats_(picked, years, scope, district) {
+  if (picked.length < 3) return { ok: true, count: picked.length, scope: scope, years: years[1] + '〜' + years[0] };
+  var prices = picked.map(function (x) { return num_(x.TradePrice); }).sort(function (a, b) { return a - b; });
+  var units = picked.map(function (x) { var a = num_(x.Area); return a > 0 ? num_(x.TradePrice) / a : NaN; })
+    .filter(function (v) { return isFinite(v); }).sort(function (a, b) { return a - b; });
+  return {
+    ok: true, count: picked.length, scope: scope, years: years[1] + '〜' + years[0],
+    municipality: String(picked[0].Municipality || ''), district: scope === 'district' ? district : '',
+    median: Math.round(quantile_(prices, 0.5)), low: Math.round(quantile_(prices, 0.25)), high: Math.round(quantile_(prices, 0.75)),
+    unitMedian: units.length >= 3 ? Math.round(quantile_(units, 0.5)) : null,
+    unitLow: units.length >= 3 ? Math.round(quantile_(units, 0.25)) : null,
+    unitHigh: units.length >= 3 ? Math.round(quantile_(units, 0.75)) : null
+  };
+}
+
+/* 国の API から取り、市区町村全体と町名ごとの結果を作ってキャッシュに入れる。市区町村全体の結果を返す */
+function buildMarket_(city, kind, cache) {
   var y = Number(Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy'));
   var years = [y - 1, y - 2], rows = [];
   var results = reinfolibAll_('XIT001', years.map(function (yr) { return { year: yr, city: city, priceClassification: '01' }; }));
@@ -162,32 +180,58 @@ function market_(d) {
     rows = rows.concat(results[i].data || []);
   }
   rows = rows.filter(function (x) { return x.Type === KIND_TYPE[kind] && num_(x.TradePrice) > 0; });
-  var scope = 'city', picked = rows;
-  if (district) {
-    var inDistrict = rows.filter(function (x) {
-      var n = String(x.DistrictName || '');
-      return n && (n.indexOf(district) >= 0 || district.indexOf(n) >= 0);
-    });
-    if (inDistrict.length >= 5) { picked = inDistrict; scope = 'district'; }
+  var byName = {};
+  rows.forEach(function (x) {
+    var n = String(x.DistrictName || '').trim();
+    if (!n) return;
+    (byName[n] = byName[n] || []).push(x);
+  });
+  var names = Object.keys(byName).sort(function (a, b) { return byName[b].length - byName[a].length || (a < b ? -1 : 1); });
+  var whole = stats_(rows, years, 'city', '');
+  whole.districts = names.slice(0, DISTRICT_LIST_MAX).map(function (n) { return { name: n, count: byName[n].length }; });
+  var put = {};
+  put[marketKey_(city, kind, '')] = JSON.stringify(whole);
+  names.forEach(function (n) {
+    if (byName[n].length >= DISTRICT_MIN) put[marketKey_(city, kind, n)] = JSON.stringify(stats_(byName[n], years, 'district', n));
+  });
+  cache.putAll(put, 21600);
+  return whole;
+}
+
+function market_(d) {
+  var city = String(d.city || ''), kind = String(d.kind || '');
+  if (!/^\d{5}$/.test(city) || !KIND_TYPE[kind]) return { ok: false, error: 'bad_request' };
+  var district = str_(d.district, 30);
+  var cache = CacheService.getScriptCache();
+  var wholeRaw = cache.get(marketKey_(city, kind, ''));
+  var whole;
+  if (wholeRaw) whole = JSON.parse(wholeRaw);
+  else {
+    if (overLimitMarket_()) return { ok: false, error: 'busy' };
+    whole = buildMarket_(city, kind, cache);
+    if (!whole.ok) return whole;
   }
-  if (picked.length < 3) {
-    var few = { ok: true, count: picked.length, scope: scope, years: years[1] + '〜' + years[0] };
-    cache.put(ck, JSON.stringify(few), 21600);
-    return few;
+  if (!district) return whole;
+  // 町名の相場にも、町名の一覧を添える（アプリがいつでもリストを出せるように）
+  function withList(r) { r.districts = whole.districts || []; return r; }
+  var hit = cache.get(marketKey_(city, kind, district));
+  if (hit) return withList(JSON.parse(hit));
+  // 手で入れた町名（「安東一丁目」など）は、一覧の町名と部分一致で探す。見つからないか件数が少なければ市区町村全体
+  var list = whole.districts || [];
+  for (var i = 0; i < list.length; i++) {
+    var n = list[i].name;
+    if (list[i].count >= DISTRICT_MIN && (n === district || n.indexOf(district) >= 0 || district.indexOf(n) >= 0)) {
+      var h2 = cache.get(marketKey_(city, kind, n));
+      if (h2) return withList(JSON.parse(h2));
+      // キャッシュから先に消えていたら、作り直す
+      if (overLimitMarket_()) return whole;
+      whole = buildMarket_(city, kind, cache);
+      if (!whole.ok) return whole;
+      var h3 = cache.get(marketKey_(city, kind, n));
+      return h3 ? withList(JSON.parse(h3)) : whole;
+    }
   }
-  var prices = picked.map(function (x) { return num_(x.TradePrice); }).sort(function (a, b) { return a - b; });
-  var units = picked.map(function (x) { var a = num_(x.Area); return a > 0 ? num_(x.TradePrice) / a : NaN; })
-    .filter(function (v) { return isFinite(v); }).sort(function (a, b) { return a - b; });
-  var out = {
-    ok: true, count: picked.length, scope: scope, years: years[1] + '〜' + years[0],
-    municipality: String(picked[0].Municipality || ''), district: scope === 'district' ? district : '',
-    median: Math.round(quantile_(prices, 0.5)), low: Math.round(quantile_(prices, 0.25)), high: Math.round(quantile_(prices, 0.75)),
-    unitMedian: units.length >= 3 ? Math.round(quantile_(units, 0.5)) : null,
-    unitLow: units.length >= 3 ? Math.round(quantile_(units, 0.25)) : null,
-    unitHigh: units.length >= 3 ? Math.round(quantile_(units, 0.75)) : null
-  };
-  cache.put(ck, JSON.stringify(out), 21600);
-  return out;
+  return whole;
 }
 
 function overLimitMarket_() {

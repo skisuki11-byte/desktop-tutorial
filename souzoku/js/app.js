@@ -647,11 +647,12 @@
     d.marketKey = key; d.marketState = 'loading'; d.market = null;
     relay({ action: 'market', city: d.city, kind: d.kind, district: d.district.trim() }).then(function (j) {
       if (!draft || draft.marketKey !== key) return;
+      if (j && j.ok && Array.isArray(j.districts)) draft.districtList = { city: d.city, kind: d.kind, list: j.districts };
       if (j && j.ok && j.median) { draft.market = j; draft.marketState = 'ok'; }
       else if (j && j.ok) { draft.market = j; draft.marketState = 'few'; }
       else draft.marketState = j && j.error === 'no_key' ? 'unavailable' : 'error';
     }).catch(function () { if (draft && draft.marketKey === key) draft.marketState = 'error'; }).then(function () {
-      if (route() === 'sim/new' && draft && SIM_STEPS[simStep].id === 'market') render();
+      if (route() === 'sim/new' && draft && /^(area|market)$/.test(SIM_STEPS[simStep].id)) render();
     });
   }
   /* 相場から、この物件の目安を出す（広さがあれば㎡単価×広さ、なければ地域の取引の中央値） */
@@ -720,6 +721,25 @@
       (hint ? '<div class="yn-hint">' + hint + '</div>' : '') + '<div class="yn-btns">' +
       b(true, 'はい') + b(false, 'いいえ') + b('unk', 'わからない') + '</div></div>';
   }
+  /* 地区（町名）の欄。市区町村を選ぶと、その地域で実際に取引のあった町名を件数つきで選べる。
+     国のデータは町名（大字）まで。〇丁目・番地では絞れない */
+  function districtField() {
+    var dl = draft.districtList && draft.districtList.city === draft.city ? draft.districtList.list : null;
+    if (dl && dl.length) {
+      var cur = draft.district.trim(), found = !cur;
+      var opts = dl.map(function (x) {
+        if (x.name === cur) found = true;
+        return '<option value="' + h(x.name) + '"' + (x.name === cur ? ' selected' : '') + '>' + h(x.name) + '（' + comma(x.count) + '件）</option>';
+      }).join('');
+      if (!found) opts = '<option value="' + h(cur) + '" selected>' + h(cur) + '（入力した町名）</option>' + opts;
+      return '<select id="s-dist" class="select" data-bind="district"><option value="">指定しない（市区町村全体）</option>' + opts + '</select>' +
+        '<p class="hint">件数は、直近2年の' + h(KIND[draft.districtList.kind] || '') + 'の取引です。5件未満の町名は、市区町村全体の相場で計算します。</p>';
+    }
+    if (/^\d{5}$/.test(draft.city) && draft.marketState === 'loading') {
+      return '<div class="input" style="display:flex;align-items:center;color:var(--faint)">町名を読み込んでいます…（このまま次へ進めます）</div>';
+    }
+    return '<input id="s-dist" class="input" data-bind="district" maxlength="20" placeholder="例：安東（町名まで）" value="' + h(draft.district) + '">';
+  }
   function vSimNew() {
     if (!draft) { draft = newDraft(); simStep = 0; warmRelay(); }
     var step = SIM_STEPS[simStep], body = '';
@@ -744,9 +764,8 @@
       body = '<div class="field"><label for="s-pref">都道府県</label><select id="s-pref" class="select" data-bind="pref"><option value="">選んでください</option>' +
           PREFS.map(function (p) { return '<option value="' + p[0] + '"' + (draft.pref === p[0] ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('') + '</select></div>' +
         '<div class="field"' + (draft.pref ? '' : ' hidden') + '><label for="s-city">市区町村</label>' + cityField + '</div>' +
-        '<div class="field"' + (draft.pref ? '' : ' hidden') + '><label for="s-dist">地区 <span class="tag-opt">任意</span></label>' +
-          '<input id="s-dist" class="input" data-bind="district" maxlength="20" placeholder="例：安東（町名まで）" value="' + h(draft.district) + '"></div>' +
-        '<p class="note">番地までは入れないでください。</p>';
+        '<div class="field"' + (draft.pref ? '' : ' hidden') + '><label for="s-dist">地区（町名） <span class="tag-opt">任意</span></label>' + districtField() + '</div>' +
+        (draft.districtList && draft.districtList.city === draft.city && draft.districtList.list.length ? '' : '<p class="note">番地までは入れないでください。</p>');
     } else if (step.id === 'basic') {
       body = '<fieldset><legend class="label">種類</legend><div class="choices">' +
         ['house', 'land', 'condo'].map(function (k) {
@@ -1463,9 +1482,12 @@
         if (draft.pref !== el.value) { draft.pref = el.value; draft.city = ''; draft.cityName = ''; draft.basis = ''; }
         loadCities(draft.pref); render();
       } else if (el.tagName === 'SELECT' && k === 'city') {
+        if (ev.type !== 'change') return;
         draft.city = el.value;
         draft.cityName = el.value ? el.options[el.selectedIndex].text : '';
-        draft.basis = '';
+        draft.basis = ''; draft.district = ''; draft.districtList = null;
+        if (draft.city) loadMarket();
+        render();
       } else {
         draft[k] = el.value;
         if (k === 'size' || k === 'district' || k === 'cityName') draft.basis = '';
