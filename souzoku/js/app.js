@@ -732,8 +732,8 @@
         return '<option value="' + h(x.name) + '"' + (x.name === cur ? ' selected' : '') + '>' + h(x.name) + '（' + comma(x.count) + '件）</option>';
       }).join('');
       if (!found) opts = '<option value="' + h(cur) + '" selected>' + h(cur) + '（入力した町名）</option>' + opts;
-      return '<select id="s-dist" class="select" data-bind="district"><option value="">指定しない（市区町村全体）</option>' + opts + '</select>' +
-        '<p class="hint">件数は、直近2年の' + h(KIND[draft.districtList.kind] || '') + 'の取引です。5件未満の町名は、市区町村全体の相場で計算します。</p>';
+      return '<select id="s-dist" class="select" data-bind="district"><option value="">指定しない・リストにない</option>' + opts + '</select>' +
+        '<p class="hint">件数は直近2年の' + h(KIND[draft.districtList.kind] || '') + 'の取引です。町名がリストにないとき（最近の取引なし）は「指定しない・リストにない」を選んでください。市区町村全体の相場で計算します。近くの町名は相場が違うことがあります。</p>';
     }
     if (/^\d{5}$/.test(draft.city) && draft.marketState === 'loading') {
       return '<div class="input" style="display:flex;align-items:center;color:var(--faint)">町名を読み込んでいます…（このまま次へ進めます）</div>';
