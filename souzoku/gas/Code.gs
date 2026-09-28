@@ -28,6 +28,7 @@ function doPost(e) {
     return json_({ ok: false, error: 'bad_request' });
   }
   if (!d || d.app !== 'tsuguie') return json_({ ok: false, error: 'bad_request' });
+  if (d.action === 'ping') return json_({ ok: true });              // アプリが試算を始めたときの「温め」（初回の待ち時間を減らす）
   if (d.action === 'cities') return json_(cities_(d));
   if (d.action === 'market') return json_(market_(d));
   if (d.website) return json_({ ok: true });                      // ボット（見えない欄に入力）
@@ -97,13 +98,24 @@ var REINFOLIB = 'https://www.reinfolib.mlit.go.jp/ex-api/external/';
 var KIND_TYPE = { house: '宅地(土地と建物)', land: '宅地(土地)', condo: '中古マンション等' };
 var MARKET_PER_HOUR = 300;
 
+function reinfolibReq_(api, params, key) {
+  var q = Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
+  return { url: REINFOLIB + api + '?' + q, headers: { 'Ocp-Apim-Subscription-Key': key }, muteHttpExceptions: true };
+}
 function reinfolib_(api, params) {
   var key = PropertiesService.getScriptProperties().getProperty('REINFOLIB_KEY');
   if (!key) return { error: 'no_key' };
-  var q = Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
-  var res = UrlFetchApp.fetch(REINFOLIB + api + '?' + q, {
-    headers: { 'Ocp-Apim-Subscription-Key': key }, muteHttpExceptions: true
-  });
+  var r = reinfolibReq_(api, params, key);
+  return reinfolibRes_(UrlFetchApp.fetch(r.url, r));
+}
+/* 複数の問い合わせを同時に投げる（2年分の取引を順番に取ると、大きな市では20秒を超えることがあるため） */
+function reinfolibAll_(api, paramsList) {
+  var key = PropertiesService.getScriptProperties().getProperty('REINFOLIB_KEY');
+  if (!key) return [{ error: 'no_key' }];
+  var reqs = paramsList.map(function (p) { return reinfolibReq_(api, p, key); });
+  return UrlFetchApp.fetchAll(reqs).map(reinfolibRes_);
+}
+function reinfolibRes_(res) {
   var code = res.getResponseCode();
   if (code === 404) return { data: [] };           // 該当する取引がない
   if (code !== 200) return { error: 'upstream_' + code };
@@ -144,10 +156,10 @@ function market_(d) {
   if (overLimitMarket_()) return { ok: false, error: 'busy' };
   var y = Number(Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy'));
   var years = [y - 1, y - 2], rows = [];
-  for (var i = 0; i < years.length; i++) {
-    var r = reinfolib_('XIT001', { year: years[i], city: city, priceClassification: '01' });
-    if (r.error) return { ok: false, error: r.error };
-    rows = rows.concat(r.data || []);
+  var results = reinfolibAll_('XIT001', years.map(function (yr) { return { year: yr, city: city, priceClassification: '01' }; }));
+  for (var i = 0; i < results.length; i++) {
+    if (results[i].error) return { ok: false, error: results[i].error };
+    rows = rows.concat(results[i].data || []);
   }
   rows = rows.filter(function (x) { return x.Type === KIND_TYPE[kind] && num_(x.TradePrice) > 0; });
   var scope = 'city', picked = rows;

@@ -596,20 +596,44 @@
 
   /* ---------- 相場（中継 → 不動産情報ライブラリ） ---------- */
   var cityCache = {}, cityState = {};
+  /* 相場は、初めて調べる地域だと中継が国の API から取引を集めるので時間がかかる（2回目からは中継に残るので速い）。
+     そのため待ち時間は長めの45秒にする */
   function relay(body) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 45000);
     return fetch(CFG.endpoint, {
       method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(Object.assign({ app: 'tsuguie', v: 2 }, body)), signal: ctrl ? ctrl.signal : undefined
     }).then(function (r) { clearTimeout(timer); return r.json(); })
       .catch(function (e) { clearTimeout(timer); throw e; });
   }
+  /* 国の一覧では、政令市（例：静岡市）とその区（例：葵区）が別々に並ぶ。
+     区には市の名前をつけ（静岡市葵区）、区のある市そのものは外す（取引は区ごとに登録されているため）。
+     東京23区のように上に市がない区は、そのまま */
+  function tidyCities(list) {
+    var sorted = list.slice().sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; });
+    var parent = null, hasWard = {}, out = [];
+    sorted.forEach(function (c) {
+      var isCity = /市$/.test(c.name) && /0$/.test(c.id);
+      if (isCity) parent = c;
+      if (/区$/.test(c.name) && !/市/.test(c.name) && parent && Number(c.id) - Number(parent.id) > 0 && Number(c.id) - Number(parent.id) < 50) {
+        hasWard[parent.id] = true;
+        out.push({ id: c.id, name: parent.name + c.name });
+      } else out.push(c);
+    });
+    return out.filter(function (c) { return !hasWard[c.id]; });
+  }
+  var warmed = false;
+  function warmRelay() {   // 中継（GAS）は、しばらく使われないと起動に数秒かかる。試算を始めた時点で起こしておく
+    if (warmed || !CFG.endpoint) return;
+    warmed = true;
+    relay({ action: 'ping' }).catch(function () { warmed = false; });
+  }
   function loadCities(pref) {
     if (!CFG.endpoint || !pref || cityCache[pref] || cityState[pref] === 'loading') return;
     cityState[pref] = 'loading';
     relay({ action: 'cities', pref: pref }).then(function (j) {
-      if (j && j.ok && Array.isArray(j.cities) && j.cities.length) { cityCache[pref] = j.cities; cityState[pref] = 'ok'; }
+      if (j && j.ok && Array.isArray(j.cities) && j.cities.length) { cityCache[pref] = tidyCities(j.cities); cityState[pref] = 'ok'; }
       else cityState[pref] = 'error';
     }).catch(function () { cityState[pref] = 'error'; }).then(function () {
       if (route() === 'sim/new' && draft && SIM_STEPS[simStep].id === 'area') render();
@@ -649,7 +673,7 @@
   var CREDIT = 'このサービスは、国土交通省の不動産情報ライブラリのAPI機能を使用していますが、提供情報の最新性、正確性、完全性等が保証されたものではありません。';
   function marketCard(d) {
     var st = d.marketState, place = h(prefName(d.pref) + (d.cityName || '') + (d.district ? ' ' + d.district : ''));
-    if (st === 'loading') return '<div class="card"><b>' + place + 'の相場を調べています…</b><p class="note">数秒かかることがあります。</p></div>';
+    if (st === 'loading') return '<div class="card"><b>' + place + 'の相場を調べています…</b><p class="note">初めて調べる地域は、30秒ほどかかることがあります。</p></div>';
     if (st === 'ok') {
       var m = d.market, est = marketEstimate(m, d.size), want = num(d.want) * 10000;
       return '<div class="card" style="display:flex;flex-direction:column;gap:8px">' +
@@ -697,7 +721,7 @@
       b(true, 'はい') + b(false, 'いいえ') + b('unk', 'わからない') + '</div></div>';
   }
   function vSimNew() {
-    if (!draft) { draft = newDraft(); simStep = 0; }
+    if (!draft) { draft = newDraft(); simStep = 0; warmRelay(); }
     var step = SIM_STEPS[simStep], body = '';
     if (step.id === 'want') {
       body = '<div class="field"><label for="s-want">売りたい価格</label>' +
@@ -1364,6 +1388,8 @@
         simErr = simValidate();
         if (simErr) { render(); return; }
         if (simStep === SIM_STEPS.length - 1) { simFinish(); return; }
+        // 地域を入れたら、次の「種類・広さ」を答えているあいだに相場を調べ始める（種類が変わったら調べ直す）
+        if (SIM_STEPS[simStep].id === 'area') loadMarket();
         simStep++; render(); window.scrollTo(0, 0); break;
       }
       case 'sim-back': simErr = ''; simStep = Math.max(0, simStep - 1); render(); break;
