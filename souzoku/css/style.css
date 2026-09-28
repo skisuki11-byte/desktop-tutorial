@@ -596,3 +596,6 @@ html.revealing #view{animation:fade .35s ease .12s both}
 /* 起動中（最初の画面と書体がそろうまで）は隠す。スプラッシュだけ見える */
 html.booting #view,html.booting #tabbar{visibility:hidden}
 @media (prefers-reduced-motion:reduce){.splash-calm{opacity:0}.splash-happy{opacity:1}}
+
+/* 相場の数字のすぐ下に出す出典 */
+.source-line{display:block;font-size:14px;line-height:1.5;color:var(--muted);padding-top:6px;border-top:1px dashed var(--line)}
