@@ -471,7 +471,7 @@
       '</div>' +
       '<div class="card" style="display:flex;flex-direction:column;gap:6px">' +
         '<div class="card-title">このアプリについて</div>' +
-        '<p class="note">つぐいえは無料です。運営者（' + h(CFG.operator) + '）は' + h(MADO.name) + 'をご紹介するだけで、仲介や交渉はしません。</p>' +
+        '<p class="note">つぐいえは無料です。運営者は' + h(MADO.name) + 'をご紹介するだけで、仲介や交渉はしません。</p>' +
         '<a href="privacy.html">プライバシーポリシー</a>' +
       '</div>' +
       '<p class="app-ver">バージョン ' + h(APP_VERSION) + '</p>';
