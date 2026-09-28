@@ -182,6 +182,8 @@ h2.sec{margin:0;font-family:var(--round);font-size:20px;font-weight:700;letter-s
 .fact{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 10px;display:flex;flex-direction:column;gap:4px}
 .fact b{font-family:var(--round);font-size:24px;font-weight:700;color:var(--violet);line-height:1.2}
 .fact b small{font-size:15.5px}
+.fact b small.pre{margin-right:2px;font-size:14px}
+.fact b:has(.pre){white-space:nowrap;letter-spacing:-.01em}
 .fact span{font-size:15px;line-height:1.5;color:var(--muted)}
 .notice{border-radius:var(--r-lg);padding:16px 18px;display:flex;flex-direction:column;gap:8px;font-size:15.5px;line-height:1.8}
 .notice p{margin:0}

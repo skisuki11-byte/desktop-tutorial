@@ -302,7 +302,7 @@
         '<p>' + h(t.summary) + '</p></div></div>' +
       '<h2 class="sec">まず知っておきたいこと</h2>' +
       '<div class="fact-grid">' + t.facts.map(function (f) {
-        return '<div class="fact"><b>' + h(f.big) + '<small>' + h(f.unit) + '</small></b><span>' + h(f.text) + '</span></div>';
+        return '<div class="fact"><b>' + (f.pre ? '<small class="pre">' + h(f.pre) + '</small>' : '') + h(f.big) + '<small>' + h(f.unit) + '</small></b><span>' + h(f.text) + '</span></div>';
       }).join('') + '</div>' +
       '<h2 class="sec">やることの流れ</h2><ol class="steps">' + steps + '</ol>' +
       '<h2 class="sec">用意するもの</h2><div class="pills">' + t.bring.map(function (b) { return '<span class="pill">' + h(b) + '</span>'; }).join('') + '</div>' +
