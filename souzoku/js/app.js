@@ -319,6 +319,32 @@
             '<span class="note center">当てはまらない場合も「済」にできます</span>') +
       '</div></div>';
   }
+  /* 「済」にする前の確認。押しまちがいで一覧から消えて戻れなくならないように、いったん聞く。
+     安全な方（まだ済んでいない）に最初のフォーカスを置き、背景や Esc でも「やめる」扱いにする */
+  function confirmDone(id, onYes) {
+    var it = taskStatus(id), title = it ? it.item.title : '';
+    var wrap = document.createElement('div');
+    wrap.className = 'sheet-wrap';
+    wrap.innerHTML = '<div class="sheet" role="alertdialog" aria-modal="true" aria-labelledby="cf-title" aria-describedby="cf-desc">' +
+      '<span class="grabber" aria-hidden="true"></span>' +
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">' + buddy(64) +
+        '<h2 id="cf-title" class="title" style="font-size:22px">終わりましたか？</h2>' +
+        '<p id="cf-desc" class="lead" style="margin:0"><b>' + h(title) + '</b></p></div>' +
+      '<div class="btn-col">' +
+        '<button class="btn mint" data-yes>' + icon('check', 20) + '終わったので「済」にする</button>' +
+        '<button class="btn ghost" data-no>まだ済んでいない</button></div>' +
+      '<p class="note center" style="margin:0">あとから取り消せます。</p>' +
+      '</div>';
+    document.body.appendChild(wrap);
+    wrap.querySelector('[data-no]').focus();
+    function close() { wrap.remove(); document.removeEventListener('keydown', onKey); }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+    wrap.addEventListener('click', function (e) {
+      if (e.target === wrap || e.target.closest('[data-no]')) { close(); return; }
+      if (e.target.closest('[data-yes]')) { close(); onYes(); }
+    });
+  }
   function showDoneSheet(id) {
     var st = S.get();
     var s = DL.status(st.deathISO, st.done);
@@ -330,7 +356,7 @@
     wrap.className = 'sheet-wrap';
     wrap.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">' +
       '<div style="display:flex;justify-content:space-between;align-items:center"><span style="width:88px"></span><span class="grabber" aria-hidden="true"></span>' +
-        '<button class="text-btn" data-undo="' + id + '" style="color:var(--faint);width:88px;text-align:right;font-size:14px">取り消す</button></div>' +
+        '<button class="text-btn" data-undo="' + id + '" style="width:88px;text-align:right;font-size:15px;font-weight:700">取り消す</button></div>' +
       '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">' + buddy(84, 'happy') +
         '<h2 id="sheet-title" class="title" style="font-size:24px">' + (next ? 'ひとつ進みました' : 'ぜんぶ済みました') + '</h2>' +
         '<p class="lead">' + (next ? 'おつかれさまでした。' : '本当におつかれさまでした。') + '</p></div>' +
@@ -343,6 +369,7 @@
             chipFor(next, next.id) + '</div></div>' +
           '<a class="btn" href="#/task/' + next.id + '" data-close>次のやることを見る</a>'
         : '<a class="btn" href="#/sim" data-close>家を売った場合の手取りをはかる</a>') +
+      '<button class="btn ghost" data-stay>このページに戻る</button>' +
       '<a class="text-link" href="#/home" data-close>ホームに戻る</a>' +
       '</div>';
     document.body.appendChild(wrap);
@@ -351,7 +378,7 @@
     function onKey(e) { if (e.key === 'Escape') { close(); render(); } }
     document.addEventListener('keydown', onKey);
     wrap.addEventListener('click', function (e) {
-      if (e.target === wrap) { close(); render(); return; }
+      if (e.target === wrap || e.target.closest('[data-stay]')) { close(); render(); return; }
       if (e.target.closest('[data-close]')) { close(); return; }
       var u = e.target.closest('[data-undo]');
       if (u) { S.toggleDone(u.getAttribute('data-undo')); close(); render(); toast('「済」を取り消しました'); }
@@ -1301,8 +1328,12 @@
       case 'toggle-done': showDone = !showDone; render(); break;
       case 'done': {
         var id = el.getAttribute('data-id');
-        if (!S.get().deathISO) { S.toggleDone(id); render(); toast('「済」にしました'); break; }
-        S.toggleDone(id); render(); showDoneSheet(id); break;
+        confirmDone(id, function () {
+          if (!S.get().done[id]) S.toggleDone(id);
+          render();
+          if (!S.get().deathISO) toast('「済」にしました'); else showDoneSheet(id);
+        });
+        break;
       }
       case 'undone': S.toggleDone(el.getAttribute('data-id')); render(); toast('「済」を取り消しました'); break;
       case 'filter': learnFilter = el.getAttribute('data-v'); render(); break;
