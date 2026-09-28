@@ -586,7 +586,7 @@
   }
   var SIM_STEPS = [
     { id: 'want', q: 'いくらくらいで<br>売りたい？', say: 'まずは希望で大丈夫です。あとで相場とくらべます。' },
-    { id: 'area', q: 'どこにありますか', say: '相場を調べるのに使います。' },
+    { id: 'area', q: 'どこにありますか', say: '国土交通省の実際の取引データで、相場を調べます。' },
     { id: 'basic', q: 'どんな不動産？', say: '広さや建てた年がわかると、相場の目安が近くなります。' },
     { id: 'market', q: 'この地域の相場', say: '相場は参考の値で、査定ではありません。' },
     { id: 'acq', q: '親が買ったときのこと', say: 'わからなくても計算できます。' },
@@ -713,6 +713,8 @@
     if (Math.abs(g) <= 5) return '売りたい価格は、相場の目安とほぼ同じです。';
     return '売りたい価格は、相場の目安より約' + Math.abs(g) + '%' + (g > 0 ? '高め' : '低め') + 'です。';
   }
+  /* 数字の近くに出す出典（国が保証しているように見せない：ロゴや「公認」は使わない） */
+  var DATA_SOURCE = '出典：国土交通省「不動産情報ライブラリ」の実際の取引価格';
   var CREDIT = 'このサービスは、国土交通省の不動産情報ライブラリのAPI機能を使用していますが、提供情報の最新性、正確性、完全性等が保証されたものではありません。';
   function marketCard(d) {
     var st = d.marketState, place = h(prefName(d.pref) + (d.cityName || '') + (d.district ? ' ' + d.district : ''));
@@ -725,6 +727,7 @@
         '<span class="card-label">あなたの不動産の相場の目安</span>' +
         '<span class="round num" style="font-size:34px;font-weight:900;line-height:1.2">' + manFloor(roundMan(est.mid)) + '<small style="font-size:16px">万円</small></span>' +
         '<span class="note num">幅 ' + manFloor(roundMan(est.low)) + '万〜' + manFloor(roundMan(est.high)) + '万円（' + h(est.how) + '）</span>' +
+        '<span class="source-line">' + DATA_SOURCE + '</span>' +
         (want > 0 ? '<div class="notice violet" style="padding:12px 14px"><p>' + gapText(want, est.mid) + '</p></div>' : '') +
         (m.scope !== 'district' && d.district ? '<p class="note">地区の取引が少ないため、市区町村全体の取引で出しています。</p>' : '') +
         (builtYearOf(d) && !m.age ? '<p class="note">建てた年が近い取引が少ないため、築年数では絞っていません。</p>' : '') +
@@ -965,7 +968,7 @@
       var mk = inp.market;
       html += '<div class="card" style="display:flex;flex-direction:column;gap:8px"><b style="font-size:16.5px">売りたい価格と相場</b>' +
         (inp.want ? '<div class="kv"><span>売りたい価格</span><b>' + yen(inp.want) + '</b></div>' : '') +
-        (mk ? '<div class="kv"><span>相場の目安</span><b>' + yen(mk.mid) + '</b></div><div class="kv sub"><span>幅 ' + yen(mk.low) + '〜' + yen(mk.high) + '・' + h(mk.place) + '・' + h(mk.years) + '年の取引' + comma(mk.count) + '件</span></div>' : '') +
+        (mk ? '<div class="kv"><span>相場の目安</span><b>' + yen(mk.mid) + '</b></div><div class="kv sub"><span>幅 ' + yen(mk.low) + '〜' + yen(mk.high) + '・' + h(mk.place) + '・' + h(mk.years) + '年の取引' + comma(mk.count) + '件</span></div><span class="source-line">' + DATA_SOURCE + '</span>' : '') +
         '<div class="kv"><span>この試算で使った価格</span><b>' + yen(inp.price) + '</b></div>' +
         (inp.want && mk ? '<p class="note" style="color:var(--ink)">' + gapText(inp.want, mk.mid) + '</p>' : '') +
         (mk ? '<p class="note" style="font-size:12.5px">相場は参考値で、査定ではありません。' + CREDIT + '</p>' : '<p class="note">相場は、不動産会社の査定や「不動産情報ライブラリ」で確かめられます。</p>') +
