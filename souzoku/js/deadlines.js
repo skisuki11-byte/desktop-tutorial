@@ -31,6 +31,12 @@
   }
 
   var AKIYA_SYSTEM_END = '2027-12-31';
+  /* 相続登記の義務化（2024年4月1日施行）より前に始まった相続は、2027年3月31日までが期限。
+     それ以後の相続は、取得を知った日から3年以内（ここでは亡くなった日から3年で数える） */
+  var TOUKI_START = '2024-04-01', TOUKI_OLD_DUE = '2027-03-31';
+  function toukiDue(deathISO) {
+    return deathISO < TOUKI_START ? TOUKI_OLD_DUE : addMonths(deathISO, 36);
+  }
 
   function list(deathISO) {
     var taxDue = addMonths(deathISO, 10);
@@ -50,8 +56,10 @@
           ? '制度の期限（2027年12月31日）が先に来ます。延長されることがあります。'
           : '相続開始から3年を経過する日の属する年の12月31日まで。最大3,000万円の控除。',
         article: 'akiya' },
-      { id: 'touki', title: '相続登記の申請（義務）', date: addMonths(deathISO, 36),
-        note: '相続を知った日から3年以内。正当な理由なく怠ると10万円以下の過料。', article: 'touki' },
+      { id: 'touki', title: '相続登記の申請（義務）', date: toukiDue(deathISO),
+        note: deathISO < TOUKI_START
+          ? '2024年4月より前の相続は、2027年3月31日まで。正当な理由なく怠ると10万円以下の過料。'
+          : '不動産を相続したと知った日から3年以内。正当な理由なく怠ると10万円以下の過料。', article: 'touki' },
       { id: 'shutoku', title: '取得費加算の特例の売却期限', date: addMonths(taxDue, 36),
         note: '相続税を納めた人が、申告期限から3年以内に売るときに使える特例。', article: 'shutoku' }
     ];
