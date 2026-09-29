@@ -798,6 +798,10 @@
         }).join('') + '</div>' +
         '<label class="check"><input type="checkbox" data-bind="wantUndecided"' + (draft.wantUndecided ? ' checked' : '') + '>まだ決めていない</label></div>';
     } else if (step.id === 'area') {
+      // 「編集」で開き直したときは、市区町村と町名の一覧がまだ手元にないので、ここで取りにいく
+      // （取らないと、市区町村が「読み込んでいます…」のまま、町名が手入力のままになる）
+      if (draft.pref && !cityState[draft.pref]) loadCities(draft.pref);   // 失敗したときは取り直さない（手入力に切り替わる）
+      if (/^\d{5}$/.test(draft.city) && !(draft.districtList && draft.districtList.city === draft.city)) loadMarket();
       var list = cityCache[draft.pref];
       var cityField;
       if (list) {
