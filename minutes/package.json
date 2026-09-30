@@ -1,0 +1,12 @@
+{
+  "name": "minutes-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "スマホ/PCで録音 → 要点をリアルタイム表示 → 議事録にして Notion へ保存する Web アプリ",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/smoke.mjs"
+  }
+}

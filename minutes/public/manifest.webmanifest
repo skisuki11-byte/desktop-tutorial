@@ -1,0 +1,11 @@
+{
+  "name": "議事録",
+  "short_name": "議事録",
+  "description": "録音しながら要点を表示し、終了後に議事録をNotionへ保存",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#1d3557",
+  "theme_color": "#1d3557",
+  "lang": "ja",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
