@@ -1,0 +1,184 @@
+"""sanity_check.py — 検証基盤が壊れていないことを機械的に確かめる。
+
+    python fx/tools/sanity_check.py
+
+docs/03 §7 のランダムウォーク検算を、毎回手で確認する代わりに自動化したもの。
+戦略を追加したり backtest() を触ったりしたら、まずこれを通すこと。
+
+確かめること:
+  1. エッジゼロのデータで、すべての戦略が負ける
+     -> 勝ったら未来参照かコスト未計上のバグ
+  2. グロスリターンがほぼゼロ、損失がほぼ全額コストである
+     -> ずれていたら損益計算そのものが誤り
+  3. わざと shift を外すと勝つ
+     -> 勝たないなら、このテスト自体に検出力がない(★1が無意味になる)
+  4. ウォークフォワードの合成曲線も、エッジゼロなら負ける
+     -> 勝ったら窓の切り方かエンバーゴが間違っている
+  5. 逆に、本物のエッジを仕込んだデータでは採用ラインを «通せる»
+     -> 通せないなら «常に不合格を出すだけ» のテストで、価値がない
+
+3番目が重要。「負けたからOK」だけだと、実は何もしていないコードでも通ってしまう。
+バグを入れたときに «ちゃんと壊れる» ことまで確認して、はじめてテストになる。
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import numpy as np
+
+from fx1 import PRICE_DEPENDENT, STRATEGIES, backtest, load, stats
+from make_synthetic import make
+
+DATA = Path(__file__).resolve().parent.parent / "data" / "SYNTH_M5.parquet"
+EDGE_DATA = Path(__file__).resolve().parent.parent / "data" / "SYNTH_EDGE_M5.parquet"
+EDGE_TREND = 0.02        # 控えめだが確実に捕捉できる強さ（docs/06 §8）
+
+# エッジゼロでもグロスはゼロぴったりにはならない。乱数なので散らばる。
+# 累積グロスの標準偏差は σ×√(稼働率×年数) なので、許容幅もそれに比例させる。
+# 固定値(例: ±2%)にすると、常時建玉の戦略では必ず外れて偽の失敗を出す。
+SYNTH_ANNUAL_VOL = 0.106    # make_synthetic の実現ボラ
+GROSS_SIGMA_LIMIT = 3.0     # 3σを超えたら損益計算を疑う
+LOOKAHEAD_MIN_SHARPE = 1.0  # バグを入れたらこれ以上のシャープが出ないとおかしい
+
+
+def ensure_data() -> None:
+    DATA.parent.mkdir(parents=True, exist_ok=True)
+    if not DATA.exists():
+        print(f"合成データがないので作成します -> {DATA.name}")
+        make(years=10.0, start_price=110.0, annual_vol=0.09, seed=42,
+             pip=0.01).to_parquet(DATA, index=False)
+    if not EDGE_DATA.exists():
+        print(f"検出力テスト用データを作成します -> {EDGE_DATA.name}")
+        make(years=10.0, start_price=110.0, annual_vol=0.09, seed=7, pip=0.01,
+             trend=EDGE_TREND, regime_days=20).to_parquet(EDGE_DATA, index=False)
+
+
+def main() -> int:
+    ensure_data()
+    df = load(str(DATA))
+    failures: list[str] = []
+
+    print(f"データ: {DATA.name}  ({len(df):,}本, "
+          f"{df.index[0]:%Y-%m-%d}〜{df.index[-1]:%Y-%m-%d})")
+    print("エッジは存在しない。負けるのが正しい。\n")
+
+    header = (f"{'戦略':>10} {'総リターン':>11} {'グロス':>9} {'乖離':>8} "
+              f"{'コスト':>9} {'シャープ':>9} {'判定':>8}")
+    print(header)
+    print("-" * len(header))
+
+    for name, fn in sorted(STRATEGIES.items()):
+        s = stats(backtest(df, fn(df)))
+        ok = s["total_return"] < 0
+
+        sd = SYNTH_ANNUAL_VOL * np.sqrt(s["duty"] * s["years"])
+        sigmas = abs(s["gross_return"]) / sd if sd else 0.0
+        gross_ok = sigmas < GROSS_SIGMA_LIMIT
+
+        if not ok:
+            failures.append(
+                f"{name}: エッジゼロのデータで勝っている "
+                f"({s['total_return']:+.2%})。未来参照かコスト未計上を疑うこと")
+        if not gross_ok:
+            failures.append(
+                f"{name}: グロスリターン {s['gross_return']:+.2%} が理論分布から "
+                f"{sigmas:.1f}σ 離れている。損益計算を確認すること")
+
+        print(f"{name:>10} {s['total_return']:>+10.2%} {s['gross_return']:>+8.2%} "
+              f"{sigmas:>7.1f}σ {-s['cost_drag']:>+8.2%} {s['sharpe']:>8.2f} "
+              f"{'○' if ok and gross_ok else '× 失敗':>8}")
+
+    # --- 検出力の確認: わざとバグを入れて、ちゃんと壊れるか --------------------
+    print("\n検出力の確認（わざと shift を外す = 未来参照バグの再現）")
+    print("-" * len(header))
+    for name, fn in sorted(STRATEGIES.items()):
+        s = stats(backtest(df, fn(df).shift(-1)))
+        if name not in PRICE_DEPENDENT:
+            # 価格を見ない戦略は原理的に未来参照が起きない。窓が5分ずれるだけ。
+            print(f"{name:>10} {s['total_return']:>+10.2%} {'':>8} {'':>7} {'':>8} "
+                  f"{s['sharpe']:>8.2f} {'― 対象外':>8}")
+            continue
+        detected = s["sharpe"] > LOOKAHEAD_MIN_SHARPE
+        if not detected:
+            failures.append(
+                f"{name}: shiftを外しても成績が良くならない(シャープ {s['sharpe']:.2f})。"
+                f"このテストに検出力がない")
+        print(f"{name:>10} {s['total_return']:>+10.2%} {'':>8} {'':>7} {'':>8} "
+              f"{s['sharpe']:>8.2f} {'○ 検出可' if detected else '× 検出力なし':>8}")
+    print("  ※ 価格を見ない戦略(仲値など)は shift のバグが原理的に起きないため対象外。")
+
+    # --- WF自体の検算: エッジゼロなら合成曲線も勝ってはいけない ----------------
+    print("\nウォークフォワードの検算（エッジゼロなら合成も負けるはず）")
+    print("-" * len(header))
+    from walkforward import PARAM_GRIDS
+    from walkforward import run as wf_run
+    for name in sorted(PARAM_GRIDS):
+        composite, records, grid_size = wf_run(df, name, 24, 6, 6, 5)
+        s = stats(composite)
+        ok = s["total_return"] < 0
+        if not ok:
+            failures.append(
+                f"{name}: WF合成がエッジゼロのデータで勝っている "
+                f"({s['total_return']:+.2%})。窓の切り方かエンバーゴを確認すること")
+
+        is_mean = np.mean([r["is_sharpe"] for r in records])
+        oos_mean = np.mean([r["oos_sharpe"] for r in records])
+        print(f"{name:>10} {s['total_return']:>+10.2%} {'':>8} {'':>7} "
+              f"{-s['cost_drag']:>+8.2%} {s['sharpe']:>8.2f} "
+              f"{'○' if ok else '× 失敗':>8}")
+        print(f"{'':>10}   学習窓の平均シャープ {is_mean:+.2f} / "
+              f"検証窓 {oos_mean:+.2f}  （グリッド{grid_size}点）")
+
+    if any(len(g) for g in PARAM_GRIDS.values()):
+        print("\n  ※ 学習窓のシャープが正でも意味はない。エッジゼロのデータで")
+        print("    グリッドから最良を選べば、その分だけ必ず正に出る（選択バイアス）。")
+        print("    判定に使ってよいのは検証窓の側だけ。")
+
+    # --- 検出力の本丸: 本物のエッジを «通せる» か -----------------------------
+    # ここが通らないと、これまでの検算は «常に不合格を出すだけ» のテストになる。
+    print("\n本物のエッジを通せるか（レジーム型トレンドを仕込んだデータ）")
+    print("-" * len(header))
+    import registry
+    edge_df = load(str(EDGE_DATA))
+    for name in sorted(PARAM_GRIDS):
+        composite, _, grid_size = wf_run(edge_df, name, 24, 6, 6, 5)
+        s = stats(composite)
+        floor = registry.dsr_floor(grid_size, s["years"])
+        detected = s["sharpe_lower"] > floor and s["pf"] >= 1.2
+        if name in PRICE_DEPENDENT and not detected:
+            failures.append(
+                f"{name}: 本物のエッジを検出できない（下限 {s['sharpe_lower']:.2f} "
+                f"vs 足切り {floor:.2f}、PF {s['pf']:.2f}）。"
+                f"採用ラインが厳しすぎるか、判定に誤りがある")
+        mark = ("○ 通せる" if detected else
+                "× 通せない" if name in PRICE_DEPENDENT else "― 対象外")
+        print(f"{name:>10} {s['total_return']:>+10.2%} {'':>8} {'':>7} "
+              f"{-s['cost_drag']:>+8.2%} {s['sharpe']:>8.2f} {mark:>8}")
+        print(f"{'':>10}   下限 {s['sharpe_lower']:.2f} / 足切り {floor:.2f} / "
+              f"PF {s['pf']:.2f} / 取引 {s['trades']:,}")
+    print("  ※ 仲値は時刻だけで建玉を決めるため、トレンドがあっても捕捉できない（対象外）。")
+
+    print()
+    if failures:
+        print("=" * 66)
+        print("失敗")
+        print("=" * 66)
+        for f in failures:
+            print(f"  - {f}")
+        return 1
+
+    print("=" * 66)
+    print("すべて合格。検証基盤は信頼してよい。")
+    print("=" * 66)
+    print("\n※ ここで保証されたのは «損益計算が正しく、信号と雑音を区別できること» まで。")
+    print("  実際の戦略にエッジがあるかどうかは、実データで別途検証すること。")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
