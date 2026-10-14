@@ -7,6 +7,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local I18n = require(ReplicatedStorage.Shared.I18n)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Style = require(script.Parent.Style)
+local PalsUI = require(script.Parent.PalsUI)
 
 local UI = {}
 
@@ -16,7 +17,7 @@ local t = I18n.t
 local gui
 local coinLabel, coinPill
 local seedBar
-local sellButton, harvestButton, shopButton
+local sellButton, harvestButton, shopButton, palsButton
 local shopPanel
 local toastLabel
 local bannerLabel, banner
@@ -31,7 +32,7 @@ local function basketValue(state): number
 	for cropId, n in state.basketSparkle do
 		total += Config.sellValue(cropId, true) * n
 	end
-	return total
+	return math.floor(total * (state.sellBonus or 1))
 end
 
 local function buildCoinPill()
@@ -111,7 +112,7 @@ local function buildActions()
 		Name = "Actions",
 		AnchorPoint = Vector2.new(1, 1),
 		Position = UDim2.new(1, -16, 1, -16),
-		Size = UDim2.fromOffset(210, 200),
+		Size = UDim2.fromOffset(210, 290),
 		BackgroundTransparency = 1,
 	}, gui)
 	Style.make("UIListLayout", {
@@ -119,6 +120,19 @@ local function buildActions()
 		VerticalAlignment = Enum.VerticalAlignment.Bottom,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, column)
+
+	palsButton = Style.button({
+		Name = "Pals",
+		LayoutOrder = 0,
+		Size = UDim2.new(1, 0, 0, Style.TapSize),
+		BackgroundColor3 = Color3.fromRGB(190, 160, 255),
+		TextColor3 = C.Text,
+		Text = "🐾 " .. t("ui.pals"),
+	}, column)
+	palsButton.Activated:Connect(function()
+		UI.setShopVisible(false)
+		PalsUI.toggle()
+	end)
 
 	shopButton = Style.button({
 		Name = "Shop",
@@ -149,6 +163,7 @@ local function buildActions()
 	Style.stroke(sellButton, C.Surface, 3)
 
 	shopButton.Activated:Connect(function()
+		PalsUI.setVisible(false)
 		UI.setShopVisible(not shopPanel.Visible)
 	end)
 	harvestButton.Activated:Connect(function()
@@ -385,6 +400,12 @@ function UI.update(state)
 		or ("💰 " .. t("ui.sellAll"))
 	sellButton.BackgroundColor3 = value > 0 and C.Accent or C.AccentDark
 	refreshSeedBar(state)
+	PalsUI.update(state)
+end
+
+function UI.playHatch(petId: string)
+	UI.setShopVisible(false)
+	PalsUI.playHatch(petId)
 end
 
 function UI.init()
@@ -405,6 +426,7 @@ function UI.init()
 	buildSeedBar()
 	buildActions()
 	buildShop()
+	PalsUI.build(gui)
 	buildToast()
 	buildBanner()
 end

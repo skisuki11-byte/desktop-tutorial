@@ -32,6 +32,9 @@ local function newData()
 		basketSparkle = {}, -- [cropId] = きらきらの個数
 		plots = {}, -- [tostring(tileIndex)] = { crop, plantedAt }
 		tutorialDone = false,
+		pets = {}, -- { { uid, pet } }
+		equipped = {}, -- 連れているペットの uid（最大 Config.MaxEquipped）
+		nextPetUid = 1,
 	}
 end
 
@@ -124,6 +127,19 @@ function Data.setSelected(player: Player, cropId: string)
 	end
 end
 
+-- 連れているペットの売値ボーナスの合計（0.15 = +15%）。ここで1か所だけ計算する
+function Data.petBonus(d): number
+	local bonus = 0
+	for _, uid in d.equipped do
+		for _, entry in d.pets do
+			if entry.uid == uid and Config.PetById[entry.pet] then
+				bonus += Config.PetById[entry.pet].bonus
+			end
+		end
+	end
+	return bonus
+end
+
 function Data.push(player: Player)
 	local profile = profiles[player]
 	if not profile then
@@ -131,6 +147,9 @@ function Data.push(player: Player)
 	end
 	local d = profile.data
 	Remotes.State:FireClient(player, {
+		pets = d.pets,
+		equipped = d.equipped,
+		sellBonus = 1 + Data.petBonus(d),
 		coins = d.coins,
 		seeds = d.seeds,
 		basket = d.basket,

@@ -29,6 +29,56 @@ for _, crop in Config.Crops do
 	table.insert(Config.CropOrder, crop.id)
 end
 
+-- ペット（Pals）。bonus は売値に足される割合（連れている分の合計）
+Config.MaxPets = 20
+Config.MaxEquipped = 3
+
+-- rarity: 1=ふつう 2=めずらしい 3=レア 4=すごいレア 5=でんせつ / ears: 見た目の型
+Config.Pets = {
+	{ id = "gummybear", icon = "🐻", rarity = 1, bonus = 0.05, color = Color3.fromRGB(255, 120, 140), ears = "round" },
+	{ id = "lollibunny", icon = "🐰", rarity = 2, bonus = 0.10, color = Color3.fromRGB(255, 170, 215), ears = "long" },
+	{ id = "cottoncat", icon = "🐱", rarity = 3, bonus = 0.20, color = Color3.fromRGB(185, 215, 255), ears = "point" },
+	{ id = "rainbowunicorn", icon = "🦄", rarity = 4, bonus = 0.40, color = Color3.fromRGB(235, 200, 255), ears = "horn" },
+	{ id = "starcakedragon", icon = "🐉", rarity = 5, bonus = 1.00, color = Color3.fromRGB(255, 214, 90), ears = "wings" },
+}
+
+-- weight の合計に対する割合が出る確率。画面にそのまま表示する
+Config.Eggs = {
+	{
+		id = "candyegg",
+		icon = "🥚",
+		price = 250,
+		odds = {
+			{ pet = "gummybear", weight = 60 },
+			{ pet = "lollibunny", weight = 25 },
+			{ pet = "cottoncat", weight = 10 },
+			{ pet = "rainbowunicorn", weight = 4 },
+			{ pet = "starcakedragon", weight = 1 },
+		},
+	},
+}
+
+Config.PetById = {}
+for _, pet in Config.Pets do
+	Config.PetById[pet.id] = pet
+end
+Config.EggById = {}
+for _, egg in Config.Eggs do
+	Config.EggById[egg.id] = egg
+end
+
+function Config.eggOddsPercent(egg, petId: string): number
+	local total = 0
+	local weight = 0
+	for _, entry in egg.odds do
+		total += entry.weight
+		if entry.pet == petId then
+			weight = entry.weight
+		end
+	end
+	return math.floor(weight / total * 1000 + 0.5) / 10
+end
+
 function Config.sellValue(cropId: string, sparkle: boolean): number
 	local crop = Config.CropById[cropId]
 	local price = crop.sellPrice

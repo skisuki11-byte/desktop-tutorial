@@ -7,12 +7,14 @@ local World = require(Services.World)
 local Garden = require(Services.Garden)
 local Shop = require(Services.Shop)
 local RateLimit = require(Services.RateLimit)
+local Pals = require(Services.Pals)
 
 -- データ読込と庭の準備が終わってからキャラクターを出す
 Players.CharacterAutoLoads = false
 
 World.build(Garden.interact)
 Shop.init()
+Pals.init()
 Garden.startGrowthLoop()
 Data.startAutoSave()
 
@@ -33,6 +35,7 @@ local function onPlayerAdded(player: Player)
 		warn("[Main] 空いている庭がありません: " .. player.Name)
 	end
 	Garden.attach(player)
+	Pals.refreshAttribute(player)
 
 	player.CharacterAdded:Connect(function(character)
 		local humanoid = character:WaitForChild("Humanoid")
