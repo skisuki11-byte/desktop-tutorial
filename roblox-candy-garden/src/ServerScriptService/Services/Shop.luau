@@ -7,6 +7,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Data = require(script.Parent.Data)
 local Garden = require(script.Parent.Garden)
 local RateLimit = require(script.Parent.RateLimit)
+local Monetization = require(script.Parent.Monetization)
 
 local Shop = {}
 
@@ -68,14 +69,14 @@ local function sellAll(player: Player)
 		Remotes.Toast:FireClient(player, "toast.nothingToSell")
 		return
 	end
-	total = math.floor(total * (1 + Data.petBonus(d)))
+	total = math.floor(total * (1 + Data.petBonus(d)) * Monetization.coinMultiplier(player))
 	d.basket = {}
 	d.basketSparkle = {}
 	d.coins += total
 	d.tutorialDone = true
 	Remotes.Toast:FireClient(player, "toast.sold", total)
 	Data.push(player)
-	Data.save(player) -- 初回の売却は大事な節目なので即保存
+	Data.saveSoon(player) -- 売却は、数秒以内に保存する
 end
 
 function Shop.init()

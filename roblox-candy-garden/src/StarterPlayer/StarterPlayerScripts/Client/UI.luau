@@ -1,4 +1,7 @@
--- HUD・ショップ・トースト。すべてコードで生成する。
+-- HUD・下の操作ドック・ショップ・トースト。すべてコードで生成する。
+-- 配置の方針（モバイルの親指とジャンプボタンを避ける）:
+--   左上: コインと状況 / 中央上: 案内 / 下の中央: 種えらび＋大きな操作ボタン（ドック）
+--   画面の左右の下すみは、Robloxの移動スティックとジャンプボタンの場所なので空けておく。
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -8,6 +11,7 @@ local I18n = require(ReplicatedStorage.Shared.I18n)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Style = require(script.Parent.Style)
 local PalsUI = require(script.Parent.PalsUI)
+local CosmeticsUI = require(script.Parent.CosmeticsUI)
 
 local UI = {}
 
@@ -16,13 +20,15 @@ local t = I18n.t
 
 local gui
 local coinLabel, coinPill
-local seedBar
-local sellButton, harvestButton, shopButton, palsButton
+local seedBar, bottom
+local sellButton, harvestButton, shopButton, palsButton, styleButton
 local shopPanel
 local toastLabel
 local bannerLabel, banner
 local lastCoins = nil
 local toastToken = 0
+
+local DOCK_WIDTH = 480 -- ドックの基準の幅。画面が狭いときは縮める
 
 local function basketValue(state): number
 	local total = 0
@@ -32,35 +38,88 @@ local function basketValue(state): number
 	for cropId, n in state.basketSparkle do
 		total += Config.sellValue(cropId, true) * n
 	end
-	return math.floor(total * (state.sellBonus or 1))
+	return math.floor(total * (state.sellBonus or 1) * (state.coinMultiplier or 1))
 end
+
+-- ---- 左上のコイン ----
 
 local function buildCoinPill()
 	coinPill = Style.make("Frame", {
 		Name = "CoinPill",
-		Position = UDim2.fromOffset(16, 16),
-		Size = UDim2.fromOffset(190, 56),
+		Position = UDim2.fromOffset(16, 12),
+		Size = UDim2.fromOffset(210, 60),
 		BackgroundColor3 = C.Surface,
 	}, gui)
-	Style.round(coinPill, 28)
-	Style.stroke(coinPill, C.Yellow, 4)
+	Style.round(coinPill, 30)
+	Style.stroke(coinPill, C.Outline, 5)
+	Style.make("Frame", {
+		Name = "Shine",
+		Position = UDim2.fromOffset(14, 7),
+		Size = UDim2.new(1, -28, 0, 6),
+		BackgroundColor3 = C.Yellow,
+		BorderSizePixel = 0,
+	}, coinPill)
+	Style.round(coinPill.Shine, 3)
 	coinLabel = Style.label({
-		Size = UDim2.fromScale(1, 1),
-		Text = "🪙 0",
-		TextSize = 28,
-		TextXAlignment = Enum.TextXAlignment.Center,
+		Position = UDim2.fromOffset(0, 8),
+		Size = UDim2.new(1, 0, 1, -8),
+		Text = "🟡 0",
+		TextSize = 32,
+		TextWrapped = false,
 	}, coinPill)
 end
 
-local function buildSeedBar()
-	seedBar = Style.make("Frame", {
-		Name = "SeedBar",
+-- コインが増えたとき、ふわっと上がる「+N」
+local function floatCoins(amount: number)
+	local label = Style.label({
+		Position = UDim2.new(0, 36, 0, 78),
+		Size = UDim2.fromOffset(180, 40),
+		Text = "+" .. Style.formatNumber(amount) .. " 🟡",
+		TextSize = 30,
+		TextColor3 = Color3.fromRGB(255, 226, 90),
+		TextWrapped = false,
+		ZIndex = 25,
+	}, gui)
+	TweenService:Create(label, TweenInfo.new(1.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0, 36, 0, 40),
+		TextTransparency = 1,
+	}):Play()
+	local stroke = label:FindFirstChild("TextStroke")
+	if stroke then
+		TweenService:Create(stroke, TweenInfo.new(1.1), { Transparency = 1 }):Play()
+	end
+	task.delay(1.2, function()
+		label:Destroy()
+	end)
+end
+
+-- ---- 下の中央: 種えらび + ドック ----
+
+local function buildBottom()
+	bottom = Style.make("Frame", {
+		Name = "Bottom",
 		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -16),
-		Size = UDim2.fromOffset(0, 92),
-		AutomaticSize = Enum.AutomaticSize.X,
+		Position = UDim2.new(0.5, 0, 1, -10),
+		Size = UDim2.fromOffset(DOCK_WIDTH, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
 	}, gui)
+	Style.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Vertical,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Bottom,
+		Padding = UDim.new(0, 10),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, bottom)
+	Style.make("UIScale", { Name = "FitScale" }, bottom)
+
+	seedBar = Style.make("Frame", {
+		Name = "SeedBar",
+		LayoutOrder = 1,
+		Size = UDim2.fromOffset(DOCK_WIDTH, 0),
+		AutomaticSize = Enum.AutomaticSize.Y, -- 種が無いときは高さ0（場所を取らない）
+		BackgroundTransparency = 1,
+	}, bottom)
 	Style.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		Padding = UDim.new(0, 8),
@@ -68,6 +127,64 @@ local function buildSeedBar()
 		VerticalAlignment = Enum.VerticalAlignment.Bottom,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, seedBar)
+
+	local dock = Style.make("Frame", {
+		Name = "Dock",
+		LayoutOrder = 2,
+		Size = UDim2.fromOffset(DOCK_WIDTH, 88),
+		BackgroundTransparency = 1,
+	}, bottom)
+	Style.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		Padding = UDim.new(0, 8),
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Bottom,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, dock)
+
+	local function nav(name: string, order: number, icon: string, caption: string, color: Color3, width: number?)
+		return Style.navButton({
+			Name = name,
+			LayoutOrder = order,
+			Size = UDim2.fromOffset(width or 76, 88),
+			BackgroundColor3 = color,
+			Icon = icon,
+			Caption = caption,
+		}, dock)
+	end
+
+	shopButton = nav("Shop", 1, "🛒", t("ui.shop"), C.Mint)
+	palsButton = nav("Pals", 2, "🐾", t("ui.pals"), C.Lilac)
+	styleButton = nav("Style", 3, "👗", t("ui.style"), Color3.fromRGB(255, 190, 220))
+	harvestButton = nav("HarvestAll", 4, "🧺", t("ui.harvest"), C.Yellow)
+	sellButton = nav("SellAll", 5, "💰", t("ui.sell"), C.Accent, 132)
+	-- 売るボタンは主役。文字は白＋縁取り
+	sellButton.Caption.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Style.textStroke(sellButton.Caption)
+
+	-- もう一度押すと閉じる
+	local function toggle(name: string, isOpen: boolean)
+		if isOpen then
+			UI.showPanel(nil)
+		else
+			UI.showPanel(name)
+		end
+	end
+	shopButton.Activated:Connect(function()
+		toggle("shop", shopPanel.Visible)
+	end)
+	palsButton.Activated:Connect(function()
+		toggle("pals", PalsUI.isVisible())
+	end)
+	styleButton.Activated:Connect(function()
+		toggle("style", CosmeticsUI.isVisible())
+	end)
+	harvestButton.Activated:Connect(function()
+		Remotes.HarvestAll:FireServer()
+	end)
+	sellButton.Activated:Connect(function()
+		Remotes.SellAll:FireServer()
+	end)
 end
 
 local function refreshSeedBar(state)
@@ -84,21 +201,26 @@ local function refreshSeedBar(state)
 			local button = Style.button({
 				Name = cropId,
 				LayoutOrder = order,
-				Size = UDim2.fromOffset(selected and 92 or 80, selected and 92 or 80),
-				BackgroundColor3 = selected and C.Surface or C.Dim,
+				Size = UDim2.fromOffset(selected and 84 or 72, selected and 76 or 66),
+				BackgroundColor3 = selected and C.Yellow or C.Surface,
 			}, seedBar)
-			Style.stroke(button, selected and C.Accent or C.Surface, selected and 5 or 2)
+			if selected then
+				button:FindFirstChildOfClass("UIStroke").Color = C.Accent
+			end
 			Style.label({
-				Size = UDim2.new(1, 0, 0, 44),
-				Position = UDim2.fromOffset(0, 6),
+				Position = UDim2.fromOffset(0, 2),
+				Size = UDim2.new(1, 0, 0.6, 0),
 				Text = crop.icon,
-				TextSize = 36,
+				TextSize = 34,
+				TextWrapped = false,
 			}, button)
 			Style.label({
-				Size = UDim2.new(1, 0, 0, 24),
-				Position = UDim2.new(0, 0, 1, -30),
+				AnchorPoint = Vector2.new(0.5, 1),
+				Position = UDim2.new(0.5, 0, 1, -2),
+				Size = UDim2.new(1, 0, 0.36, 0),
 				Text = "×" .. count,
-				TextSize = 22,
+				TextSize = 20,
+				TextWrapped = false,
 			}, button)
 			button.Activated:Connect(function()
 				Remotes.SelectSeed:FireServer(cropId)
@@ -107,165 +229,73 @@ local function refreshSeedBar(state)
 	end
 end
 
-local function buildActions()
-	local column = Style.make("Frame", {
-		Name = "Actions",
-		AnchorPoint = Vector2.new(1, 1),
-		Position = UDim2.new(1, -16, 1, -16),
-		Size = UDim2.fromOffset(210, 290),
-		BackgroundTransparency = 1,
-	}, gui)
-	Style.make("UIListLayout", {
-		Padding = UDim.new(0, 10),
-		VerticalAlignment = Enum.VerticalAlignment.Bottom,
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, column)
-
-	palsButton = Style.button({
-		Name = "Pals",
-		LayoutOrder = 0,
-		Size = UDim2.new(1, 0, 0, Style.TapSize),
-		BackgroundColor3 = Color3.fromRGB(190, 160, 255),
-		TextColor3 = C.Text,
-		Text = "🐾 " .. t("ui.pals"),
-	}, column)
-	palsButton.Activated:Connect(function()
-		UI.setShopVisible(false)
-		PalsUI.toggle()
-	end)
-
-	shopButton = Style.button({
-		Name = "Shop",
-		LayoutOrder = 1,
-		Size = UDim2.new(1, 0, 0, Style.TapSize),
-		BackgroundColor3 = C.Mint,
-		TextColor3 = C.Text,
-		Text = "🛒 " .. t("ui.shop"),
-	}, column)
-
-	harvestButton = Style.button({
-		Name = "HarvestAll",
-		LayoutOrder = 2,
-		Size = UDim2.new(1, 0, 0, Style.TapSize),
-		BackgroundColor3 = C.Yellow,
-		TextColor3 = C.Text,
-		Text = "🧺 " .. t("ui.harvestAll"),
-	}, column)
-
-	sellButton = Style.button({
-		Name = "SellAll",
-		LayoutOrder = 3,
-		Size = UDim2.new(1, 0, 0, 64),
-		BackgroundColor3 = C.Accent,
-		Text = "💰 " .. t("ui.sellAll"),
-		TextSize = 24,
-	}, column)
-	Style.stroke(sellButton, C.Surface, 3)
-
-	shopButton.Activated:Connect(function()
-		PalsUI.setVisible(false)
-		UI.setShopVisible(not shopPanel.Visible)
-	end)
-	harvestButton.Activated:Connect(function()
-		Remotes.HarvestAll:FireServer()
-	end)
-	sellButton.Activated:Connect(function()
-		Remotes.SellAll:FireServer()
-	end)
+-- 画面の大きさに合わせて、下のドックを縮める（スマホの縦持ちでも収まる）
+local function fitBottom()
+	local camera = workspace.CurrentCamera
+	if not camera or not bottom then
+		return
+	end
+	local view = camera.ViewportSize
+	-- 縦の基準は、種えらび(76)＋ドック(88)＋余白＋上の案内の分。低い画面ほど小さくする
+	local scale = math.min(1, (view.X - 24) / DOCK_WIDTH, (view.Y - 20) / 440)
+	bottom.FitScale.Scale = math.max(0.5, scale)
 end
 
+-- ---- ショップ ----
+
 local function buildShop()
-	shopPanel = Style.make("Frame", {
-		Name = "ShopPanel",
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(460, 420),
-		BackgroundColor3 = C.Surface,
-		Visible = false,
-		ZIndex = 10,
-	}, gui)
-	Style.round(shopPanel, 24)
-	Style.stroke(shopPanel, C.Accent, 5)
-	Style.make("UISizeConstraint", { MaxSize = Vector2.new(460, 420) }, shopPanel)
-
-	Style.label({
-		Position = UDim2.fromOffset(20, 12),
-		Size = UDim2.new(1, -100, 0, 48),
-		Text = "🛒 " .. t("ui.shop"),
-		TextSize = 30,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		ZIndex = 11,
-	}, shopPanel)
-
-	local close = Style.button({
-		Name = "Close",
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -14, 0, 12),
-		Size = UDim2.fromOffset(Style.TapSize, 48),
-		BackgroundColor3 = C.Dim,
-		TextColor3 = C.Text,
-		Text = "✕",
-		ZIndex = 11,
-	}, shopPanel)
-	close.Activated:Connect(function()
-		UI.setShopVisible(false)
+	local scroll
+	shopPanel, scroll = Style.modal(gui, "ShopPanel", "🛒 " .. t("ui.shop"), function()
+		UI.showPanel(nil)
 	end)
-
-	local list = Style.make("ScrollingFrame", {
-		Name = "List",
-		Position = UDim2.fromOffset(14, 72),
-		Size = UDim2.new(1, -28, 1, -86),
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		ScrollBarThickness = 6,
-		CanvasSize = UDim2.new(),
-		AutomaticCanvasSize = Enum.AutomaticSize.Y,
-		ZIndex = 11,
-	}, shopPanel)
-	Style.make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, list)
+	Style.make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 
 	for order, cropId in Config.CropOrder do
 		local crop = Config.CropById[cropId]
 		local row = Style.make("Frame", {
 			Name = cropId,
 			LayoutOrder = order,
-			Size = UDim2.new(1, -8, 0, 72),
+			Size = UDim2.new(1, -10, 0, 88),
 			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 			ZIndex = 11,
-		}, list)
-		Style.round(row, 16)
-		Style.stroke(row, C.Dim, 2)
+		}, scroll)
+		Style.round(row, 20)
+		Style.stroke(row, C.Dim, 3)
 		Style.label({
 			Position = UDim2.fromOffset(8, 0),
-			Size = UDim2.fromOffset(52, 72),
+			Size = UDim2.fromOffset(64, 88),
 			Text = crop.icon,
-			TextSize = 36,
+			TextSize = 46,
+			TextWrapped = false,
 			ZIndex = 12,
 		}, row)
 		Style.label({
-			Position = UDim2.fromOffset(64, 8),
-			Size = UDim2.new(1, -200, 0, 28),
+			Position = UDim2.fromOffset(78, 10),
+			Size = UDim2.new(1, -240, 0, 32),
 			Text = t("crop." .. cropId),
-			TextSize = 20,
+			TextSize = 22,
 			TextXAlignment = Enum.TextXAlignment.Left,
+			TextWrapped = false,
 			ZIndex = 12,
 		}, row)
 		Style.label({
-			Position = UDim2.fromOffset(64, 38),
-			Size = UDim2.new(1, -200, 0, 26),
-			Text = t("ui.growTime", crop.growTime) .. "・" .. t("ui.sellPrice", crop.sellPrice),
-			TextSize = 14,
+			Position = UDim2.fromOffset(78, 46),
+			Size = UDim2.new(1, -240, 0, 30),
+			Text = "⏱ " .. t("ui.growTime", crop.growTime) .. "  💰 " .. crop.sellPrice,
+			TextSize = 15,
 			TextColor3 = C.TextMuted,
 			TextXAlignment = Enum.TextXAlignment.Left,
+			TextWrapped = false,
 			ZIndex = 12,
 		}, row)
 		local buy = Style.button({
 			Name = "Buy",
 			AnchorPoint = Vector2.new(1, 0.5),
-			Position = UDim2.new(1, -8, 0.5, 0),
-			Size = UDim2.fromOffset(112, 52),
-			Text = "🪙 " .. Style.formatNumber(crop.seedPrice),
-			TextSize = 20,
+			Position = UDim2.new(1, -10, 0.5, 0),
+			Size = UDim2.fromOffset(136, 64),
+			Text = "🟡 " .. Style.formatNumber(crop.seedPrice),
+			TextSize = 22,
+			TextWrapped = false,
 			ZIndex = 12,
 		}, row)
 		buy.Activated:Connect(function()
@@ -274,54 +304,69 @@ local function buildShop()
 	end
 end
 
+-- ---- トーストと案内バナー ----
+
 local function buildToast()
 	toastLabel = Style.label({
 		Name = "Toast",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 84),
-		Size = UDim2.fromOffset(0, 48),
+		Position = UDim2.new(0.5, 0, 0, 92),
+		Size = UDim2.fromOffset(0, 54),
 		AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundTransparency = 1,
 		BackgroundColor3 = C.Surface,
-		TextSize = 24,
+		TextSize = 26,
 		TextWrapped = false,
 		Visible = false,
 		ZIndex = 20,
 	}, gui)
-	Style.round(toastLabel, 24)
-	Style.stroke(toastLabel, C.Accent, 3)
-	Style.make("UIPadding", { PaddingLeft = UDim.new(0, 24), PaddingRight = UDim.new(0, 24) }, toastLabel)
+	Style.round(toastLabel, 27)
+	Style.stroke(toastLabel, C.Accent, 5)
+	Style.make("UIPadding", { PaddingLeft = UDim.new(0, 28), PaddingRight = UDim.new(0, 28) }, toastLabel)
 end
 
 local function buildBanner()
 	banner = Style.make("Frame", {
 		Name = "TutorialBanner",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 16),
-		Size = UDim2.fromOffset(0, 56),
+		Position = UDim2.new(0.5, 0, 0, 12),
+		Size = UDim2.fromOffset(0, 64),
 		AutomaticSize = Enum.AutomaticSize.X,
 		BackgroundColor3 = C.Accent,
 		Visible = false,
 	}, gui)
-	Style.round(banner, 28)
-	Style.stroke(banner, C.Surface, 4)
-	Style.make("UIPadding", { PaddingLeft = UDim.new(0, 26), PaddingRight = UDim.new(0, 26) }, banner)
+	Style.round(banner, 32)
+	Style.stroke(banner, C.Outline, 5)
+	Style.gloss(banner)
+	Style.make("UIPadding", { PaddingLeft = UDim.new(0, 30), PaddingRight = UDim.new(0, 30) }, banner)
 	bannerLabel = Style.label({
-		Size = UDim2.fromOffset(0, 56),
+		Size = UDim2.fromOffset(0, 64),
 		AutomaticSize = Enum.AutomaticSize.X,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
-		TextSize = 24,
+		TextSize = 26,
 		TextWrapped = false,
 	}, banner)
 end
 
-function UI.setShopVisible(visible: boolean)
-	if visible == shopPanel.Visible then
-		return
-	end
-	shopPanel.Visible = visible
-	if visible then
+-- ---- 公開する関数 ----
+
+-- どのパネルを開くか。同時に開くのは1つだけ（nil で全部閉じる）
+function UI.showPanel(name: string?)
+	bottom.Visible = name == nil -- パネルを開いている間は、下の操作ボタンを隠して画面を広く使う
+	local wasShop = shopPanel.Visible
+	shopPanel.Visible = name == "shop"
+	if shopPanel.Visible and not wasShop then
 		Style.pop(shopPanel, 0.92)
+	end
+	PalsUI.setVisible(name == "pals")
+	CosmeticsUI.setVisible(name == "style")
+end
+
+function UI.setShopVisible(visible: boolean)
+	if visible then
+		UI.showPanel("shop")
+	elseif shopPanel.Visible then
+		UI.showPanel(nil)
 	end
 end
 
@@ -380,12 +425,13 @@ function UI.highlight(target: GuiObject?)
 	end
 	highlighted = target
 	if target then
-		local stroke = Style.stroke(target, C.Yellow, 6)
+		local stroke = Style.stroke(target, C.Yellow, 8)
 		stroke.Name = "Pulse"
+		stroke.LineJoinMode = Enum.LineJoinMode.Round
 		pulseTween = TweenService:Create(
 			stroke,
 			TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-			{ Thickness = 12 }
+			{ Thickness = 16 }
 		)
 		pulseTween:Play()
 	end
@@ -395,25 +441,27 @@ function UI.buttons()
 	return { shop = shopButton, sell = sellButton, harvest = harvestButton }
 end
 
+function UI.playHatch(petId: string)
+	UI.showPanel(nil)
+	PalsUI.playHatch(petId)
+end
+
 function UI.update(state)
 	local coins = state.coins
-	coinLabel.Text = "🪙 " .. Style.formatNumber(coins)
+	coinLabel.Text = "🟡 " .. Style.formatNumber(coins)
 	if lastCoins and coins > lastCoins then
-		Style.pop(coinPill, 1.15)
+		Style.pop(coinPill, 1.12)
+		floatCoins(coins - lastCoins)
 	end
 	lastCoins = coins
 
 	local value = basketValue(state)
-	sellButton.Text = value > 0 and ("💰 %s  +%s"):format(t("ui.sellAll"), Style.formatNumber(value))
-		or ("💰 " .. t("ui.sellAll"))
+	local caption = sellButton:FindFirstChild("Caption")
+	caption.Text = value > 0 and ("+" .. Style.formatNumber(value)) or t("ui.sell")
 	sellButton.BackgroundColor3 = value > 0 and C.Accent or C.AccentDark
 	refreshSeedBar(state)
 	PalsUI.update(state)
-end
-
-function UI.playHatch(petId: string)
-	UI.setShopVisible(false)
-	PalsUI.playHatch(petId)
+	CosmeticsUI.update(state)
 end
 
 function UI.init()
@@ -422,21 +470,26 @@ function UI.init()
 		Name = "CandyUI",
 		ResetOnSpawn = false,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		IgnoreGuiInset = false,
+		-- Robloxの上バー・端末の切り欠きを避ける（公式のセーフエリア）
+		ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets,
 	}, player:WaitForChild("PlayerGui"))
 
-	local camera = workspace.CurrentCamera
-	if camera and camera.ViewportSize.Y < 500 then
-		Style.make("UIScale", { Scale = 0.85 }, gui)
-	end
-
 	buildCoinPill()
-	buildSeedBar()
-	buildActions()
+	buildBottom()
 	buildShop()
-	PalsUI.build(gui)
+	local function closeAll()
+		UI.showPanel(nil)
+	end
+	PalsUI.build(gui, closeAll)
+	CosmeticsUI.build(gui, closeAll)
 	buildToast()
 	buildBanner()
+
+	fitBottom()
+	local camera = workspace.CurrentCamera
+	if camera then
+		camera:GetPropertyChangedSignal("ViewportSize"):Connect(fitBottom)
+	end
 end
 
 return UI

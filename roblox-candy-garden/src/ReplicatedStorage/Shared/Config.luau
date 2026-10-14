@@ -110,6 +110,38 @@ function Config.treeReward(level: number): number
 	return math.floor(Config.Tree.RewardBase * Config.Tree.RewardGrowth ^ (level - 1))
 end
 
+-- おしゃれ（アバターアイテム）。ぜんぶコードで作る見た目。コインで買える（無料の道）。
+-- price=0 は最初からもらえる。pass=... は、そのゲームパスを持っている人が使える（コインでは買えない）。
+Config.CosmeticSlots = { "hat", "back", "trail" }
+Config.Cosmetics = {
+	{ id = "bunnyears", slot = "hat", icon = "🐰", price = 0 },
+	{ id = "catears", slot = "hat", icon = "🐱", price = 150 },
+	{ id = "candyhat", slot = "hat", icon = "🍭", price = 250 },
+	{ id = "icecream", slot = "hat", icon = "🍦", price = 400 },
+	{ id = "chefhat", slot = "hat", icon = "🧁", price = 600 },
+	{ id = "starhalo", slot = "hat", icon = "⭐", price = 1200 },
+	{ id = "crown", slot = "hat", icon = "👑", price = 2500 },
+	{ id = "cottoncloud", slot = "back", icon = "☁️", price = 200 },
+	{ id = "candycane", slot = "back", icon = "🍬", price = 450 },
+	{ id = "fairywings", slot = "back", icon = "🦋", price = 900 },
+	{ id = "rainbowcape", slot = "back", icon = "🌈", price = 1800 },
+	{ id = "goldwings", slot = "back", icon = "🌟", pass = "gold" },
+	{ id = "sparkletrail", slot = "trail", icon = "✨", price = 300 },
+	{ id = "hearttrail", slot = "trail", icon = "💗", price = 700 },
+	{ id = "rainbowtrail", slot = "trail", icon = "🌈", price = 1500 },
+}
+Config.CosmeticById = {}
+for _, item in Config.Cosmetics do
+	Config.CosmeticById[item.id] = item
+end
+
+-- ロバックスの商品（ゲームパス）。id を 0 のままにすると、画面に出ない・買えない。
+-- 作ったゲームパスのIDをここに入れる（README参照）。ランダム要素は入れない（中身が決まった商品だけ）。
+Config.Passes = {
+	coins2x = { id = 0, icon = "💰", multiplier = 2 }, -- 売値2倍（便利さ）
+	gold = { id = 0, icon = "🌟" }, -- ゴールドのつばさ（限定の見た目）
+}
+
 Config.PetById = {}
 for _, pet in Config.Pets do
 	Config.PetById[pet.id] = pet

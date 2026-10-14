@@ -75,9 +75,10 @@ local function ensureSign(): Frame?
 	end
 	board = Style.make("BillboardGui", {
 		Name = "Sign",
-		Size = UDim2.fromOffset(300, 92),
+		Size = UDim2.fromOffset(240, 80),
 		AlwaysOnTop = false,
-		MaxDistance = 160,
+		MaxDistance = 110,
+		DistanceLowerLimit = 25, -- 近づきすぎたら小さく見えて視界をふさがない
 	}, anchor)
 	local frame = Style.make("Frame", {
 		Name = "Board",

@@ -75,8 +75,8 @@ local function buildEggCard(parent: Instance)
 		Name = "BuyEgg",
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, 0, 0.5, 0),
-		Size = UDim2.fromOffset(120, 56),
-		Text = "🪙 " .. Style.formatNumber(egg.price),
+		Size = UDim2.fromOffset(150, 64),
+		Text = "🟡 " .. Style.formatNumber(egg.price),
 		TextSize = 22,
 		ZIndex = 12,
 	}, top)
@@ -168,7 +168,10 @@ local function refresh()
 				BackgroundColor3 = on and Color3.fromRGB(255, 233, 244) or Color3.fromRGB(255, 255, 255),
 				ZIndex = 12,
 			}, grid)
-			Style.stroke(card, on and C.Accent or RARITY_COLOR[cfg.rarity], on and 5 or 3)
+			-- ボタンの太い縁取りを、「連れている=ピンク / レア度の色」に変える
+			local border = card:FindFirstChildOfClass("UIStroke")
+			border.Color = on and C.Accent or RARITY_COLOR[cfg.rarity]
+			border.Thickness = on and 6 or 4
 			Style.label({
 				Position = UDim2.fromOffset(0, 4),
 				Size = UDim2.new(1, 0, 0, 40),
@@ -195,7 +198,7 @@ local function refresh()
 			Style.label({
 				Position = UDim2.fromOffset(0, 80),
 				Size = UDim2.new(1, 0, 0, 18),
-				Text = on and ("✓ " .. t("ui.equipped")) or t("rarity." .. cfg.rarity),
+				Text = on and ("⭐ " .. t("ui.equipped")) or t("rarity." .. cfg.rarity),
 				TextSize = 13,
 				TextColor3 = on and C.AccentDark or RARITY_COLOR[cfg.rarity]:Lerp(C.Text, 0.55),
 				ZIndex = 13,
@@ -207,53 +210,8 @@ local function refresh()
 	end
 end
 
-function PalsUI.build(gui: ScreenGui)
-	panel = Style.make("Frame", {
-		Name = "PalsPanel",
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(500, 520),
-		BackgroundColor3 = C.Surface,
-		Visible = false,
-		ZIndex = 10,
-	}, gui)
-	Style.round(panel, 24)
-	Style.stroke(panel, C.Accent, 5)
-	Style.make("UISizeConstraint", { MaxSize = Vector2.new(500, 520) }, panel)
-
-	Style.label({
-		Position = UDim2.fromOffset(20, 12),
-		Size = UDim2.new(1, -100, 0, 48),
-		Text = "🐾 " .. t("ui.pals"),
-		TextSize = 30,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		ZIndex = 11,
-	}, panel)
-	local close = Style.button({
-		Name = "Close",
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -14, 0, 12),
-		Size = UDim2.fromOffset(Style.TapSize, 48),
-		BackgroundColor3 = C.Dim,
-		TextColor3 = C.Text,
-		Text = "✕",
-		ZIndex = 11,
-	}, panel)
-	close.Activated:Connect(function()
-		PalsUI.setVisible(false)
-	end)
-
-	scroll = Style.make("ScrollingFrame", {
-		Name = "Scroll",
-		Position = UDim2.fromOffset(14, 68),
-		Size = UDim2.new(1, -28, 1, -82),
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		ScrollBarThickness = 6,
-		CanvasSize = UDim2.new(),
-		AutomaticCanvasSize = Enum.AutomaticSize.Y,
-		ZIndex = 11,
-	}, panel)
+function PalsUI.build(gui: ScreenGui, onClose: () -> ())
+	panel, scroll = Style.modal(gui, "PalsPanel", "🐾 " .. t("ui.pals"), onClose)
 	Style.make("UIListLayout", { Padding = UDim.new(0, 12), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 
 	buildEggCard(scroll)
@@ -300,7 +258,7 @@ function PalsUI.build(gui: ScreenGui)
 		ZIndex = 11,
 	}, scroll)
 	Style.make("UIGridLayout", {
-		CellSize = UDim2.fromOffset(104, 102),
+		CellSize = UDim2.fromOffset(112, 108),
 		CellPadding = UDim2.fromOffset(8, 8),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, grid)
@@ -405,7 +363,7 @@ function PalsUI.playHatch(petId: string)
 		local ok = Style.button({
 			AnchorPoint = Vector2.new(0.5, 0),
 			Position = UDim2.new(0.5, 0, 0.64, 96),
-			Size = UDim2.fromOffset(200, 60),
+			Size = UDim2.fromOffset(220, 68),
 			Text = t("hatch.ok"),
 			TextSize = 26,
 			ZIndex = 31,

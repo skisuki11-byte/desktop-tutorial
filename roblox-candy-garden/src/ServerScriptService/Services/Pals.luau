@@ -86,7 +86,7 @@ local function buyEgg(player: Player, eggId: any)
 	Pals.refreshAttribute(player)
 	Data.push(player)
 	Remotes.EggResult:FireClient(player, petId)
-	Data.save(player) -- 課金に近い抽選結果は即保存する
+	Data.saveSoon(player) -- 抽選結果は、すぐ(数秒以内に)保存する
 end
 
 local function equipPet(player: Player, uid: any)

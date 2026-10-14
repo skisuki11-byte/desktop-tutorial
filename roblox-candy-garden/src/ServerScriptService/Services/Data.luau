@@ -35,6 +35,11 @@ local function newData()
 		pets = {}, -- { { uid, pet } }
 		equipped = {}, -- 連れているペットの uid（最大 Config.MaxEquipped）
 		nextPetUid = 1,
+		-- おしゃれ。うさみみを最初にプレゼントして、すぐ着せる（最初の5分の小さなごほうび）
+		cosmetics = {
+			owned = { bunnyears = true },
+			equipped = { hat = "bunnyears" },
+		},
 	}
 end
 
@@ -95,6 +100,21 @@ function Data.save(player: Player)
 	end
 end
 
+-- 連続した操作（買い物など）は、数秒おきにまとめて保存する。DataStoreの回数制限を守るため。
+local savePending: { [Player]: boolean } = {}
+function Data.saveSoon(player: Player)
+	if savePending[player] then
+		return
+	end
+	savePending[player] = true
+	task.delay(4, function()
+		savePending[player] = nil
+		if profiles[player] then
+			Data.save(player)
+		end
+	end)
+end
+
 function Data.release(player: Player)
 	Data.save(player)
 	profiles[player] = nil
@@ -140,13 +160,23 @@ function Data.petBonus(d): number
 	return bonus
 end
 
+-- ほかのサービス（ゲームパスなど）が、クライアントへ送る状態に項目を足せる
+local stateExtender: ((Player) -> { [string]: any })? = nil
+function Data.setStateExtender(fn: (Player) -> { [string]: any })
+	stateExtender = fn
+end
+
 function Data.push(player: Player)
 	local profile = profiles[player]
 	if not profile then
 		return
 	end
 	local d = profile.data
+	local extra = stateExtender and stateExtender(player) or {}
 	Remotes.State:FireClient(player, {
+		cosmetics = d.cosmetics,
+		passes = extra.passes or {},
+		coinMultiplier = extra.coinMultiplier or 1,
 		pets = d.pets,
 		equipped = d.equipped,
 		sellBonus = 1 + Data.petBonus(d),

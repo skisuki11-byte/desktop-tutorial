@@ -10,6 +10,8 @@ local RateLimit = require(Services.RateLimit)
 local Pals = require(Services.Pals)
 local Weather = require(Services.Weather)
 local Tree = require(Services.Tree)
+local Monetization = require(Services.Monetization)
+local Cosmetics = require(Services.Cosmetics)
 
 -- データ読込と庭の準備が終わってからキャラクターを出す
 Players.CharacterAutoLoads = false
@@ -18,6 +20,8 @@ World.build(Garden.interact)
 Tree.build()
 Shop.init()
 Pals.init()
+Monetization.init()
+Cosmetics.init()
 Weather.start()
 Garden.startGrowthLoop()
 Data.startAutoSave()
@@ -38,8 +42,10 @@ local function onPlayerAdded(player: Player)
 	if not plotIndex then
 		warn("[Main] 空いている庭がありません: " .. player.Name)
 	end
+	Monetization.load(player)
 	Garden.attach(player)
 	Pals.refreshAttribute(player)
+	Cosmetics.track(player)
 
 	player.CharacterAdded:Connect(function(character)
 		local humanoid = character:WaitForChild("Humanoid")
@@ -56,6 +62,7 @@ end
 local function onPlayerRemoving(player: Player)
 	Data.release(player)
 	World.release(player)
+	Monetization.release(player)
 	RateLimit.clear(player)
 end
 

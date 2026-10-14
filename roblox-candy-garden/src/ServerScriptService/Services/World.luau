@@ -14,10 +14,10 @@ local PASTELS = {
 	Color3.fromRGB(200, 170, 255),
 	Color3.fromRGB(160, 235, 195),
 }
-local GROUND = Color3.fromRGB(196, 242, 214)
-local PATH = Color3.fromRGB(255, 226, 238)
+local GROUND = Color3.fromRGB(140, 222, 178)
+local PATH = Color3.fromRGB(255, 205, 225)
 local SOIL = Color3.fromRGB(139, 94, 78)
-local PLATFORM = Color3.fromRGB(255, 244, 214)
+local PLATFORM = Color3.fromRGB(255, 236, 190)
 
 local PLOT_RADIUS = 62
 local TILE_SIZE = Vector3.new(7, 0.6, 7)
@@ -48,9 +48,10 @@ end
 
 local function setupLighting()
 	Lighting.ClockTime = 15
-	Lighting.Brightness = 2.6
-	Lighting.Ambient = Color3.fromRGB(255, 226, 240)
-	Lighting.OutdoorAmbient = Color3.fromRGB(255, 226, 240)
+	-- 明るすぎると地面が白く飛ぶので、少し抑えて色を出す（画面を見て調整）
+	Lighting.Brightness = 1.6
+	Lighting.Ambient = Color3.fromRGB(200, 175, 205)
+	Lighting.OutdoorAmbient = Color3.fromRGB(190, 170, 205)
 	Lighting.EnvironmentDiffuseScale = 0.6
 	Lighting.EnvironmentSpecularScale = 0.3
 	for _, child in Lighting:GetChildren() do
@@ -66,8 +67,8 @@ local function setupLighting()
 		Glare = 0,
 		Haze = 1.2,
 	}, Lighting)
-	make("BloomEffect", { Intensity = 0.35, Size = 28, Threshold = 1.1 }, Lighting)
-	make("ColorCorrectionEffect", { Name = "Tint", Saturation = 0.18, Contrast = 0.04 }, Lighting)
+	make("BloomEffect", { Intensity = 0.25, Size = 24, Threshold = 1.3 }, Lighting)
+	make("ColorCorrectionEffect", { Name = "Tint", Saturation = 0.3, Contrast = 0.08 }, Lighting)
 end
 
 local function lollipop(position: Vector3, color: Color3, scale: number, parent: Instance)
