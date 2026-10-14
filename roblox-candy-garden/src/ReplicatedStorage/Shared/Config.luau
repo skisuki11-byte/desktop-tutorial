@@ -58,6 +58,40 @@ Config.Eggs = {
 	},
 }
 
+-- お天気イベント。天気の間は、収穫のきらきら確率が sparkleChance に上がる
+Config.Weather = {
+	FirstDelay = 60, -- 最初の天気までの秒数（早く体験してもらう）
+	Interval = 300, -- 天気の開始から次の開始までの秒数
+	Duration = 90,
+	Types = {
+		{
+			id = "sprinkles",
+			icon = "🍬",
+			sparkleChance = 0.35,
+			tint = Color3.fromRGB(255, 232, 244),
+			particle = Color3.fromRGB(255, 130, 190),
+		},
+		{
+			id = "rainbow",
+			icon = "🌈",
+			sparkleChance = 0.5,
+			tint = Color3.fromRGB(240, 236, 255),
+			particle = Color3.fromRGB(150, 200, 255),
+		},
+		{
+			id = "starfall",
+			icon = "⭐",
+			sparkleChance = 0.6,
+			tint = Color3.fromRGB(255, 244, 214),
+			particle = Color3.fromRGB(255, 220, 90),
+		},
+	},
+}
+Config.WeatherById = {}
+for _, w in Config.Weather.Types do
+	Config.WeatherById[w.id] = w
+end
+
 Config.PetById = {}
 for _, pet in Config.Pets do
 	Config.PetById[pet.id] = pet

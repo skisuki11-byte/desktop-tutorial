@@ -67,7 +67,7 @@ local function setupLighting()
 		Haze = 1.2,
 	}, Lighting)
 	make("BloomEffect", { Intensity = 0.35, Size = 28, Threshold = 1.1 }, Lighting)
-	make("ColorCorrectionEffect", { Saturation = 0.18, Contrast = 0.04 }, Lighting)
+	make("ColorCorrectionEffect", { Name = "Tint", Saturation = 0.18, Contrast = 0.04 }, Lighting)
 end
 
 local function lollipop(position: Vector3, color: Color3, scale: number, parent: Instance)

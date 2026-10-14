@@ -51,6 +51,12 @@ local STRINGS = {
 		["hatch.title"] = "うまれた！",
 		["hatch.ok"] = "やったー！",
 		["toast.petFull"] = "ペットがいっぱいだよ",
+		["weather.sprinkles"] = "キャンディシャワー",
+		["weather.rainbow"] = "にじいろタイム",
+		["weather.starfall"] = "ほしふりタイム",
+		["weather.announce"] = "%s！ きらきらが出やすいよ",
+		["ui.weatherNow"] = "✨%d%%  あと%d秒",
+		["ui.weatherNext"] = "次の天気まで %s",
 	},
 	en = {
 		["crop.gummyberry"] = "Gummy Berry",
@@ -101,6 +107,12 @@ local STRINGS = {
 		["hatch.title"] = "It hatched!",
 		["hatch.ok"] = "Yay!",
 		["toast.petFull"] = "Your pal list is full",
+		["weather.sprinkles"] = "Candy Shower",
+		["weather.rainbow"] = "Rainbow Time",
+		["weather.starfall"] = "Starfall",
+		["weather.announce"] = "%s! Sparkles are more likely",
+		["ui.weatherNow"] = "✨%d%%  %ds left",
+		["ui.weatherNext"] = "Next weather in %s",
 	},
 }
 

@@ -325,20 +325,28 @@ function UI.setShopVisible(visible: boolean)
 	end
 end
 
-function UI.toast(key: string, ...)
+function UI.toastText(text: string, seconds: number?)
 	toastToken += 1
 	local token = toastToken
-	toastLabel.Text = t(key, ...)
+	toastLabel.Text = text
 	toastLabel.Visible = true
 	toastLabel.BackgroundTransparency = 0
 	toastLabel.TextTransparency = 0
 	Style.pop(toastLabel, 1.15)
-	task.delay(1.8, function()
+	task.delay(seconds or 1.8, function()
 		if token ~= toastToken then
 			return
 		end
 		toastLabel.Visible = false
 	end)
+end
+
+function UI.toast(key: string, ...)
+	UI.toastText(t(key, ...))
+end
+
+function UI.gui(): ScreenGui
+	return gui
 end
 
 function UI.setBanner(text: string?)

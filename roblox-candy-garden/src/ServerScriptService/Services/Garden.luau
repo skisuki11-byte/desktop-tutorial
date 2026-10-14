@@ -8,6 +8,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Data = require(script.Parent.Data)
 local World = require(script.Parent.World)
 local RateLimit = require(script.Parent.RateLimit)
+local Weather = require(script.Parent.Weather)
 
 local Garden = {}
 
@@ -130,7 +131,7 @@ local function harvest(player: Player, tileIndex: number): boolean
 	if not slot or not isReady(slot) then
 		return false
 	end
-	local sparkle = rng:NextNumber() < Config.SparkleChance
+	local sparkle = rng:NextNumber() < Weather.sparkleChance()
 	local bucket = sparkle and d.basketSparkle or d.basket
 	bucket[slot.crop] = (bucket[slot.crop] or 0) + 1
 	d.plots[tostring(tileIndex)] = nil
