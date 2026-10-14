@@ -5,6 +5,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local I18n = require(ReplicatedStorage.Shared.I18n)
@@ -34,6 +35,7 @@ local lastCoins = nil
 local toastToken = 0
 
 local DOCK_WIDTH = 480 -- ドックの基準の幅。画面が狭いときは縮める
+local JUMP_RESERVE = 100 -- タッチ端末で、右下のジャンプボタンのために空ける高さ
 
 local function basketValue(state): number
 	local total = 0
@@ -281,7 +283,15 @@ local function fitBottom()
 	-- 縦の基準は、種えらび(76)＋ドック(88)＋余白＋上の案内の分。低い画面ほど小さくする
 	local scale = math.min(1, (view.X - 24) / DOCK_WIDTH, (view.Y - 20) / 440)
 	bottom.FitScale.Scale = math.max(0.5, scale)
-	-- 右の列は縦に並ぶので、低い画面では縮める（下のドックとぶつからない高さに）
+	-- お知らせと案内は、画面幅の9割まで（それ以上は折り返す）
+	local width = gui.AbsoluteSize.X
+	if toastLabel then
+		toastLabel.MaxWidth.MaxSize = Vector2.new(math.max(200, width * 0.9), math.huge)
+	end
+	if bannerLabel then
+		bannerLabel.MaxWidth.MaxSize = Vector2.new(math.max(160, width * 0.9 - 60), math.huge)
+	end
+	-- 右の列は縦に並ぶので、低い画面では縮める
 	if side then
 		local count = 0
 		for _, child in side:GetChildren() do
@@ -290,7 +300,19 @@ local function fitBottom()
 			end
 		end
 		local height = count * 78 + math.max(0, count - 1) * 10
-		side.FitScale.Scale = math.clamp((view.Y * 0.66) / math.max(height, 1), 0.5, 1)
+		local screenY = gui.AbsoluteSize.Y
+		if UserInputService.TouchEnabled then
+			-- スマホ・タブレット: 右下のジャンプボタン（約70px＋余白）より上で止める
+			local reserve = JUMP_RESERVE
+			side.AnchorPoint = Vector2.new(1, 1)
+			side.Position = UDim2.new(1, -14, 1, -reserve)
+			side.FitScale.Scale = math.clamp((screenY - reserve - 12) / math.max(height, 1), 0.4, 1)
+		else
+			-- パソコン: 画面のまん中より少し上（右上のプレイヤー一覧とぶつからない位置）
+			side.AnchorPoint = Vector2.new(1, 0.5)
+			side.Position = UDim2.new(1, -14, 0.5, 0)
+			side.FitScale.Scale = math.clamp((screenY * 0.66) / math.max(height, 1), 0.5, 1)
+		end
 	end
 end
 
@@ -364,18 +386,25 @@ local function buildToast()
 		Name = "Toast",
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.new(0.5, 0, 0, 92),
-		Size = UDim2.fromOffset(0, 54),
-		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(0, 0),
+		-- 文の長さに合わせて広がり、画面幅の9割（fitBottomで設定）を超えたら折り返す
+		AutomaticSize = Enum.AutomaticSize.XY,
 		BackgroundTransparency = 1,
 		BackgroundColor3 = C.Surface,
 		TextSize = 26,
-		TextWrapped = false,
+		TextWrapped = true,
 		Visible = false,
 		ZIndex = 20,
 	}, gui)
 	Style.round(toastLabel, 27)
 	Style.stroke(toastLabel, C.Accent, 5)
-	Style.make("UIPadding", { PaddingLeft = UDim.new(0, 28), PaddingRight = UDim.new(0, 28) }, toastLabel)
+	Style.make("UIPadding", {
+		PaddingLeft = UDim.new(0, 28),
+		PaddingRight = UDim.new(0, 28),
+		PaddingTop = UDim.new(0, 12),
+		PaddingBottom = UDim.new(0, 12),
+	}, toastLabel)
+	Style.make("UISizeConstraint", { Name = "MaxWidth" }, toastLabel)
 end
 
 local function buildBanner()
@@ -383,22 +412,29 @@ local function buildBanner()
 		Name = "TutorialBanner",
 		AnchorPoint = Vector2.new(0.5, 0),
 		Position = UDim2.new(0.5, 0, 0, 12),
-		Size = UDim2.fromOffset(0, 64),
-		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(0, 0),
+		AutomaticSize = Enum.AutomaticSize.XY,
 		BackgroundColor3 = C.Accent,
 		Visible = false,
 	}, gui)
 	Style.round(banner, 32)
 	Style.stroke(banner, C.Outline, 5)
 	Style.gloss(banner)
-	Style.make("UIPadding", { PaddingLeft = UDim.new(0, 30), PaddingRight = UDim.new(0, 30) }, banner)
+	Style.make("UIPadding", {
+		PaddingLeft = UDim.new(0, 30),
+		PaddingRight = UDim.new(0, 30),
+		PaddingTop = UDim.new(0, 14),
+		PaddingBottom = UDim.new(0, 14),
+	}, banner)
 	bannerLabel = Style.label({
-		Size = UDim2.fromOffset(0, 64),
-		AutomaticSize = Enum.AutomaticSize.X,
+		Size = UDim2.fromOffset(0, 0),
+		-- 長い案内は、画面幅に合わせて折り返す（fitBottomで上限を設定）
+		AutomaticSize = Enum.AutomaticSize.XY,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
 		TextSize = 26,
-		TextWrapped = false,
+		TextWrapped = true,
 	}, banner)
+	Style.make("UISizeConstraint", { Name = "MaxWidth" }, bannerLabel)
 end
 
 -- ---- 公開する関数 ----

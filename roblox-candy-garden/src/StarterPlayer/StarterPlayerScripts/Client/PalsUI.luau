@@ -263,7 +263,7 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, grid)
 
-	-- 孵化の演出（全画面）
+	-- 孵化の演出（全画面）。中身は PalsUI.playHatch で、画面の高さに合わせて並べる
 	hatchOverlay = Style.make("Frame", {
 		Name = "HatchOverlay",
 		Size = UDim2.fromScale(1, 1),
@@ -312,15 +312,69 @@ function PalsUI.playHatch(petId: string)
 	end
 	hatchOverlay.Visible = true
 
-	local egg = Style.label({
+	-- 画面の高さに合わせて、上から「うまれた！」「たまご→ペット」「名前」「売値」「やったー！」を縦に並べる
+	-- （スマホの横画面のように低い画面でも、ボタンが下にはみ出さない）
+	local screenY = hatchOverlay.AbsoluteSize.Y
+	local iconSize = math.clamp(math.floor(screenY * 0.32), 80, 200)
+	local column = Style.make("Frame", {
+		Name = "Column",
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.45),
-		Size = UDim2.fromOffset(200, 200),
-		Text = Config.Eggs[1].icon,
-		TextSize = 150,
-		TextWrapped = false,
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.new(0.9, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
 		ZIndex = 31,
 	}, hatchOverlay)
+	Style.make("UIListLayout", {
+		Padding = UDim.new(0, 6),
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, column)
+
+	local function line(order: number, text: string, height: number, size: number, color: Color3)
+		return Style.label({
+			LayoutOrder = order,
+			Size = UDim2.new(1, 0, 0, height),
+			Text = text,
+			TextSize = size,
+			TextColor3 = color,
+			Visible = false,
+			ZIndex = 32,
+		}, column)
+	end
+	local white = Color3.fromRGB(255, 255, 255)
+	local title = line(1, t("hatch.title"), 40, 32, white)
+	local egg = Style.label({
+		LayoutOrder = 2,
+		Size = UDim2.fromOffset(iconSize, iconSize),
+		Text = Config.Eggs[1].icon,
+		TextSize = math.floor(iconSize * 0.75),
+		TextWrapped = false,
+		ZIndex = 32,
+	}, column)
+	local name = line(3, t("pet." .. cfg.id) .. "（" .. t("rarity." .. cfg.rarity) .. "）", 34, 26,
+		RARITY_COLOR[cfg.rarity]:Lerp(Color3.new(1, 1, 1), 0.35))
+	local bonus = line(4, t("ui.petBonus", math.floor(cfg.bonus * 100 + 0.5)), 26, 20, white)
+	local ok = Style.button({
+		LayoutOrder = 5,
+		Size = UDim2.fromOffset(220, 60),
+		Text = t("hatch.ok"),
+		TextSize = 26,
+		Visible = false,
+		ZIndex = 32,
+	}, column)
+	ok.Activated:Connect(function()
+		hatchOverlay.Visible = false
+	end)
+	-- 文字とボタンは、たまごが割れるまで場所だけ取っておく（並びがガタつかないように透明にしておく）
+	for _, item in { title, name, bonus } do
+		item.Visible = true
+		item.TextTransparency = 1
+		local stroke = item:FindFirstChild("TextStroke")
+		if stroke then
+			stroke.Transparency = 1
+		end
+	end
 
 	task.spawn(function()
 		for i = 1, 6 do
@@ -333,45 +387,15 @@ function PalsUI.playHatch(petId: string)
 
 		egg.Text = cfg.icon
 		Style.pop(egg, 1.5)
-		Style.label({
-			AnchorPoint = Vector2.new(0.5, 0),
-			Position = UDim2.fromScale(0.5, 0.18),
-			Size = UDim2.fromOffset(400, 44),
-			Text = t("hatch.title"),
-			TextSize = 34,
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			ZIndex = 31,
-		}, hatchOverlay)
-		Style.label({
-			AnchorPoint = Vector2.new(0.5, 0),
-			Position = UDim2.fromScale(0.5, 0.64),
-			Size = UDim2.fromOffset(460, 40),
-			Text = t("pet." .. cfg.id) .. "（" .. t("rarity." .. cfg.rarity) .. "）",
-			TextSize = 28,
-			TextColor3 = RARITY_COLOR[cfg.rarity]:Lerp(Color3.new(1, 1, 1), 0.35),
-			ZIndex = 31,
-		}, hatchOverlay)
-		Style.label({
-			AnchorPoint = Vector2.new(0.5, 0),
-			Position = UDim2.new(0.5, 0, 0.64, 46),
-			Size = UDim2.fromOffset(460, 30),
-			Text = t("ui.petBonus", math.floor(cfg.bonus * 100 + 0.5)),
-			TextSize = 20,
-			TextColor3 = Color3.fromRGB(255, 255, 255),
-			ZIndex = 31,
-		}, hatchOverlay)
-		local ok = Style.button({
-			AnchorPoint = Vector2.new(0.5, 0),
-			Position = UDim2.new(0.5, 0, 0.64, 96),
-			Size = UDim2.fromOffset(220, 68),
-			Text = t("hatch.ok"),
-			TextSize = 26,
-			ZIndex = 31,
-		}, hatchOverlay)
+		for _, item in { title, name, bonus } do
+			item.TextTransparency = 0
+			local stroke = item:FindFirstChild("TextStroke")
+			if stroke then
+				stroke.Transparency = 0
+			end
+		end
+		ok.Visible = true
 		Style.pop(ok, 0.6)
-		ok.Activated:Connect(function()
-			hatchOverlay.Visible = false
-		end)
 	end)
 end
 
