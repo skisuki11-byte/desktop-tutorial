@@ -132,6 +132,11 @@ Config.Cosmetics = {
 	{ id = "lollipopback", slot = "back", icon = "🍭", seasonOnly = true },
 	{ id = "startrail", slot = "trail", icon = "🌟", seasonOnly = true },
 	{ id = "gemcrown", slot = "hat", icon = "💎", seasonOnly = true },
+	-- 期間限定ショップの品（ふつうのおしゃれ画面では買えない。日替わりで並ぶ）
+	{ id = "puddinghat", slot = "hat", icon = "🍮", shopOnly = true },
+	{ id = "donutback", slot = "back", icon = "🍩", shopOnly = true },
+	{ id = "heartwings", slot = "back", icon = "💕", shopOnly = true },
+	{ id = "candytrail", slot = "trail", icon = "🍬", shopOnly = true },
 	{ id = "sparkletrail", slot = "trail", icon = "✨", price = 300 },
 	{ id = "hearttrail", slot = "trail", icon = "💗", price = 700 },
 	{ id = "rainbowtrail", slot = "trail", icon = "🌈", price = 1500 },
@@ -148,6 +153,42 @@ Config.Passes = {
 	gold = { id = 0, icon = "🌟" }, -- ゴールドのつばさ（限定の見た目）
 	season = { id = 0, icon = "🎫" }, -- シーズンパスのスペシャルの道（中身は決まっている）
 }
+
+-- 期間限定ショップ（日替わり）。毎日 UTC 0時（日本時間 朝9時）に、pool から slots 個を選んで並べる。
+-- 子供向けの配慮: コインだけで買える（ロバックスは使わない）。品物は何日かすると戻ってくる（「二度と手に入らない」で焦らせない）。
+-- regular: 種のセットの、ふつうに買ったときの値段（「○%おとく」の表示に使う）
+Config.LimitedShop = {
+	slots = 3,
+	pool = {
+		{ cosmetic = "puddinghat", price = 900 },
+		{ cosmetic = "donutback", price = 1200 },
+		{ cosmetic = "heartwings", price = 2000 },
+		{ cosmetic = "candytrail", price = 1500 },
+		{ seeds = { peropero = 10 }, price = 400, regular = 500 },
+		{ seeds = { wataame = 3 }, price = 600, regular = 750 },
+		{ seeds = { nijimelon = 2 }, price = 1900, regular = 2400 },
+		{ seeds = { starcake = 1 }, price = 4800, regular = 6000 },
+	},
+}
+
+-- その日の品ぞろえ（pool の番号の一覧）。サーバーとクライアントで同じ結果になるよう、日付だけで決める
+function Config.limitedSelection(day: number): { number }
+	local pool = Config.LimitedShop.pool
+	local order = {}
+	for i = 1, #pool do
+		order[i] = i
+	end
+	local rng = Random.new(day * 7919 + 17)
+	for i = #order, 2, -1 do
+		local j = rng:NextInteger(1, i)
+		order[i], order[j] = order[j], order[i]
+	end
+	local picked = {}
+	for i = 1, math.min(Config.LimitedShop.slots, #order) do
+		picked[i] = order[i]
+	end
+	return picked
+end
 
 -- シーズンパス（キャンディパス）。収穫などで経験値(XP)がたまり、段に届くと自動でごほうびがもらえる。
 -- free=無料の道 / premium=スペシャルの道（Passes.season を持っている人）。中身は全て決まっていて、ランダムは無し。

@@ -21,6 +21,7 @@ local NAMES = {
 	"CodeResult",
 	"Teleport",
 	"SeasonReward",
+	"BuyLimited",
 }
 
 local folder

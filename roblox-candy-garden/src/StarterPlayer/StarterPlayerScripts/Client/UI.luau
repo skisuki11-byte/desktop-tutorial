@@ -16,6 +16,7 @@ local CosmeticsUI = require(script.Parent.CosmeticsUI)
 local DailyUI = require(script.Parent.DailyUI)
 local CodesUI = require(script.Parent.CodesUI)
 local SeasonUI = require(script.Parent.SeasonUI)
+local LimitedShopUI = require(script.Parent.LimitedShopUI)
 
 local UI = {}
 
@@ -325,6 +326,18 @@ local function buildShop()
 	end, C.Mint)
 	Style.make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 
+	-- いちばん上に「きょうの とくべつ」（日替わり）、その下に いつもの種屋
+	LimitedShopUI.build(scroll)
+	Style.label({
+		Name = "SeedTitle",
+		LayoutOrder = 0,
+		Size = UDim2.new(1, -10, 0, 30),
+		Text = t("ui.seedTitle"),
+		TextSize = 22,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, scroll)
+
 	for order, cropId in Config.CropOrder do
 		local crop = Config.CropById[cropId]
 		local row = Style.make("Frame", {
@@ -580,6 +593,7 @@ function UI.update(state)
 	CosmeticsUI.update(state)
 	DailyUI.update(state)
 	SeasonUI.update(state)
+	LimitedShopUI.update(state)
 end
 
 function UI.init()

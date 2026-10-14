@@ -187,6 +187,45 @@ BUILD.gemcrown = function(m)
 	ball(m, 0.6, CFrame.new(0, 1.2, 0), C(255, 255, 255), Enum.Material.Neon)
 end
 
+BUILD.puddinghat = function(m)
+	-- プリン（下が広い円柱を2段）＋カラメル＋さくらんぼ
+	pillar(m, 0.7, 2.0, CFrame.new(0, 0.35, 0), C(255, 222, 120))
+	pillar(m, 0.5, 1.7, CFrame.new(0, 0.95, 0), C(255, 230, 140))
+	pillar(m, 0.25, 1.75, CFrame.new(0, 1.3, 0), C(170, 95, 40))
+	ball(m, 0.5, CFrame.new(0, 1.65, 0), C(230, 50, 80))
+	pillar(m, 0.4, 0.08, CFrame.new(0.1, 2.0, 0) * CFrame.Angles(0, 0, math.rad(-20)), C(90, 160, 70))
+end
+
+BUILD.donutback = function(m)
+	-- ドーナツのうきわ（玉を輪に並べる）＋チョコの粒
+	local center = Vector3.new(0, 0.2, 0.9)
+	for i = 1, 14 do
+		local a = (i / 14) * math.pi * 2
+		local pos = center + Vector3.new(math.cos(a) * 1.0, math.sin(a) * 1.0, 0)
+		ball(m, 0.85, CFrame.new(pos), C(240, 190, 120))
+		ball(m, 0.55, CFrame.new(pos + Vector3.new(0, 0, 0.3)), i % 2 == 0 and C(255, 130, 190) or C(255, 160, 210))
+		if i % 3 == 0 then
+			ball(m, 0.18, CFrame.new(pos + Vector3.new(0.1, 0.1, 0.55)), i % 2 == 0 and C(120, 200, 255) or C(255, 236, 120))
+		end
+	end
+end
+
+BUILD.heartwings = function(m)
+	-- ハートの形のはね（玉2つ＋三角の代わりに傾けた四角）
+	for _, side in { -1, 1 } do
+		local base = CFrame.new(side * 1.5, 0.5, 0.7) * CFrame.Angles(0, side * math.rad(-20), 0)
+		local pink = C(255, 110, 160)
+		ellipsoid(m, Vector3.new(1.3, 1.3, 0.2), base * CFrame.new(-0.45, 0.35, 0), pink, Enum.Material.Neon)
+		ellipsoid(m, Vector3.new(1.3, 1.3, 0.2), base * CFrame.new(0.45, 0.35, 0), pink, Enum.Material.Neon)
+		part(m, {
+			Size = Vector3.new(1.25, 1.25, 0.2),
+			CFrame = base * CFrame.new(0, -0.15, 0) * CFrame.Angles(0, 0, math.rad(45)),
+			Color = pink,
+			Material = Enum.Material.Neon,
+		})
+	end
+end
+
 BUILD.cottoncloud = function(m)
 	ball(m, 1.9, CFrame.new(0, 0, 0.5), C(235, 245, 255))
 	ball(m, 1.4, CFrame.new(-0.9, -0.3, 0.45), C(215, 235, 255))
@@ -235,6 +274,12 @@ local TRAILS = {
 	hearttrail = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, C(255, 110, 170)),
 		ColorSequenceKeypoint.new(1, C(255, 200, 225)),
+	}),
+	candytrail = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, C(255, 120, 180)),
+		ColorSequenceKeypoint.new(0.33, C(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.66, C(255, 120, 180)),
+		ColorSequenceKeypoint.new(1, C(255, 255, 255)),
 	}),
 	startrail = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, C(255, 255, 255)),
@@ -384,7 +429,7 @@ local function buy(player: Player, id: any)
 		return
 	end
 	-- パス限定・コード限定・シーズンパスのごほうびは、コインでは買えない
-	if item.pass or item.codeOnly or item.seasonOnly or type(item.price) ~= "number" then
+	if item.pass or item.codeOnly or item.seasonOnly or item.shopOnly or type(item.price) ~= "number" then
 		return
 	end
 	if d.coins < item.price then

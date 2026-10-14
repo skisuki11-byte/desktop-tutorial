@@ -45,6 +45,8 @@ local function newData()
 		redeemedCodes = {}, -- 使ったログインコード [CODE] = true
 		-- シーズンパス: id=どのシーズンか / xp / free・premium=どの段まで受け取ったか
 		season = { id = "", xp = 0, free = 0, premium = 0 },
+		-- 期間限定ショップ: その日に買った枠 [tostring(slot)] = true（日が変わったらリセット）
+		limited = { day = 0, bought = {} },
 	}
 end
 
@@ -189,6 +191,7 @@ function Data.push(player: Player)
 		coinMultiplier = extra.coinMultiplier or 1,
 		daily = extra.daily,
 		season = extra.season,
+		limited = extra.limited,
 		pets = d.pets,
 		equipped = d.equipped,
 		sellBonus = 1 + Data.petBonus(d),
