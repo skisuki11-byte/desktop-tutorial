@@ -2,6 +2,7 @@
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -10,10 +11,19 @@ local Data = {}
 
 local profiles: { [Player]: { data: any, runtime: any, canSave: boolean } } = {}
 
+-- 保存場所の名前。Studio で遊んだデータが本番に混ざらないよう、Studio では別の場所に保存する
+-- （本番: CandyGardenV1 / Studio: CandyGardenV1_Studio）
+function Data.storeName(): string
+	if RunService:IsStudio() then
+		return Config.DataStoreName .. "_Studio"
+	end
+	return Config.DataStoreName
+end
+
 local store
 do
 	local ok, result = pcall(function()
-		return DataStoreService:GetDataStore(Config.DataStoreName)
+		return DataStoreService:GetDataStore(Data.storeName())
 	end)
 	if ok then
 		store = result
@@ -84,6 +94,9 @@ function Data.load(player: Player)
 			warn(("[Data] load failed (%d/3): %s"):format(attempt, tostring(result)))
 			task.wait(1)
 		end
+	end
+	if canSave and RunService:IsStudio() then
+		print("[Data] Studio用の保存場所を使っています: " .. Data.storeName())
 	end
 	if not canSave then
 		warn("[Data] 保存は無効です（Studioで「Enable Studio Access to API Services」がオフ、またはDataStore障害）")
