@@ -64,6 +64,59 @@ function Style.gloss(target: Instance)
 	}, target)
 end
 
+-- 控えめな影（公式の UIShadow）。大きすぎる影は「にじんで見える」ので、小さく・少し下に
+function Style.shadow(target: Instance, offsetY: number?, transparency: number?)
+	pcall(function()
+		Style.make("UIShadow", {
+			Name = "Shadow",
+			Color = Style.Color.Outline,
+			Transparency = transparency or 0.45,
+			Offset = UDim2.fromOffset(0, offsetY or 5),
+			BlurRadius = UDim.new(0, 3),
+		}, target)
+	end)
+end
+
+-- 注目してほしいときだけ付ける赤い「!」（バッジの乱用は避ける）
+function Style.badge(target: GuiObject): Frame
+	local badge = Style.make("Frame", {
+		Name = "Badge",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, 8, 0, -8),
+		Size = UDim2.fromOffset(28, 28),
+		BackgroundColor3 = Color3.fromRGB(255, 70, 90),
+		Visible = false,
+		ZIndex = (target.ZIndex or 1) + 3,
+	}, target)
+	Style.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, badge)
+	Style.make("UIStroke", { Color = Color3.fromRGB(255, 255, 255), Thickness = 3 }, badge)
+	local mark = Style.make("TextLabel", {
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 1),
+		Font = Style.Font,
+		Text = "!",
+		TextSize = 20,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		ZIndex = badge.ZIndex + 1,
+	}, badge)
+	return badge
+end
+
+-- 数字がふわっと数え上がる（増えたことが目で分かる）
+local counters: { [TextLabel]: NumberValue } = {}
+function Style.countTo(label: TextLabel, from: number, to: number, format: (number) -> string)
+	local value = counters[label]
+	if not value then
+		value = Instance.new("NumberValue")
+		counters[label] = value
+		value.Changed:Connect(function(v)
+			label.Text = format(v)
+		end)
+	end
+	value.Value = from
+	TweenService:Create(value, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Value = to }):Play()
+end
+
 local function isLight(color: Color3): boolean
 	return (color.R * 0.299 + color.G * 0.587 + color.B * 0.114) > 0.8
 end
@@ -131,6 +184,7 @@ function Style.button(props: { [string]: any }, parent: Instance?): TextButton
 	Style.round(button, 18)
 	Style.stroke(button, Style.Color.Outline, 4)
 	Style.gloss(button)
+	Style.shadow(button)
 	if isLight(button.TextColor3) then
 		Style.textStroke(button)
 	end
@@ -143,7 +197,9 @@ function Style.navButton(props: { [string]: any }, parent: Instance?): TextButto
 	local icon = props.Icon
 	local caption = props.Caption
 	local captionColor = props.CaptionColor
-	props.Icon, props.Caption, props.CaptionColor = nil, nil, nil
+	local captionSize = props.CaptionSize
+	local iconSize = props.IconSize
+	props.Icon, props.Caption, props.CaptionColor, props.CaptionSize, props.IconSize = nil, nil, nil, nil, nil
 	props.Text = ""
 	props.TextColor3 = props.TextColor3 or Style.Color.Text
 	local button = Style.button(props, parent)
@@ -152,7 +208,7 @@ function Style.navButton(props: { [string]: any }, parent: Instance?): TextButto
 		Position = UDim2.fromScale(0, 0.04),
 		Size = UDim2.fromScale(1, 0.58),
 		Text = icon,
-		TextSize = 36,
+		TextSize = iconSize or 36,
 		TextWrapped = false,
 	}, button)
 	Style.label({
@@ -161,56 +217,97 @@ function Style.navButton(props: { [string]: any }, parent: Instance?): TextButto
 		Position = UDim2.fromScale(0.5, 0.97),
 		Size = UDim2.new(1, -6, 0.34, 0),
 		Text = caption,
-		TextSize = 15,
+		TextSize = captionSize or 15,
 		TextWrapped = false,
 		TextColor3 = captionColor or Style.Color.Text,
 	}, button)
 	return button
 end
 
--- ショップ・ペット・おしゃれ で共通の、大きなパネル。画面の大きさに合わせて広がり、上限で止まる。
+-- ショップ・ペット・おしゃれ等で共通の、大きなパネル。画面の大きさに合わせて広がり、上限で止まる。
+-- 上に色帯（リボン）のタイトル。閉じるボタンは、どのパネルでも同じ「右上の角」に置く（一貫性）。
+-- color: 色帯の色（下のドックのボタンと同じ色にして、どのボタンから開いたか分かるようにする）
 -- 戻り値: パネル, 中身を入れるスクロール枠
-function Style.modal(gui: Instance, name: string, title: string, onClose: () -> ()): (Frame, ScrollingFrame)
+function Style.modal(gui: Instance, name: string, title: string, onClose: () -> (), color: Color3?): (Frame, ScrollingFrame)
+	local headerColor = color or Style.Color.Accent
 	local panel = Style.make("Frame", {
 		Name = name,
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		-- 開いている間は下のドックを隠す（UI.showPanel）ので、画面の高さを広く使える
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromScale(0.94, 0.88),
+		Position = UDim2.fromScale(0.5, 0.52),
+		Size = UDim2.fromScale(0.92, 0.84),
 		BackgroundColor3 = Style.Color.Surface,
 		Visible = false,
 		ZIndex = 10,
 	}, gui)
 	Style.round(panel, 28)
 	Style.stroke(panel, Style.Color.Outline, 6)
+	Style.shadow(panel, 8, 0.35)
 	Style.make("UISizeConstraint", { MaxSize = Vector2.new(560, 600) }, panel)
+	-- うっすら下がピンクになる背景
+	Style.make("UIGradient", {
+		Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 232, 242)),
+		Rotation = 90,
+	}, panel)
 
+	-- 色帯のタイトル（下側の角は四角くして、パネル本体とつなげる）
+	local header = Style.make("Frame", {
+		Name = "Header",
+		Size = UDim2.new(1, 0, 0, 66),
+		BackgroundColor3 = headerColor,
+		ZIndex = 11,
+	}, panel)
+	Style.round(header, 24)
+	Style.gloss(header)
+	local filler = Style.make("Frame", {
+		Name = "Filler",
+		Position = UDim2.new(0, 0, 1, -24),
+		Size = UDim2.new(1, 0, 0, 24),
+		BackgroundColor3 = headerColor,
+		BorderSizePixel = 0,
+		ZIndex = 11,
+	}, header)
+	Style.make("UIGradient", {
+		Color = ColorSequence.new(Color3.fromRGB(226, 220, 230), Color3.fromRGB(214, 206, 220)),
+		Rotation = 90,
+	}, filler)
+	Style.make("Frame", {
+		Name = "Line",
+		Position = UDim2.new(0, 0, 1, 0),
+		Size = UDim2.new(1, 0, 0, 5),
+		BackgroundColor3 = Style.Color.Outline,
+		BorderSizePixel = 0,
+		ZIndex = 12,
+	}, header)
 	Style.label({
-		Position = UDim2.fromOffset(20, 10),
-		Size = UDim2.new(1, -110, 0, 56),
+		Position = UDim2.fromOffset(22, 4),
+		Size = UDim2.new(1, -110, 1, -8),
 		Text = title,
 		TextSize = 32,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextWrapped = false,
-		ZIndex = 11,
-	}, panel)
+		ZIndex = 13,
+	}, header)
 
+	-- 閉じるボタン: 右上の角に少しはみ出させる（見つけやすく、押しやすい）
 	local close = Style.button({
 		Name = "Close",
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -12, 0, 10),
-		Size = UDim2.fromOffset(Style.TapSize, 56),
-		BackgroundColor3 = Color3.fromRGB(255, 140, 150),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(1, -16, 0, 14),
+		Size = UDim2.fromOffset(60, 60),
+		BackgroundColor3 = Color3.fromRGB(255, 95, 110),
 		Text = "X", -- 「✕」はこの環境のフォントに無かったので、ふつうのXにする
 		TextSize = 34,
-		ZIndex = 11,
+		ZIndex = 15,
 	}, panel)
+	close:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0.5, 0)
 	close.Activated:Connect(onClose)
 
 	local scroll = Style.make("ScrollingFrame", {
 		Name = "Scroll",
-		Position = UDim2.fromOffset(14, 76),
-		Size = UDim2.new(1, -28, 1, -90),
+		Position = UDim2.fromOffset(14, 84),
+		Size = UDim2.new(1, -28, 1, -98),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		ScrollBarThickness = 8,
@@ -218,6 +315,13 @@ function Style.modal(gui: Instance, name: string, title: string, onClose: () -> 
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		ZIndex = 11,
 	}, panel)
+	-- 内側の余白: カードの太い縁取りと影が、スクロール枠の端で切れないようにする
+	Style.make("UIPadding", {
+		PaddingLeft = UDim.new(0, 8),
+		PaddingRight = UDim.new(0, 14), -- 右はスクロールバーのぶん広め
+		PaddingTop = UDim.new(0, 8),
+		PaddingBottom = UDim.new(0, 12),
+	}, scroll)
 	return panel, scroll
 end
 

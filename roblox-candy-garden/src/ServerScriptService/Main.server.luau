@@ -13,6 +13,8 @@ local Tree = require(Services.Tree)
 local Monetization = require(Services.Monetization)
 local Cosmetics = require(Services.Cosmetics)
 local Daily = require(Services.Daily)
+local Codes = require(Services.Codes)
+local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
 
 -- データ読込と庭の準備が終わってからキャラクターを出す
 Players.CharacterAutoLoads = false
@@ -24,7 +26,14 @@ Pals.init()
 Monetization.init()
 Cosmetics.init()
 Daily.init()
+Codes.init()
 Weather.start()
+
+Remotes.Teleport.OnServerEvent:Connect(function(player, dest)
+	if (dest == "home" or dest == "tree") and RateLimit.ok(player, "teleport", 1.5) then
+		World.teleport(player, dest)
+	end
+end)
 Garden.startGrowthLoop()
 Data.startAutoSave()
 
@@ -65,6 +74,7 @@ local function onPlayerRemoving(player: Player)
 	Data.release(player)
 	World.release(player)
 	Monetization.release(player)
+	Codes.release(player)
 	RateLimit.clear(player)
 end
 

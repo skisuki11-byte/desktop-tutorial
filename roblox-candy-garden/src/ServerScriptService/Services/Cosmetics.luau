@@ -124,6 +124,15 @@ BUILD.crown = function(m)
 	end
 end
 
+BUILD.ribbon = function(m)
+	local red = C(255, 90, 140)
+	ball(m, 0.6, CFrame.new(0, 0.35, 0), red)
+	for _, side in { -1, 1 } do
+		ellipsoid(m, Vector3.new(1.3, 0.9, 0.35), CFrame.new(side * 0.75, 0.4, 0) * CFrame.Angles(0, 0, side * math.rad(18)), red)
+		ellipsoid(m, Vector3.new(0.6, 0.45, 0.4), CFrame.new(side * 0.75, 0.4, -0.02), C(255, 170, 200))
+	end
+end
+
 BUILD.cottoncloud = function(m)
 	ball(m, 1.9, CFrame.new(0, 0, 0.5), C(235, 245, 255))
 	ball(m, 1.4, CFrame.new(-0.9, -0.3, 0.45), C(215, 235, 255))
@@ -315,8 +324,8 @@ local function buy(player: Player, id: any)
 		Remotes.Toast:FireClient(player, "toast.alreadyOwned")
 		return
 	end
-	-- パス限定のものは、コインでは買えない
-	if item.pass or type(item.price) ~= "number" then
+	-- パス限定・コード限定のものは、コインでは買えない
+	if item.pass or item.codeOnly or type(item.price) ~= "number" then
 		return
 	end
 	if d.coins < item.price then
@@ -357,6 +366,18 @@ local function equip(player: Player, slot: any, id: any)
 	end
 	Cosmetics.apply(player)
 	Data.push(player)
+end
+
+-- ログインコードなど、お金を使わずに渡すとき。もらったらすぐ着る
+function Cosmetics.grant(player: Player, id: string)
+	local item = Config.CosmeticById[id]
+	local d = Data.get(player)
+	if not item or not d then
+		return
+	end
+	d.cosmetics.owned[id] = true
+	d.cosmetics.equipped[item.slot] = id
+	Cosmetics.apply(player)
 end
 
 function Cosmetics.init()

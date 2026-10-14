@@ -14,6 +14,9 @@ local DailyUI = {}
 local C = Style.Color
 local t = I18n.t
 
+local CARD_HEIGHT = 88 -- 2段で「もらう！」ボタンの上に収まる高さ（小さい画面でもスクロールなしで見える）
+local CARD_GAP = 10
+
 local panel, grid, streakLabel, claimButton, giftButton, badge
 local lastState = nil
 local autoOpened = false
@@ -64,38 +67,68 @@ local function refresh()
 		end
 	end
 
+	-- 2段の決まった配置: 1段目=1〜4日目 / 2段目=5〜6日目 + 7日目（2マス分の特別なカード）
+	-- 幅は割合で決めるので、画面が狭くても端が切れない
+	local rows = {}
+	for r = 1, 2 do
+		local row = Style.make("Frame", {
+			Name = "Row" .. r,
+			LayoutOrder = r,
+			Size = UDim2.new(1, 0, 0, CARD_HEIGHT),
+			BackgroundTransparency = 1,
+			ZIndex = 12,
+		}, grid)
+		Style.make("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			Padding = UDim.new(0, CARD_GAP),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}, row)
+		rows[r] = row
+	end
+
+	local count = #Config.Daily
 	for i, reward in Config.Daily do
 		local done = (daily.canClaim and i < daily.index) or (not daily.canClaim and i <= daily.index)
 		local today = daily.canClaim and i == daily.index
+		local big = i == count -- 最後の日（7日目）は大きく
+		-- 4列ぶんの幅: 1マス = (全体 - すきま3つ) / 4
+		local width = big and UDim2.new(0.5, -CARD_GAP / 2, 1, 0) or UDim2.new(0.25, -CARD_GAP * 3 / 4, 1, 0)
 		local card = Style.make("Frame", {
 			Name = "Day" .. i,
 			LayoutOrder = i,
-			BackgroundColor3 = today and C.Yellow or (done and C.Mint or Color3.fromRGB(255, 255, 255)),
+			Size = width,
+			-- 「きょう」は淡いクリーム色（黄色いコインが背景にまぎれないように）
+			BackgroundColor3 = today and Color3.fromRGB(255, 247, 222)
+				or (done and C.Mint or (big and Color3.fromRGB(255, 236, 246) or Color3.fromRGB(255, 255, 255))),
 			ZIndex = 12,
-		}, grid)
+		}, i <= 4 and rows[1] or rows[2])
 		Style.round(card, 18)
-		Style.stroke(card, today and C.Accent or C.Outline, today and 6 or 4)
+		Style.stroke(card, today and C.Accent or (big and C.AccentDark or C.Outline), today and 6 or 4)
 		Style.label({
-			Position = UDim2.fromOffset(0, 6),
+			Position = UDim2.fromOffset(0, 4),
 			Size = UDim2.new(1, 0, 0, 24),
-			Text = t("ui.dailyDay", i),
+			Text = (big and "👑 " or "") .. t("ui.dailyDay", i),
 			TextSize = 18,
 			TextWrapped = false,
 			ZIndex = 13,
 		}, card)
+		local lines = rewardLines(reward)
+		if big then
+			lines = string.gsub(lines, "\n", "  ")
+		end
 		Style.label({
-			Position = UDim2.fromOffset(4, 34),
-			Size = UDim2.new(1, -8, 0, 52),
-			Text = rewardLines(reward),
-			TextSize = 18,
+			Position = UDim2.fromOffset(4, 26),
+			Size = UDim2.new(1, -8, 1, -48),
+			Text = lines,
+			TextSize = big and 22 or 16,
 			ZIndex = 13,
 		}, card)
 		local caption = today and t("ui.dailyToday") or (done and ("⭐ " .. t("ui.dailyClaimed")) or "")
 		if caption ~= "" then
 			Style.label({
 				AnchorPoint = Vector2.new(0.5, 1),
-				Position = UDim2.new(0.5, 0, 1, -6),
-				Size = UDim2.new(1, -8, 0, 22),
+				Position = UDim2.new(0.5, 0, 1, -3),
+				Size = UDim2.new(1, -8, 0, 20),
 				Text = caption,
 				TextSize = 15,
 				TextWrapped = false,
@@ -109,27 +142,28 @@ local function refresh()
 		streakLabel.Text = daily.restarted and t("ui.dailyBack") or t("ui.dailyStreak", daily.streak)
 		claimButton.Visible = true
 		claimButton.Text = "🎁 " .. t("ui.dailyClaim")
-		panel.Scroll.Size = UDim2.new(1, -28, 1, -170)
+		panel.Scroll.Size = UDim2.new(1, -28, 1, -164)
 	else
 		streakLabel.Text = t("ui.dailyStreak", daily.streak) .. "  ・  " .. t("ui.dailyDone")
 		claimButton.Visible = false
-		panel.Scroll.Size = UDim2.new(1, -28, 1, -90)
+		panel.Scroll.Size = UDim2.new(1, -28, 1, -98)
 	end
 end
 
-function DailyUI.build(gui: ScreenGui, onClose: () -> (), onOpen: () -> ())
+function DailyUI.build(gui: ScreenGui, onClose: () -> (), onOpen: () -> (), side: Frame)
 	openPanel = onOpen
 
-	-- 右の中ほど（移動スティックとジャンプボタンを避ける）
+	-- 右の列（移動スティックとジャンプボタンを避ける）
 	giftButton = Style.navButton({
 		Name = "DailyButton",
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -12, 0.42, 0),
-		Size = UDim2.fromOffset(80, 88),
+		LayoutOrder = 3,
+		Size = UDim2.fromOffset(76, 78),
 		BackgroundColor3 = Color3.fromRGB(255, 170, 190),
 		Icon = "🎁",
+		IconSize = 32,
 		Caption = t("ui.dailyShort"),
-	}, gui)
+		CaptionSize = 13,
+	}, side)
 	giftButton.Activated:Connect(function()
 		if panel.Visible then
 			onClose()
@@ -137,33 +171,15 @@ function DailyUI.build(gui: ScreenGui, onClose: () -> (), onOpen: () -> ())
 			onOpen()
 		end
 	end)
-	badge = Style.make("Frame", {
-		Name = "Badge",
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, 8, 0, -8),
-		Size = UDim2.fromOffset(30, 30),
-		BackgroundColor3 = Color3.fromRGB(255, 70, 90),
-		Visible = false,
-		ZIndex = 5,
-	}, giftButton)
-	Style.round(badge, 15)
-	Style.stroke(badge, Color3.fromRGB(255, 255, 255), 3)
-	Style.label({
-		Size = UDim2.fromScale(1, 1),
-		Text = "!",
-		TextSize = 22,
-		TextColor3 = Color3.fromRGB(255, 255, 255),
-		TextWrapped = false,
-		ZIndex = 6,
-	}, badge)
+	badge = Style.badge(giftButton)
 
 	local scroll
-	panel, scroll = Style.modal(gui, "DailyPanel", "🎁 " .. t("ui.daily"), onClose)
-	Style.make("UIListLayout", { Padding = UDim.new(0, 12), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
+	panel, scroll = Style.modal(gui, "DailyPanel", "🎁 " .. t("ui.daily"), onClose, Color3.fromRGB(255, 170, 190))
+	Style.make("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 
 	streakLabel = Style.label({
 		LayoutOrder = 1,
-		Size = UDim2.new(1, -8, 0, 30),
+		Size = UDim2.new(1, -8, 0, 26),
 		Text = "",
 		TextSize = 20,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -173,24 +189,23 @@ function DailyUI.build(gui: ScreenGui, onClose: () -> (), onOpen: () -> ())
 	grid = Style.make("Frame", {
 		Name = "Grid",
 		LayoutOrder = 2,
-		Size = UDim2.new(1, -8, 0, 0),
+		Size = UDim2.new(1, 0, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
 		ZIndex = 12,
 	}, scroll)
-	Style.make("UIGridLayout", {
-		CellSize = UDim2.fromOffset(112, 112),
-		CellPadding = UDim2.fromOffset(10, 10),
+	Style.make("UIListLayout", {
+		Padding = UDim.new(0, CARD_GAP),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, grid)
 
 	-- いちばん大事なボタンは、スクロールしなくても押せるよう、パネルの下に固定する
-	scroll.Size = UDim2.new(1, -28, 1, -170)
+	scroll.Size = UDim2.new(1, -28, 1, -164)
 	claimButton = Style.button({
 		Name = "Claim",
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, -14),
-		Size = UDim2.new(1, -28, 0, 72),
+		Size = UDim2.new(1, -28, 0, 64),
 		TextSize = 30,
 		Text = "",
 		TextWrapped = false,

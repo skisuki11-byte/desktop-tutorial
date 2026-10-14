@@ -126,6 +126,7 @@ Config.Cosmetics = {
 	{ id = "fairywings", slot = "back", icon = "🦋", price = 900 },
 	{ id = "rainbowcape", slot = "back", icon = "🌈", price = 1800 },
 	{ id = "goldwings", slot = "back", icon = "🌟", pass = "gold" },
+	{ id = "ribbon", slot = "hat", icon = "🎀", codeOnly = true }, -- ログインコードでだけ手に入る
 	{ id = "sparkletrail", slot = "trail", icon = "✨", price = 300 },
 	{ id = "hearttrail", slot = "trail", icon = "💗", price = 700 },
 	{ id = "rainbowtrail", slot = "trail", icon = "🌈", price = 1500 },

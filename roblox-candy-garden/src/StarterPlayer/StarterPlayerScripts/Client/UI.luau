@@ -13,6 +13,7 @@ local Style = require(script.Parent.Style)
 local PalsUI = require(script.Parent.PalsUI)
 local CosmeticsUI = require(script.Parent.CosmeticsUI)
 local DailyUI = require(script.Parent.DailyUI)
+local CodesUI = require(script.Parent.CodesUI)
 
 local UI = {}
 
@@ -21,8 +22,10 @@ local t = I18n.t
 
 local gui
 local coinLabel, coinPill
-local seedBar, bottom
+local seedBar, bottom, side
 local sellButton, harvestButton, shopButton, palsButton, styleButton
+local palsBadge
+local sellWiggling = false
 local shopPanel
 local toastLabel
 local bannerLabel, banner
@@ -188,6 +191,43 @@ local function buildBottom()
 	end)
 end
 
+-- ---- 右の列: 移動ボタン（じぶんの庭・みんなの木）、ボーナス、コード ----
+-- Grow a Garden 2 の「庭・売り場・店へ飛ぶボタン」と同じ考え方。迷子になっても1タップで戻れる。
+local function buildSide()
+	side = Style.make("Frame", {
+		Name = "Side",
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -14, 0.45, 0),
+		Size = UDim2.fromOffset(76, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+	}, gui)
+	Style.make("UIListLayout", {
+		Padding = UDim.new(0, 10),
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, side)
+	Style.make("UIScale", { Name = "FitScale" }, side)
+
+	local function place(name: string, order: number, icon: string, caption: string, color: Color3, dest: string)
+		local button = Style.navButton({
+			Name = name,
+			LayoutOrder = order,
+			Size = UDim2.fromOffset(76, 78),
+			BackgroundColor3 = color,
+			Icon = icon,
+			IconSize = 32,
+			Caption = caption,
+			CaptionSize = 13,
+		}, side)
+		button.Activated:Connect(function()
+			Remotes.Teleport:FireServer(dest)
+		end)
+	end
+	place("GoHome", 1, "🏡", t("ui.home"), Color3.fromRGB(255, 226, 150), "home")
+	place("GoTree", 2, "🌳", t("ui.toTree"), C.Mint, "tree")
+end
+
 local function refreshSeedBar(state)
 	for _, child in seedBar:GetChildren() do
 		if child:IsA("TextButton") then
@@ -240,6 +280,10 @@ local function fitBottom()
 	-- 縦の基準は、種えらび(76)＋ドック(88)＋余白＋上の案内の分。低い画面ほど小さくする
 	local scale = math.min(1, (view.X - 24) / DOCK_WIDTH, (view.Y - 20) / 440)
 	bottom.FitScale.Scale = math.max(0.5, scale)
+	-- 右の列は4つ縦に並ぶので、低い画面では縮める（下のドックとぶつからない高さに）
+	if side then
+		side.FitScale.Scale = math.clamp((view.Y * 0.62) / 352, 0.55, 1)
+	end
 end
 
 -- ---- ショップ ----
@@ -248,7 +292,7 @@ local function buildShop()
 	local scroll
 	shopPanel, scroll = Style.modal(gui, "ShopPanel", "🛒 " .. t("ui.shop"), function()
 		UI.showPanel(nil)
-	end)
+	end, C.Mint)
 	Style.make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 
 	for order, cropId in Config.CropOrder do
@@ -353,7 +397,10 @@ end
 
 -- どのパネルを開くか。同時に開くのは1つだけ（nil で全部閉じる）
 function UI.showPanel(name: string?)
-	bottom.Visible = name == nil -- パネルを開いている間は、下の操作ボタンを隠して画面を広く使う
+	-- パネルを開いている間は、下と右の操作ボタンを隠して画面を広く使う
+	bottom.Visible = name == nil
+	side.Visible = name == nil
+	CodesUI.setVisible(name == "codes")
 	local wasShop = shopPanel.Visible
 	shopPanel.Visible = name == "shop"
 	if shopPanel.Visible and not wasShop then
@@ -450,10 +497,16 @@ end
 
 function UI.update(state)
 	local coins = state.coins
-	coinLabel.Text = "🟡 " .. Style.formatNumber(coins)
+	local function coinText(n: number): string
+		return "🟡 " .. Style.formatNumber(n)
+	end
 	if lastCoins and coins > lastCoins then
+		-- 増えたときは、数字が数え上がる＋「+N」がふわっと出る
+		Style.countTo(coinLabel, lastCoins, coins, coinText)
 		Style.pop(coinPill, 1.12)
 		floatCoins(coins - lastCoins)
+	else
+		coinLabel.Text = coinText(coins)
 	end
 	lastCoins = coins
 
@@ -461,6 +514,22 @@ function UI.update(state)
 	local caption = sellButton:FindFirstChild("Caption")
 	caption.Text = value > 0 and ("+" .. Style.formatNumber(value)) or t("ui.sell")
 	sellButton.BackgroundColor3 = value > 0 and C.Accent or C.AccentDark
+	-- 売れる物があるときは、売るボタンがときどき弾む（次にやることを目で示す）
+	if value > 0 and not sellWiggling then
+		sellWiggling = true
+		task.spawn(function()
+			while sellWiggling do
+				Style.pop(sellButton, 1.1)
+				task.wait(2.2)
+			end
+		end)
+	elseif value <= 0 then
+		sellWiggling = false
+	end
+
+	-- はじめてのたまごが買えるようになったら、ペットに「!」（1回目だけの案内。出しすぎない）
+	local egg = Config.Eggs[1]
+	palsBadge.Visible = #(state.pets or {}) == 0 and coins >= egg.price
 	refreshSeedBar(state)
 	PalsUI.update(state)
 	CosmeticsUI.update(state)
@@ -485,9 +554,14 @@ function UI.init()
 	end
 	PalsUI.build(gui, closeAll)
 	CosmeticsUI.build(gui, closeAll)
+	buildSide()
 	DailyUI.build(gui, closeAll, function()
 		UI.showPanel("daily")
-	end)
+	end, side)
+	CodesUI.build(gui, closeAll, function()
+		UI.showPanel("codes")
+	end, side)
+	palsBadge = Style.badge(palsButton)
 	buildToast()
 	buildBanner()
 

@@ -42,6 +42,7 @@ local function newData()
 		},
 		-- デイリーボーナス: lastDay=最後にもらった日(UTCの日数) / streak=連続日数
 		daily = { lastDay = 0, streak = 0 },
+		redeemedCodes = {}, -- 使ったログインコード [CODE] = true
 	}
 end
 

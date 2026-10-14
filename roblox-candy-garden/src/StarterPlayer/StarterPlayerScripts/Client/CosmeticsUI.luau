@@ -68,7 +68,10 @@ local function refreshGrid()
 		local have = owns(lastState, item)
 		-- パス限定は、持っているか、買える状態(id>0)のときだけ出す
 		local passId = item.pass and Config.Passes[item.pass].id or 0
-		local visible = item.slot == currentSlot and (item.pass == nil or have or passId > 0)
+		-- コード限定は、持っているときだけ出す
+		local visible = item.slot == currentSlot
+			and (item.pass == nil or have or passId > 0)
+			and (not item.codeOnly or have)
 		if visible then
 			order += 1
 			local worn = equipped[item.slot] == item.id
@@ -196,7 +199,7 @@ end
 
 function CosmeticsUI.build(gui: ScreenGui, onClose: () -> ())
 	local scroll
-	panel, scroll = Style.modal(gui, "StylePanel", "👗 " .. t("ui.style"), onClose)
+	panel, scroll = Style.modal(gui, "StylePanel", "👗 " .. t("ui.style"), onClose, Color3.fromRGB(255, 150, 200))
 	Style.make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 
 	tabsFrame = Style.make("Frame", {

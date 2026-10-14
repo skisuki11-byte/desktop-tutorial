@@ -300,6 +300,28 @@ function World.plotOf(player: Player)
 	return index and plots[index] or nil
 end
 
+-- 移動ボタン（Grow a Garden 2 の「庭・売り場・店」へ飛ぶボタンと同じ考え方）
+-- dest: "home"=じぶんの庭 / "tree"=みんなの木。行き先はサーバーが決める
+function World.teleport(player: Player, dest: string)
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+	local target: CFrame?
+	if dest == "home" then
+		local plot = World.plotOf(player)
+		if plot then
+			target = plot.spawn.CFrame * CFrame.new(0, 3.5, 0)
+		end
+	elseif dest == "tree" then
+		target = CFrame.lookAt(Vector3.new(0, 4, 16), Vector3.new(0, 4, 0))
+	end
+	if target then
+		character:PivotTo(target)
+	end
+end
+
 function World.allPlots()
 	return plots
 end

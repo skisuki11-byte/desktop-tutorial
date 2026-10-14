@@ -211,7 +211,7 @@ local function refresh()
 end
 
 function PalsUI.build(gui: ScreenGui, onClose: () -> ())
-	panel, scroll = Style.modal(gui, "PalsPanel", "🐾 " .. t("ui.pals"), onClose)
+	panel, scroll = Style.modal(gui, "PalsPanel", "🐾 " .. t("ui.pals"), onClose, C.Lilac)
 	Style.make("UIListLayout", { Padding = UDim.new(0, 12), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 
 	buildEggCard(scroll)
