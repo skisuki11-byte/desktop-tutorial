@@ -14,6 +14,7 @@ local PalsUI = require(script.Parent.PalsUI)
 local CosmeticsUI = require(script.Parent.CosmeticsUI)
 local DailyUI = require(script.Parent.DailyUI)
 local CodesUI = require(script.Parent.CodesUI)
+local SeasonUI = require(script.Parent.SeasonUI)
 
 local UI = {}
 
@@ -280,9 +281,16 @@ local function fitBottom()
 	-- 縦の基準は、種えらび(76)＋ドック(88)＋余白＋上の案内の分。低い画面ほど小さくする
 	local scale = math.min(1, (view.X - 24) / DOCK_WIDTH, (view.Y - 20) / 440)
 	bottom.FitScale.Scale = math.max(0.5, scale)
-	-- 右の列は4つ縦に並ぶので、低い画面では縮める（下のドックとぶつからない高さに）
+	-- 右の列は縦に並ぶので、低い画面では縮める（下のドックとぶつからない高さに）
 	if side then
-		side.FitScale.Scale = math.clamp((view.Y * 0.62) / 352, 0.55, 1)
+		local count = 0
+		for _, child in side:GetChildren() do
+			if child:IsA("GuiButton") then
+				count += 1
+			end
+		end
+		local height = count * 78 + math.max(0, count - 1) * 10
+		side.FitScale.Scale = math.clamp((view.Y * 0.66) / math.max(height, 1), 0.5, 1)
 	end
 end
 
@@ -401,6 +409,7 @@ function UI.showPanel(name: string?)
 	bottom.Visible = name == nil
 	side.Visible = name == nil
 	CodesUI.setVisible(name == "codes")
+	SeasonUI.setVisible(name == "season")
 	local wasShop = shopPanel.Visible
 	shopPanel.Visible = name == "shop"
 	if shopPanel.Visible and not wasShop then
@@ -534,6 +543,7 @@ function UI.update(state)
 	PalsUI.update(state)
 	CosmeticsUI.update(state)
 	DailyUI.update(state)
+	SeasonUI.update(state)
 end
 
 function UI.init()
@@ -561,6 +571,12 @@ function UI.init()
 	CodesUI.build(gui, closeAll, function()
 		UI.showPanel("codes")
 	end, side)
+	SeasonUI.build(gui, closeAll, function()
+		UI.showPanel("season")
+	end, side)
+	SeasonUI.setCelebrate(function(text)
+		UI.toastText(text, 3)
+	end)
 	palsBadge = Style.badge(palsButton)
 	buildToast()
 	buildBanner()

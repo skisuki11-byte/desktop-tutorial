@@ -43,6 +43,8 @@ local function newData()
 		-- デイリーボーナス: lastDay=最後にもらった日(UTCの日数) / streak=連続日数
 		daily = { lastDay = 0, streak = 0 },
 		redeemedCodes = {}, -- 使ったログインコード [CODE] = true
+		-- シーズンパス: id=どのシーズンか / xp / free・premium=どの段まで受け取ったか
+		season = { id = "", xp = 0, free = 0, premium = 0 },
 	}
 end
 
@@ -186,6 +188,7 @@ function Data.push(player: Player)
 		passes = extra.passes or {},
 		coinMultiplier = extra.coinMultiplier or 1,
 		daily = extra.daily,
+		season = extra.season,
 		pets = d.pets,
 		equipped = d.equipped,
 		sellBonus = 1 + Data.petBonus(d),

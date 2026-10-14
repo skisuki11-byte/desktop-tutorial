@@ -156,7 +156,7 @@ function DailyUI.build(gui: ScreenGui, onClose: () -> (), onOpen: () -> (), side
 	-- 右の列（移動スティックとジャンプボタンを避ける）
 	giftButton = Style.navButton({
 		Name = "DailyButton",
-		LayoutOrder = 3,
+		LayoutOrder = 4,
 		Size = UDim2.fromOffset(76, 78),
 		BackgroundColor3 = Color3.fromRGB(255, 170, 190),
 		Icon = "🎁",

@@ -9,6 +9,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local Data = require(script.Parent.Data)
 local RateLimit = require(script.Parent.RateLimit)
+local Season = require(script.Parent.Season)
 
 local Daily = {}
 
@@ -65,6 +66,7 @@ local function claim(player: Player)
 	Remotes.Toast:FireClient(player, "toast.dailyGot")
 	Data.push(player)
 	Data.saveSoon(player)
+	Season.addXp(player, Config.Season.xp.daily)
 end
 
 function Daily.init()

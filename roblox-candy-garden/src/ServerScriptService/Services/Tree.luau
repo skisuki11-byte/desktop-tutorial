@@ -9,6 +9,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local Data = require(script.Parent.Data)
+local Season = require(script.Parent.Season)
 
 local Tree = {}
 
@@ -206,6 +207,7 @@ function Tree.add(cropId: string)
 			if d then
 				d.coins += rewardTotal
 				Data.push(player)
+				Season.addXp(player, Config.Season.xp.tree)
 			end
 		end
 		rebuild()

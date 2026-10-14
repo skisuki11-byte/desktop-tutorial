@@ -133,6 +133,60 @@ BUILD.ribbon = function(m)
 	end
 end
 
+BUILD.berryhat = function(m)
+	local red = C(240, 60, 90)
+	ellipsoid(m, Vector3.new(1.9, 1.7, 1.9), CFrame.new(0, 0.7, 0), red)
+	-- つぶつぶ
+	for i = 1, 8 do
+		local a = (i / 8) * math.pi * 2
+		ball(m, 0.18, CFrame.new(math.cos(a) * 0.9, 0.75 + (i % 2) * 0.25, math.sin(a) * 0.9), C(255, 236, 150))
+	end
+	-- へた
+	for i = 1, 5 do
+		local a = (i / 5) * math.pi * 2
+		part(m, {
+			Size = Vector3.new(0.7, 0.12, 0.3),
+			CFrame = CFrame.new(math.cos(a) * 0.35, 1.55, math.sin(a) * 0.35) * CFrame.Angles(0, -a, math.rad(-20)),
+			Color = C(90, 190, 90),
+		})
+	end
+	pillar(m, 0.4, 0.18, CFrame.new(0, 1.75, 0), C(90, 170, 80))
+end
+
+BUILD.lollipopback = function(m)
+	pillar(m, 3.2, 0.25, CFrame.new(0.4, -0.2, 0.7) * CFrame.Angles(0, 0, math.rad(-12)), WHITE)
+	-- 円盤（円柱の軸を背中の向き=Zにする）
+	part(m, {
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.3, 2.6, 2.6),
+		CFrame = CFrame.new(0.75, 1.7, 0.75) * CFrame.Angles(0, math.pi / 2, 0),
+		Color = C(255, 120, 190),
+	})
+	part(m, {
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.34, 1.6, 1.6),
+		CFrame = CFrame.new(0.75, 1.7, 0.75) * CFrame.Angles(0, math.pi / 2, 0),
+		Color = C(255, 220, 240),
+	})
+	ball(m, 0.7, CFrame.new(0.75, 1.7, 0.75), C(130, 210, 255), Enum.Material.Neon)
+end
+
+BUILD.gemcrown = function(m)
+	pillar(m, 0.55, 2.0, CFrame.new(0, 0.3, 0), C(200, 220, 255), Enum.Material.Neon)
+	local gems = { C(255, 90, 140), C(120, 200, 255), C(150, 240, 170), C(255, 220, 90), C(200, 150, 255) }
+	for i = 1, 5 do
+		local a = (i / 5) * math.pi * 2
+		local x, z = math.cos(a) * 0.85, math.sin(a) * 0.85
+		part(m, {
+			Size = Vector3.new(0.45, 0.45, 0.45),
+			CFrame = CFrame.new(x, 0.95, z) * CFrame.Angles(math.rad(45), 0, math.rad(45)),
+			Color = gems[i],
+			Material = Enum.Material.Neon,
+		})
+	end
+	ball(m, 0.6, CFrame.new(0, 1.2, 0), C(255, 255, 255), Enum.Material.Neon)
+end
+
 BUILD.cottoncloud = function(m)
 	ball(m, 1.9, CFrame.new(0, 0, 0.5), C(235, 245, 255))
 	ball(m, 1.4, CFrame.new(-0.9, -0.3, 0.45), C(215, 235, 255))
@@ -181,6 +235,11 @@ local TRAILS = {
 	hearttrail = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, C(255, 110, 170)),
 		ColorSequenceKeypoint.new(1, C(255, 200, 225)),
+	}),
+	startrail = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, C(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.5, C(255, 226, 120)),
+		ColorSequenceKeypoint.new(1, C(150, 200, 255)),
 	}),
 	rainbowtrail = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, C(255, 100, 120)),
@@ -324,8 +383,8 @@ local function buy(player: Player, id: any)
 		Remotes.Toast:FireClient(player, "toast.alreadyOwned")
 		return
 	end
-	-- パス限定・コード限定のものは、コインでは買えない
-	if item.pass or item.codeOnly or type(item.price) ~= "number" then
+	-- パス限定・コード限定・シーズンパスのごほうびは、コインでは買えない
+	if item.pass or item.codeOnly or item.seasonOnly or type(item.price) ~= "number" then
 		return
 	end
 	if d.coins < item.price then
@@ -368,11 +427,11 @@ local function equip(player: Player, slot: any, id: any)
 	Data.push(player)
 end
 
--- ログインコードなど、お金を使わずに渡すとき。もらったらすぐ着る
+-- ログインコード・シーズンパスなど、お金を使わずに渡すとき。もらったらすぐ着る（新しい物を見せる）
 function Cosmetics.grant(player: Player, id: string)
 	local item = Config.CosmeticById[id]
 	local d = Data.get(player)
-	if not item or not d then
+	if not item or not d or d.cosmetics.owned[id] then
 		return
 	end
 	d.cosmetics.owned[id] = true

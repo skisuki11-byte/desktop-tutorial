@@ -20,6 +20,7 @@ local NAMES = {
 	"RedeemCode",
 	"CodeResult",
 	"Teleport",
+	"SeasonReward",
 }
 
 local folder

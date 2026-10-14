@@ -14,6 +14,7 @@ local Monetization = require(Services.Monetization)
 local Cosmetics = require(Services.Cosmetics)
 local Daily = require(Services.Daily)
 local Codes = require(Services.Codes)
+local Season = require(Services.Season)
 local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
 
 -- データ読込と庭の準備が終わってからキャラクターを出す
@@ -27,6 +28,7 @@ Monetization.init()
 Cosmetics.init()
 Daily.init()
 Codes.init()
+Season.init()
 Weather.start()
 
 Remotes.Teleport.OnServerEvent:Connect(function(player, dest)
@@ -54,6 +56,7 @@ local function onPlayerAdded(player: Player)
 		warn("[Main] 空いている庭がありません: " .. player.Name)
 	end
 	Monetization.load(player)
+	Season.sync(player) -- シーズンの切り替えと、取りこぼしの受け取り
 	Garden.attach(player)
 	Pals.refreshAttribute(player)
 	Cosmetics.track(player)

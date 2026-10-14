@@ -13,6 +13,12 @@ local RateLimit = require(script.Parent.RateLimit)
 local Monetization = {}
 
 local owned: { [Player]: { [string]: boolean } } = {}
+local purchaseHandlers: { (Player, string) -> () } = {}
+
+-- パスを買ったときに、ほかのサービスが続きの処理をする（シーズンパスのさかのぼり付与など）
+function Monetization.onPurchased(fn: (Player, string) -> ())
+	table.insert(purchaseHandlers, fn)
+end
 
 function Monetization.owns(player: Player, key: string): boolean
 	local set = owned[player]
@@ -75,6 +81,9 @@ function Monetization.init()
 		for key, pass in Config.Passes do
 			if pass.id == passId then
 				owned[player][key] = true
+				for _, handler in purchaseHandlers do
+					handler(player, key)
+				end
 				Data.push(player)
 				Remotes.Toast:FireClient(player, "toast.styleBought")
 			end

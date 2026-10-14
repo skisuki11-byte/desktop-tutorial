@@ -10,6 +10,7 @@ local World = require(script.Parent.World)
 local RateLimit = require(script.Parent.RateLimit)
 local Weather = require(script.Parent.Weather)
 local Tree = require(script.Parent.Tree)
+local Season = require(script.Parent.Season)
 
 local Garden = {}
 
@@ -139,6 +140,7 @@ local function harvest(player: Player, tileIndex: number): boolean
 	d.plots[tostring(tileIndex)] = nil
 	syncTile(player, tileIndex)
 	Tree.add(cropId) -- みんなの木の成長ポイントになる
+	Season.addXp(player, Config.Season.xp.harvest[cropId] or 1) -- キャンディパスのXP
 	if sparkle then
 		Remotes.Toast:FireClient(player, "toast.sparkle")
 	end

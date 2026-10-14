@@ -127,6 +127,11 @@ Config.Cosmetics = {
 	{ id = "rainbowcape", slot = "back", icon = "🌈", price = 1800 },
 	{ id = "goldwings", slot = "back", icon = "🌟", pass = "gold" },
 	{ id = "ribbon", slot = "hat", icon = "🎀", codeOnly = true }, -- ログインコードでだけ手に入る
+	-- シーズンパスのごほうび（コインでは買えない）
+	{ id = "berryhat", slot = "hat", icon = "🍓", seasonOnly = true },
+	{ id = "lollipopback", slot = "back", icon = "🍭", seasonOnly = true },
+	{ id = "startrail", slot = "trail", icon = "🌟", seasonOnly = true },
+	{ id = "gemcrown", slot = "hat", icon = "💎", seasonOnly = true },
 	{ id = "sparkletrail", slot = "trail", icon = "✨", price = 300 },
 	{ id = "hearttrail", slot = "trail", icon = "💗", price = 700 },
 	{ id = "rainbowtrail", slot = "trail", icon = "🌈", price = 1500 },
@@ -141,6 +146,44 @@ end
 Config.Passes = {
 	coins2x = { id = 0, icon = "💰", multiplier = 2 }, -- 売値2倍（便利さ）
 	gold = { id = 0, icon = "🌟" }, -- ゴールドのつばさ（限定の見た目）
+	season = { id = 0, icon = "🎫" }, -- シーズンパスのスペシャルの道（中身は決まっている）
+}
+
+-- シーズンパス（キャンディパス）。収穫などで経験値(XP)がたまり、段に届くと自動でごほうびがもらえる。
+-- free=無料の道 / premium=スペシャルの道（Passes.season を持っている人）。中身は全て決まっていて、ランダムは無し。
+-- 数字は仮。遊んで調整する。
+Config.Season = {
+	id = "S1",
+	-- 終わり: 2026/12/31 23:59 日本時間（UTCで指定）
+	endsAt = DateTime.fromUniversalTime(2026, 12, 31, 14, 59, 0).UnixTimestamp,
+	xpPerTier = 150,
+	xp = {
+		harvest = { gummyberry = 2, peropero = 5, wataame = 12, nijimelon = 25, starcake = 50 },
+		daily = 30, -- デイリーボーナスを受け取った
+		tree = 20, -- みんなの木がレベルアップした（その場にいた全員）
+	},
+	tiers = {
+		{ free = { coins = 100 }, premium = { coins = 300 } },
+		{ free = { seeds = { gummyberry = 5 } }, premium = { seeds = { peropero = 3 } } },
+		{ free = { coins = 150 }, premium = { coins = 400 } },
+		{ free = { seeds = { peropero = 2 } }, premium = { cosmetic = "startrail" } },
+		{ free = { coins = 200 }, premium = { coins = 500 } },
+		{ free = { seeds = { peropero = 3 } }, premium = { seeds = { wataame = 2 } } },
+		{ free = { coins = 250 }, premium = { coins = 600 } },
+		{ free = { seeds = { wataame = 1 } }, premium = { seeds = { nijimelon = 1 } } },
+		{ free = { coins = 300 }, premium = { coins = 700 } },
+		{ free = { cosmetic = "berryhat" }, premium = { coins = 1000 } },
+		{ free = { coins = 350 }, premium = { coins = 800 } },
+		{ free = { seeds = { wataame = 2 } }, premium = { seeds = { nijimelon = 2 } } },
+		{ free = { coins = 400 }, premium = { coins = 900 } },
+		{ free = { seeds = { nijimelon = 1 } }, premium = { seeds = { starcake = 1 } } },
+		{ free = { coins = 500 }, premium = { coins = 1000 } },
+		{ free = { seeds = { wataame = 3 } }, premium = { seeds = { nijimelon = 2 } } },
+		{ free = { coins = 600 }, premium = { coins = 1200 } },
+		{ free = { seeds = { nijimelon = 2 } }, premium = { seeds = { starcake = 1 } } },
+		{ free = { coins = 800 }, premium = { coins = 1500 } },
+		{ free = { cosmetic = "lollipopback" }, premium = { cosmetic = "gemcrown" } },
+	},
 }
 
 -- デイリーボーナス。1日1回、ログインしたらもらえる。7日で一巡し、7日目がいちばん豪華。
