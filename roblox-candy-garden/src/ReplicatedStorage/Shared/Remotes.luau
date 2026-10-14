@@ -24,6 +24,7 @@ local NAMES = {
 	"BuyLimited",
 	"ClaimQuest",
 	"WelcomeBack",
+	"SetMusic",
 }
 
 local folder

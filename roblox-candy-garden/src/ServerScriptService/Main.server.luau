@@ -41,6 +41,14 @@ Remotes.Teleport.OnServerEvent:Connect(function(player, dest)
 		World.teleport(player, dest)
 	end
 end)
+-- BGMのオン/オフ。保存して、次に来たときも同じにする
+Remotes.SetMusic.OnServerEvent:Connect(function(player, on)
+	local d = Data.get(player)
+	if d and type(on) == "boolean" and RateLimit.ok(player, "music", 0.5) then
+		d.music = on
+		Data.saveSoon(player)
+	end
+end)
 Garden.startGrowthLoop()
 Data.startAutoSave()
 

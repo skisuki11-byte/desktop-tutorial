@@ -60,6 +60,7 @@ local function newData()
 		-- きょうのおねがい: progress・claimed は [tostring(slot)]（日が変わったらリセット）
 		quests = { day = 0, progress = {}, claimed = {} },
 		lastSeen = 0, -- 最後に保存した時刻（おかえりメッセージ用）
+		music = true, -- BGMを流すか（次に来たときも同じ設定にする）
 	}
 end
 
@@ -227,6 +228,7 @@ function Data.push(player: Player)
 		basketSparkle = d.basketSparkle,
 		selected = Data.selected(player),
 		tutorialDone = d.tutorialDone,
+		music = d.music,
 		plotId = player:GetAttribute("PlotId"),
 	})
 end

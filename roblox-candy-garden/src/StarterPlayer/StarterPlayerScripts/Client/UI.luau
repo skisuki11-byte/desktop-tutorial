@@ -18,6 +18,7 @@ local CodesUI = require(script.Parent.CodesUI)
 local SeasonUI = require(script.Parent.SeasonUI)
 local LimitedShopUI = require(script.Parent.LimitedShopUI)
 local QuestsUI = require(script.Parent.QuestsUI)
+local Sounds = require(script.Parent.Sounds)
 
 local UI = {}
 
@@ -76,6 +77,43 @@ local function buildCoinPill()
 		TextSize = 32,
 		TextWrapped = false,
 	}, coinPill)
+end
+
+-- 左の列（コイン・お天気・みんなの木）の下に、BGMのオン/オフ。
+-- 消したときは赤い斜め線（「🔇」はフォントに無いかもしれないので線で描く）
+local function buildMusicButton()
+	local button = Style.button({
+		Name = "Music",
+		Position = UDim2.fromOffset(20, 196), -- お天気(y80〜120)・みんなの木(y128〜186)の下
+		Size = UDim2.fromOffset(54, 54),
+		BackgroundColor3 = C.Surface,
+		Text = "🎵",
+		TextSize = 28,
+		TextColor3 = C.Text,
+	}, gui)
+	button:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0.5, 0)
+	local slash = Style.make("Frame", {
+		Name = "Off",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.new(0.9, 0, 0, 6),
+		Rotation = -45,
+		BackgroundColor3 = Color3.fromRGB(255, 80, 100),
+		BorderSizePixel = 0,
+		Visible = false,
+		ZIndex = 3,
+	}, button)
+	Style.round(slash, 3)
+	local function refresh()
+		slash.Visible = not Sounds.isMusicOn()
+	end
+	button.Activated:Connect(function()
+		local on = not Sounds.isMusicOn()
+		Sounds.setMusic(on)
+		Remotes.SetMusic:FireServer(on)
+		refresh()
+	end)
+	UI.refreshMusic = refresh
 end
 
 -- コインが増えたとき、ふわっと上がる「+N」
@@ -609,6 +647,7 @@ function UI.update(state)
 	local egg = Config.Eggs[1]
 	palsBadge.Visible = #(state.pets or {}) == 0 and coins >= egg.price
 	refreshSeedBar(state)
+	UI.refreshMusic()
 	PalsUI.update(state)
 	CosmeticsUI.update(state)
 	DailyUI.update(state)
@@ -628,6 +667,7 @@ function UI.init()
 	}, player:WaitForChild("PlayerGui"))
 
 	buildCoinPill()
+	buildMusicButton()
 	buildBottom()
 	buildShop()
 	local function closeAll()

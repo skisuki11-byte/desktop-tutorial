@@ -8,7 +8,13 @@ local Tutorial = require(script.Tutorial)
 local PalRenderer = require(script.PalRenderer)
 local WeatherClient = require(script.WeatherClient)
 local TreeClient = require(script.TreeClient)
+local Sounds = require(script.Sounds)
+local Style = require(script.Style)
 
+Sounds.init()
+Style.onTap = function()
+	Sounds.play("tap")
+end
 UI.init()
 Tutorial.init()
 PalRenderer.init()
@@ -18,13 +24,26 @@ TreeClient.init(UI)
 Remotes.Toast.OnClientEvent:Connect(function(key, ...)
 	if type(key) == "string" then
 		UI.toast(key, ...)
+		Sounds.toast(key)
 	end
 end)
 
 Remotes.EggResult.OnClientEvent:Connect(function(petId)
 	if type(petId) == "string" and Config.PetById[petId] then
 		UI.playHatch(petId)
+		Sounds.hatch()
 	end
+end)
+
+-- みんなの木のレベルアップ・パスの段・ログインコードは、和音でお祝い
+Remotes.TreeLevelUp.OnClientEvent:Connect(function()
+	Sounds.play("jingle")
+end)
+Remotes.SeasonReward.OnClientEvent:Connect(function()
+	Sounds.play("jingle")
+end)
+Remotes.CodeResult.OnClientEvent:Connect(function(status)
+	Sounds.play(status == "ok" and "jingle" or "nope")
 end)
 
 -- おかえりメッセージ（しばらくぶりに来たとき）。いない間に実った数を見せる
@@ -40,6 +59,7 @@ Remotes.WelcomeBack.OnClientEvent:Connect(function(readyCount)
 end)
 
 Remotes.State.OnClientEvent:Connect(function(state)
+	Sounds.onState(state) -- 先に呼ぶ（保存してあるBGMの設定を、UIの表示より先に反映する）
 	UI.update(state)
 	Tutorial.update(state)
 end)

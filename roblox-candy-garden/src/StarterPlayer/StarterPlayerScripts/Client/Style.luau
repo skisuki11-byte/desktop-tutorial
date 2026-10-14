@@ -165,7 +165,15 @@ local function pressFeedback(button: TextButton)
 	end
 	button.MouseButton1Up:Connect(release)
 	button.MouseLeave:Connect(release)
+	-- 押したら小さな音（Sounds が Style.onTap を入れる）
+	button.Activated:Connect(function()
+		if Style.onTap then
+			Style.onTap()
+		end
+	end)
 end
+
+Style.onTap = nil :: (() -> ())?
 
 -- 太い縁取りの押せるボタン。文字が明るい色なら文字にも縁取りを付ける
 function Style.button(props: { [string]: any }, parent: Instance?): TextButton
