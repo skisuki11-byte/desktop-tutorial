@@ -16,6 +16,8 @@ local Daily = require(Services.Daily)
 local Codes = require(Services.Codes)
 local Season = require(Services.Season)
 local LimitedShop = require(Services.LimitedShop)
+local Quests = require(Services.Quests)
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
 
 -- データ読込と庭の準備が終わってからキャラクターを出す
@@ -31,6 +33,7 @@ Daily.init()
 Codes.init()
 Season.init()
 LimitedShop.init()
+Quests.init()
 Weather.start()
 
 Remotes.Teleport.OnServerEvent:Connect(function(player, dest)
@@ -73,6 +76,13 @@ local function onPlayerAdded(player: Player)
 
 	Data.push(player)
 	spawnCharacter(player)
+
+	-- おかえりメッセージ: しばらくぶりに来た人に「いない間に ○こ 実ったよ」を見せる（翌日また来る理由）
+	-- （初めての人のチュートリアル中は出さない）
+	local d = Data.get(player)
+	if d and d.tutorialDone and Data.awaySeconds(player) >= Config.WelcomeBackSeconds then
+		Remotes.WelcomeBack:FireClient(player, Garden.readyCount(player))
+	end
 end
 
 local function onPlayerRemoving(player: Player)

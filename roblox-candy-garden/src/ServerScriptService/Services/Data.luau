@@ -47,6 +47,9 @@ local function newData()
 		season = { id = "", xp = 0, free = 0, premium = 0 },
 		-- 期間限定ショップ: その日に買った枠 [tostring(slot)] = true（日が変わったらリセット）
 		limited = { day = 0, bought = {} },
+		-- きょうのおねがい: progress・claimed は [tostring(slot)]（日が変わったらリセット）
+		quests = { day = 0, progress = {}, claimed = {} },
+		lastSeen = 0, -- 最後に保存した時刻（おかえりメッセージ用）
 	}
 end
 
@@ -86,7 +89,15 @@ function Data.load(player: Player)
 		warn("[Data] 保存は無効です（Studioで「Enable Studio Access to API Services」がオフ、またはDataStore障害）")
 	end
 	data = reconcile(type(data) == "table" and data or {})
-	profiles[player] = { data = data, runtime = { selected = nil }, canSave = canSave }
+	-- いなかった時間（前回の保存から今まで）。初めての人は 0
+	local away = data.lastSeen > 0 and math.max(0, os.time() - data.lastSeen) or 0
+	profiles[player] = { data = data, runtime = { selected = nil, awaySeconds = away }, canSave = canSave }
+end
+
+-- 前回からいなかった秒数（おかえりメッセージ用）
+function Data.awaySeconds(player: Player): number
+	local profile = profiles[player]
+	return profile and profile.runtime.awaySeconds or 0
 end
 
 function Data.get(player: Player)
@@ -99,6 +110,7 @@ function Data.save(player: Player)
 	if not profile or not profile.canSave or not store then
 		return
 	end
+	profile.data.lastSeen = os.time()
 	local ok, err = pcall(function()
 		store:SetAsync(key(player), profile.data)
 	end)
@@ -192,6 +204,7 @@ function Data.push(player: Player)
 		daily = extra.daily,
 		season = extra.season,
 		limited = extra.limited,
+		quests = extra.quests,
 		pets = d.pets,
 		equipped = d.equipped,
 		sellBonus = 1 + Data.petBonus(d),

@@ -8,6 +8,26 @@ local STRINGS = {
 		["crop.wataame"] = "わたあめブッシュ",
 		["crop.nijimelon"] = "にじメロン",
 		["crop.starcake"] = "スターケーキの木",
+		["crop.mooncandy"] = "ムーンキャンディ",
+		["dur.h"] = "%d時間",
+		["dur.m"] = "%d分",
+		["dur.s"] = "%d秒",
+		["ui.growTimeText"] = "育つ時間 %s",
+		["ui.questsShort"] = "おねがい",
+		["ui.quests"] = "きょうのおねがい",
+		["ui.questClaim"] = "もらう！",
+		["ui.questDone"] = "もらった",
+		["ui.questNext"] = "あしたも あたらしい おねがいが くるよ（あと %s）",
+		["quest.harvest"] = "%d こ しゅうかく しよう",
+		["quest.harvestCrop"] = "%s を %d こ しゅうかく",
+		["quest.plant"] = "たねを %d こ うえよう",
+		["quest.sell"] = "うって %d コイン かせごう",
+		["quest.sparkle"] = "きらきらを %d こ みつけよう",
+		["quest.egg"] = "たまごを %d こ かおう",
+		["toast.questDone"] = "📋 おねがい たっせい！ ごほうびを もらおう",
+		["ui.dailyTomorrow"] = "あしたは これ！",
+		["welcome.ready"] = "🌙 おかえり！ いない間に %d こ 実ったよ。しゅうかく しよう！",
+		["welcome.plain"] = "🌅 おかえり！ きょうも あそぼう",
 		["ui.shop"] = "ショップ",
 		["ui.sellAll"] = "ぜんぶ売る",
 		["ui.harvestAll"] = "ぜんぶ収穫",
@@ -152,6 +172,26 @@ local STRINGS = {
 		["crop.wataame"] = "Cotton Candy Bush",
 		["crop.nijimelon"] = "Rainbow Melon",
 		["crop.starcake"] = "Star Cake Tree",
+		["crop.mooncandy"] = "Moon Candy",
+		["dur.h"] = "%dh",
+		["dur.m"] = "%dm",
+		["dur.s"] = "%ds",
+		["ui.growTimeText"] = "Grows in %s",
+		["ui.questsShort"] = "Quests",
+		["ui.quests"] = "Today's Quests",
+		["ui.questClaim"] = "Claim!",
+		["ui.questDone"] = "Claimed",
+		["ui.questNext"] = "New quests come tomorrow (in %s)",
+		["quest.harvest"] = "Harvest %d crops",
+		["quest.harvestCrop"] = "Harvest %s x%d",
+		["quest.plant"] = "Plant %d seeds",
+		["quest.sell"] = "Earn %d coins by selling",
+		["quest.sparkle"] = "Find %d sparkle crop",
+		["quest.egg"] = "Buy %d egg",
+		["toast.questDone"] = "📋 Quest complete! Claim your reward",
+		["ui.dailyTomorrow"] = "Tomorrow!",
+		["welcome.ready"] = "🌙 Welcome back! %d crops grew while you were away. Harvest them!",
+		["welcome.plain"] = "🌅 Welcome back! Let's play today too",
 		["ui.shop"] = "Shop",
 		["ui.sellAll"] = "Sell All",
 		["ui.harvestAll"] = "Harvest All",
@@ -302,6 +342,16 @@ function I18n.language(): string
 		return "ja"
 	end
 	return "en"
+end
+
+-- 秒を「8時間」「3分」「20秒」のように読みやすくする
+function I18n.duration(seconds: number): string
+	if seconds >= 3600 and seconds % 3600 == 0 then
+		return I18n.t("dur.h", seconds // 3600)
+	elseif seconds >= 60 and seconds % 60 == 0 then
+		return I18n.t("dur.m", seconds // 60)
+	end
+	return I18n.t("dur.s", seconds)
 end
 
 function I18n.t(key: string, ...): string

@@ -47,7 +47,7 @@ end
 function CodesUI.build(gui: ScreenGui, onClose: () -> (), onOpen: () -> (), side: Frame)
 	local button = Style.navButton({
 		Name = "CodesButton",
-		LayoutOrder = 5,
+		LayoutOrder = 4,
 		Size = UDim2.fromOffset(76, 78),
 		BackgroundColor3 = Color3.fromRGB(150, 200, 255),
 		Icon = "🎟️",

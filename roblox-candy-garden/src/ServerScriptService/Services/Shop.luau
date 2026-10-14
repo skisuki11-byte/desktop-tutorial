@@ -8,6 +8,7 @@ local Data = require(script.Parent.Data)
 local Garden = require(script.Parent.Garden)
 local RateLimit = require(script.Parent.RateLimit)
 local Monetization = require(script.Parent.Monetization)
+local Quests = require(script.Parent.Quests)
 
 local Shop = {}
 
@@ -76,6 +77,7 @@ local function sellAll(player: Player)
 	d.tutorialDone = true
 	Remotes.Toast:FireClient(player, "toast.sold", total)
 	Data.push(player)
+	Quests.progress(player, "sell", total)
 	Data.saveSoon(player) -- 売却は、数秒以内に保存する
 end
 

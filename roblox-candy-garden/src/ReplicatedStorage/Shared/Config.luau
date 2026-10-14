@@ -1,4 +1,4 @@
--- ゲーム全体の数値設定。数字は仮。遊んで調整する。
+-- ゲーム全体の数値設定。数字は仮。遊んで調整する（遊んだ感想をもとに直していく）。
 local Config = {}
 
 Config.DataStoreName = "CandyGardenV1"
@@ -20,6 +20,8 @@ Config.Crops = {
 	{ id = "wataame", icon = "☁️", seedPrice = 250, growTime = 180, sellPrice = 600, color = Color3.fromRGB(176, 206, 255) },
 	{ id = "nijimelon", icon = "🍈", seedPrice = 1200, growTime = 480, sellPrice = 3200, color = Color3.fromRGB(120, 230, 170) },
 	{ id = "starcake", icon = "🍰", seedPrice = 6000, growTime = 1200, sellPrice = 18000, color = Color3.fromRGB(255, 214, 90) },
+	-- 寝る前に植えて、翌日に収穫する作物（8時間）。オフライン中も育つので「明日また来る理由」になる
+	{ id = "mooncandy", icon = "🌙", seedPrice = 2000, growTime = 28800, sellPrice = 20000, color = Color3.fromRGB(150, 140, 255) },
 }
 
 Config.CropById = {}
@@ -99,7 +101,7 @@ Config.Tree = {
 	RewardBase = 100, -- レベル1のごほうびコイン（全員）
 	RewardGrowth = 1.4,
 	MaxVisualLevel = 6, -- 見た目が大きくなるのはここまで（それ以降は数字だけ増える）
-	Points = { gummyberry = 1, peropero = 3, wataame = 8, nijimelon = 18, starcake = 40 },
+	Points = { gummyberry = 1, peropero = 3, wataame = 8, nijimelon = 18, starcake = 40, mooncandy = 30 },
 }
 
 function Config.treeGoal(level: number): number
@@ -190,6 +192,44 @@ function Config.limitedSelection(day: number): { number }
 	return picked
 end
 
+-- きょうのおねがい（デイリークエスト）。毎日 UTC 0時に、pool から3つ選ぶ。達成したら「もらう」でごほうび。
+-- kind: harvest=収穫した数 / harvestCrop=決まった作物の収穫数 / plant=植えた数 / sell=売って得たコイン / sparkle=きらきら / egg=たまご
+Config.Quests = {
+	count = 3,
+	pool = {
+		{ id = "harvest10", kind = "harvest", goal = 10, icon = "🧺", reward = { coins = 150, xp = 30 } },
+		{ id = "harvest25", kind = "harvest", goal = 25, icon = "🧺", reward = { coins = 400, xp = 50 } },
+		{ id = "plant8", kind = "plant", goal = 8, icon = "🌱", reward = { coins = 120, xp = 25 } },
+		{ id = "sell500", kind = "sell", goal = 500, icon = "💰", reward = { coins = 200, xp = 30 } },
+		{ id = "sell2000", kind = "sell", goal = 2000, icon = "💰", reward = { coins = 500, xp = 60 } },
+		{ id = "sparkle1", kind = "sparkle", goal = 1, icon = "✨", reward = { coins = 250, xp = 40 } },
+		{ id = "egg1", kind = "egg", goal = 1, icon = "🥚", reward = { coins = 150, xp = 30 } },
+		{ id = "peropero5", kind = "harvestCrop", crop = "peropero", goal = 5, icon = "🌸", reward = { coins = 300, xp = 40 } },
+	},
+}
+
+-- その日のおねがい（pool の番号の一覧）。日付だけで決まる（期間限定ショップとは別の並び）
+function Config.questSelection(day: number): { number }
+	local pool = Config.Quests.pool
+	local order = {}
+	for i = 1, #pool do
+		order[i] = i
+	end
+	local rng = Random.new(day * 104729 + 3)
+	for i = #order, 2, -1 do
+		local j = rng:NextInteger(1, i)
+		order[i], order[j] = order[j], order[i]
+	end
+	local picked = {}
+	for i = 1, math.min(Config.Quests.count, #order) do
+		picked[i] = order[i]
+	end
+	return picked
+end
+
+-- おかえりメッセージを出す、いなかった時間の下限（秒）
+Config.WelcomeBackSeconds = 600
+
 -- シーズンパス（キャンディパス）。収穫などで経験値(XP)がたまり、段に届くと自動でごほうびがもらえる。
 -- free=無料の道 / premium=スペシャルの道（Passes.season を持っている人）。中身は全て決まっていて、ランダムは無し。
 -- 数字は仮。遊んで調整する。
@@ -199,7 +239,7 @@ Config.Season = {
 	endsAt = DateTime.fromUniversalTime(2026, 12, 31, 14, 59, 0).UnixTimestamp,
 	xpPerTier = 150,
 	xp = {
-		harvest = { gummyberry = 2, peropero = 5, wataame = 12, nijimelon = 25, starcake = 50 },
+		harvest = { gummyberry = 2, peropero = 5, wataame = 12, nijimelon = 25, starcake = 50, mooncandy = 60 },
 		daily = 30, -- デイリーボーナスを受け取った
 		tree = 20, -- みんなの木がレベルアップした（その場にいた全員）
 	},

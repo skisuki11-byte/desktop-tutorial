@@ -27,6 +27,18 @@ Remotes.EggResult.OnClientEvent:Connect(function(petId)
 	end
 end)
 
+-- おかえりメッセージ（しばらくぶりに来たとき）。いない間に実った数を見せる
+Remotes.WelcomeBack.OnClientEvent:Connect(function(readyCount)
+	if type(readyCount) ~= "number" then
+		return
+	end
+	local I18n = require(ReplicatedStorage.Shared.I18n)
+	local text = readyCount > 0 and I18n.t("welcome.ready", readyCount) or I18n.t("welcome.plain")
+	task.delay(1.5, function() -- 画面が出そろってから
+		UI.toastText(text, 6)
+	end)
+end)
+
 Remotes.State.OnClientEvent:Connect(function(state)
 	UI.update(state)
 	Tutorial.update(state)

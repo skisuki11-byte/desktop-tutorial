@@ -90,6 +90,11 @@ local function refresh()
 	for i, reward in Config.Daily do
 		local done = (daily.canClaim and i < daily.index) or (not daily.canClaim and i <= daily.index)
 		local today = daily.canClaim and i == daily.index
+		-- 受け取ったあとは、あしたのごほうびを光らせて予告する（あしたも来る理由）
+		local tomorrow = not daily.canClaim and i == (daily.index % count) + 1
+		if tomorrow then
+			done = false
+		end
 		local big = i == count -- 最後の日（7日目）は大きく
 		-- 4列ぶんの幅: 1マス = (全体 - すきま3つ) / 4
 		local width = big and UDim2.new(0.5, -CARD_GAP / 2, 1, 0) or UDim2.new(0.25, -CARD_GAP * 3 / 4, 1, 0)
@@ -98,12 +103,13 @@ local function refresh()
 			LayoutOrder = i,
 			Size = width,
 			-- 「きょう」は淡いクリーム色（黄色いコインが背景にまぎれないように）
-			BackgroundColor3 = today and Color3.fromRGB(255, 247, 222)
+			BackgroundColor3 = (today or tomorrow) and Color3.fromRGB(255, 247, 222)
 				or (done and C.Mint or (big and Color3.fromRGB(255, 236, 246) or Color3.fromRGB(255, 255, 255))),
 			ZIndex = 12,
 		}, i <= 4 and rows[1] or rows[2])
 		Style.round(card, 18)
-		Style.stroke(card, today and C.Accent or (big and C.AccentDark or C.Outline), today and 6 or 4)
+		local strokeColor = today and C.Accent or (tomorrow and Color3.fromRGB(240, 170, 60) or (big and C.AccentDark or C.Outline))
+		Style.stroke(card, strokeColor, (today or tomorrow) and 6 or 4)
 		Style.label({
 			Position = UDim2.fromOffset(0, 4),
 			Size = UDim2.new(1, 0, 0, 24),
@@ -123,7 +129,8 @@ local function refresh()
 			TextSize = big and 22 or 16,
 			ZIndex = 13,
 		}, card)
-		local caption = today and t("ui.dailyToday") or (done and ("⭐ " .. t("ui.dailyClaimed")) or "")
+		local caption = today and t("ui.dailyToday")
+			or (tomorrow and t("ui.dailyTomorrow") or (done and ("⭐ " .. t("ui.dailyClaimed")) or ""))
 		if caption ~= "" then
 			Style.label({
 				AnchorPoint = Vector2.new(0.5, 1),
@@ -132,7 +139,7 @@ local function refresh()
 				Text = caption,
 				TextSize = 15,
 				TextWrapped = false,
-				TextColor3 = today and C.AccentDark or C.Text,
+				TextColor3 = (today or tomorrow) and C.AccentDark or C.Text,
 				ZIndex = 13,
 			}, card)
 		end
@@ -156,7 +163,7 @@ function DailyUI.build(gui: ScreenGui, onClose: () -> (), onOpen: () -> (), side
 	-- 右の列（移動スティックとジャンプボタンを避ける）
 	giftButton = Style.navButton({
 		Name = "DailyButton",
-		LayoutOrder = 4,
+		LayoutOrder = 3,
 		Size = UDim2.fromOffset(76, 78),
 		BackgroundColor3 = Color3.fromRGB(255, 170, 190),
 		Icon = "🎁",

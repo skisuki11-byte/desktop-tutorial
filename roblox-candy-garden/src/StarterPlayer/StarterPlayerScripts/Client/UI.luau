@@ -1,4 +1,4 @@
--- HUD・下の操作ドック・ショップ・トースト。すべてコードで生成する。
+-- HUD・下の操作ドック・上の移動ボタン・ショップ・トースト。すべてコードで生成する。
 -- 配置の方針（モバイルの親指とジャンプボタンを避ける）:
 --   左上: コインと状況 / 中央上: 案内 / 下の中央: 種えらび＋大きな操作ボタン（ドック）
 --   画面の左右の下すみは、Robloxの移動スティックとジャンプボタンの場所なので空けておく。
@@ -17,6 +17,7 @@ local DailyUI = require(script.Parent.DailyUI)
 local CodesUI = require(script.Parent.CodesUI)
 local SeasonUI = require(script.Parent.SeasonUI)
 local LimitedShopUI = require(script.Parent.LimitedShopUI)
+local QuestsUI = require(script.Parent.QuestsUI)
 
 local UI = {}
 
@@ -25,7 +26,7 @@ local t = I18n.t
 
 local gui
 local coinLabel, coinPill
-local seedBar, bottom, side
+local seedBar, bottom, side, travel
 local sellButton, harvestButton, shopButton, palsButton, styleButton
 local palsBadge
 local sellWiggling = false
@@ -195,8 +196,7 @@ local function buildBottom()
 	end)
 end
 
--- ---- 右の列: 移動ボタン（じぶんの庭・みんなの木）、ボーナス、コード ----
--- Grow a Garden 2 の「庭・売り場・店へ飛ぶボタン」と同じ考え方。迷子になっても1タップで戻れる。
+-- ---- 右の列: パス・おねがい・ボーナス・コード（各画面のモジュールがボタンを入れる） ----
 local function buildSide()
 	side = Style.make("Frame", {
 		Name = "Side",
@@ -212,24 +212,41 @@ local function buildSide()
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, side)
 	Style.make("UIScale", { Name = "FitScale" }, side)
+end
 
-	local function place(name: string, order: number, icon: string, caption: string, color: Color3, dest: string)
-		local button = Style.navButton({
+-- ---- 上のまん中: 移動ボタン（じぶんの庭・みんなの木） ----
+-- Grow a Garden 2 の「画面の上に並んだ、庭・売り場・店へ飛ぶボタン」と同じ配置。迷子になっても1タップで戻れる。
+local function buildTravel()
+	travel = Style.make("Frame", {
+		Name = "Travel",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 8),
+		Size = UDim2.fromOffset(0, 46),
+		AutomaticSize = Enum.AutomaticSize.X,
+		BackgroundTransparency = 1,
+	}, gui)
+	Style.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		Padding = UDim.new(0, 10),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, travel)
+	local function place(name: string, order: number, text: string, color: Color3, dest: string)
+		local button = Style.button({
 			Name = name,
 			LayoutOrder = order,
-			Size = UDim2.fromOffset(76, 78),
+			Size = UDim2.fromOffset(150, 46),
 			BackgroundColor3 = color,
-			Icon = icon,
-			IconSize = 32,
-			Caption = caption,
-			CaptionSize = 13,
-		}, side)
+			TextColor3 = C.Text,
+			Text = text,
+			TextSize = 18,
+			TextWrapped = false,
+		}, travel)
 		button.Activated:Connect(function()
 			Remotes.Teleport:FireServer(dest)
 		end)
 	end
-	place("GoHome", 1, "🏡", t("ui.home"), Color3.fromRGB(255, 226, 150), "home")
-	place("GoTree", 2, "🌳", t("ui.toTree"), C.Mint, "tree")
+	place("GoHome", 1, "🏡 " .. t("ui.home"), Color3.fromRGB(255, 226, 150), "home")
+	place("GoTree", 2, "🌳 " .. t("ui.toTree"), C.Mint, "tree")
 end
 
 local function refreshSeedBar(state)
@@ -369,7 +386,7 @@ local function buildShop()
 		Style.label({
 			Position = UDim2.fromOffset(78, 46),
 			Size = UDim2.new(1, -240, 0, 30),
-			Text = "⏱ " .. t("ui.growTime", crop.growTime) .. "  💰 " .. crop.sellPrice,
+			Text = "⏱ " .. t("ui.growTimeText", I18n.duration(crop.growTime)) .. "  💰 " .. Style.formatNumber(crop.sellPrice),
 			TextSize = 15,
 			TextColor3 = C.TextMuted,
 			TextXAlignment = Enum.TextXAlignment.Left,
@@ -398,7 +415,7 @@ local function buildToast()
 	toastLabel = Style.label({
 		Name = "Toast",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 92),
+		Position = UDim2.new(0.5, 0, 0, 120), -- 上の移動ボタンと案内バナーの下
 		Size = UDim2.fromOffset(0, 0),
 		-- 文の長さに合わせて広がり、画面幅の9割（fitBottomで設定）を超えたら折り返す
 		AutomaticSize = Enum.AutomaticSize.XY,
@@ -424,7 +441,8 @@ local function buildBanner()
 	banner = Style.make("Frame", {
 		Name = "TutorialBanner",
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 12),
+		Position = UDim2.new(0.5, 0, 0, 62), -- 上の移動ボタンの下
+		ZIndex = 5,
 		Size = UDim2.fromOffset(0, 0),
 		AutomaticSize = Enum.AutomaticSize.XY,
 		BackgroundColor3 = C.Accent,
@@ -457,7 +475,9 @@ function UI.showPanel(name: string?)
 	-- パネルを開いている間は、下と右の操作ボタンを隠して画面を広く使う
 	bottom.Visible = name == nil
 	side.Visible = name == nil
+	travel.Visible = name == nil
 	CodesUI.setVisible(name == "codes")
+	QuestsUI.setVisible(name == "quests")
 	SeasonUI.setVisible(name == "season")
 	local wasShop = shopPanel.Visible
 	shopPanel.Visible = name == "shop"
@@ -594,6 +614,7 @@ function UI.update(state)
 	DailyUI.update(state)
 	SeasonUI.update(state)
 	LimitedShopUI.update(state)
+	QuestsUI.update(state)
 end
 
 function UI.init()
@@ -615,6 +636,10 @@ function UI.init()
 	PalsUI.build(gui, closeAll)
 	CosmeticsUI.build(gui, closeAll)
 	buildSide()
+	buildTravel()
+	QuestsUI.build(gui, closeAll, function()
+		UI.showPanel("quests")
+	end, side)
 	DailyUI.build(gui, closeAll, function()
 		UI.showPanel("daily")
 	end, side)

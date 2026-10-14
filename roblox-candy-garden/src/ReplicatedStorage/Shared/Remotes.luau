@@ -22,6 +22,8 @@ local NAMES = {
 	"Teleport",
 	"SeasonReward",
 	"BuyLimited",
+	"ClaimQuest",
+	"WelcomeBack",
 }
 
 local folder

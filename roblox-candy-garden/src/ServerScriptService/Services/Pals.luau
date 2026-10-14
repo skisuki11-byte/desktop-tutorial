@@ -6,6 +6,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local Data = require(script.Parent.Data)
 local RateLimit = require(script.Parent.RateLimit)
+local Quests = require(script.Parent.Quests)
 
 local Pals = {}
 
@@ -86,6 +87,7 @@ local function buyEgg(player: Player, eggId: any)
 	Pals.refreshAttribute(player)
 	Data.push(player)
 	Remotes.EggResult:FireClient(player, petId)
+	Quests.progress(player, "egg", 1)
 	Data.saveSoon(player) -- 抽選結果は、すぐ(数秒以内に)保存する
 end
 

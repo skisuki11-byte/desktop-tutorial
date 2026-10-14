@@ -211,7 +211,7 @@ end
 function SeasonUI.build(gui: ScreenGui, onClose: () -> (), onOpen: () -> (), side: Frame)
 	button = Style.navButton({
 		Name = "SeasonButton",
-		LayoutOrder = 3,
+		LayoutOrder = 1,
 		Size = UDim2.fromOffset(76, 78),
 		BackgroundColor3 = HEADER_COLOR,
 		Icon = "🎫",

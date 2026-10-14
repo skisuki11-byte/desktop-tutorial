@@ -11,6 +11,7 @@ local RateLimit = require(script.Parent.RateLimit)
 local Weather = require(script.Parent.Weather)
 local Tree = require(script.Parent.Tree)
 local Season = require(script.Parent.Season)
+local Quests = require(script.Parent.Quests)
 
 local Garden = {}
 
@@ -141,6 +142,12 @@ local function harvest(player: Player, tileIndex: number): boolean
 	syncTile(player, tileIndex)
 	Tree.add(cropId) -- みんなの木の成長ポイントになる
 	Season.addXp(player, Config.Season.xp.harvest[cropId] or 1) -- キャンディパスのXP
+	-- きょうのおねがい
+	Quests.progress(player, "harvest", 1)
+	Quests.progress(player, "harvestCrop", 1, cropId)
+	if sparkle then
+		Quests.progress(player, "sparkle", 1)
+	end
 	if sparkle then
 		Remotes.Toast:FireClient(player, "toast.sparkle")
 	end
@@ -162,6 +169,7 @@ local function plant(player: Player, tileIndex: number)
 		d.seeds[cropId] = nil
 	end
 	d.plots[tostring(tileIndex)] = { crop = cropId, plantedAt = now() }
+	Quests.progress(player, "plant", 1)
 	syncTile(player, tileIndex)
 end
 
@@ -186,6 +194,21 @@ function Garden.interact(player: Player, tile: BasePart)
 		harvest(player, tileIndex)
 	end
 	Data.push(player)
+end
+
+-- 収穫できる（熟した）作物の数（おかえりメッセージ用）
+function Garden.readyCount(player: Player): number
+	local d = Data.get(player)
+	if not d then
+		return 0
+	end
+	local count = 0
+	for _, slot in d.plots do
+		if isReady(slot) then
+			count += 1
+		end
+	end
+	return count
 end
 
 function Garden.harvestAll(player: Player)
