@@ -142,6 +142,19 @@ Config.Passes = {
 	gold = { id = 0, icon = "🌟" }, -- ゴールドのつばさ（限定の見た目）
 }
 
+-- デイリーボーナス。1日1回、ログインしたらもらえる。7日で一巡し、7日目がいちばん豪華。
+-- 日付はサーバーのUTCの日付で数える。1日休んでも、1日目に戻らず1日だけ戻る（やさしい連続記録）。
+Config.Daily = {
+	{ coins = 100 }, -- 1日目
+	{ coins = 150 },
+	{ coins = 200, seeds = { peropero = 2 } }, -- 3日目: ペロペロフラワーの種
+	{ coins = 300 },
+	{ coins = 400, seeds = { wataame = 1 } }, -- 5日目: わたあめブッシュの種
+	{ coins = 600 },
+	{ coins = 1000, seeds = { nijimelon = 1 } }, -- 7日目: いちばん豪華（中身は決まっていて、ランダムではない）
+}
+Config.DailySecondsPerDay = 86400
+
 Config.PetById = {}
 for _, pet in Config.Pets do
 	Config.PetById[pet.id] = pet

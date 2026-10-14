@@ -12,6 +12,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Style = require(script.Parent.Style)
 local PalsUI = require(script.Parent.PalsUI)
 local CosmeticsUI = require(script.Parent.CosmeticsUI)
+local DailyUI = require(script.Parent.DailyUI)
 
 local UI = {}
 
@@ -360,6 +361,7 @@ function UI.showPanel(name: string?)
 	end
 	PalsUI.setVisible(name == "pals")
 	CosmeticsUI.setVisible(name == "style")
+	DailyUI.setVisible(name == "daily")
 end
 
 function UI.setShopVisible(visible: boolean)
@@ -462,6 +464,7 @@ function UI.update(state)
 	refreshSeedBar(state)
 	PalsUI.update(state)
 	CosmeticsUI.update(state)
+	DailyUI.update(state)
 end
 
 function UI.init()
@@ -482,6 +485,9 @@ function UI.init()
 	end
 	PalsUI.build(gui, closeAll)
 	CosmeticsUI.build(gui, closeAll)
+	DailyUI.build(gui, closeAll, function()
+		UI.showPanel("daily")
+	end)
 	buildToast()
 	buildBanner()
 

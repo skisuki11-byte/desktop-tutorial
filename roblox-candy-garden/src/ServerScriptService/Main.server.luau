@@ -12,6 +12,7 @@ local Weather = require(Services.Weather)
 local Tree = require(Services.Tree)
 local Monetization = require(Services.Monetization)
 local Cosmetics = require(Services.Cosmetics)
+local Daily = require(Services.Daily)
 
 -- データ読込と庭の準備が終わってからキャラクターを出す
 Players.CharacterAutoLoads = false
@@ -22,6 +23,7 @@ Shop.init()
 Pals.init()
 Monetization.init()
 Cosmetics.init()
+Daily.init()
 Weather.start()
 Garden.startGrowthLoop()
 Data.startAutoSave()

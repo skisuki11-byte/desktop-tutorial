@@ -40,6 +40,8 @@ local function newData()
 			owned = { bunnyears = true },
 			equipped = { hat = "bunnyears" },
 		},
+		-- デイリーボーナス: lastDay=最後にもらった日(UTCの日数) / streak=連続日数
+		daily = { lastDay = 0, streak = 0 },
 	}
 end
 
@@ -161,9 +163,9 @@ function Data.petBonus(d): number
 end
 
 -- ほかのサービス（ゲームパスなど）が、クライアントへ送る状態に項目を足せる
-local stateExtender: ((Player) -> { [string]: any })? = nil
-function Data.setStateExtender(fn: (Player) -> { [string]: any })
-	stateExtender = fn
+local stateExtenders: { (Player) -> { [string]: any } } = {}
+function Data.addStateExtender(fn: (Player) -> { [string]: any })
+	table.insert(stateExtenders, fn)
 end
 
 function Data.push(player: Player)
@@ -172,11 +174,17 @@ function Data.push(player: Player)
 		return
 	end
 	local d = profile.data
-	local extra = stateExtender and stateExtender(player) or {}
+	local extra = {}
+	for _, extend in stateExtenders do
+		for k, v in extend(player) do
+			extra[k] = v
+		end
+	end
 	Remotes.State:FireClient(player, {
 		cosmetics = d.cosmetics,
 		passes = extra.passes or {},
 		coinMultiplier = extra.coinMultiplier or 1,
+		daily = extra.daily,
 		pets = d.pets,
 		equipped = d.equipped,
 		sellBonus = 1 + Data.petBonus(d),

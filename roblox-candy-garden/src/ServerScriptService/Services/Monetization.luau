@@ -63,7 +63,7 @@ local function buyPass(player: Player, key: any)
 end
 
 function Monetization.init()
-	Data.setStateExtender(function(player)
+	Data.addStateExtender(function(player)
 		return { passes = owned[player] or {}, coinMultiplier = Monetization.coinMultiplier(player) }
 	end)
 	Remotes.BuyPass.OnServerEvent:Connect(buyPass)

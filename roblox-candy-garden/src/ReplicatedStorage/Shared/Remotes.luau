@@ -16,6 +16,7 @@ local NAMES = {
 	"BuyCosmetic",
 	"EquipCosmetic",
 	"BuyPass",
+	"ClaimDaily",
 }
 
 local folder
