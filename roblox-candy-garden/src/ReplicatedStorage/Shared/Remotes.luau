@@ -12,6 +12,7 @@ local NAMES = {
 	"BuyEgg",
 	"EquipPet",
 	"EggResult",
+	"TreeLevelUp",
 }
 
 local folder

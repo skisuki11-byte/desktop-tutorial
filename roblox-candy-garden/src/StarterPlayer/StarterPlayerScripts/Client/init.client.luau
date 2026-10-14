@@ -7,11 +7,13 @@ local UI = require(script.UI)
 local Tutorial = require(script.Tutorial)
 local PalRenderer = require(script.PalRenderer)
 local WeatherClient = require(script.WeatherClient)
+local TreeClient = require(script.TreeClient)
 
 UI.init()
 Tutorial.init()
 PalRenderer.init()
 WeatherClient.init(UI)
+TreeClient.init(UI)
 
 Remotes.Toast.OnClientEvent:Connect(function(key, ...)
 	if type(key) == "string" then

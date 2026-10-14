@@ -9,6 +9,7 @@ local Data = require(script.Parent.Data)
 local World = require(script.Parent.World)
 local RateLimit = require(script.Parent.RateLimit)
 local Weather = require(script.Parent.Weather)
+local Tree = require(script.Parent.Tree)
 
 local Garden = {}
 
@@ -133,9 +134,11 @@ local function harvest(player: Player, tileIndex: number): boolean
 	end
 	local sparkle = rng:NextNumber() < Weather.sparkleChance()
 	local bucket = sparkle and d.basketSparkle or d.basket
-	bucket[slot.crop] = (bucket[slot.crop] or 0) + 1
+	local cropId = slot.crop
+	bucket[cropId] = (bucket[cropId] or 0) + 1
 	d.plots[tostring(tileIndex)] = nil
 	syncTile(player, tileIndex)
+	Tree.add(cropId) -- みんなの木の成長ポイントになる
 	if sparkle then
 		Remotes.Toast:FireClient(player, "toast.sparkle")
 	end

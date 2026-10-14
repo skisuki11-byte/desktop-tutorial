@@ -9,11 +9,13 @@ local Shop = require(Services.Shop)
 local RateLimit = require(Services.RateLimit)
 local Pals = require(Services.Pals)
 local Weather = require(Services.Weather)
+local Tree = require(Services.Tree)
 
 -- データ読込と庭の準備が終わってからキャラクターを出す
 Players.CharacterAutoLoads = false
 
 World.build(Garden.interact)
+Tree.build()
 Shop.init()
 Pals.init()
 Weather.start()

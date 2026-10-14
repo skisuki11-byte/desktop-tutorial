@@ -57,6 +57,8 @@ local STRINGS = {
 		["weather.announce"] = "%s！ きらきらが出やすいよ",
 		["ui.weatherNow"] = "✨%d%%  あと%d秒",
 		["ui.weatherNext"] = "次の天気まで %s",
+		["ui.tree"] = "みんなの木",
+		["tree.levelUp"] = "🌳 みんなの木が Lv.%d に育った！ ぜんいんに +%d コイン",
 	},
 	en = {
 		["crop.gummyberry"] = "Gummy Berry",
@@ -113,6 +115,8 @@ local STRINGS = {
 		["weather.announce"] = "%s! Sparkles are more likely",
 		["ui.weatherNow"] = "✨%d%%  %ds left",
 		["ui.weatherNext"] = "Next weather in %s",
+		["ui.tree"] = "Community Tree",
+		["tree.levelUp"] = "🌳 The tree grew to Lv.%d! Everyone gets +%d coins",
 	},
 }
 

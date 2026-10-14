@@ -92,6 +92,24 @@ for _, w in Config.Weather.Types do
 	Config.WeatherById[w.id] = w
 end
 
+-- コミュニティの木。サーバー全員の収穫が成長ポイントになり、レベルが上がると全員にごほうび
+Config.Tree = {
+	BaseGoal = 20, -- レベル1に必要なポイント
+	GoalGrowth = 1.5, -- レベルごとに必要ポイントが増える倍率
+	RewardBase = 100, -- レベル1のごほうびコイン（全員）
+	RewardGrowth = 1.4,
+	MaxVisualLevel = 6, -- 見た目が大きくなるのはここまで（それ以降は数字だけ増える）
+	Points = { gummyberry = 1, peropero = 3, wataame = 8, nijimelon = 18, starcake = 40 },
+}
+
+function Config.treeGoal(level: number): number
+	return math.floor(Config.Tree.BaseGoal * Config.Tree.GoalGrowth ^ (level - 1) + 0.5)
+end
+
+function Config.treeReward(level: number): number
+	return math.floor(Config.Tree.RewardBase * Config.Tree.RewardGrowth ^ (level - 1))
+end
+
 Config.PetById = {}
 for _, pet in Config.Pets do
 	Config.PetById[pet.id] = pet

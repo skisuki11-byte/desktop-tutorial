@@ -181,7 +181,8 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 			ActionText = "",
 			ObjectText = "",
 			HoldDuration = 0,
-			MaxActivationDistance = 12,
+			-- タイルの間隔(9)より短くして、足元のタイルだけが選ばれるようにする
+			MaxActivationDistance = 7,
 			RequiresLineOfSight = false,
 			KeyboardKeyCode = Enum.KeyCode.E,
 			Enabled = true,
