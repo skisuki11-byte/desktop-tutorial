@@ -67,7 +67,8 @@ local function rebuild()
 		Shape = Enum.PartType.Cylinder,
 		Size = Vector3.new(trunkHeight, 3.2 * s, 3.2 * s),
 		CFrame = CFrame.new(0, trunkHeight / 2 + 0.4, 0) * CFrame.Angles(0, 0, math.pi / 2),
-		Color = Color3.fromRGB(176, 120, 96),
+		Color = Color3.fromRGB(160, 110, 84),
+		Material = Enum.Material.Wood, -- 木目の幹（リアルな質感）
 		CanCollide = true,
 	})
 	model.PrimaryPart = trunk
@@ -81,6 +82,7 @@ local function rebuild()
 		Size = Vector3.one * 13 * s,
 		Position = canopyCenter,
 		Color = CANOPY[1],
+		Material = Enum.Material.Fabric, -- ふわふわのわたあめ
 	})
 	for i = 1, 5 do
 		local angle = (i / 5) * math.pi * 2
@@ -90,6 +92,7 @@ local function rebuild()
 			Size = Vector3.one * 8 * s,
 			Position = canopyCenter + Vector3.new(math.cos(angle) * 5.5 * s, -1.5 * s, math.sin(angle) * 5.5 * s),
 			Color = CANOPY[(i % #CANOPY) + 1],
+			Material = Enum.Material.Fabric,
 		})
 	end
 

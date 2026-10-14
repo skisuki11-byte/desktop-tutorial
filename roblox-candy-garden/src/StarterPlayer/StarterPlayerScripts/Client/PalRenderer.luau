@@ -112,6 +112,21 @@ local function buildPet(cfg): (Model, number)
 		glow.Brightness = 1.5
 		glow.Parent = body
 	end
+	-- 質感: グミベアは本物のグミのように、つやつやで少し透ける。ほかの子は、つやのあるお菓子の質感
+	for _, p in model:GetChildren() do
+		if p:IsA("BasePart") and p.Name ~= "Eye" then
+			if cfg.id == "gummybear" then
+				-- ガラスの質感だと暗く出たので、明るい半透明＋つやにする（画面で確認して調整）
+				p.Transparency = 0.15
+				p.Reflectance = 0.08
+				p.Color = p.Color:Lerp(Color3.fromRGB(255, 255, 255), 0.15)
+			elseif p.Material == Enum.Material.SmoothPlastic then
+				p.Reflectance = 0.05
+			end
+		elseif p:IsA("BasePart") and p.Name == "Eye" then
+			p.Material = Enum.Material.Glass -- 目にきらっと光が入る
+		end
+	end
 	return model, size
 end
 

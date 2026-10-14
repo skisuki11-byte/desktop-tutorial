@@ -12,67 +12,54 @@ local Weather = require(script.Parent.Weather)
 local Tree = require(script.Parent.Tree)
 local Season = require(script.Parent.Season)
 local Quests = require(script.Parent.Quests)
+local CropModels = require(script.Parent.CropModels)
 
 local Garden = {}
 
-local STEM_COLOR = Color3.fromRGB(120, 205, 130)
 local rng = Random.new()
+
+-- 芽のあいだ（育ちはじめの割合）。そのあと作物の形になって、大きくなっていく
+local SPROUT_UNTIL = 0.2
 
 local function now(): number
 	return workspace:GetServerTimeNow()
 end
 
--- ---- 見た目（実と茎。育つほど大きくなる） ----
+-- ---- 見た目（芽 → 作物の形が大きくなる → 実ったらキラキラ） ----
 
-local function ensureVisual(tile: BasePart, cropCfg)
+local function ensureVisual(tile: BasePart, kind: string): (Model, boolean)
 	local visual = tile:FindFirstChild("Plant")
-	if visual then
-		return visual
+	if visual and visual:GetAttribute("Kind") ~= kind then
+		visual:Destroy()
+		visual = nil
 	end
-	visual = Instance.new("Model")
+	if visual then
+		return visual, false
+	end
+	visual = CropModels.build(kind)
 	visual.Name = "Plant"
-
-	local stem = Instance.new("Part")
-	stem.Name = "Stem"
-	stem.Shape = Enum.PartType.Cylinder
-	stem.Anchored = true
-	stem.CanCollide = false
-	stem.Material = Enum.Material.SmoothPlastic
-	stem.Color = STEM_COLOR
-	stem.Size = Vector3.new(1, 0.5, 0.5)
-	stem.Parent = visual
-
-	local fruit = Instance.new("Part")
-	fruit.Name = "Fruit"
-	fruit.Shape = Enum.PartType.Ball
-	fruit.Anchored = true
-	fruit.CanCollide = false
-	fruit.Material = Enum.Material.SmoothPlastic
-	fruit.Color = cropCfg.color
-	fruit.Size = Vector3.new(1, 1, 1)
-	fruit.Parent = visual
-
-	visual.PrimaryPart = fruit
+	visual:SetAttribute("Kind", kind)
+	-- 畑ごとに向きを少し変えて、並んだときに自然に見えるようにする
+	local yaw = (tile:GetAttribute("TileIndex") or 1) * 1.3
+	visual:PivotTo(tile.CFrame * CFrame.new(0, tile.Size.Y / 2, 0) * CFrame.Angles(0, yaw, 0))
 	visual.Parent = tile
-	return visual
+	return visual, true
 end
 
 local function renderTile(tile: BasePart, cropCfg, progress: number)
-	local visual = ensureVisual(tile, cropCfg)
-	local scale = 0.25 + 0.75 * progress
-	local stemHeight = 1.8 * scale
-	local diameter = 4.4 * scale
-	local topY = tile.Position.Y + tile.Size.Y / 2
-
-	local stem = visual.Stem
-	stem.Size = Vector3.new(stemHeight, 0.5, 0.5)
-	stem.CFrame = CFrame.new(tile.Position.X, topY + stemHeight / 2, tile.Position.Z) * CFrame.Angles(0, 0, math.pi / 2)
-
-	local fruit = visual.Fruit
-	fruit.Size = Vector3.new(diameter, diameter, diameter)
-	fruit.Position = Vector3.new(tile.Position.X, topY + stemHeight + diameter * 0.45, tile.Position.Z)
-	-- 熟したらネオンで光らせる（色だけに頼らない合図）
-	fruit.Material = progress >= 1 and Enum.Material.Neon or Enum.Material.SmoothPlastic
+	local sprout = progress < SPROUT_UNTIL
+	local visual, created = ensureVisual(tile, sprout and "sprout" or cropCfg.id)
+	local scale
+	if sprout then
+		scale = 0.7 + 1.3 * (progress / SPROUT_UNTIL)
+	else
+		scale = 0.45 + 0.55 * math.clamp((progress - SPROUT_UNTIL) / (1 - SPROUT_UNTIL), 0, 1)
+	end
+	-- 大きさが変わったときだけ ScaleTo（毎秒の通信を減らす）
+	if created or math.abs(visual:GetScale() - scale) > 0.01 then
+		visual:ScaleTo(scale)
+	end
+	CropModels.setReady(visual, progress >= 1)
 end
 
 -- profile.plots[i] の内容をタイルの属性と見た目に反映する
