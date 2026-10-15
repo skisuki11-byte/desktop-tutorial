@@ -65,7 +65,7 @@ local function buildEggCard(parent: Instance)
 	}, top)
 	Style.label({
 		Position = UDim2.fromOffset(72, 0),
-		Size = UDim2.new(1, -200, 1, 0),
+		Size = UDim2.new(0.62, -84, 1, 0), -- 買うボタンの左の残り幅（狭い画面では文字が小さくなる）
 		Text = t("egg." .. egg.id),
 		TextSize = 22,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -75,11 +75,12 @@ local function buildEggCard(parent: Instance)
 		Name = "BuyEgg",
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, 0, 0.5, 0),
-		Size = UDim2.fromOffset(150, 64),
+		Size = UDim2.new(0.38, 0, 0, 64), -- 画面の幅に合わせる（最大150）
 		Text = "🟡 " .. Style.formatNumber(egg.price),
 		TextSize = 22,
 		ZIndex = 12,
 	}, top)
+	Style.make("UISizeConstraint", { MaxSize = Vector2.new(150, 64) }, buy)
 	buy.Activated:Connect(function()
 		Remotes.BuyEgg:FireServer(egg.id)
 	end)

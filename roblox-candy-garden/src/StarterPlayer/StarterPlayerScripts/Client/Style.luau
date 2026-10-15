@@ -121,6 +121,29 @@ local function isLight(color: Color3): boolean
 	return (color.R * 0.299 + color.G * 0.587 + color.B * 0.114) > 0.8
 end
 
+-- 文字が枠に入りきらないときだけ、自動で小さくする（スマホの縦持ちなど、狭い画面で見切れないように）。
+-- 入るときは指定の大きさのまま。大きさが自動で変わる枠（AutomaticSize）は対象外
+function Style.fitText(obj: TextLabel | TextButton)
+	if obj.AutomaticSize ~= Enum.AutomaticSize.None then
+		return
+	end
+	local limit = obj:FindFirstChild("FitText")
+	if not limit then
+		limit = Style.make("UITextSizeConstraint", { Name = "FitText", MinTextSize = 9 }, obj)
+	end
+	limit.MaxTextSize = math.max(9, obj.TextSize)
+	obj.TextScaled = true
+end
+
+-- あとから文字の大きさを変えるとき用（fitText をかけた文字は TextSize では変わらないため）
+function Style.setTextSize(obj: TextLabel | TextButton, size: number)
+	obj.TextSize = size
+	local limit = obj:FindFirstChild("FitText")
+	if limit then
+		limit.MaxTextSize = math.max(9, size)
+	end
+end
+
 function Style.label(props: { [string]: any }, parent: Instance?): TextLabel
 	local base = {
 		BackgroundTransparency = 1,
@@ -136,6 +159,7 @@ function Style.label(props: { [string]: any }, parent: Instance?): TextLabel
 	if isLight(label.TextColor3) then
 		Style.textStroke(label)
 	end
+	Style.fitText(label)
 	return label
 end
 
@@ -196,6 +220,7 @@ function Style.button(props: { [string]: any }, parent: Instance?): TextButton
 	if isLight(button.TextColor3) then
 		Style.textStroke(button)
 	end
+	Style.fitText(button)
 	pressFeedback(button)
 	return button
 end
