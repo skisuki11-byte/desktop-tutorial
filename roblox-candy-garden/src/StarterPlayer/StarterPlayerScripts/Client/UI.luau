@@ -447,7 +447,7 @@ local function applyLayout(mode: string)
 	layoutMode = mode
 	compact = mode == "phone"
 	local size = gui.AbsoluteSize
-	portrait = compact and size.Y > size.X
+	portrait = compact and (size.Y > size.X or gui:GetAttribute("ForcePortrait") == true) -- ForcePortrait: Studioで試すとき用
 	local s = if compact then phoneScale() else 1
 	for i, button in { shopButton, harvestButton, sellButton } do
 		button.LayoutOrder = i
@@ -493,36 +493,67 @@ local function applyLayout(mode: string)
 		end
 	end
 
+	local seedLayout = seedBar:FindFirstChildOfClass("UIListLayout")
 	if compact then
 		local coinWidth = 210 * 0.62
 		Style.setScale(coinPill, 0.62)
 		coinPill.Position = UDim2.fromOffset(12, leftTop)
-		menuButton.Size = UDim2.fromOffset(56, 56)
-		Style.setScale(menuButton, s)
-		menuButton.Position = UDim2.fromOffset(12 + coinWidth + 6, leftTop - 2)
-		Style.setTextSize(menuButton.Caption, 11)
-		for _, bar in bars do
+		-- メニュー: スマホでは三本線だけ（小さいボタンに文字を入れると見切れるため）
+		menuButton.Size = UDim2.fromOffset(50, 50)
+		Style.setScale(menuButton, 1)
+		menuButton.Position = UDim2.fromOffset(12 + coinWidth + 6, leftTop - 6)
+		menuButton.Caption.Visible = false
+		for i, bar in bars do
 			bar.Size = UDim2.fromOffset(24, 4)
+			bar.Position = UDim2.new(0.5, 0, 0.3 + (i - 1) * 0.16, 0)
 		end
 		side.AnchorPoint = Vector2.new(0, 0)
 		side.Position = UDim2.fromOffset(12, leftTop + 50)
 		travel.AnchorPoint = Vector2.new(1, 0)
-		travel.Position = UDim2.new(1, -12, 0, leftTop - 2)
+		travel.Position = UDim2.new(1, -12, 0, leftTop - 6)
 		Style.setScale(travel, s)
-		-- 2段目: 左にお天気、右にみんなの木のレベル（右上）
-		local row2 = leftTop + 52
-		if weatherChip then
-			weatherChip.AnchorPoint = Vector2.new(0, 0)
-			weatherChip.Position = UDim2.fromOffset(12, row2)
-			Style.setScale(weatherChip, 0.72)
-		end
+		local travelWidth = (54 * 2 + 6) * s
 		if treeChip then
-			treeChip.AnchorPoint = Vector2.new(1, 0)
-			treeChip.Position = UDim2.new(1, -12, 0, row2)
-			Style.setScale(treeChip, 0.68)
+			Style.setScale(treeChip, 0.62)
 		end
-		-- 種えらび: 縦持ちは2段目の下、横持ちは上のまん中（左右の表示のあいだ）
-		topSeeds.Position = UDim2.new(0.5, 0, 0, if portrait then row2 + 46 else leftTop)
+		if portrait then
+			-- 縦持ち: 1段目 [コイン][メニュー] … [庭][木]
+			--         2段目 [種えらび] … [みんなの木のレベル]
+			--         3段目 [お天気]（お天気のときだけ）
+			local row2 = leftTop + 50
+			if treeChip then
+				treeChip.AnchorPoint = Vector2.new(1, 0)
+				treeChip.Position = UDim2.new(1, -12, 0, row2)
+			end
+			topSeeds.AnchorPoint = Vector2.new(0, 0)
+			topSeeds.Position = UDim2.fromOffset(12, row2)
+			seedBar.AnchorPoint = Vector2.new(0, 0)
+			seedBar.Position = UDim2.new()
+			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+			if weatherChip then
+				weatherChip.AnchorPoint = Vector2.new(0, 0)
+				weatherChip.Position = UDim2.fromOffset(12, row2 + 50)
+				Style.setScale(weatherChip, 0.72)
+			end
+		else
+			-- 横持ち: 1段目 [コイン][メニュー] … [種えらび] … [みんなの木のレベル][庭][木]
+			--         2段目 [お天気]（お天気のときだけ）
+			-- 右側の縦は、ショップ・収穫・売るのために空けておく
+			if treeChip then
+				treeChip.AnchorPoint = Vector2.new(1, 0)
+				treeChip.Position = UDim2.new(1, -12 - travelWidth - 8, 0, leftTop)
+			end
+			topSeeds.AnchorPoint = Vector2.new(0.5, 0)
+			topSeeds.Position = UDim2.new(0.5, 0, 0, leftTop - 4)
+			seedBar.AnchorPoint = Vector2.new(0.5, 0)
+			seedBar.Position = UDim2.fromScale(0.5, 0)
+			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+			if weatherChip then
+				weatherChip.AnchorPoint = Vector2.new(0, 0)
+				weatherChip.Position = UDim2.fromOffset(12, leftTop + 50)
+				Style.setScale(weatherChip, 0.72)
+			end
+		end
 		actionStack.AnchorPoint = Vector2.new(1, 1)
 		actionStack.Position = UDim2.new(1, -14, 1, -JUMP_RESERVE)
 	else
@@ -531,9 +562,11 @@ local function applyLayout(mode: string)
 		menuButton.Size = UDim2.fromOffset(76, 78)
 		Style.setScale(menuButton, 1)
 		menuButton.Position = UDim2.fromOffset(234, leftTop - 9)
+		menuButton.Caption.Visible = true
 		Style.setTextSize(menuButton.Caption, 13)
-		for _, bar in bars do
+		for i, bar in bars do
 			bar.Size = UDim2.fromOffset(32, 5)
+			bar.Position = UDim2.new(0.5, 0, 0.17 + (i - 1) * 0.13, 0)
 		end
 		side.AnchorPoint = Vector2.new(0, 0)
 		side.Position = UDim2.fromOffset(318, leftTop - 9)
@@ -551,12 +584,16 @@ local function applyLayout(mode: string)
 			treeChip.Position = UDim2.new(0.5, 170, 0, 2)
 			Style.setScale(treeChip, 0.85)
 		end
+		topSeeds.AnchorPoint = Vector2.new(0.5, 0)
 		topSeeds.Position = UDim2.new(0.5, 0, 0, 58)
+		seedBar.AnchorPoint = Vector2.new(0.5, 0)
+		seedBar.Position = UDim2.fromScale(0.5, 0)
+		seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		actionStack.AnchorPoint = Vector2.new(0, 0)
 		actionStack.Position = UDim2.fromOffset(16, leftTop + 72)
 	end
 	-- 案内とお知らせは、種えらびの下に
-	local bannerY = if compact then (if portrait then leftTop + 150 else leftTop + 60) else 130
+	local bannerY = if compact then (if portrait then leftTop + 104 else leftTop + 54) else 130
 	banner.Position = UDim2.new(0.5, 0, 0, bannerY)
 	toastLabel.Position = UDim2.new(0.5, 0, 0, bannerY + 60)
 	Style.setScale(banner, if compact then 0.8 else 1)
@@ -587,7 +624,7 @@ local function fitBottom()
 	local size = gui.AbsoluteSize
 	if actionStack and banner then
 		local mode = wantedMode()
-		local turned = compact and (size.Y > size.X) ~= portrait -- スマホの向きが変わった
+		local turned = compact and (size.Y > size.X or gui:GetAttribute("ForcePortrait") == true) ~= portrait -- スマホの向きが変わった
 		if mode ~= layoutMode or turned or (compact and size ~= lastSize) then
 			lastSize = size
 			applyLayout(mode)
@@ -597,7 +634,7 @@ local function fitBottom()
 	if actionStack then
 		-- 3つのボタン: スマホは画面に合わせて小さく（ジャンプボタンの上に収める）、パソコンはコインの下に収まる大きさ
 		if compact then
-			local room = (screenY - JUMP_RESERVE - (if portrait then 200 else 60)) / 214
+			local room = (screenY - JUMP_RESERVE - (if portrait then 200 else leftTop + 52)) / 214
 			Style.setScale(actionStack, math.clamp(math.min(phoneScale(), room), 0.55, 0.85))
 		else
 			Style.setScale(actionStack, math.clamp((screenY - leftTop - 72 - 12) / 214, 0.6, 1))
@@ -623,7 +660,10 @@ local function fitBottom()
 		end
 		local base = if compact then 0.6 else 0.85
 		-- 横持ちのスマホは、左右の表示のあいだ（画面の半分くらい）に収める
-		local room = if compact and not portrait then width * 0.5 else width - 24
+		-- スマホ縦持ち: レベル表示の左の残り幅 / 横持ち: コイン・メニューと、レベル・庭・木のあいだ
+		local room = if compact and portrait then width - 24 - 230 * 0.62 - 12
+			elseif compact then width - 2 * (12 + 230 * 0.62 + 8 + 114 * phoneScale() + 8)
+			else width - 24
 		Style.setScale(topSeeds, math.min(base, room / math.max(1, count * 82)))
 	end
 	-- メニューの一覧は、画面に収まる大きさに
