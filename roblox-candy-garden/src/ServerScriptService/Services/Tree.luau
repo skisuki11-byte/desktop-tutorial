@@ -1,7 +1,7 @@
 -- コミュニティの木。サーバー全員の収穫が成長ポイントになる協力要素。
 -- 奪い合いの代わりに、みんなで育てて、レベルが上がると全員にごほうびを出す。
 -- 状態は workspace の属性（TreeLevel / TreeProgress / TreeGoal）で全員に共有する。
--- 進み具合はサーバーごと（サーバーが閉じるとリセット）。
+-- 進み具合は全サーバー共通（下の「全サーバー共通の進み具合」）。サーバーが閉じても育ちは残る。
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -321,43 +321,181 @@ local function celebrate()
 	end)
 end
 
+-- ---- 全サーバー共通の進み具合 ----
+-- 木の育ち具合は「これまでに集まったポイントの合計（total）」1つの数だけで表す。レベルと進み具合は合計から計算する。
+--   ・集計: MemoryStore（全サーバーで共有する高速な記録）に、10秒ごとにまとめて足す。
+--           UpdateAsync で足すので、たくさんのサーバーが同時に書いても数が失われない
+--   ・保存: 1分ごとに DataStore（ずっと残る保存場所）にも控えを書く。MemoryStore は最長45日で消えるため
+--   ・Studio では本番と別の木を使う（プレイヤーデータと同じ考え方）
+local MemoryStoreService = game:GetService("MemoryStoreService")
+local DataStoreService = game:GetService("DataStoreService")
+local RunService = game:GetService("RunService")
+
+local STORE_NAME = "CandyTree" .. (if RunService:IsStudio() then "_Studio" else "")
+local TOTAL_KEY = "total"
+local MEMORY_TTL = 30 * 24 * 3600 -- 30日（MemoryStore の上限は45日）
+local SYNC_SECONDS = 10
+local SAVE_SECONDS = 60
+
+local total = 0 -- 全サーバーで集まった合計（最後に確かめた値）
+local pending = 0 -- このサーバーで集まって、まだ足していないポイント
+local shownLevel = 1 -- 画面に出している（お祝い済みの）レベル
+
+local memoryMap = nil
+local dataStore = nil
+pcall(function()
+	memoryMap = MemoryStoreService:GetSortedMap(STORE_NAME)
+end)
+pcall(function()
+	dataStore = DataStoreService:GetDataStore(STORE_NAME)
+end)
+
+-- 合計ポイントから、レベルと次のレベルまでの進み具合を出す
+local function fromTotal(points: number): (number, number)
+	local lv = 1
+	local rest = points
+	while rest >= Config.treeGoal(lv) and lv < 999 do
+		rest -= Config.treeGoal(lv)
+		lv += 1
+	end
+	return lv, rest
+end
+
+-- 合計（＋このサーバーのまだ足していない分）から表示を更新し、レベルが上がっていたらお祝いする
+local function refresh(celebrateLevelUp: boolean)
+	local lv, rest = fromTotal(total + pending)
+	level, progress = lv, rest
+	publish()
+	if lv > shownLevel then
+		local reward = Config.treeReward(lv - 1) -- 上がった最後のレベルのごほうび（まとめて上がっても多重取りにならない）
+		shownLevel = lv
+		rebuild()
+		if celebrateLevelUp then
+			for _, player in Players:GetPlayers() do
+				local d = Data.get(player)
+				if d then
+					d.coins += reward
+					Data.push(player)
+					Data.saveSoon(player)
+					Season.addXp(player, Config.Season.xp.tree)
+				end
+			end
+			celebrate()
+			Remotes.TreeLevelUp:FireAllClients(lv, reward)
+		end
+	end
+end
+
+-- 全サーバー共通の合計に、このサーバーの分を足す（足す物が無いときは、ほかのサーバーの進みを読むだけ）
+local function sync()
+	if not memoryMap then
+		return
+	end
+	local flush = pending
+	local ok, result = pcall(function()
+		if flush > 0 then
+			return memoryMap:UpdateAsync(TOTAL_KEY, function(old)
+				return (tonumber(old) or total) + flush
+			end, MEMORY_TTL)
+		end
+		return memoryMap:GetAsync(TOTAL_KEY)
+	end)
+	if ok then
+		pending -= flush
+		if type(result) == "number" then
+			total = math.max(total, result)
+		end
+	else
+		warn("[Tree] 共通の木を更新できませんでした（あとでもう一度）: " .. tostring(result))
+	end
+	refresh(true)
+end
+
+-- ずっと残る保存場所に控えを書く（大きい方を残すので、古い値で上書きしない）
+local function save()
+	if not dataStore then
+		return
+	end
+	local value = total
+	local ok, err = pcall(function()
+		dataStore:UpdateAsync(TOTAL_KEY, function(old)
+			return math.max(tonumber(old) or 0, value)
+		end)
+	end)
+	if not ok then
+		warn("[Tree] 木の控えを保存できませんでした: " .. tostring(err))
+	end
+end
+
+-- 起動時: 控え（DataStore）と共通の記録（MemoryStore）の大きい方から始める。お祝いはしない
+local function load()
+	local saved, live = 0, 0
+	if dataStore then
+		local ok, value = pcall(function()
+			return dataStore:GetAsync(TOTAL_KEY)
+		end)
+		if ok and type(value) == "number" then
+			saved = value
+		end
+	end
+	if memoryMap then
+		local ok, value = pcall(function()
+			return memoryMap:GetAsync(TOTAL_KEY)
+		end)
+		if ok and type(value) == "number" then
+			live = value
+		end
+		-- 共通の記録が消えていた（長いあいだ誰も来なかった）ときは、控えから戻す
+		if saved > live then
+			pcall(function()
+				memoryMap:UpdateAsync(TOTAL_KEY, function(old)
+					return math.max(tonumber(old) or 0, saved)
+				end, MEMORY_TTL)
+			end)
+		end
+	end
+	total = math.max(saved, live)
+	shownLevel = fromTotal(total)
+	refresh(false)
+	rebuild()
+end
+
 function Tree.build()
 	model = Instance.new("Model")
 	model.Name = "CommunityTree"
 	model.Parent = workspace
 	rebuild()
 	publish()
-end
-
--- 収穫のたびに呼ぶ。points は作物ごとの成長ポイント
-function Tree.add(cropId: string)
-	local points = Config.Tree.Points[cropId] or 1
-	progress += points
-
-	local reached = 0
-	local rewardTotal = 0
-	while progress >= Config.treeGoal(level) do
-		progress -= Config.treeGoal(level)
-		reached = level + 1
-		rewardTotal = Config.treeReward(level)
-		level += 1
-	end
-	publish()
-
-	if reached > 0 then
-		-- 上がった最後のレベルのごほうびを全員に配る（まとめて上がっても多重取りにならない）
-		for _, player in Players:GetPlayers() do
-			local d = Data.get(player)
-			if d then
-				d.coins += rewardTotal
-				Data.push(player)
-				Season.addXp(player, Config.Season.xp.tree)
+	task.spawn(function()
+		load()
+		local sinceSave = 0
+		while true do
+			task.wait(SYNC_SECONDS)
+			sync()
+			sinceSave += SYNC_SECONDS
+			if sinceSave >= SAVE_SECONDS then
+				sinceSave = 0
+				save()
 			end
 		end
-		rebuild()
-		celebrate()
-		Remotes.TreeLevelUp:FireAllClients(level, rewardTotal)
-	end
+	end)
+	-- サーバーが閉じるときは、残りを足して控えも書く
+	game:BindToClose(function()
+		sync()
+		save()
+	end)
+end
+
+-- 収穫のたびに呼ぶ。points は作物ごとの成長ポイント。
+-- 画面にはすぐ反映し（待たせない）、全サーバー共通の合計には10秒ごとにまとめて足す
+function Tree.add(cropId: string)
+	pending += Config.Tree.Points[cropId] or 1
+	refresh(true)
+end
+
+-- 今の木の合計ポイント（テスト・確認用）
+function Tree.total(): number
+	return total + pending
 end
 
 return Tree
