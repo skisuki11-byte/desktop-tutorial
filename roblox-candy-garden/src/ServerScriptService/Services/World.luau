@@ -401,7 +401,7 @@ end
 -- ---- 庭（Plot） ----
 
 -- 白い柵。前（広場がわ、-Z）のまん中は入口としてあける。
--- 当たり判定は無し（飾り）。どこからでも出入りできて、引っかからない
+-- ふだんは通り抜けられない。ジャンプすれば乗り越えられる高さ（3stud）にして、横からでも入れる
 local function buildFence(model: Model, origin: CFrame, color: Color3)
 	local fence = make("Folder", { Name = "Fence" }, model)
 	local halfX, halfZ = 15, 12
@@ -414,6 +414,17 @@ local function buildFence(model: Model, origin: CFrame, color: Color3)
 		local a = (origin * CFrame.new(x1, 0, z1)).Position
 		local b = (origin * CFrame.new(x2, 0, z2)).Position
 		local length = (b - a).Magnitude
+		-- 当たり判定は、見えない板1枚にまとめる（横木と柱のすき間に引っかからず、なめらかにぶつかる）
+		local wallMid = (a + b) / 2 + Vector3.new(0, 1 + 1.5, 0)
+		block({
+			Name = "FenceWall",
+			Size = Vector3.new(0.4, 3, length),
+			CFrame = CFrame.lookAt(wallMid, wallMid + (b - a)),
+			Transparency = 1,
+			CanCollide = true,
+			CanTouch = false,
+			CanQuery = false,
+		}, fence)
 		for _, y in { 1.9, 3.0 } do
 			local mid = (a + b) / 2 + Vector3.new(0, y, 0)
 			deco({
