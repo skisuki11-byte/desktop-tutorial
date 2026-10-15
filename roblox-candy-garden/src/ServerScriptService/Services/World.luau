@@ -400,13 +400,14 @@ end
 
 -- ---- 庭（Plot） ----
 
--- 白い柵。前（広場がわ、-Z）のまん中は入口としてあける
+-- 白い柵。前（広場がわ、-Z）のまん中は入口としてあける。
+-- 当たり判定は無し（飾り）。どこからでも出入りできて、引っかからない
 local function buildFence(model: Model, origin: CFrame, color: Color3)
 	local fence = make("Folder", { Name = "Fence" }, model)
 	local halfX, halfZ = 15, 12
 	local postHeight = 2.6
 	local function post(x: number, z: number)
-		pillar(fence, postHeight, 0.55, origin * CFrame.new(x, 1 + postHeight / 2, z), FENCE, nil, true)
+		pillar(fence, postHeight, 0.55, origin * CFrame.new(x, 1 + postHeight / 2, z), FENCE)
 		ball(fence, 0.75, (origin * CFrame.new(x, 1 + postHeight + 0.2, z)).Position, color) -- パステルの玉
 	end
 	local function rail(x1: number, z1: number, x2: number, z2: number)
@@ -419,7 +420,6 @@ local function buildFence(model: Model, origin: CFrame, color: Color3)
 				Size = Vector3.new(0.25, 0.3, length),
 				CFrame = CFrame.lookAt(mid, mid + (b - a)),
 				Color = FENCE,
-				CanCollide = true,
 			}, fence)
 		end
 	end
@@ -479,6 +479,7 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 			CFrame = origin * CFrame.new(x, 1.15, z),
 			Color = C(176, 126, 86),
 			Material = Enum.Material.Wood,
+			CanCollide = false, -- 畑の上を、段差に引っかからずに歩けるように
 		}, model)
 		local tile = block({
 			Name = "Tile_" .. i,
@@ -486,6 +487,7 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 			CFrame = origin * CFrame.new(x, 1.0 + TILE_SIZE.Y / 2 + 0.1, z),
 			Color = SOIL,
 			Material = Enum.Material.Ground,
+			CanCollide = false,
 		}, model)
 		tile:SetAttribute("IsTile", true)
 		tile:SetAttribute("TileIndex", i)

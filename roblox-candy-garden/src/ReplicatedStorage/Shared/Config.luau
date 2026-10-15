@@ -5,6 +5,11 @@ Config.DataStoreName = "CandyGardenV1"
 Config.AutoSaveSeconds = 60
 
 Config.StartCoins = 30
+
+-- キャラクターの動き。Robloxの標準は 歩く速さ16・ジャンプ7.2。
+-- 広い庭と広場を行き来するので、少し速く・少し高く跳べるようにして軽快にする
+Config.WalkSpeed = 24
+Config.JumpHeight = 8.5
 Config.StartSeeds = { gummyberry = 3 }
 
 Config.MaxPlots = 8 -- 同時に遊べる人数分の庭。StudioのMax Playersも8にする

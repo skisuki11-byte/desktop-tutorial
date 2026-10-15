@@ -1,6 +1,8 @@
 -- 起動。マップ生成 → Remote待ち受け → 参加者ごとにデータ読込・庭の割り当て。
 local Players = game:GetService("Players")
 
+local StarterPlayer = game:GetService("StarterPlayer")
+
 local Services = script.Parent.Services
 local Data = require(Services.Data)
 local World = require(Services.World)
@@ -52,6 +54,11 @@ end)
 Garden.startGrowthLoop()
 Data.startAutoSave()
 
+-- 最初に生まれるキャラクターにも同じ速さを使う
+StarterPlayer.CharacterWalkSpeed = Config.WalkSpeed
+StarterPlayer.CharacterUseJumpPower = false
+StarterPlayer.CharacterJumpHeight = Config.JumpHeight
+
 local function spawnCharacter(player: Player)
 	if player.Parent == Players then
 		player:LoadCharacter()
@@ -75,7 +82,11 @@ local function onPlayerAdded(player: Player)
 	Cosmetics.track(player)
 
 	player.CharacterAdded:Connect(function(character)
-		local humanoid = character:WaitForChild("Humanoid")
+		local humanoid = character:WaitForChild("Humanoid") :: Humanoid
+		-- 軽快に歩けるように（Config.WalkSpeed / JumpHeight）
+		humanoid.WalkSpeed = Config.WalkSpeed
+		humanoid.UseJumpPower = false
+		humanoid.JumpHeight = Config.JumpHeight
 		humanoid.Died:Connect(function()
 			task.wait(3)
 			spawnCharacter(player)
