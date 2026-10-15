@@ -1,11 +1,18 @@
 -- 畑の「植える」「収穫」の小さなボタン。Robloxの標準の大きな吹き出しは、スマホでは畑の真ん中をふさぐので、
--- 畑の上に浮かぶ小さな丸いボタンに置きかえる（ProximityPrompt の Style = Custom）。
+-- 畑の上に浮かぶ小さなボタンに置きかえる（ProximityPrompt の Style = Custom）。
+-- デザイン:
+--   ・左に白い丸の「絵」（植えるときは選んでいる種、収穫のときは実った作物）。何が起きるかが絵で分かる
+--   ・右に「植える」「収穫」の大きな文字だけ（文字は短く、絵と文字の大きさをそろえる）
+--   ・パソコンでは、角に小さな「E」のキー（押すキーを教える）
+--   ・ゆっくり上下に浮かんで、目に入りやすくする
 -- キーボードの E でも、これまでどおり動く。
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
+local Config = require(ReplicatedStorage.Shared.Config)
 local I18n = require(ReplicatedStorage.Shared.I18n)
 local Style = require(script.Parent.Style)
 
@@ -14,25 +21,36 @@ local PromptUI = {}
 local C = Style.Color
 local t = I18n.t
 
-local shown: { [ProximityPrompt]: { gui: BillboardGui, conn: RBXScriptConnection } } = {}
+local WIDTH, HEIGHT = 138, 50
 
-local function iconFor(prompt: ProximityPrompt): string
-	return if prompt.ActionText == t("prompt.harvest") then "🧺" else "🌱"
+local shown: { [ProximityPrompt]: { gui: BillboardGui, conns: { RBXScriptConnection }, tween: Tween } } = {}
+
+local function isHarvest(prompt: ProximityPrompt): boolean
+	return prompt.ActionText == t("prompt.harvest")
 end
 
-local function textFor(prompt: ProximityPrompt): string
-	local text = iconFor(prompt) .. " " .. prompt.ActionText
-	-- パソコンでは、押すキーも書く
-	if UserInputService.KeyboardEnabled and not UserInputService.TouchEnabled then
-		text = "[E] " .. text
+-- 絵: 収穫は畑の作物、植えるは選んでいる種（ObjectText に作物の名前が入っている）
+local function iconFor(prompt: ProximityPrompt): string
+	local tile = prompt.Parent
+	local crop = tile and tile:GetAttribute("Crop")
+	if isHarvest(prompt) and crop and Config.CropById[crop] then
+		return Config.CropById[crop].icon
 	end
-	return text
+	for _, c in Config.Crops do
+		if t("crop." .. c.id) == prompt.ObjectText then
+			return c.icon
+		end
+	end
+	return if isHarvest(prompt) then "🧺" else "🌱"
 end
 
 local function hide(prompt: ProximityPrompt)
 	local entry = shown[prompt]
 	if entry then
-		entry.conn:Disconnect()
+		for _, conn in entry.conns do
+			conn:Disconnect()
+		end
+		entry.tween:Cancel()
 		entry.gui:Destroy()
 		shown[prompt] = nil
 	end
@@ -44,35 +62,106 @@ local function show(prompt: ProximityPrompt)
 	if not (target and target:IsA("BasePart")) then
 		return
 	end
-	local harvest = prompt.ActionText == t("prompt.harvest")
 	local gui = Style.make("BillboardGui", {
 		Name = "PromptButton",
 		Adornee = target,
-		Size = UDim2.fromOffset(118, 44),
-		StudsOffset = Vector3.new(0, 3.2, 0),
+		Size = UDim2.fromOffset(WIDTH + 12, HEIGHT + 16), -- キーの印と影がはみ出す分の余白
+		StudsOffset = Vector3.new(0, 3, 0),
 		AlwaysOnTop = true,
 		Active = true,
 		ResetOnSpawn = false,
 	}, Players.LocalPlayer:WaitForChild("PlayerGui"))
+
 	local button = Style.button({
-		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = if harvest then C.Yellow else C.Mint,
-		TextColor3 = C.Text,
-		Text = textFor(prompt),
-		TextSize = 18,
-		TextWrapped = false,
+		Name = "Button",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(WIDTH, HEIGHT),
+		Text = "",
 	}, gui)
 	button:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0.5, 0)
-	Style.pop(button, 0.8)
+
+	-- 左の白い丸と絵
+	local badge = Style.make("Frame", {
+		Name = "IconBadge",
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 5, 0.5, 0),
+		Size = UDim2.fromOffset(HEIGHT - 10, HEIGHT - 10),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		ZIndex = 2,
+	}, button)
+	Style.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, badge)
+	Style.stroke(badge, C.Outline, 2)
+	local icon = Style.label({
+		Name = "Icon",
+		Size = UDim2.fromScale(1, 1),
+		TextSize = 24,
+		TextWrapped = false,
+		ZIndex = 3,
+	}, badge)
+
+	-- 右の文字（「植える」「収穫」だけ。短く大きく）
+	local label = Style.label({
+		Name = "Action",
+		Position = UDim2.fromOffset(HEIGHT, 0),
+		Size = UDim2.new(1, -HEIGHT - 10, 1, 0),
+		TextSize = 22,
+		TextWrapped = false,
+		ZIndex = 2,
+	}, button)
+
+	-- パソコン: 押すキー「E」を右上の角に
+	if UserInputService.KeyboardEnabled and not UserInputService.TouchEnabled then
+		local key = Style.make("Frame", {
+			Name = "Key",
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(1, -6, 0, 4),
+			Size = UDim2.fromOffset(24, 24),
+			BackgroundColor3 = C.Outline,
+			ZIndex = 4,
+		}, button)
+		Style.round(key, 7)
+		Style.stroke(key, Color3.fromRGB(255, 255, 255), 2)
+		Style.label({
+			Size = UDim2.fromScale(1, 1),
+			Text = "E",
+			TextSize = 15,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			TextWrapped = false,
+			ZIndex = 5,
+		}, key)
+	end
+
+	local function refresh()
+		local harvest = isHarvest(prompt)
+		button.BackgroundColor3 = if harvest then C.Yellow else C.Mint
+		label.Text = prompt.ActionText
+		icon.Text = iconFor(prompt)
+	end
+	refresh()
+	Style.pop(button, 0.7)
+
 	button.Activated:Connect(function()
 		prompt:InputHoldBegin()
 		prompt:InputHoldEnd()
 	end)
-	local conn = prompt:GetPropertyChangedSignal("ActionText"):Connect(function()
-		button.Text = textFor(prompt)
-		button.BackgroundColor3 = if prompt.ActionText == t("prompt.harvest") then C.Yellow else C.Mint
-	end)
-	shown[prompt] = { gui = gui, conn = conn }
+
+	-- ゆっくり上下に浮かぶ
+	local tween = TweenService:Create(
+		gui,
+		TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+		{ StudsOffset = Vector3.new(0, 3.35, 0) }
+	)
+	tween:Play()
+
+	shown[prompt] = {
+		gui = gui,
+		tween = tween,
+		conns = {
+			prompt:GetPropertyChangedSignal("ActionText"):Connect(refresh),
+			prompt:GetPropertyChangedSignal("ObjectText"):Connect(refresh),
+		},
+	}
 end
 
 function PromptUI.init()

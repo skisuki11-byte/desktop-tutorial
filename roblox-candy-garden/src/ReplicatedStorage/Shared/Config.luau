@@ -102,10 +102,14 @@ end
 -- コミュニティの木。サーバー全員の収穫が成長ポイントになり、レベルが上がると全員にごほうび
 Config.Tree = {
 	BaseGoal = 20, -- レベル1に必要なポイント
-	GoalGrowth = 1.5, -- レベルごとに必要ポイントが増える倍率
+	-- レベルごとに必要ポイントが増える倍率。1.25 だとレベル20まで合計 約6,800ポイント（みんなで数時間遊べば届く）。
+	-- 1.5 だと約88,000ポイントになり、レベル20の見た目に誰も届かなかった
+	GoalGrowth = 1.25,
 	RewardBase = 100, -- レベル1のごほうびコイン（全員）
-	RewardGrowth = 1.4,
-	MaxVisualLevel = 6, -- 見た目が大きくなるのはここまで（それ以降は数字だけ増える）
+	RewardGrowth = 1.2, -- レベル20で約3,200コイン
+	MaxVisualLevel = 10, -- 形が変わるのはレベル10まで。そのあとは色が変わる（Tree.Themes）
+	-- 色のテーマ: このレベルから切り替わる（パステル → 金色の夕焼け → 星空）
+	Themes = { { from = 1, id = "pastel" }, { from = 10, id = "golden" }, { from = 20, id = "galaxy" } },
 	Points = { gummyberry = 1, peropero = 3, wataame = 8, nijimelon = 18, starcake = 40, mooncandy = 30 },
 }
 
