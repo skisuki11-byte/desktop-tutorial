@@ -10,6 +10,7 @@ local WeatherClient = require(script.WeatherClient)
 local TreeClient = require(script.TreeClient)
 local Sounds = require(script.Sounds)
 local DayNight = require(script.DayNight)
+local PromptUI = require(script.PromptUI)
 local Style = require(script.Style)
 
 Sounds.init()
@@ -23,6 +24,7 @@ WeatherClient.init(UI)
 TreeClient.init(UI)
 UI.relayout()
 DayNight.init()
+PromptUI.init()
 
 Remotes.Toast.OnClientEvent:Connect(function(key, ...)
 	if type(key) == "string" then

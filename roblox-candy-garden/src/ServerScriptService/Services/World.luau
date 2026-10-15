@@ -503,6 +503,8 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 			RequiresLineOfSight = false,
 			KeyboardKeyCode = Enum.KeyCode.E,
 			Enabled = true,
+			-- 見た目はクライアントの小さなボタン（PromptUI）。標準の大きな吹き出しは畑をふさぐため使わない
+			Style = Enum.ProximityPromptStyle.Custom,
 		}, tile)
 		prompt.Triggered:Connect(function(player)
 			onTile(player, tile)
@@ -532,9 +534,10 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 		Color = C(170, 120, 84),
 		Material = Enum.Material.Wood,
 	}, model)
+	-- 大きさは stud 単位（遠くでは小さく見える）。画面の大きさで決めると、スマホでは近くで画面をふさぐため
 	local gui = make("BillboardGui", {
 		Name = "OwnerLabel",
-		Size = UDim2.fromOffset(260, 56),
+		Size = UDim2.fromScale(9, 2),
 		StudsOffset = Vector3.new(0, 4.2, 0),
 		AlwaysOnTop = false,
 		MaxDistance = 140,
@@ -544,10 +547,12 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 		BackgroundColor3 = C(255, 246, 251),
 		TextColor3 = C(74, 43, 92),
 		Font = Enum.Font.FredokaOne,
-		TextSize = 26,
+		TextScaled = true,
 		Text = "",
 		Visible = false,
 	}, gui)
+	make("UITextSizeConstraint", { MaxTextSize = 26 }, label)
+	make("UIPadding", { PaddingLeft = UDim.new(0.06, 0), PaddingRight = UDim.new(0.06, 0), PaddingTop = UDim.new(0.12, 0), PaddingBottom = UDim.new(0.12, 0) }, label)
 	make("UICorner", { CornerRadius = UDim.new(0, 18) }, label)
 	make("UIStroke", { Color = C(255, 111, 168), Thickness = 3 }, label)
 

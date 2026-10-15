@@ -40,9 +40,10 @@ local menuButton, menuBadge
 -- 画面の下（畑と足元）は何も置かずに広く見せる。種えらびは上のまん中（空のあたり）。
 -- よく使う3つ（ショップ・収穫・売る）は、パソコンでは左の列、スマホでは右手の親指の近く（ジャンプボタンの上）。
 -- スマホの左下は移動スティック専用に空けておく。
--- 配置の種類: "pc"（パソコン・タブレット）/ "landscape"（スマホ横持ち）/ "portrait"（スマホ縦持ち）
+-- 配置の種類: "pc"（パソコン・タブレット）/ "phone"（スマホ。縦持ち・横持ちとも同じ並び）
 local layoutMode = "pc"
-local compact = false -- スマホ（横・縦）のとき true
+local compact = false -- スマホのとき true
+local portrait = false -- スマホの縦持ち
 local actionStack, topSeeds
 local treeChipUntil = 0 -- みんなの木の表示を、この時刻まで出す（進んだときだけ少し見せる）
 
@@ -172,7 +173,7 @@ local function buildBottom()
 		Padding = UDim.new(0, 10),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, bottom)
-	Style.make("UIScale", { Name = "FitScale" }, bottom)
+	Style.setScale(bottom, 1)
 
 	seedBar = Style.make("Frame", {
 		Name = "SeedBar",
@@ -301,7 +302,7 @@ local function buildMenu()
 		FillDirectionMaxCells = 4,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, side)
-	Style.make("UIScale", { Name = "FitScale" }, side)
+	Style.setScale(side, 1)
 
 	local function item(name: string, order: number, icon: string, caption: string, color: Color3)
 		return Style.navButton({
@@ -420,7 +421,7 @@ local function buildCompactFrames()
 		FillDirectionMaxCells = 1,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, actionStack)
-	Style.make("UIScale", { Name = "FitScale" }, actionStack)
+	Style.setScale(actionStack, 1)
 
 	topSeeds = Style.make("Frame", {
 		Name = "TopSeeds",
@@ -430,13 +431,24 @@ local function buildCompactFrames()
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
 	}, gui)
-	Style.make("UIScale", { Name = "FitScale", Scale = 0.72 }, topSeeds)
+	Style.setScale(topSeeds, 0.72)
 end
 
--- 配置を切り替える（パソコン / スマホ横持ち / スマホ縦持ち）
+-- スマホでの大きさの倍率。画面の短い辺に合わせる（390pt ならおよそ0.75。指で押せる44pt以上は保つ）
+local function phoneScale(): number
+	local size = gui.AbsoluteSize
+	return math.clamp(math.min(size.X, size.Y) / 520, 0.62, 0.85)
+end
+
+-- 配置を切り替える（パソコン / スマホ）
+-- スマホは、上のはしに小さく1段（左: コイン・メニュー / 右: 庭・木）、その下に種えらび。
+-- よく使う3つ（ショップ・収穫・売る）は右手の親指の近く。左下は移動スティック、まん中は畑のために空ける。
 local function applyLayout(mode: string)
 	layoutMode = mode
-	compact = mode ~= "pc"
+	compact = mode == "phone"
+	local size = gui.AbsoluteSize
+	portrait = compact and size.Y > size.X
+	local s = if compact then phoneScale() else 1
 	for i, button in { shopButton, harvestButton, sellButton } do
 		button.LayoutOrder = i
 		button.Parent = actionStack
@@ -446,16 +458,12 @@ local function applyLayout(mode: string)
 	seedBar.Parent = topSeeds
 	seedBar.AnchorPoint = Vector2.new(0.5, 0)
 	seedBar.Position = UDim2.fromScale(0.5, 0)
-	topSeeds.FitScale.Scale = if compact then 0.72 else 0.85
-	leftTop = if compact then 12 else LEFT_TOP_PC
+	leftTop = if compact then 8 else LEFT_TOP_PC
 
-	local coinScale = coinPill:FindFirstChild("FitScale") or Style.make("UIScale", { Name = "FitScale" }, coinPill)
-	coinScale.Scale = if mode == "portrait" then 0.72 else 1
-	coinPill.Position = UDim2.fromOffset(if mode == "portrait" then 12 else 16, leftTop)
 	local sideGrid = side:FindFirstChildOfClass("UIGridLayout")
-	sideGrid.FillDirectionMaxCells = if mode == "portrait" then 3 else 4
+	sideGrid.FillDirectionMaxCells = if portrait then 3 else 4
 
-	-- 移動ボタン: 縦持ちでは絵だけの小さいボタンにして、右上に メニュー と並べる
+	-- 移動ボタン: スマホでは絵だけの小さいボタン
 	local travelLayout = travel:FindFirstChildOfClass("UIListLayout")
 	for _, button in travel:GetChildren() do
 		if button:IsA("TextButton") then
@@ -463,7 +471,7 @@ local function applyLayout(mode: string)
 				button:SetAttribute("FullText", button.Text)
 			end
 			local full = button:GetAttribute("FullText")
-			if mode == "portrait" then
+			if compact then
 				button.Text = string.match(full, "^(%S+)") or full -- 先頭の絵文字だけ
 				button.Size = UDim2.fromOffset(54, 54)
 				Style.setTextSize(button, 28)
@@ -474,113 +482,131 @@ local function applyLayout(mode: string)
 			end
 		end
 	end
-	travelLayout.Padding = UDim.new(0, if mode == "portrait" then 6 else 10)
+	travelLayout.Padding = UDim.new(0, if compact then 6 else 10)
 
 	local weatherChip = gui:FindFirstChild("WeatherChip")
 	local treeChip = gui:FindFirstChild("TreeChip")
-	local function chips(x: number, y1: number, y2: number)
-		if weatherChip then
-			weatherChip.Position = UDim2.fromOffset(x, y1)
-		end
-		if treeChip then
-			treeChip.Position = UDim2.fromOffset(x, y2)
+	local bars = {}
+	for _, bar in menuButton:GetChildren() do
+		if bar.Name == "Bar" then
+			table.insert(bars, bar)
 		end
 	end
-	local travelScale = travel:FindFirstChild("FitScale") or Style.make("UIScale", { Name = "FitScale" }, travel)
-	if mode == "portrait" then
-		-- スマホ縦持ち: 上の1段目に [コイン] … [庭][木][メニュー]、2段目に種えらび。3つのボタンはジャンプボタンの上
-		travel.AnchorPoint = Vector2.new(1, 0)
-		travel.Position = UDim2.new(1, -74, 0, 12)
-		travelScale.Scale = 1
+
+	if compact then
+		local coinWidth = 210 * 0.62
+		Style.setScale(coinPill, 0.62)
+		coinPill.Position = UDim2.fromOffset(12, leftTop)
 		menuButton.Size = UDim2.fromOffset(56, 56)
-		menuButton.Position = UDim2.new(1, -68, 0, 12)
-		for _, bar in menuButton:GetChildren() do
-			if bar.Name == "Bar" then
-				bar.Size = UDim2.fromOffset(24, 4)
-			end
-		end
+		Style.setScale(menuButton, s)
+		menuButton.Position = UDim2.fromOffset(12 + coinWidth + 6, leftTop - 2)
 		Style.setTextSize(menuButton.Caption, 11)
-		side.AnchorPoint = Vector2.new(1, 0)
-		side.Position = UDim2.new(1, -12, 0, 76)
-		topSeeds.Position = UDim2.new(0.5, 0, 0, 76)
-		actionStack.AnchorPoint = Vector2.new(1, 1)
-		actionStack.Position = UDim2.new(1, -14, 1, -JUMP_RESERVE)
-		chips(12, 140, 188)
-	else
-		travel.AnchorPoint = Vector2.new(0.5, 0)
-		travel.Position = UDim2.new(0.5, 0, 0, 8)
-		travelScale.Scale = if compact then 0.8 else 1
-		menuButton.Size = UDim2.fromOffset(76, 78)
-		Style.setTextSize(menuButton.Caption, 13)
-		for _, bar in menuButton:GetChildren() do
-			if bar.Name == "Bar" then
-				bar.Size = UDim2.fromOffset(32, 5)
-			end
+		for _, bar in bars do
+			bar.Size = UDim2.fromOffset(24, 4)
 		end
 		side.AnchorPoint = Vector2.new(0, 0)
-		topSeeds.Position = UDim2.new(0.5, 0, 0, 58)
-		if mode == "landscape" then
-			-- スマホ横持ち: 左上に コイン → メニュー → お天気 → みんなの木。3つのボタンはジャンプボタンの上
-			actionStack.AnchorPoint = Vector2.new(1, 1)
-			actionStack.Position = UDim2.new(1, -14, 1, -JUMP_RESERVE)
-			menuButton.Position = UDim2.fromOffset(16, leftTop + 68)
-			side.Position = UDim2.fromOffset(102, leftTop + 68)
-			chips(16, leftTop + 154, leftTop + 202)
-		else
-			-- パソコン: 左の列に [コイン][メニュー] → 下に3つのボタン（縦）。お天気・みんなの木はボタンの右
-			actionStack.AnchorPoint = Vector2.new(0, 0)
-			actionStack.Position = UDim2.fromOffset(16, leftTop + 72)
-			menuButton.Position = UDim2.fromOffset(234, leftTop - 9)
-			side.Position = UDim2.fromOffset(318, leftTop - 9)
-			chips(94, leftTop + 76, leftTop + 124)
+		side.Position = UDim2.fromOffset(12, leftTop + 50)
+		travel.AnchorPoint = Vector2.new(1, 0)
+		travel.Position = UDim2.new(1, -12, 0, leftTop - 2)
+		Style.setScale(travel, s)
+		-- 2段目: 左にお天気、右にみんなの木のレベル（右上）
+		local row2 = leftTop + 52
+		if weatherChip then
+			weatherChip.AnchorPoint = Vector2.new(0, 0)
+			weatherChip.Position = UDim2.fromOffset(12, row2)
+			Style.setScale(weatherChip, 0.72)
 		end
+		if treeChip then
+			treeChip.AnchorPoint = Vector2.new(1, 0)
+			treeChip.Position = UDim2.new(1, -12, 0, row2)
+			Style.setScale(treeChip, 0.68)
+		end
+		-- 種えらび: 縦持ちは2段目の下、横持ちは上のまん中（左右の表示のあいだ）
+		topSeeds.Position = UDim2.new(0.5, 0, 0, if portrait then row2 + 46 else leftTop)
+		actionStack.AnchorPoint = Vector2.new(1, 1)
+		actionStack.Position = UDim2.new(1, -14, 1, -JUMP_RESERVE)
+	else
+		Style.setScale(coinPill, 1)
+		coinPill.Position = UDim2.fromOffset(16, leftTop)
+		menuButton.Size = UDim2.fromOffset(76, 78)
+		Style.setScale(menuButton, 1)
+		menuButton.Position = UDim2.fromOffset(234, leftTop - 9)
+		Style.setTextSize(menuButton.Caption, 13)
+		for _, bar in bars do
+			bar.Size = UDim2.fromOffset(32, 5)
+		end
+		side.AnchorPoint = Vector2.new(0, 0)
+		side.Position = UDim2.fromOffset(318, leftTop - 9)
+		travel.AnchorPoint = Vector2.new(0.5, 0)
+		travel.Position = UDim2.new(0.5, 0, 0, 8)
+		Style.setScale(travel, 1)
+		if weatherChip then
+			weatherChip.AnchorPoint = Vector2.new(0, 0)
+			weatherChip.Position = UDim2.fromOffset(94, leftTop + 76)
+			Style.setScale(weatherChip, 1)
+		end
+		if treeChip then
+			-- みんなの木のレベルは、上の移動ボタンの右（右上より）
+			treeChip.AnchorPoint = Vector2.new(0, 0)
+			treeChip.Position = UDim2.new(0.5, 170, 0, 2)
+			Style.setScale(treeChip, 0.85)
+		end
+		topSeeds.Position = UDim2.new(0.5, 0, 0, 58)
+		actionStack.AnchorPoint = Vector2.new(0, 0)
+		actionStack.Position = UDim2.fromOffset(16, leftTop + 72)
 	end
-	-- 種えらびが上に来るので、案内とお知らせはその下に
-	local bannerY = if mode == "portrait" then 136 elseif mode == "landscape" then 116 else 130
+	-- 案内とお知らせは、種えらびの下に
+	local bannerY = if compact then (if portrait then leftTop + 150 else leftTop + 60) else 130
 	banner.Position = UDim2.new(0.5, 0, 0, bannerY)
 	toastLabel.Position = UDim2.new(0.5, 0, 0, bannerY + 60)
+	Style.setScale(banner, if compact then 0.8 else 1)
+	Style.setScale(toastLabel, if compact then 0.8 else 1)
 	UI.showPanel(UI.currentPanel)
 end
 
 local function wantedMode(): string
-	local forced = gui:GetAttribute("ForceLayout") -- Studioで試すとき用（"pc" / "landscape" / "portrait"）
-	if forced == "pc" or forced == "landscape" or forced == "portrait" then
+	local forced = gui:GetAttribute("ForceLayout") -- Studioで試すとき用（"pc" / "phone"）
+	if forced == "pc" or forced == "phone" then
 		return forced
 	end
 	local size = gui.AbsoluteSize
-	if UserInputService.TouchEnabled then
-		if size.Y > size.X and size.X < 600 then
-			return "portrait"
-		elseif size.Y < COMPACT_MAX_HEIGHT then
-			return "landscape"
-		end
+	if UserInputService.TouchEnabled and math.min(size.X, size.Y) < COMPACT_MAX_HEIGHT then
+		return "phone"
 	end
 	return "pc"
 end
 
--- 画面の大きさに合わせて、配置を選び、ボタンを縮める
+local lastSize = Vector2.zero
+-- 画面の大きさ・向きに合わせて、配置を選び、ボタンを縮める
 local function fitBottom()
 	local camera = workspace.CurrentCamera
 	if not camera or not bottom then
 		return
 	end
 	local view = camera.ViewportSize
+	local size = gui.AbsoluteSize
 	if actionStack and banner then
 		local mode = wantedMode()
-		if mode ~= layoutMode then
+		local turned = compact and (size.Y > size.X) ~= portrait -- スマホの向きが変わった
+		if mode ~= layoutMode or turned or (compact and size ~= lastSize) then
+			lastSize = size
 			applyLayout(mode)
 		end
 	end
-	local screenY = gui.AbsoluteSize.Y
+	local screenY = size.Y
 	if actionStack then
-		-- 3つのボタンは、スマホではジャンプボタンの上から、パソコンではコインの下から、画面に収まる大きさに
-		local room = if compact then screenY - JUMP_RESERVE - 50 else screenY - leftTop - 72 - 12
-		actionStack.FitScale.Scale = math.clamp(room / 214, 0.6, 1)
+		-- 3つのボタン: スマホは画面に合わせて小さく（ジャンプボタンの上に収める）、パソコンはコインの下に収まる大きさ
+		if compact then
+			local room = (screenY - JUMP_RESERVE - (if portrait then 200 else 60)) / 214
+			Style.setScale(actionStack, math.clamp(math.min(phoneScale(), room), 0.55, 0.85))
+		else
+			Style.setScale(actionStack, math.clamp((screenY - leftTop - 72 - 12) / 214, 0.6, 1))
+		end
 	end
 	local scale = math.min(1, (view.X - 24) / DOCK_WIDTH, (view.Y - 20) / 440)
-	bottom.FitScale.Scale = math.max(0.5, scale)
+	Style.setScale(bottom, math.max(0.5, scale))
 	-- お知らせと案内は、画面幅の9割まで（それ以上は折り返す）
-	local width = gui.AbsoluteSize.X
+	local width = size.X
 	if toastLabel then
 		toastLabel.MaxWidth.MaxSize = Vector2.new(math.max(200, width * 0.9), math.huge)
 	end
@@ -595,14 +621,16 @@ local function fitBottom()
 				count += 1
 			end
 		end
-		local base = if compact then 0.72 else 0.85
-		topSeeds.FitScale.Scale = math.min(base, (width - 24) / math.max(1, count * 82))
+		local base = if compact then 0.6 else 0.85
+		-- 横持ちのスマホは、左右の表示のあいだ（画面の半分くらい）に収める
+		local room = if compact and not portrait then width * 0.5 else width - 24
+		Style.setScale(topSeeds, math.min(base, room / math.max(1, count * 82)))
 	end
 	-- メニューの一覧は、画面に収まる大きさに
 	if side then
 		local byHeight = (screenY - leftTop - 90) / 200
-		local byWidth = (width - 24) / 290
-		side.FitScale.Scale = math.clamp(if layoutMode == "portrait" then byWidth else byHeight, 0.6, 1)
+		local byWidth = (width - 24) / (if portrait then 290 else 380)
+		Style.setScale(side, math.clamp(math.min(byHeight, byWidth), 0.55, 1))
 	end
 end
 
@@ -946,6 +974,8 @@ function UI.init()
 		camera:GetPropertyChangedSignal("ViewportSize"):Connect(fitBottom)
 	end
 	gui:GetAttributeChangedSignal("ForceLayout"):Connect(fitBottom)
+	-- スマホを回したとき（画面の向きが変わったとき）にも配置を合わせ直す
+	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitBottom)
 
 	-- みんなの木が進んだら、左の表示を少しのあいだ出す
 	for _, name in { "TreeProgress", "TreeLevel" } do

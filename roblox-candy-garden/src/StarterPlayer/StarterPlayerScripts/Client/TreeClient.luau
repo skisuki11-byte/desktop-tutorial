@@ -75,10 +75,10 @@ local function ensureSign(): Frame?
 	end
 	board = Style.make("BillboardGui", {
 		Name = "Sign",
-		Size = UDim2.fromOffset(240, 80),
+		-- 大きさは stud 単位（遠くでは小さく見える）。画面の大きさで決めると、スマホでは画面の上をふさぐため
+		Size = UDim2.fromScale(12, 4),
 		AlwaysOnTop = false,
 		MaxDistance = 110,
-		DistanceLowerLimit = 25, -- 近づきすぎたら小さく見えて視界をふさがない
 	}, anchor)
 	local frame = Style.make("Frame", {
 		Name = "Board",
@@ -88,16 +88,16 @@ local function ensureSign(): Frame?
 	Style.round(frame, 24)
 	Style.stroke(frame, C.Mint, 4)
 	Style.label({
-		Position = UDim2.fromOffset(0, 6),
-		Size = UDim2.new(1, 0, 0, 30),
+		Position = UDim2.fromScale(0, 0.06),
+		Size = UDim2.fromScale(1, 0.36),
 		Text = "🌳 " .. t("ui.tree"),
 		TextSize = 24,
 		TextWrapped = false,
 	}, frame)
 	Style.label({
 		Name = "Level",
-		Position = UDim2.fromOffset(14, 38),
-		Size = UDim2.new(0.5, 0, 0, 24),
+		Position = UDim2.fromScale(0.06, 0.46),
+		Size = UDim2.fromScale(0.44, 0.3),
 		Text = "",
 		TextSize = 20,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -106,15 +106,15 @@ local function ensureSign(): Frame?
 	Style.label({
 		Name = "Count",
 		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -14, 0, 38),
-		Size = UDim2.new(0.5, 0, 0, 24),
+		Position = UDim2.fromScale(0.94, 0.46),
+		Size = UDim2.fromScale(0.44, 0.3),
 		Text = "",
 		TextSize = 18,
 		TextColor3 = C.TextMuted,
 		TextXAlignment = Enum.TextXAlignment.Right,
 		TextWrapped = false,
 	}, frame)
-	bar(frame, UDim2.fromOffset(14, 66), UDim2.new(1, -28, 0, 14))
+	bar(frame, UDim2.fromScale(0.06, 0.8), UDim2.fromScale(0.88, 0.12))
 	return frame
 end
 

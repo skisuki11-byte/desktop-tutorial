@@ -14,12 +14,14 @@ end
 
 -- 時刻ごとの見た目。あいだの時刻は、前後をなめらかにまぜる
 local NIGHT = {
-	brightness = 1.1,
-	ambient = C(96, 88, 145),
-	outdoor = C(112, 104, 175),
-	atmosphere = C(140, 128, 196),
-	decay = C(82, 72, 145),
-	tint = 0.05,
+	-- 月の明るい夜。スマホの小さな画面でも畑と作物が見えるよう、かなり明るめにしている
+	brightness = 1.7,
+	ambient = C(132, 122, 178),
+	outdoor = C(150, 140, 200),
+	atmosphere = C(160, 148, 210),
+	decay = C(104, 92, 165),
+	tint = 0.08,
+	exposure = 0.45, -- 夜は少し露出を上げて、見やすくする
 }
 local SUNRISE = {
 	brightness = 1.9,
@@ -28,6 +30,7 @@ local SUNRISE = {
 	atmosphere = C(255, 204, 196),
 	decay = C(232, 165, 196),
 	tint = 0.02,
+	exposure = 0.1,
 }
 local DAY = {
 	brightness = 2.4,
@@ -36,14 +39,16 @@ local DAY = {
 	atmosphere = C(255, 222, 236),
 	decay = C(200, 178, 236),
 	tint = 0.01,
+	exposure = 0,
 }
 local SUNSET = {
-	brightness = 1.8,
+	brightness = 2.0,
 	ambient = C(150, 106, 118),
 	outdoor = C(186, 136, 152),
 	atmosphere = C(255, 184, 172),
 	decay = C(222, 142, 182),
 	tint = 0.02,
+	exposure = 0.15,
 }
 local KEYS = {
 	{ hour = 0, look = NIGHT },
@@ -64,6 +69,7 @@ local function mix(a, b, alpha: number)
 		atmosphere = a.atmosphere:Lerp(b.atmosphere, alpha),
 		decay = a.decay:Lerp(b.decay, alpha),
 		tint = a.tint + (b.tint - a.tint) * alpha,
+		exposure = a.exposure + (b.exposure - a.exposure) * alpha,
 	}
 end
 
@@ -97,6 +103,7 @@ local function apply(seconds: number)
 		Brightness = look.brightness,
 		Ambient = look.ambient,
 		OutdoorAmbient = look.outdoor,
+		ExposureCompensation = look.exposure,
 	}):Play()
 	local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
 	if atmosphere then

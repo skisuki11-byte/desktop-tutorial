@@ -164,28 +164,48 @@ function Style.label(props: { [string]: any }, parent: Instance?): TextLabel
 end
 
 -- 押したとき・変化したときの小さな弾み
-function Style.pop(target: GuiObject, amount: number?)
-	local scale = target:FindFirstChild("PopScale")
+-- 大きさの倍率は1つの UIScale（FitScale）にまとめる（UIScale が2つあると片方しか効かないため）。
+-- 「基本の倍率」は属性 Base に持ち、弾む動きはその倍率を中心に動かす
+local function scaleObj(target: GuiObject): UIScale
+	local scale = target:FindFirstChild("FitScale")
 	if not scale then
-		scale = Style.make("UIScale", { Name = "PopScale" }, target)
+		local old = target:FindFirstChild("PopScale")
+		if old then
+			old:Destroy()
+		end
+		scale = Style.make("UIScale", { Name = "FitScale" }, target)
+		scale:SetAttribute("Base", 1)
 	end
-	scale.Scale = amount or 1.12
-	TweenService:Create(scale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+	return scale
+end
+
+-- 画面の大きさに合わせた倍率を決める（弾む動きと両立する）
+function Style.setScale(target: GuiObject, value: number)
+	local scale = scaleObj(target)
+	scale:SetAttribute("Base", value)
+	scale.Scale = value
+end
+
+local function baseOf(scale: UIScale): number
+	return scale:GetAttribute("Base") or 1
+end
+
+-- 押したとき・変化したときの小さな弾み
+function Style.pop(target: GuiObject, amount: number?)
+	local scale = scaleObj(target)
+	local base = baseOf(scale)
+	scale.Scale = base * (amount or 1.12)
+	TweenService:Create(scale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = base }):Play()
 end
 
 local function pressFeedback(button: TextButton)
-	local function scale(): UIScale
-		local s = button:FindFirstChild("PopScale")
-		if not s then
-			s = Style.make("UIScale", { Name = "PopScale" }, button)
-		end
-		return s
-	end
 	button.MouseButton1Down:Connect(function()
-		TweenService:Create(scale(), TweenInfo.new(0.08), { Scale = 0.93 }):Play()
+		local scale = scaleObj(button)
+		TweenService:Create(scale, TweenInfo.new(0.08), { Scale = baseOf(scale) * 0.93 }):Play()
 	end)
 	local function release()
-		TweenService:Create(scale(), TweenInfo.new(0.18, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+		local scale = scaleObj(button)
+		TweenService:Create(scale, TweenInfo.new(0.18, Enum.EasingStyle.Back), { Scale = baseOf(scale) }):Play()
 	end
 	button.MouseButton1Up:Connect(release)
 	button.MouseLeave:Connect(release)
