@@ -91,6 +91,21 @@ local function buyEgg(player: Player, eggId: any)
 	Data.saveSoon(player) -- 抽選結果は、すぐ(数秒以内に)保存する
 end
 
+-- たまご以外でペットを渡す（ほしぞらのおくりもの など）。ペットの数が上限でも渡す
+function Pals.grant(player: Player, petId: string)
+	local d = Data.get(player)
+	if not d or not Config.PetById[petId] then
+		return
+	end
+	local uid = d.nextPetUid
+	d.nextPetUid += 1
+	table.insert(d.pets, { uid = uid, pet = petId })
+	if #d.equipped < Config.MaxEquipped then
+		table.insert(d.equipped, uid)
+	end
+	Pals.refreshAttribute(player)
+end
+
 local function equipPet(player: Player, uid: any)
 	if type(uid) ~= "number" or uid ~= uid then
 		return

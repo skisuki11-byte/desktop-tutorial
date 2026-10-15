@@ -61,6 +61,7 @@ local function newData()
 		quests = { day = 0, progress = {}, claimed = {} },
 		lastSeen = 0, -- 最後に保存した時刻（おかえりメッセージ用）
 		music = true, -- BGMを流すか（次に来たときも同じ設定にする）
+		starGift = false, -- ほしぞらのおくりものを受け取ったか
 	}
 end
 

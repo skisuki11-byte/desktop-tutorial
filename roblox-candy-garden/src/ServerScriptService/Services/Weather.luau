@@ -20,10 +20,12 @@ end
 function Weather.sparkleChance(): number
 	local id = workspace:GetAttribute("Weather")
 	local weather = id and Config.WeatherById[id]
-	if weather then
-		return weather.sparkleChance
+	local chance = if weather then weather.sparkleChance else Config.SparkleChance
+	-- ほしぞらまつりの間は、さらに出やすい
+	if (workspace:GetAttribute("StarFestivalEndsAt") or 0) > now() then
+		chance = math.min(0.9, chance + Config.StarGift.sparkleBonus)
 	end
-	return Config.SparkleChance
+	return chance
 end
 
 local function setTint(color: Color3)

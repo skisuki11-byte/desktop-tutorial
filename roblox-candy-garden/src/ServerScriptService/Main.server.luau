@@ -97,6 +97,7 @@ local function onPlayerAdded(player: Player)
 
 	Data.push(player)
 	spawnCharacter(player)
+	Tree.onPlayerReady(player) -- ほしぞらの木なら、おくりもの（1回だけ）
 
 	-- おかえりメッセージ: しばらくぶりに来た人に「いない間に ○こ 実ったよ」を見せる（翌日また来る理由）
 	-- （初めての人のチュートリアル中は出さない）

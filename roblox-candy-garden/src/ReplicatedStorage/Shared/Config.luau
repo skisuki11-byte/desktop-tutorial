@@ -40,13 +40,23 @@ end
 Config.MaxPets = 20
 Config.MaxEquipped = 3
 
--- rarity: 1=ふつう 2=めずらしい 3=レア 4=すごいレア 5=でんせつ / ears: 見た目の型
+-- rarity: 1=ふつう 2=めずらしい 3=レア 4=すごいレア 5=でんせつ 6=まもりがみ / ears: 見た目の型
+-- giftOnly: たまごからは出ない（ほしぞらのおくりものでだけ会える）
 Config.Pets = {
 	{ id = "gummybear", icon = "🐻", rarity = 1, bonus = 0.05, color = Color3.fromRGB(255, 120, 140), ears = "round" },
 	{ id = "lollibunny", icon = "🐰", rarity = 2, bonus = 0.10, color = Color3.fromRGB(255, 170, 215), ears = "long" },
 	{ id = "cottoncat", icon = "🐱", rarity = 3, bonus = 0.20, color = Color3.fromRGB(185, 215, 255), ears = "point" },
 	{ id = "rainbowunicorn", icon = "🦄", rarity = 4, bonus = 0.40, color = Color3.fromRGB(235, 200, 255), ears = "horn" },
 	{ id = "starcakedragon", icon = "🐉", rarity = 5, bonus = 1.00, color = Color3.fromRGB(255, 214, 90), ears = "wings" },
+	{
+		id = "starguardian",
+		icon = "🌠",
+		rarity = 6,
+		bonus = 0.50,
+		color = Color3.fromRGB(110, 100, 220),
+		ears = "guardian",
+		giftOnly = true,
+	},
 }
 
 -- weight の合計に対する割合が出る確率。画面にそのまま表示する
@@ -113,6 +123,17 @@ Config.Tree = {
 	Points = { gummyberry = 1, peropero = 3, wataame = 8, nijimelon = 18, starcake = 40, mooncandy = 30 },
 }
 
+-- ほしぞらのおくりもの: みんなの木がこのレベルになったら、全員に1回だけ。あとから来た人にも渡す
+-- （その場にいた人だけのごほうびにすると、子供が「見逃したくない」と遊び続けるよう追い立ててしまうため）
+Config.StarGift = {
+	level = 20,
+	coins = 10000,
+	cosmetics = { "starcrown", "starwings" },
+	pet = "starguardian", -- ほしぞらの まもりがみ
+	festivalSeconds = 24 * 3600, -- ほしぞらまつり（全サーバーで星が降り、きらきらが出やすい）
+	sparkleBonus = 0.25,
+}
+
 function Config.treeGoal(level: number): number
 	return math.floor(Config.Tree.BaseGoal * Config.Tree.GoalGrowth ^ (level - 1) + 0.5)
 end
@@ -148,6 +169,9 @@ Config.Cosmetics = {
 	{ id = "donutback", slot = "back", icon = "🍩", shopOnly = true },
 	{ id = "heartwings", slot = "back", icon = "💕", shopOnly = true },
 	{ id = "candytrail", slot = "trail", icon = "🍬", shopOnly = true },
+	-- ほしぞらの木（みんなの木 レベル20）のごほうびでだけ手に入る
+	{ id = "starcrown", slot = "hat", icon = "👑", starOnly = true },
+	{ id = "starwings", slot = "back", icon = "🌌", starOnly = true },
 	{ id = "sparkletrail", slot = "trail", icon = "✨", price = 300 },
 	{ id = "hearttrail", slot = "trail", icon = "💗", price = 700 },
 	{ id = "rainbowtrail", slot = "trail", icon = "🌈", price = 1500 },

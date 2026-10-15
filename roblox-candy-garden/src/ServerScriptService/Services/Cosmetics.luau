@@ -187,6 +187,39 @@ BUILD.gemcrown = function(m)
 	ball(m, 0.6, CFrame.new(0, 1.2, 0), C(255, 255, 255), Enum.Material.Neon)
 end
 
+-- ほしぞらのかんむり: 夜空色の輪に、光る星を5つ。まん中に大きな星
+BUILD.starcrown = function(m)
+	pillar(m, 0.5, 2.1, CFrame.new(0, 0.28, 0), C(70, 60, 160), Enum.Material.Neon)
+	pillar(m, 0.18, 2.15, CFrame.new(0, 0.55, 0), C(255, 230, 120), Enum.Material.Neon)
+	for i = 1, 5 do
+		local a = (i / 5) * math.pi * 2
+		ball(m, 0.42, CFrame.new(math.cos(a) * 0.9, 0.85, math.sin(a) * 0.9), C(200, 235, 255), Enum.Material.Neon)
+	end
+	part(m, {
+		Size = Vector3.new(0.75, 0.75, 0.75),
+		CFrame = CFrame.new(0, 1.25, 0) * CFrame.Angles(math.rad(45), 0, math.rad(45)),
+		Color = C(255, 240, 150),
+		Material = Enum.Material.Neon,
+	})
+	local glow = Instance.new("PointLight")
+	glow.Color = C(170, 200, 255)
+	glow.Range = 8
+	glow.Brightness = 1
+	glow.Parent = m:GetChildren()[1]
+end
+
+-- ほしぞらのつばさ: 夜空色の大きなはね。小さな星がちりばめてある
+BUILD.starwings = function(m)
+	for _, side in { -1, 1 } do
+		local base = CFrame.new(side * 1.7, 0.6, 0.7) * CFrame.Angles(0, side * math.rad(-22), side * math.rad(-12))
+		ellipsoid(m, Vector3.new(2.4, 1.5, 0.18), base * CFrame.new(side * 0.2, 0.45, 0), C(90, 80, 200), Enum.Material.Neon)
+		ellipsoid(m, Vector3.new(1.9, 1.1, 0.2), base * CFrame.new(side * 0.05, -0.55, 0), C(130, 90, 220), Enum.Material.Neon)
+		for k = 1, 4 do
+			ball(m, 0.22, base * CFrame.new(side * (k * 0.35 - 0.6), 0.3 + (k % 2) * 0.4, -0.12), C(255, 255, 255), Enum.Material.Neon)
+		end
+	end
+end
+
 BUILD.puddinghat = function(m)
 	-- プリン（下が広い円柱を2段）＋カラメル＋さくらんぼ
 	pillar(m, 0.7, 2.0, CFrame.new(0, 0.35, 0), C(255, 222, 120))
@@ -429,7 +462,7 @@ local function buy(player: Player, id: any)
 		return
 	end
 	-- パス限定・コード限定・シーズンパスのごほうびは、コインでは買えない
-	if item.pass or item.codeOnly or item.seasonOnly or item.shopOnly or type(item.price) ~= "number" then
+	if item.pass or item.codeOnly or item.seasonOnly or item.shopOnly or item.starOnly or type(item.price) ~= "number" then
 		return
 	end
 	if d.coins < item.price then

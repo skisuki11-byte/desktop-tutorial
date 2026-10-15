@@ -19,6 +19,7 @@ local RARITY_COLOR = {
 	Color3.fromRGB(120, 170, 255),
 	Color3.fromRGB(190, 130, 255),
 	Color3.fromRGB(255, 190, 40),
+	Color3.fromRGB(140, 160, 255), -- まもりがみ
 }
 
 local panel, scroll, grid, countLabel, bonusLabel, hatchOverlay

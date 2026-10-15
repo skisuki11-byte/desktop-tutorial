@@ -11,6 +11,7 @@ local TreeClient = require(script.TreeClient)
 local Sounds = require(script.Sounds)
 local DayNight = require(script.DayNight)
 local PromptUI = require(script.PromptUI)
+local StarGiftUI = require(script.StarGiftUI)
 local Style = require(script.Style)
 
 Sounds.init()
@@ -25,6 +26,7 @@ TreeClient.init(UI)
 UI.relayout()
 DayNight.init()
 PromptUI.init()
+StarGiftUI.init(UI)
 
 Remotes.Toast.OnClientEvent:Connect(function(key, ...)
 	if type(key) == "string" then

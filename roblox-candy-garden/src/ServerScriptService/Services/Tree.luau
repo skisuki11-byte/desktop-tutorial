@@ -10,6 +10,8 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local Data = require(script.Parent.Data)
 local Season = require(script.Parent.Season)
+local Cosmetics = require(script.Parent.Cosmetics)
+local Pals = require(script.Parent.Pals)
 
 local Tree = {}
 
@@ -337,6 +339,8 @@ local MEMORY_TTL = 30 * 24 * 3600 -- 30日（MemoryStore の上限は45日）
 local SYNC_SECONDS = 10
 local SAVE_SECONDS = 60
 
+local STAR_KEY = "starAt" -- ほしぞらの木になった時刻（全サーバー共通。ほしぞらまつりの始まり）
+local starAt = 0
 local total = 0 -- 全サーバーで集まった合計（最後に確かめた値）
 local pending = 0 -- このサーバーで集まって、まだ足していないポイント
 local shownLevel = 1 -- 画面に出している（お祝い済みの）レベル
@@ -359,6 +363,77 @@ local function fromTotal(points: number): (number, number)
 		lv += 1
 	end
 	return lv, rest
+end
+
+-- ---- ほしぞらのおくりもの（Config.StarGift） ----
+-- みんなの木がレベル20になったら、全員に1回だけ: 限定のおしゃれ・まもりがみのペット・コイン。
+-- あとから来た人にも、来たときに渡す（見逃しを作らない）
+local function giveStarGift(player: Player)
+	local d = Data.get(player)
+	if not d or d.starGift or level < Config.StarGift.level then
+		return
+	end
+	d.starGift = true
+	d.coins += Config.StarGift.coins
+	for _, id in Config.StarGift.cosmetics do
+		Cosmetics.grant(player, id)
+	end
+	Pals.grant(player, Config.StarGift.pet)
+	Data.push(player)
+	Data.saveSoon(player)
+	Remotes.StarGift:FireClient(player, Config.StarGift.level)
+end
+
+local function publishFestival()
+	workspace:SetAttribute("StarFestivalEndsAt", if starAt > 0 then starAt + Config.StarGift.festivalSeconds else 0)
+end
+
+-- ほしぞらの木になった時刻を、全サーバー共通の記録とずっと残る控えに書く（先に書かれていれば、そちらを使う）
+local function markStar()
+	if starAt > 0 then
+		return
+	end
+	starAt = os.time()
+	publishFestival()
+	task.spawn(function()
+		if memoryMap then
+			local ok, value = pcall(function()
+				return memoryMap:UpdateAsync(STAR_KEY, function(old)
+					return if tonumber(old) and tonumber(old) > 0 then old else starAt
+				end, MEMORY_TTL)
+			end)
+			if ok and type(value) == "number" then
+				starAt = value
+			end
+		end
+		if dataStore then
+			pcall(function()
+				dataStore:UpdateAsync(STAR_KEY, function(old)
+					return if tonumber(old) and tonumber(old) > 0 then old else starAt
+				end)
+			end)
+		end
+		publishFestival()
+	end)
+end
+
+-- ほかのサーバーが先にほしぞらの木にしていたら、その時刻を読む
+local function readStar()
+	if starAt > 0 then
+		return
+	end
+	for _, store in { memoryMap, dataStore } do
+		if store then
+			local ok, value = pcall(function()
+				return store:GetAsync(STAR_KEY)
+			end)
+			if ok and type(value) == "number" and value > 0 then
+				starAt = value
+				publishFestival()
+				return
+			end
+		end
+	end
 end
 
 -- 合計（＋このサーバーのまだ足していない分）から表示を更新し、レベルが上がっていたらお祝いする
@@ -384,6 +459,13 @@ local function refresh(celebrateLevelUp: boolean)
 			Remotes.TreeLevelUp:FireAllClients(lv, reward)
 		end
 	end
+	-- ほしぞらの木になった: まつりを始めて、ここにいる全員におくりもの
+	if lv >= Config.StarGift.level then
+		markStar()
+		for _, player in Players:GetPlayers() do
+			giveStarGift(player)
+		end
+	end
 end
 
 -- 全サーバー共通の合計に、このサーバーの分を足す（足す物が無いときは、ほかのサーバーの進みを読むだけ）
@@ -407,6 +489,9 @@ local function sync()
 		end
 	else
 		warn("[Tree] 共通の木を更新できませんでした（あとでもう一度）: " .. tostring(result))
+	end
+	if level >= Config.StarGift.level then
+		readStar()
 	end
 	refresh(true)
 end
@@ -456,6 +541,7 @@ local function load()
 	end
 	total = math.max(saved, live)
 	shownLevel = fromTotal(total)
+	readStar()
 	refresh(false)
 	rebuild()
 end
@@ -491,6 +577,15 @@ end
 function Tree.add(cropId: string)
 	pending += Config.Tree.Points[cropId] or 1
 	refresh(true)
+end
+
+-- 参加した人の準備ができたら呼ぶ。すでにほしぞらの木なら、おくりものを渡す
+function Tree.onPlayerReady(player: Player)
+	task.delay(3, function() -- 画面が出そろってから
+		if player.Parent == Players then
+			giveStarGift(player)
+		end
+	end)
 end
 
 -- 今の木の合計ポイント（テスト・確認用）

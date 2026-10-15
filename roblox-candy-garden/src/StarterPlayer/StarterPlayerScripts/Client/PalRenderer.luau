@@ -112,6 +112,58 @@ local function buildPet(cfg): (Model, number)
 		glow.Brightness = 1.5
 		glow.Parent = body
 	end
+	-- ほしぞらの まもりがみ: 夜空色の体に、頭の上の光の輪・おでこの星・大きなはね。自分で光る
+	if cfg.ears == "guardian" then
+		for i = 1, 10 do
+			local a = (i / 10) * math.pi * 2
+			local halo = part(
+				model,
+				"Halo",
+				ball,
+				Vector3.one * (size * 0.12),
+				CFrame.new(math.cos(a) * r * 0.55, r * 1.25, math.sin(a) * r * 0.55),
+				Color3.fromRGB(255, 240, 160)
+			)
+			halo.Material = Enum.Material.Neon
+		end
+		local star = part(
+			model,
+			"Star",
+			block,
+			Vector3.one * (size * 0.2),
+			CFrame.new(0, r * 0.62, -r * 0.82) * CFrame.Angles(math.rad(45), 0, math.rad(45)),
+			Color3.fromRGB(255, 245, 190)
+		)
+		star.Material = Enum.Material.Neon
+		for _, x in { -1, 1 } do
+			local wing = part(
+				model,
+				"Wing",
+				ball,
+				Vector3.new(size * 0.12, size * 0.95, size * 0.6),
+				CFrame.new(x * r * 1.15, r * 0.35, r * 0.25) * CFrame.Angles(0, 0, x * math.rad(-25)),
+				Color3.fromRGB(170, 200, 255)
+			)
+			wing.Material = Enum.Material.Neon
+			wing.Transparency = 0.25
+		end
+		local glow = Instance.new("PointLight")
+		glow.Color = Color3.fromRGB(160, 180, 255)
+		glow.Range = 14
+		glow.Brightness = 2
+		glow.Parent = body
+		local twinkle = Instance.new("ParticleEmitter")
+		twinkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+		twinkle.Rate = 8
+		twinkle.Lifetime = NumberRange.new(0.8, 1.4)
+		twinkle.Speed = NumberRange.new(0.5, 1.5)
+		twinkle.SpreadAngle = Vector2.new(180, 180)
+		twinkle.LightEmission = 1
+		twinkle.Size = NumberSequence.new(0.35, 0)
+		twinkle.Color = ColorSequence.new(Color3.fromRGB(200, 220, 255))
+		twinkle.Parent = body
+		body.Material = Enum.Material.Neon -- 夜空のように、ほんのり光る体
+	end
 	-- 質感: グミベアは本物のグミのように、つやつやで少し透ける。ほかの子は、つやのあるお菓子の質感
 	for _, p in model:GetChildren() do
 		if p:IsA("BasePart") and p.Name ~= "Eye" then
