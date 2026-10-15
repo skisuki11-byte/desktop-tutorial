@@ -60,6 +60,8 @@ StarterPlayer.CharacterUseJumpPower = false
 StarterPlayer.CharacterJumpHeight = Config.JumpHeight
 -- スマホの移動は、いつも左下に見えている固定のスティック（どこを触ればよいか、子供にも分かる）
 StarterPlayer.DevTouchMovementMode = Enum.DevTouchMovementMode.Thumbstick
+-- スマホの「ぶつかると自動でジャンプ」はオフ。柵などは、自分でジャンプボタンを押して越える
+StarterPlayer.AutoJumpEnabled = false
 
 local function spawnCharacter(player: Player)
 	if player.Parent == Players then
@@ -89,6 +91,7 @@ local function onPlayerAdded(player: Player)
 		humanoid.WalkSpeed = Config.WalkSpeed
 		humanoid.UseJumpPower = false
 		humanoid.JumpHeight = Config.JumpHeight
+		humanoid.AutoJumpEnabled = false
 		humanoid.Died:Connect(function()
 			task.wait(3)
 			spawnCharacter(player)
