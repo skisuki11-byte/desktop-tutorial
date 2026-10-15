@@ -58,6 +58,8 @@ Data.startAutoSave()
 StarterPlayer.CharacterWalkSpeed = Config.WalkSpeed
 StarterPlayer.CharacterUseJumpPower = false
 StarterPlayer.CharacterJumpHeight = Config.JumpHeight
+-- スマホの移動は、いつも左下に見えている固定のスティック（どこを触ればよいか、子供にも分かる）
+StarterPlayer.DevTouchMovementMode = Enum.DevTouchMovementMode.Thumbstick
 
 local function spawnCharacter(player: Player)
 	if player.Parent == Players then

@@ -97,6 +97,8 @@ local function refreshChip()
 	local id = workspace:GetAttribute("Weather")
 	local weather = id and Config.WeatherById[id]
 	local serverNow = workspace:GetServerTimeNow()
+	-- お天気の表示は、お天気の間だけ出す（ふだんの画面をすっきりさせる）
+	chip.Visible = weather ~= nil
 	if weather then
 		local left = (workspace:GetAttribute("WeatherEndsAt") or serverNow) - serverNow
 		chipLabel.Text = weather.icon

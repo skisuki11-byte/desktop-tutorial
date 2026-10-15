@@ -36,15 +36,20 @@ local toastLabel
 local bannerLabel, banner
 local lastCoins = nil
 local toastToken = 0
-local musicButton
--- スマホ（横持ちで画面が低い）用の配置。下のドックを左の2列に、種えらびを上のまん中に移して、
--- 画面の下（畑と足元）を広く見せる。Adopt Me! などと同じ「左に操作ボタン」の考え方。
+local menuButton, menuBadge
+-- 画面の下（畑と足元）は何も置かずに広く見せる。種えらびは上のまん中（空のあたり）。
+-- よく使う3つ（ショップ・収穫・売る）は、パソコンでは左の列、スマホでは右手の親指の近く（ジャンプボタンの上）。
+-- スマホの左下は移動スティック専用に空けておく。
 local compact = false
-local leftGrid, topSeeds
-local chipHome: { [string]: UDim2 } = {}
+local actionStack, topSeeds
+local treeChipUntil = 0 -- みんなの木の表示を、この時刻まで出す（進んだときだけ少し見せる）
 
 local COMPACT_MAX_HEIGHT = 600 -- これより低いタッチ画面をスマホとみなす
 local DOCK_WIDTH = 480 -- ドックの基準の幅。画面が狭いときは縮める
+-- パソコンでは、左上にRobloxのチャット欄が出る。左の列（コイン・メニュー）はその下から始める
+-- （スマホのチャットはボタンに畳まれているので、上から使える）
+local LEFT_TOP_PC = 196
+local leftTop = 12
 local JUMP_RESERVE = 100 -- タッチ端末で、右下のジャンプボタンのために空ける高さ
 
 local function basketValue(state): number
@@ -86,30 +91,30 @@ local function buildCoinPill()
 	}, coinPill)
 end
 
--- 左の列（コイン・お天気・みんなの木）の下に、BGMのオン/オフ。
+-- メニューの中の、BGMのオン/オフ（設定はふだん使わないので、メニューにしまう）。
 -- 消したときは赤い斜め線（「🔇」はフォントに無いかもしれないので線で描く）
 local function buildMusicButton()
-	local button = Style.button({
+	local button = Style.navButton({
 		Name = "Music",
-		Position = UDim2.fromOffset(20, 196), -- お天気(y80〜120)・みんなの木(y128〜186)の下
-		Size = UDim2.fromOffset(54, 54),
+		LayoutOrder = 8,
+		Size = UDim2.fromOffset(76, 78),
 		BackgroundColor3 = C.Surface,
-		Text = "🎵",
-		TextSize = 28,
-		TextColor3 = C.Text,
-	}, gui)
-	button:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0.5, 0)
+		Icon = "🎵",
+		IconSize = 32,
+		Caption = t("ui.music"),
+		CaptionSize = 13,
+	}, side)
 	local slash = Style.make("Frame", {
 		Name = "Off",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.new(0.9, 0, 0, 6),
+		Size = UDim2.new(0, 40, 0, 5),
 		Rotation = -45,
 		BackgroundColor3 = Color3.fromRGB(255, 80, 100),
 		BorderSizePixel = 0,
 		Visible = false,
 		ZIndex = 3,
-	}, button)
+	}, button.Icon)
 	Style.round(slash, 3)
 	local function refresh()
 		slash.Visible = not Sounds.isMusicOn()
@@ -121,13 +126,12 @@ local function buildMusicButton()
 		refresh()
 	end)
 	UI.refreshMusic = refresh
-	musicButton = button
 end
 
 -- コインが増えたとき、ふわっと上がる「+N」
 local function floatCoins(amount: number)
 	local label = Style.label({
-		Position = UDim2.new(0, 36, 0, 78),
+		Position = UDim2.new(0, 36, 0, leftTop + 66),
 		Size = UDim2.fromOffset(180, 40),
 		Text = "+" .. Style.formatNumber(amount) .. " 🟡",
 		TextSize = 30,
@@ -136,7 +140,7 @@ local function floatCoins(amount: number)
 		ZIndex = 25,
 	}, gui)
 	TweenService:Create(label, TweenInfo.new(1.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Position = UDim2.new(0, 36, 0, 40),
+		Position = UDim2.new(0, 36, 0, leftTop + 28),
 		TextTransparency = 1,
 	}):Play()
 	local stroke = label:FindFirstChild("TextStroke")
@@ -208,11 +212,10 @@ local function buildBottom()
 		}, dock)
 	end
 
+	-- いつも出すのは、毎回使う3つだけ（ペット・おしゃれ・パスなどは「メニュー」にしまう）
 	shopButton = nav("Shop", 1, "🛒", t("ui.shop"), C.Mint)
-	palsButton = nav("Pals", 2, "🐾", t("ui.pals"), C.Lilac)
-	styleButton = nav("Style", 3, "👗", t("ui.style"), Color3.fromRGB(255, 190, 220))
-	harvestButton = nav("HarvestAll", 4, "🧺", t("ui.harvest"), C.Yellow)
-	sellButton = nav("SellAll", 5, "💰", t("ui.sell"), C.Accent, 132)
+	harvestButton = nav("HarvestAll", 2, "🧺", t("ui.harvest"), C.Yellow)
+	sellButton = nav("SellAll", 3, "💰", t("ui.sell"), C.Accent, 132)
 	-- 売るボタンは主役。文字は白＋縁取り
 	sellButton.Caption.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Style.textStroke(sellButton.Caption)
@@ -228,12 +231,6 @@ local function buildBottom()
 	shopButton.Activated:Connect(function()
 		toggle("shop", shopPanel.Visible)
 	end)
-	palsButton.Activated:Connect(function()
-		toggle("pals", PalsUI.isVisible())
-	end)
-	styleButton.Activated:Connect(function()
-		toggle("style", CosmeticsUI.isVisible())
-	end)
 	harvestButton.Activated:Connect(function()
 		Remotes.HarvestAll:FireServer()
 	end)
@@ -242,22 +239,91 @@ local function buildBottom()
 	end)
 end
 
--- ---- 右の列: パス・おねがい・ボーナス・コード（各画面のモジュールがボタンを入れる） ----
-local function buildSide()
+-- ---- 左上の「メニュー」: ふだん使わないもの（ペット・おしゃれ・パス・おねがい・ボーナス・コード・音楽）をしまう ----
+-- 選べる物が少ないほど早く選べる（ヒックの法則）。よく使う物だけを常に出し、残りは必要なときに開く（段階的な表示）。
+-- 受け取れる物があるときは、メニューのボタンに「!」を出して、しまっていても気づけるようにする。
+local function setMenuOpen(open: boolean)
+	side.Visible = open
+	menuButton.BackgroundColor3 = open and C.Accent or C.Lilac
+	if open then
+		Style.pop(side, 0.9)
+	end
+end
+
+local function buildMenu()
+	menuButton = Style.navButton({
+		Name = "Menu",
+		Position = UDim2.fromOffset(16, 80), -- コインのすぐ下
+		Size = UDim2.fromOffset(76, 78),
+		BackgroundColor3 = C.Lilac,
+		Icon = "",
+		Caption = t("ui.menu"),
+		CaptionSize = 13,
+	}, gui)
+	-- 三本線のアイコン（「☰」はフォントに無いかもしれないので線で描く）
+	for i = 0, 2 do
+		local bar = Style.make("Frame", {
+			Name = "Bar",
+			AnchorPoint = Vector2.new(0.5, 0),
+			Position = UDim2.new(0.5, 0, 0, 14 + i * 10),
+			Size = UDim2.fromOffset(32, 5),
+			BackgroundColor3 = C.Text,
+			BorderSizePixel = 0,
+		}, menuButton)
+		Style.round(bar, 3)
+	end
+	menuBadge = Style.badge(menuButton)
+
+	-- 開いたときに出る、ボタンの一覧（メニューの右に出る）
 	side = Style.make("Frame", {
 		Name = "Side",
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -14, 0.45, 0),
-		Size = UDim2.fromOffset(76, 0),
-		AutomaticSize = Enum.AutomaticSize.Y,
-		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(102, 80),
+		Size = UDim2.fromOffset(0, 0),
+		AutomaticSize = Enum.AutomaticSize.XY,
+		BackgroundColor3 = C.Surface,
+		Visible = false,
+		ZIndex = 8,
 	}, gui)
-	Style.make("UIListLayout", {
-		Padding = UDim.new(0, 10),
-		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+	Style.round(side, 24)
+	Style.stroke(side, C.Outline, 5)
+	Style.shadow(side)
+	Style.make("UIPadding", {
+		PaddingLeft = UDim.new(0, 12),
+		PaddingRight = UDim.new(0, 12),
+		PaddingTop = UDim.new(0, 12),
+		PaddingBottom = UDim.new(0, 12),
+	}, side)
+	Style.make("UIGridLayout", {
+		CellSize = UDim2.fromOffset(76, 78),
+		CellPadding = UDim2.fromOffset(10, 10),
+		FillDirectionMaxCells = 4,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, side)
 	Style.make("UIScale", { Name = "FitScale" }, side)
+
+	local function item(name: string, order: number, icon: string, caption: string, color: Color3)
+		return Style.navButton({
+			Name = name,
+			LayoutOrder = order,
+			Size = UDim2.fromOffset(76, 78),
+			BackgroundColor3 = color,
+			Icon = icon,
+			IconSize = 32,
+			Caption = caption,
+			CaptionSize = 13,
+		}, side)
+	end
+	palsButton = item("Pals", 5, "🐾", t("ui.pals"), C.Lilac)
+	styleButton = item("Style", 6, "👗", t("ui.style"), Color3.fromRGB(255, 190, 220))
+	palsButton.Activated:Connect(function()
+		UI.showPanel(if PalsUI.isVisible() then nil else "pals")
+	end)
+	styleButton.Activated:Connect(function()
+		UI.showPanel(if CosmeticsUI.isVisible() then nil else "style")
+	end)
+	menuButton.Activated:Connect(function()
+		setMenuOpen(not side.Visible)
+	end)
 end
 
 -- ---- 上のまん中: 移動ボタン（じぶんの庭・みんなの木） ----
@@ -337,23 +403,22 @@ local function refreshSeedBar(state)
 	end
 end
 
--- スマホ用の入れ物（左の2列のボタン・上の種えらび）。ふだんは空で隠しておく
+-- よく使う3つのボタンの入れ物と、上の種えらびの入れ物
 local function buildCompactFrames()
-	leftGrid = Style.make("Frame", {
-		Name = "LeftGrid",
-		Position = UDim2.fromOffset(14, 80), -- コインの下
-		Size = UDim2.fromOffset(136, 0),
+	actionStack = Style.make("Frame", {
+		Name = "ActionStack",
+		Size = UDim2.fromOffset(66, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
 		Visible = false,
 	}, gui)
 	Style.make("UIGridLayout", {
-		CellSize = UDim2.fromOffset(62, 62),
+		CellSize = UDim2.fromOffset(66, 66),
 		CellPadding = UDim2.fromOffset(8, 8),
-		FillDirectionMaxCells = 2,
+		FillDirectionMaxCells = 1,
 		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, leftGrid)
-	Style.make("UIScale", { Name = "FitScale" }, leftGrid)
+	}, actionStack)
+	Style.make("UIScale", { Name = "FitScale" }, actionStack)
 
 	topSeeds = Style.make("Frame", {
 		Name = "TopSeeds",
@@ -362,7 +427,6 @@ local function buildCompactFrames()
 		Size = UDim2.fromOffset(DOCK_WIDTH, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
-		Visible = false,
 	}, gui)
 	Style.make("UIScale", { Name = "FitScale", Scale = 0.72 }, topSeeds)
 end
@@ -370,57 +434,51 @@ end
 -- 普通の配置とスマホの配置を切り替える
 local function applyLayout(isCompact: boolean)
 	compact = isCompact
-	local dock = bottom:FindFirstChild("Dock") -- ドックの枠は下に残し、ボタンだけを移す
-	local buttons = { shopButton, palsButton, styleButton, harvestButton, sellButton }
-	if isCompact then
-		for i, button in buttons do
-			button.LayoutOrder = i
-			button.Parent = leftGrid
-			button.Icon.TextSize = 28
-			button.Caption.TextSize = 13
-		end
-		musicButton.LayoutOrder = 6
-		musicButton.Parent = leftGrid
-		musicButton.TextSize = 26
-		seedBar.Parent = topSeeds
-		seedBar.AnchorPoint = Vector2.new(0.5, 0)
-		seedBar.Position = UDim2.fromScale(0.5, 0)
-	else
-		for i, button in buttons do
-			button.LayoutOrder = i
-			button.Parent = dock
-			button.Icon.TextSize = 36
-			button.Caption.TextSize = 15
-		end
-		musicButton.Parent = gui
-		musicButton.TextSize = 28
-		seedBar.AnchorPoint = Vector2.new(0, 0)
-		seedBar.Position = UDim2.new()
-		seedBar.Parent = bottom
+	for i, button in { shopButton, harvestButton, sellButton } do
+		button.LayoutOrder = i
+		button.Parent = actionStack
+		button.Icon.TextSize = 30
+		button.Caption.TextSize = 13
 	end
-	-- お天気・みんなの木の表示は、スマホではボタンの下へ（押せない表示なので、移動スティックの邪魔にならない）。
-	-- みんなの木はスマホでは隠す（木の上の看板と、レベルアップのお知らせで分かる）
-	for _, name in { "WeatherChip", "TreeChip" } do
-		local chip = gui:FindFirstChild(name)
-		if chip then
-			chipHome[name] = chipHome[name] or chip.Position
-			if isCompact then
-				chip.Position = UDim2.fromOffset(14, 290)
-			else
-				chip.Position = chipHome[name]
-			end
-		end
-	end
+	seedBar.Parent = topSeeds
+	seedBar.AnchorPoint = Vector2.new(0.5, 0)
+	seedBar.Position = UDim2.fromScale(0.5, 0)
+	topSeeds.FitScale.Scale = if isCompact then 0.72 else 0.85
+	leftTop = if isCompact then 12 else LEFT_TOP_PC
+	coinPill.Position = UDim2.fromOffset(16, leftTop)
+	local weatherChip = gui:FindFirstChild("WeatherChip")
 	local treeChip = gui:FindFirstChild("TreeChip")
-	if treeChip then
-		treeChip.Visible = not isCompact
+	if isCompact then
+		-- スマホ: 左上に コイン → メニュー → お天気 → みんなの木。3つのボタンはジャンプボタンの上
+		actionStack.AnchorPoint = Vector2.new(1, 1)
+		actionStack.Position = UDim2.new(1, -14, 1, -JUMP_RESERVE)
+		menuButton.Position = UDim2.fromOffset(16, leftTop + 68)
+		side.Position = UDim2.fromOffset(102, leftTop + 68)
+		if weatherChip then
+			weatherChip.Position = UDim2.fromOffset(16, leftTop + 154)
+		end
+		if treeChip then
+			treeChip.Position = UDim2.fromOffset(16, leftTop + 202)
+		end
+	else
+		-- パソコン: 左の列に [コイン][メニュー] → 下に3つのボタン（縦）。お天気・みんなの木はボタンの右
+		actionStack.AnchorPoint = Vector2.new(0, 0)
+		actionStack.Position = UDim2.fromOffset(16, leftTop + 72)
+		menuButton.Position = UDim2.fromOffset(234, leftTop - 9)
+		side.Position = UDim2.fromOffset(318, leftTop - 9)
+		if weatherChip then
+			weatherChip.Position = UDim2.fromOffset(94, leftTop + 76)
+		end
+		if treeChip then
+			treeChip.Position = UDim2.fromOffset(94, leftTop + 124)
+		end
 	end
 	-- 上の移動ボタンは、スマホでは少し小さく（狭い画面で左上のコインとぶつからないように）
 	local travelScale = travel:FindFirstChild("FitScale") or Style.make("UIScale", { Name = "FitScale" }, travel)
-	travelScale.Scale = isCompact and 0.8 or 1
+	travelScale.Scale = if isCompact then 0.8 else 1
 	-- 種えらびが上に来るので、案内とお知らせを少し下げる
-	banner.Position = UDim2.new(0.5, 0, 0, isCompact and 116 or 62)
-	toastLabel.Position = UDim2.new(0.5, 0, 0, isCompact and 176 or 120)
+	banner.Position = UDim2.new(0.5, 0, 0, if isCompact then 116 else 130)
+	toastLabel.Position = UDim2.new(0.5, 0, 0, if isCompact then 176 else 190)
 	UI.showPanel(UI.currentPanel)
 end
 
@@ -438,12 +496,14 @@ local function fitBottom()
 		return
 	end
 	local view = camera.ViewportSize
-	if leftGrid and banner and wantsCompact() ~= compact then
+	if actionStack and banner and wantsCompact() ~= compact then
 		applyLayout(not compact)
 	end
-	if leftGrid then
-		-- 左の列は、低い画面ではさらに縮める（コインの下〜画面の下の手前まで）
-		leftGrid.FitScale.Scale = math.clamp((gui.AbsoluteSize.Y - 80 - 70) / 202, 0.6, 1)
+	local screenY = gui.AbsoluteSize.Y
+	if actionStack then
+		-- 3つのボタンは、スマホではジャンプボタンの上から、パソコンではコインの下から、画面に収まる大きさに
+		local room = if compact then screenY - JUMP_RESERVE - 50 else screenY - leftTop - 72 - 12
+		actionStack.FitScale.Scale = math.clamp(room / 214, 0.6, 1)
 	end
 	-- 縦の基準は、種えらび(76)＋ドック(88)＋余白＋上の案内の分。低い画面ほど小さくする
 	local scale = math.min(1, (view.X - 24) / DOCK_WIDTH, (view.Y - 20) / 440)
@@ -456,28 +516,9 @@ local function fitBottom()
 	if bannerLabel then
 		bannerLabel.MaxWidth.MaxSize = Vector2.new(math.max(160, width * 0.9 - 60), math.huge)
 	end
-	-- 右の列は縦に並ぶので、低い画面では縮める
+	-- メニューの一覧（4列×2段）は、低い画面では縮める
 	if side then
-		local count = 0
-		for _, child in side:GetChildren() do
-			if child:IsA("GuiButton") then
-				count += 1
-			end
-		end
-		local height = count * 78 + math.max(0, count - 1) * 10
-		local screenY = gui.AbsoluteSize.Y
-		if UserInputService.TouchEnabled then
-			-- スマホ・タブレット: 右下のジャンプボタン（約70px＋余白）より上で止める
-			local reserve = JUMP_RESERVE
-			side.AnchorPoint = Vector2.new(1, 1)
-			side.Position = UDim2.new(1, -14, 1, -reserve)
-			side.FitScale.Scale = math.clamp((screenY - reserve - 12) / math.max(height, 1), 0.4, 1)
-		else
-			-- パソコン: 画面のまん中より少し上（右上のプレイヤー一覧とぶつからない位置）
-			side.AnchorPoint = Vector2.new(1, 0.5)
-			side.Position = UDim2.new(1, -14, 0.5, 0)
-			side.FitScale.Scale = math.clamp((screenY * 0.66) / math.max(height, 1), 0.5, 1)
-		end
+		side.FitScale.Scale = math.clamp((screenY - leftTop - 90) / 200, 0.6, 1)
 	end
 end
 
@@ -621,12 +662,13 @@ end
 function UI.showPanel(name: string?)
 	UI.currentPanel = name
 	-- パネルを開いている間は、下と右の操作ボタンを隠して画面を広く使う
-	bottom.Visible = name == nil and not compact
-	if leftGrid then
-		leftGrid.Visible = name == nil and compact
-		topSeeds.Visible = name == nil and compact
+	bottom.Visible = false -- 下はいつも空けておく（畑と足元を見やすく）
+	if actionStack then
+		actionStack.Visible = name == nil
+		topSeeds.Visible = name == nil
 	end
-	side.Visible = name == nil
+	setMenuOpen(false) -- 何かを開いたら、メニューの一覧は閉じる
+	menuButton.Visible = name == nil
 	travel.Visible = name == nil
 	CodesUI.setVisible(name == "codes")
 	QuestsUI.setVisible(name == "quests")
@@ -781,7 +823,6 @@ function UI.init()
 	}, player:WaitForChild("PlayerGui"))
 
 	buildCoinPill()
-	buildMusicButton()
 	buildBottom()
 	buildShop()
 	local function closeAll()
@@ -789,7 +830,8 @@ function UI.init()
 	end
 	PalsUI.build(gui, closeAll)
 	CosmeticsUI.build(gui, closeAll)
-	buildSide()
+	buildMenu()
+	buildMusicButton()
 	buildTravel()
 	QuestsUI.build(gui, closeAll, function()
 		UI.showPanel("quests")
@@ -817,6 +859,35 @@ function UI.init()
 		camera:GetPropertyChangedSignal("ViewportSize"):Connect(fitBottom)
 	end
 	gui:GetAttributeChangedSignal("ForceCompact"):Connect(fitBottom)
+
+	-- みんなの木が進んだら、左の表示を少しのあいだ出す
+	for _, name in { "TreeProgress", "TreeLevel" } do
+		workspace:GetAttributeChangedSignal(name):Connect(function()
+			treeChipUntil = os.clock() + 6
+		end)
+	end
+	task.spawn(function()
+		while gui.Parent do
+			-- メニューの中に「!」があれば、閉じているメニューのボタンにも「!」を出す
+			local any = false
+			for _, d in side:GetDescendants() do
+				if d.Name == "Badge" and d:IsA("GuiObject") and d.Visible then
+					any = true
+					break
+				end
+			end
+			menuBadge.Visible = any and not side.Visible
+			-- みんなの木の表示は、木の近く（広場）にいるときと、進んだ直後だけ
+			local treeChip = gui:FindFirstChild("TreeChip")
+			if treeChip then
+				local character = player.Character
+				local root = character and character:FindFirstChild("HumanoidRootPart")
+				local nearTree = root ~= nil and (root.Position * Vector3.new(1, 0, 1)).Magnitude < 45
+				treeChip.Visible = nearTree or os.clock() < treeChipUntil
+			end
+			task.wait(0.5)
+		end
+	end)
 end
 
 -- お天気・みんなの木の表示ができたあとに呼ぶ（スマホの配置にそろえる）
