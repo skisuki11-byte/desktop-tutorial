@@ -20,6 +20,7 @@ Tutorial.init()
 PalRenderer.init()
 WeatherClient.init(UI)
 TreeClient.init(UI)
+UI.relayout()
 
 Remotes.Toast.OnClientEvent:Connect(function(key, ...)
 	if type(key) == "string" then

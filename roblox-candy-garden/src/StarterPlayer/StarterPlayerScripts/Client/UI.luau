@@ -36,7 +36,14 @@ local toastLabel
 local bannerLabel, banner
 local lastCoins = nil
 local toastToken = 0
+local musicButton
+-- スマホ（横持ちで画面が低い）用の配置。下のドックを左の2列に、種えらびを上のまん中に移して、
+-- 画面の下（畑と足元）を広く見せる。Adopt Me! などと同じ「左に操作ボタン」の考え方。
+local compact = false
+local leftGrid, topSeeds
+local chipHome: { [string]: UDim2 } = {}
 
+local COMPACT_MAX_HEIGHT = 600 -- これより低いタッチ画面をスマホとみなす
 local DOCK_WIDTH = 480 -- ドックの基準の幅。画面が狭いときは縮める
 local JUMP_RESERVE = 100 -- タッチ端末で、右下のジャンプボタンのために空ける高さ
 
@@ -114,6 +121,7 @@ local function buildMusicButton()
 		refresh()
 	end)
 	UI.refreshMusic = refresh
+	musicButton = button
 end
 
 -- コインが増えたとき、ふわっと上がる「+N」
@@ -329,6 +337,100 @@ local function refreshSeedBar(state)
 	end
 end
 
+-- スマホ用の入れ物（左の2列のボタン・上の種えらび）。ふだんは空で隠しておく
+local function buildCompactFrames()
+	leftGrid = Style.make("Frame", {
+		Name = "LeftGrid",
+		Position = UDim2.fromOffset(14, 80), -- コインの下
+		Size = UDim2.fromOffset(136, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		Visible = false,
+	}, gui)
+	Style.make("UIGridLayout", {
+		CellSize = UDim2.fromOffset(62, 62),
+		CellPadding = UDim2.fromOffset(8, 8),
+		FillDirectionMaxCells = 2,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, leftGrid)
+	Style.make("UIScale", { Name = "FitScale" }, leftGrid)
+
+	topSeeds = Style.make("Frame", {
+		Name = "TopSeeds",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 58), -- 上の移動ボタンの下（空のあたり）
+		Size = UDim2.fromOffset(DOCK_WIDTH, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		Visible = false,
+	}, gui)
+	Style.make("UIScale", { Name = "FitScale", Scale = 0.72 }, topSeeds)
+end
+
+-- 普通の配置とスマホの配置を切り替える
+local function applyLayout(isCompact: boolean)
+	compact = isCompact
+	local dock = bottom:FindFirstChild("Dock") -- ドックの枠は下に残し、ボタンだけを移す
+	local buttons = { shopButton, palsButton, styleButton, harvestButton, sellButton }
+	if isCompact then
+		for i, button in buttons do
+			button.LayoutOrder = i
+			button.Parent = leftGrid
+			button.Icon.TextSize = 28
+			button.Caption.TextSize = 13
+		end
+		musicButton.LayoutOrder = 6
+		musicButton.Parent = leftGrid
+		musicButton.TextSize = 26
+		seedBar.Parent = topSeeds
+		seedBar.AnchorPoint = Vector2.new(0.5, 0)
+		seedBar.Position = UDim2.fromScale(0.5, 0)
+	else
+		for i, button in buttons do
+			button.LayoutOrder = i
+			button.Parent = dock
+			button.Icon.TextSize = 36
+			button.Caption.TextSize = 15
+		end
+		musicButton.Parent = gui
+		musicButton.TextSize = 28
+		seedBar.AnchorPoint = Vector2.new(0, 0)
+		seedBar.Position = UDim2.new()
+		seedBar.Parent = bottom
+	end
+	-- お天気・みんなの木の表示は、スマホではボタンの下へ（押せない表示なので、移動スティックの邪魔にならない）。
+	-- みんなの木はスマホでは隠す（木の上の看板と、レベルアップのお知らせで分かる）
+	for _, name in { "WeatherChip", "TreeChip" } do
+		local chip = gui:FindFirstChild(name)
+		if chip then
+			chipHome[name] = chipHome[name] or chip.Position
+			if isCompact then
+				chip.Position = UDim2.fromOffset(14, 290)
+			else
+				chip.Position = chipHome[name]
+			end
+		end
+	end
+	local treeChip = gui:FindFirstChild("TreeChip")
+	if treeChip then
+		treeChip.Visible = not isCompact
+	end
+	-- 上の移動ボタンは、スマホでは少し小さく（狭い画面で左上のコインとぶつからないように）
+	local travelScale = travel:FindFirstChild("FitScale") or Style.make("UIScale", { Name = "FitScale" }, travel)
+	travelScale.Scale = isCompact and 0.8 or 1
+	-- 種えらびが上に来るので、案内とお知らせを少し下げる
+	banner.Position = UDim2.new(0.5, 0, 0, isCompact and 116 or 62)
+	toastLabel.Position = UDim2.new(0.5, 0, 0, isCompact and 176 or 120)
+	UI.showPanel(UI.currentPanel)
+end
+
+local function wantsCompact(): boolean
+	if gui:GetAttribute("ForceCompact") ~= nil then -- Studioで試すとき用
+		return gui:GetAttribute("ForceCompact") == true
+	end
+	return UserInputService.TouchEnabled and gui.AbsoluteSize.Y < COMPACT_MAX_HEIGHT
+end
+
 -- 画面の大きさに合わせて、下のドックを縮める（スマホの縦持ちでも収まる）
 local function fitBottom()
 	local camera = workspace.CurrentCamera
@@ -336,6 +438,13 @@ local function fitBottom()
 		return
 	end
 	local view = camera.ViewportSize
+	if leftGrid and banner and wantsCompact() ~= compact then
+		applyLayout(not compact)
+	end
+	if leftGrid then
+		-- 左の列は、低い画面ではさらに縮める（コインの下〜画面の下の手前まで）
+		leftGrid.FitScale.Scale = math.clamp((gui.AbsoluteSize.Y - 80 - 70) / 202, 0.6, 1)
+	end
 	-- 縦の基準は、種えらび(76)＋ドック(88)＋余白＋上の案内の分。低い画面ほど小さくする
 	local scale = math.min(1, (view.X - 24) / DOCK_WIDTH, (view.Y - 20) / 440)
 	bottom.FitScale.Scale = math.max(0.5, scale)
@@ -510,8 +619,13 @@ end
 
 -- どのパネルを開くか。同時に開くのは1つだけ（nil で全部閉じる）
 function UI.showPanel(name: string?)
+	UI.currentPanel = name
 	-- パネルを開いている間は、下と右の操作ボタンを隠して画面を広く使う
-	bottom.Visible = name == nil
+	bottom.Visible = name == nil and not compact
+	if leftGrid then
+		leftGrid.Visible = name == nil and compact
+		topSeeds.Visible = name == nil and compact
+	end
 	side.Visible = name == nil
 	travel.Visible = name == nil
 	CodesUI.setVisible(name == "codes")
@@ -695,12 +809,20 @@ function UI.init()
 	palsBadge = Style.badge(palsButton)
 	buildToast()
 	buildBanner()
+	buildCompactFrames()
 
 	fitBottom()
 	local camera = workspace.CurrentCamera
 	if camera then
 		camera:GetPropertyChangedSignal("ViewportSize"):Connect(fitBottom)
 	end
+	gui:GetAttributeChangedSignal("ForceCompact"):Connect(fitBottom)
+end
+
+-- お天気・みんなの木の表示ができたあとに呼ぶ（スマホの配置にそろえる）
+function UI.relayout()
+	applyLayout(compact)
+	fitBottom()
 end
 
 return UI
