@@ -12,6 +12,8 @@ local Sounds = require(script.Sounds)
 local DayNight = require(script.DayNight)
 local PromptUI = require(script.PromptUI)
 local StarGiftUI = require(script.StarGiftUI)
+local TradeUI = require(script.TradeUI)
+local PalsUI = require(script.PalsUI)
 local Style = require(script.Style)
 
 Sounds.init()
@@ -27,6 +29,8 @@ UI.relayout()
 DayNight.init()
 PromptUI.init()
 StarGiftUI.init(UI)
+TradeUI.init(UI)
+PalsUI.onTrade = TradeUI.openPicker
 
 Remotes.Toast.OnClientEvent:Connect(function(key, ...)
 	if type(key) == "string" then
@@ -66,6 +70,7 @@ Remotes.WelcomeBack.OnClientEvent:Connect(function(readyCount)
 end)
 
 Remotes.State.OnClientEvent:Connect(function(state)
+	TradeUI.update(state)
 	Sounds.onState(state) -- 先に呼ぶ（保存してあるBGMの設定を、UIの表示より先に反映する）
 	UI.update(state)
 	Tutorial.update(state)

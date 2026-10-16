@@ -112,6 +112,53 @@ local function buildPet(cfg): (Model, number)
 		glow.Brightness = 1.5
 		glow.Parent = body
 	end
+	-- わたあめクジラ: 横に長い体、しっぽのひれ、頭の上の潮ふき（水色の玉）
+	if cfg.ears == "whale" then
+		-- 横長の体（Ball は縦横を別にできないので、四角＋球のメッシュにする）
+		body.Shape = Enum.PartType.Block
+		body.Size = Vector3.new(size * 1.35, size, size * 1.1)
+		local mesh = Instance.new("SpecialMesh")
+		mesh.MeshType = Enum.MeshType.Sphere
+		mesh.Parent = body
+		for _, x in { -1, 1 } do
+			part(model, "Fin", ball, Vector3.new(size * 0.5, size * 0.12, size * 0.35), CFrame.new(x * r * 1.2, -r * 0.2, r * 0.1) * CFrame.Angles(0, 0, x * math.rad(-30)), light)
+		end
+		part(model, "Tail", block, Vector3.new(size * 0.8, size * 0.12, size * 0.35), CFrame.new(0, r * 0.2, r * 1.15) * CFrame.Angles(math.rad(-25), 0, 0), color)
+		for k = 0, 2 do
+			local drop = part(model, "Spout", ball, Vector3.one * (size * (0.22 - k * 0.04)), CFrame.new((k - 1) * r * 0.2, r * (1.05 + k * 0.25), -r * 0.1), Color3.fromRGB(190, 230, 255))
+			drop.Material = Enum.Material.Glass
+			drop.Transparency = 0.2
+		end
+	end
+	-- ゆめいろフェニックス: 虹色に光る大きなはねと、頭のかざり。ふわっと光る
+	if cfg.ears == "phoenix" then
+		local rainbow = {
+			Color3.fromRGB(255, 120, 160), Color3.fromRGB(255, 190, 110), Color3.fromRGB(255, 240, 140),
+			Color3.fromRGB(150, 235, 170), Color3.fromRGB(140, 200, 255), Color3.fromRGB(200, 150, 255),
+		}
+		for _, x in { -1, 1 } do
+			for k, c in rainbow do
+				local feather = part(
+					model,
+					"Feather",
+					ball,
+					Vector3.new(size * 0.12, size * (0.75 - k * 0.07), size * 0.32),
+					CFrame.new(x * r * (1.0 + k * 0.12), r * (0.55 - k * 0.12), r * (0.1 + k * 0.08)) * CFrame.Angles(0, 0, x * math.rad(-35 - k * 6)),
+					c
+				)
+				feather.Material = Enum.Material.Neon
+			end
+		end
+		for k = 1, 3 do
+			local crest = part(model, "Crest", ball, Vector3.one * (size * 0.18), CFrame.new(0, r * (0.95 + k * 0.18), r * (k * 0.12)), rainbow[k * 2])
+			crest.Material = Enum.Material.Neon
+		end
+		local glow = Instance.new("PointLight")
+		glow.Color = Color3.fromRGB(255, 180, 230)
+		glow.Range = 12
+		glow.Brightness = 1.6
+		glow.Parent = body
+	end
 	-- ほしぞらの まもりがみ: 夜空色の体に、頭の上の光の輪・おでこの星・大きなはね。自分で光る
 	if cfg.ears == "guardian" then
 		for i = 1, 10 do

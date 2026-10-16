@@ -71,7 +71,7 @@ end
 Config.MaxPets = 20
 Config.MaxEquipped = 3
 
--- rarity: 1=ふつう 2=めずらしい 3=レア 4=すごいレア 5=でんせつ 6=まもりがみ / ears: 見た目の型
+-- rarity: 1=ふつう 2=めずらしい 3=レア 4=すごいレア 5=でんせつ 6=まもりがみ 7=ゆめいろ / ears: 見た目の型
 -- giftOnly: たまごからは出ない（ほしぞらのおくりものでだけ会える）
 Config.Pets = {
 	{ id = "gummybear", icon = "🐻", rarity = 1, bonus = 0.05, color = Color3.fromRGB(255, 120, 140), ears = "round" },
@@ -79,6 +79,9 @@ Config.Pets = {
 	{ id = "cottoncat", icon = "🐱", rarity = 3, bonus = 0.20, color = Color3.fromRGB(185, 215, 255), ears = "point" },
 	{ id = "rainbowunicorn", icon = "🦄", rarity = 4, bonus = 0.40, color = Color3.fromRGB(235, 200, 255), ears = "horn" },
 	{ id = "starcakedragon", icon = "🐉", rarity = 5, bonus = 1.00, color = Color3.fromRGB(255, 214, 90), ears = "wings" },
+	-- ほしのたまご（Config.Eggs）からだけ出る、超レア
+	{ id = "cottonwhale", icon = "🐋", rarity = 5, bonus = 1.20, color = Color3.fromRGB(150, 200, 255), ears = "whale" },
+	{ id = "dreamphoenix", icon = "🐦", rarity = 7, bonus = 2.00, color = Color3.fromRGB(255, 150, 220), ears = "phoenix" },
 	{
 		id = "starguardian",
 		icon = "🌠",
@@ -104,6 +107,37 @@ Config.Eggs = {
 			{ pet = "starcakedragon", weight = 1 },
 		},
 	},
+	-- ほしのたまご: 高いけれど、レアなペットだけが出る。超レアの わたあめクジラ・ゆめいろフェニックス はここだけ
+	{
+		id = "staregg",
+		icon = "🌟",
+		price = 5000,
+		odds = {
+			{ pet = "cottoncat", weight = 40 },
+			{ pet = "rainbowunicorn", weight = 30 },
+			{ pet = "starcakedragon", weight = 20 },
+			{ pet = "cottonwhale", weight = 8 },
+			{ pet = "dreamphoenix", weight = 2 },
+		},
+	},
+}
+
+-- ペット図鑑: 見つけた（一度でも持った）ペットの種類の数で、ごほうび（1回ずつ）
+Config.Dex = {
+	rewards = {
+		{ count = 3, coins = 1000 },
+		{ count = 5, coins = 5000, fertilizer = 3 },
+		{ count = 7, coins = 20000, fertilizer = 10 },
+		{ count = 8, coins = 100000 }, -- ぜんぶ（8しゅるい。まもりがみ も入る）
+	},
+}
+
+-- ペットの交換: Robloxで友だちの人とだけ（知らない人からだまし取られないように）。
+-- おたがいに中身を見て、2人とも「OK」を押してから少し待って交換する。中身が変わったら OK はやりなおし
+Config.Trade = {
+	maxOffer = 3, -- 1回に出せるペットの数
+	countdown = 3, -- 2人がOKしてから交換するまでの秒数（最後に確かめる時間）
+	requestSeconds = 30, -- おさそいの有効時間
 }
 
 -- お天気イベント。天気の間は、収穫のきらきら確率が sparkleChance に上がる

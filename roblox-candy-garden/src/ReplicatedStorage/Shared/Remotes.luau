@@ -28,6 +28,13 @@ local NAMES = {
 	"StarGift",
 	"UpgradeCan",
 	"BuyFertilizer",
+	"TradeRequest",
+	"TradeInvite",
+	"TradeRespond",
+	"TradeOffer",
+	"TradeReady",
+	"TradeCancel",
+	"TradeState",
 }
 
 local folder

@@ -664,7 +664,7 @@ local function applyLayout(mode: string)
 		seedBar.Position = UDim2.fromScale(0.5, 0)
 		seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		actionStack.AnchorPoint = Vector2.new(0, 0)
-		actionStack.Position = UDim2.fromOffset(16, leftTop + 72)
+		actionStack.Position = UDim2.fromOffset(16, leftTop + 108) -- 上に じょうろの残り（💧）を出す すき間
 	end
 	-- 案内とお知らせは、種えらびの下に
 	local bannerY = if compact
@@ -716,7 +716,7 @@ local function fitBottom()
 			local room = (screenY - JUMP_RESERVE - (if portrait then 200 else leftTop + 52) - 40) / 214
 			Style.setScale(actionStack, math.clamp(math.min(phoneScale(), room), 0.55, 0.85))
 		else
-			Style.setScale(actionStack, math.clamp((screenY - leftTop - 72 - 12) / 214, 0.6, 1))
+			Style.setScale(actionStack, math.clamp((screenY - leftTop - 108 - 12) / 214, 0.6, 1))
 		end
 	end
 	local scale = math.min(1, (view.X - 24) / DOCK_WIDTH, (view.Y - 20) / 440)

@@ -64,6 +64,8 @@ local function newData()
 		starGift = false, -- ほしぞらのおくりものを受け取ったか
 		water = { amount = 3, level = 1 }, -- じょうろの水（残り回数）と大きさ（Config.Water.cans）
 		fertilizer = 0, -- キャンディひりょうの数
+		dex = {}, -- ペット図鑑: 見つけたペット [petId] = true
+		dexClaimed = 0, -- 受け取った図鑑のごほうびの数（Config.Dex.rewards の何番目まで）
 	}
 end
 
@@ -234,6 +236,7 @@ function Data.push(player: Player)
 		music = d.music,
 		water = d.water,
 		fertilizer = d.fertilizer,
+		dex = d.dex,
 		plotId = player:GetAttribute("PlotId"),
 	})
 end

@@ -12,12 +12,48 @@ local Pals = {}
 
 local rng = Random.new()
 
+-- ペット図鑑: 見つけたペットを記録し、集めた種類の数でごほうび（1回ずつ）
+local function checkDexRewards(player: Player, d)
+	local count = 0
+	for _ in d.dex do
+		count += 1
+	end
+	local rewards = Config.Dex.rewards
+	while rewards[d.dexClaimed + 1] and count >= rewards[d.dexClaimed + 1].count do
+		d.dexClaimed += 1
+		local reward = rewards[d.dexClaimed]
+		d.coins += reward.coins or 0
+		d.fertilizer = math.min(Config.Fertilizer.max, (d.fertilizer or 0) + (reward.fertilizer or 0))
+		Remotes.Toast:FireClient(player, "toast.dexReward", reward.coins or 0)
+	end
+end
+
+function Pals.markDex(player: Player, petId: string, announce: boolean?)
+	local d = Data.get(player)
+	if not d or not Config.PetById[petId] or d.dex[petId] then
+		return
+	end
+	d.dex[petId] = true
+	if announce then
+		Remotes.Toast:FireClient(player, "toast.dexNew", "@pet." .. petId)
+	end
+	checkDexRewards(player, d)
+	Data.saveSoon(player)
+end
+
 -- 他のプレイヤーの画面にもペットを出すため、連れているペットの種類を属性で共有する
 function Pals.refreshAttribute(player: Player)
 	local d = Data.get(player)
 	if not d then
 		return
 	end
+	-- 図鑑ができる前から持っているペットも、図鑑にのせる
+	for _, entry in d.pets do
+		if Config.PetById[entry.pet] and not d.dex[entry.pet] then
+			d.dex[entry.pet] = true
+		end
+	end
+	checkDexRewards(player, d)
 	local ids = {}
 	for _, uid in d.equipped do
 		for _, entry in d.pets do
@@ -84,6 +120,7 @@ local function buyEgg(player: Player, eggId: any)
 		table.insert(d.equipped, uid)
 	end
 
+	Pals.markDex(player, petId, false) -- 孵化の演出で見せるので、お知らせは出さない
 	Pals.refreshAttribute(player)
 	Data.push(player)
 	Remotes.EggResult:FireClient(player, petId)
@@ -103,6 +140,7 @@ function Pals.grant(player: Player, petId: string)
 	if #d.equipped < Config.MaxEquipped then
 		table.insert(d.equipped, uid)
 	end
+	Pals.markDex(player, petId, false)
 	Pals.refreshAttribute(player)
 end
 

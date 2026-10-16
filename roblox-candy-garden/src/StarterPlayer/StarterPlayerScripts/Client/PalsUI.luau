@@ -20,6 +20,7 @@ local RARITY_COLOR = {
 	Color3.fromRGB(190, 130, 255),
 	Color3.fromRGB(255, 190, 40),
 	Color3.fromRGB(140, 160, 255), -- まもりがみ
+	Color3.fromRGB(255, 120, 200), -- ゆめいろ
 }
 
 local panel, scroll, grid, countLabel, bonusLabel, hatchOverlay
@@ -32,18 +33,17 @@ local function percentText(n: number): string
 	return ("%.1f%%"):format(n)
 end
 
-local function buildEggCard(parent: Instance)
-	local egg = Config.Eggs[1]
+local function buildEggCard(parent: Instance, egg, order: number)
 	local card = Style.make("Frame", {
-		Name = "EggCard",
-		LayoutOrder = 1,
+		Name = "EggCard_" .. egg.id,
+		LayoutOrder = order,
 		Size = UDim2.new(1, -8, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 		ZIndex = 11,
 	}, parent)
 	Style.round(card, 18)
-	Style.stroke(card, C.Accent, 3)
+	Style.stroke(card, if egg.id == "staregg" then Color3.fromRGB(255, 200, 80) else C.Accent, 3)
 	Style.make("UIPadding", {
 		PaddingTop = UDim.new(0, 12),
 		PaddingBottom = UDim.new(0, 12),
@@ -131,6 +131,67 @@ local function buildEggCard(parent: Instance)
 	end
 end
 
+local dexTitle, dexNote, dexGrid
+
+-- 図鑑: 全部のペットを、レア度の順に並べる（見つけていないペットは「？」）
+local function refreshDex()
+	if not dexGrid or not lastState then
+		return
+	end
+	for _, child in dexGrid:GetChildren() do
+		if child:IsA("GuiObject") then
+			child:Destroy()
+		end
+	end
+	local dex = lastState.dex or {}
+	local found = 0
+	for i, cfg in Config.Pets do
+		local have = dex[cfg.id] == true
+		if have then
+			found += 1
+		end
+		local cell = Style.make("Frame", {
+			LayoutOrder = cfg.rarity * 100 + i,
+			BackgroundColor3 = if have then Color3.fromRGB(255, 255, 255) else Color3.fromRGB(235, 228, 240),
+			ZIndex = 12,
+		}, dexGrid)
+		Style.round(cell, 14)
+		Style.stroke(cell, if have then RARITY_COLOR[cfg.rarity] else C.Dim, 3)
+		Style.label({
+			Position = UDim2.fromOffset(0, 4),
+			Size = UDim2.new(1, 0, 0, 40),
+			Text = if have then cfg.icon else "？",
+			TextSize = 32,
+			TextColor3 = if have then C.Text else C.TextMuted,
+			ZIndex = 13,
+		}, cell)
+		Style.label({
+			Position = UDim2.fromOffset(3, 46),
+			Size = UDim2.new(1, -6, 0, 22),
+			Text = if have then t("pet." .. cfg.id) else t("ui.unknownPet"),
+			TextSize = 12,
+			ZIndex = 13,
+		}, cell)
+		Style.label({
+			Position = UDim2.fromOffset(0, 68),
+			Size = UDim2.new(1, 0, 0, 18),
+			Text = t("rarity." .. cfg.rarity),
+			TextSize = 12,
+			TextColor3 = RARITY_COLOR[cfg.rarity]:Lerp(C.Text, 0.5),
+			ZIndex = 13,
+		}, cell)
+	end
+	dexTitle.Text = t("ui.dex", found, #Config.Pets)
+	local nextReward = nil
+	for _, reward in Config.Dex.rewards do
+		if reward.count > found then
+			nextReward = reward
+			break
+		end
+	end
+	dexNote.Text = if nextReward then t("ui.dexNext", nextReward.count - found) else t("ui.dexDone")
+end
+
 local function refresh()
 	if not lastState or not grid then
 		return
@@ -147,6 +208,7 @@ local function refresh()
 		equippedSet[uid] = true
 	end
 	countLabel.Text = t("ui.palsCount", #pets, Config.MaxPets)
+	refreshDex()
 	bonusLabel.Text = t("ui.totalBonus", math.floor(((lastState.sellBonus or 1) - 1) * 100 + 0.5))
 
 	if #pets == 0 then
@@ -216,10 +278,39 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 	panel, scroll = Style.modal(gui, "PalsPanel", "🐾 " .. t("ui.pals"), onClose, C.Lilac)
 	Style.make("UIListLayout", { Padding = UDim.new(0, 12), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 
-	buildEggCard(scroll)
+	-- たまご（ふつうの たまご・ほしのたまご）
+	for i, egg in Config.Eggs do
+		buildEggCard(scroll, egg, i)
+	end
+	-- 図鑑とこうかんの入り口
+	local tools = Style.make("Frame", {
+		LayoutOrder = 5,
+		Size = UDim2.new(1, -8, 0, 52),
+		BackgroundTransparency = 1,
+		ZIndex = 11,
+	}, scroll)
+	Style.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		Padding = UDim.new(0, 8),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, tools)
+	local tradeButton = Style.button({
+		LayoutOrder = 1,
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundColor3 = C.Mint,
+		TextColor3 = C.Text,
+		Text = t("ui.trade"),
+		TextSize = 20,
+		ZIndex = 12,
+	}, tools)
+	tradeButton.Activated:Connect(function()
+		if PalsUI.onTrade then
+			PalsUI.onTrade()
+		end
+	end)
 
 	local header = Style.make("Frame", {
-		LayoutOrder = 2,
+		LayoutOrder = 10,
 		Size = UDim2.new(1, -8, 0, 52),
 		BackgroundTransparency = 1,
 		ZIndex = 11,
@@ -253,7 +344,7 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 
 	grid = Style.make("Frame", {
 		Name = "Grid",
-		LayoutOrder = 3,
+		LayoutOrder = 11,
 		Size = UDim2.new(1, -8, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
@@ -264,6 +355,38 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 		CellPadding = UDim2.fromOffset(8, 8),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, grid)
+
+	-- ペット図鑑（見つけた種類。まだのペットは「？」）
+	dexTitle = Style.label({
+		LayoutOrder = 20,
+		Size = UDim2.new(1, -8, 0, 30),
+		Text = "",
+		TextSize = 22,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, scroll)
+	dexNote = Style.label({
+		LayoutOrder = 21,
+		Size = UDim2.new(1, -8, 0, 20),
+		Text = "",
+		TextSize = 14,
+		TextColor3 = C.AccentDark,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, scroll)
+	dexGrid = Style.make("Frame", {
+		Name = "DexGrid",
+		LayoutOrder = 22,
+		Size = UDim2.new(1, -8, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		ZIndex = 11,
+	}, scroll)
+	Style.make("UIGridLayout", {
+		CellSize = UDim2.fromOffset(84, 92),
+		CellPadding = UDim2.fromOffset(8, 8),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, dexGrid)
 
 	-- 孵化の演出（全画面）。中身は PalsUI.playHatch で、画面の高さに合わせて並べる
 	hatchOverlay = Style.make("Frame", {
