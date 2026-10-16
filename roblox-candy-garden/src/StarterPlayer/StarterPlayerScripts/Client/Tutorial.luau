@@ -91,10 +91,16 @@ local function refreshPrompts()
 			if prompt and prompt:IsA("ProximityPrompt") then
 				local crop = tile:GetAttribute("Crop")
 				-- 育っている途中で、まだ水をあげていなければ「水やり」（ほかの人の畑も手伝える）
-				local canWater = crop ~= nil and not tile:GetAttribute("Ready") and not tile:GetAttribute("Watered")
-				if canWater then
+				local growing = crop ~= nil and not tile:GetAttribute("Ready")
+				local canWater = growing and not tile:GetAttribute("Watered")
+				-- 水をあげたあとは、ひりょうを持っていれば「ひりょう」
+				local canFertilize = growing
+					and not canWater
+					and not tile:GetAttribute("Fertilized")
+					and (state.fertilizer or 0) > 0
+				if canWater or canFertilize then
 					prompt.Enabled = true
-					prompt.ActionText = t("prompt.water")
+					prompt.ActionText = t(if canWater then "prompt.water" else "prompt.fertilize")
 					prompt.ObjectText = t("crop." .. crop)
 				elseif not mine then
 					prompt.Enabled = false

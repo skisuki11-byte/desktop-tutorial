@@ -73,10 +73,11 @@ local function setWet(tile: BasePart, wet: boolean)
 end
 
 -- 水しぶき（みんなに見える）
-local function splash(tile: BasePart)
+local function splash(tile: BasePart, color: Color3?)
 	local emitter = Instance.new("ParticleEmitter")
 	emitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	emitter.Color = ColorSequence.new(Color3.fromRGB(140, 200, 255), Color3.fromRGB(220, 240, 255))
+	local c = color or Color3.fromRGB(140, 200, 255)
+	emitter.Color = ColorSequence.new(c, c:Lerp(Color3.new(1, 1, 1), 0.6))
 	emitter.Speed = NumberRange.new(4, 8)
 	emitter.SpreadAngle = Vector2.new(60, 60)
 	emitter.EmissionDirection = Enum.NormalId.Top
@@ -112,9 +113,11 @@ local function syncTile(player: Player, tileIndex: number)
 		tile:SetAttribute("GrowTime", cropCfg.growTime)
 		tile:SetAttribute("Ready", progress >= 1)
 		setWet(tile, slot.watered == true)
+		tile:SetAttribute("Fertilized", slot.fertilized == true)
 		renderTile(tile, cropCfg, progress)
 	else
 		setWet(tile, false)
+		tile:SetAttribute("Fertilized", false)
 		tile:SetAttribute("Crop", nil)
 		tile:SetAttribute("PlantedAt", nil)
 		tile:SetAttribute("GrowTime", nil)
@@ -196,6 +199,44 @@ local function plant(player: Player, tileIndex: number)
 	syncTile(player, tileIndex)
 end
 
+-- 育つ時間を早める（実る1秒前まで）。水やり・ひりょう・ペットのお手伝いで使う
+local function speedUp(slot, cropCfg, ratio: number)
+	local remaining = cropCfg.growTime - (now() - slot.plantedAt)
+	local skip = math.max(0, math.min(cropCfg.growTime * ratio, remaining - 1))
+	slot.plantedAt -= skip
+end
+
+-- ひりょう: 育っている途中の作物に、植えるごとに1回まで。持っている ひりょうを1つ使う
+local function fertilize(helper: Player, owner: Player, tileIndex: number): boolean
+	local d = Data.get(owner)
+	local slot = d and d.plots[tostring(tileIndex)]
+	local cropCfg = slot and Config.CropById[slot.crop]
+	local hd = Data.get(helper)
+	if not cropCfg or not hd or slot.fertilized or isReady(slot) or (hd.fertilizer or 0) <= 0 then
+		return false
+	end
+	hd.fertilizer -= 1
+	speedUp(slot, cropCfg, Config.Fertilizer.speedUp)
+	slot.fertilized = true
+	syncTile(owner, tileIndex)
+	local plot = World.plotOf(owner)
+	if plot and plot.tiles[tileIndex] then
+		splash(plot.tiles[tileIndex], Color3.fromRGB(255, 220, 120))
+	end
+	if helper == owner then
+		Remotes.Toast:FireClient(helper, "toast.fertilized")
+	else
+		hd.coins += Config.Water.helperCoins
+		Remotes.Toast:FireClient(helper, "toast.fertilizedFriend", Config.Water.helperCoins)
+		Remotes.Toast:FireClient(owner, "toast.helpedFertilizer", helper.DisplayName)
+	end
+	Data.push(helper)
+	Data.push(owner)
+	Data.saveSoon(helper)
+	Data.saveSoon(owner)
+	return true
+end
+
 -- 水やり: 育っている途中の作物に、1回植えるごとに1回まで。育つ時間の一部を早める（実る1秒前まで）
 -- helper: 水をあげた人 / owner: 畑の持ち主（同じ人のこともある）
 local function water(helper: Player, owner: Player, tileIndex: number): boolean
@@ -213,9 +254,7 @@ local function water(helper: Player, owner: Player, tileIndex: number): boolean
 	end
 	hd.water.amount -= 1
 	Data.push(helper)
-	local remaining = cropCfg.growTime - (now() - slot.plantedAt)
-	local skip = math.max(0, math.min(cropCfg.growTime * Config.Water.speedUp, remaining - 1))
-	slot.plantedAt -= skip
+	speedUp(slot, cropCfg, Config.Water.speedUp)
 	slot.watered = true
 	syncTile(owner, tileIndex)
 	local plot = World.plotOf(owner)
@@ -253,8 +292,12 @@ function Garden.interact(player: Player, tile: BasePart)
 	end
 	if model:GetAttribute("OwnerUserId") ~= player.UserId then
 		local owner = Players:GetPlayerByUserId(model:GetAttribute("OwnerUserId") or 0)
-		if owner then
+		local od = owner and Data.get(owner)
+		local slot = od and od.plots[tostring(tileIndex)]
+		if slot and not slot.watered then
 			water(player, owner, tileIndex)
+		elseif slot then
+			fertilize(player, owner, tileIndex)
 		end
 		return
 	end
@@ -267,10 +310,75 @@ function Garden.interact(player: Player, tile: BasePart)
 		plant(player, tileIndex)
 	elseif isReady(slot) then
 		harvest(player, tileIndex)
-	else
+	elseif not slot.watered then
 		water(player, player, tileIndex)
+	else
+		fertilize(player, player, tileIndex)
 	end
 	Data.push(player)
+end
+
+-- ひりょうを1つ買う
+function Garden.buyFertilizer(player: Player)
+	if not RateLimit.ok(player, "buyFertilizer", 0.25) then
+		return
+	end
+	local d = Data.get(player)
+	if not d then
+		return
+	end
+	if (d.fertilizer or 0) >= Config.Fertilizer.max then
+		Remotes.Toast:FireClient(player, "toast.fertilizerFull")
+		return
+	end
+	if d.coins < Config.Fertilizer.price then
+		Remotes.Toast:FireClient(player, "toast.noCoins")
+		return
+	end
+	d.coins -= Config.Fertilizer.price
+	d.fertilizer = (d.fertilizer or 0) + 1
+	Remotes.Toast:FireClient(player, "toast.boughtFertilizer", d.fertilizer)
+	Data.push(player)
+	Data.saveSoon(player)
+end
+
+-- ペットのお手伝い: 連れているペットが、ときどき自分の畑の まだ水をあげていない作物に水をあげる
+local function petHelp(player: Player)
+	local d = Data.get(player)
+	local plot = World.plotOf(player)
+	if not d or not plot then
+		return
+	end
+	for _, uid in d.equipped do
+		local petId
+		for _, entry in d.pets do
+			if entry.uid == uid then
+				petId = entry.pet
+			end
+		end
+		local pet = petId and Config.PetById[petId]
+		if pet and rng:NextNumber() < (Config.PetHelp.chance[pet.rarity] or 0.05) then
+			-- まだ水をあげていない、育っている途中の作物を1つ選ぶ
+			local candidates = {}
+			for i = 1, #plot.tiles do
+				local slot = d.plots[tostring(i)]
+				if slot and Config.CropById[slot.crop] and not slot.watered and not isReady(slot) then
+					table.insert(candidates, i)
+				end
+			end
+			if #candidates == 0 then
+				return
+			end
+			local tileIndex = candidates[rng:NextInteger(1, #candidates)]
+			local slot = d.plots[tostring(tileIndex)]
+			speedUp(slot, Config.CropById[slot.crop], Config.Water.speedUp)
+			slot.watered = true
+			syncTile(player, tileIndex)
+			splash(plot.tiles[tileIndex])
+			Remotes.Toast:FireClient(player, "toast.petWatered", pet.icon, "@pet." .. pet.id)
+			Data.push(player)
+		end
+	end
 end
 
 -- 池のポンプで、じょうろに水をくむ（タダ。いっぱいまで）
@@ -350,6 +458,15 @@ end
 
 -- 毎秒、全員の庭の成長を見た目に反映する（オフライン中の分も plantedAt から計算される）
 function Garden.startGrowthLoop()
+	-- ペットのお手伝い（Config.PetHelp.interval 秒ごと）
+	task.spawn(function()
+		while true do
+			task.wait(Config.PetHelp.interval)
+			for _, player in Players:GetPlayers() do
+				petHelp(player)
+			end
+		end
+	end)
 	task.spawn(function()
 		while true do
 			task.wait(1)

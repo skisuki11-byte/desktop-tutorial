@@ -50,15 +50,20 @@ local NOPE_TOASTS = {
 	["toast.limitedAlready"] = true,
 	["toast.noWater"] = true,
 	["toast.waterFull"] = true,
+	["toast.fertilizerFull"] = true,
 }
 -- ちょっとうれしいもの（キラキラ）と、大きなごほうび（和音）
 local SPARKLE_TOASTS = {
+	["toast.fertilized"] = true,
+	["toast.fertilizedFriend"] = true,
+	["toast.helpedFertilizer"] = true,
 	["toast.sparkle"] = true,
 	["toast.styleBought"] = true,
 	["toast.limitedBought"] = true,
 	["toast.questDone"] = true,
 }
 local WATER_TOASTS = {
+	["toast.petWatered"] = true,
 	["toast.refilled"] = true,
 	["toast.watered"] = true,
 	["toast.wateredFriend"] = true,

@@ -30,15 +30,32 @@ Config.Water = {
 	cans = { 3, 4, 5, 6 }, -- じょうろの大きさごとの回数
 	canPrices = { 0, 1500, 6000, 20000 }, -- その大きさにするのに必要なコイン
 }
+
+-- キャンディひりょう: ショップで買う使い切りのアイテム。育っている途中の作物に、植えるごとに1回使える。
+-- 水やりより よく効く（育つ時間の40%ぶん早く実る）。ほかの人の畑にも使える（手伝い）
+Config.Fertilizer = {
+	price = 300,
+	speedUp = 0.4,
+	max = 99, -- 持てる数
+}
+
+-- ペットのお手伝い: 連れているペットが、ときどき自分の畑に水をあげてくれる（じょうろの水は使わない）。
+-- 20秒ごとに、ペット1匹ずつ この確率で手伝う。珍しいペットほど よく手伝う（rarity 1〜6）
+Config.PetHelp = {
+	interval = 20,
+	chance = { 0.06, 0.09, 0.13, 0.18, 0.25, 0.35 },
+}
 Config.SparkleMultiplier = 2
 
 -- icon: 絵文字 / color: 実の色
+-- 育つ時間は、水やり・ひりょう・ペットのお手伝いで早められる前提で、少し長め（もとの1.5倍）。
+-- ムーンキャンディは「寝る前に植えて翌朝」のための作物なので、8時間のまま
 Config.Crops = {
-	{ id = "gummyberry", icon = "🍓", seedPrice = 10, growTime = 20, sellPrice = 18, color = Color3.fromRGB(255, 92, 138) },
-	{ id = "peropero", icon = "🌸", seedPrice = 50, growTime = 60, sellPrice = 110, color = Color3.fromRGB(255, 140, 214) },
-	{ id = "wataame", icon = "☁️", seedPrice = 250, growTime = 180, sellPrice = 600, color = Color3.fromRGB(176, 206, 255) },
-	{ id = "nijimelon", icon = "🍈", seedPrice = 1200, growTime = 480, sellPrice = 3200, color = Color3.fromRGB(120, 230, 170) },
-	{ id = "starcake", icon = "🍰", seedPrice = 6000, growTime = 1200, sellPrice = 18000, color = Color3.fromRGB(255, 214, 90) },
+	{ id = "gummyberry", icon = "🍓", seedPrice = 10, growTime = 30, sellPrice = 18, color = Color3.fromRGB(255, 92, 138) },
+	{ id = "peropero", icon = "🌸", seedPrice = 50, growTime = 90, sellPrice = 110, color = Color3.fromRGB(255, 140, 214) },
+	{ id = "wataame", icon = "☁️", seedPrice = 250, growTime = 270, sellPrice = 600, color = Color3.fromRGB(176, 206, 255) },
+	{ id = "nijimelon", icon = "🍈", seedPrice = 1200, growTime = 720, sellPrice = 3200, color = Color3.fromRGB(120, 230, 170) },
+	{ id = "starcake", icon = "🍰", seedPrice = 6000, growTime = 1800, sellPrice = 18000, color = Color3.fromRGB(255, 214, 90) },
 	-- 寝る前に植えて、翌日に収穫する作物（8時間）。オフライン中も育つので「明日また来る理由」になる
 	{ id = "mooncandy", icon = "🌙", seedPrice = 2000, growTime = 28800, sellPrice = 20000, color = Color3.fromRGB(150, 140, 255) },
 }

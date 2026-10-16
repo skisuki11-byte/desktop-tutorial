@@ -47,6 +47,7 @@ local portrait = false -- スマホの縦持ち
 local actionStack, topSeeds
 local waterMeter, waterLabel -- じょうろの残り（3つのボタンの上）
 local canDetail, canButton -- ショップの「じょうろ」の行
+local fertDetail -- ショップの「ひりょう」の行
 local treeChipUntil = 0 -- みんなの木の表示を、この時刻まで出す（進んだときだけ少し見せる）
 
 local COMPACT_MAX_HEIGHT = 600 -- これより低いタッチ画面をスマホとみなす
@@ -876,10 +877,62 @@ local function buildShop()
 	canButton.Activated:Connect(function()
 		Remotes.UpgradeCan:FireServer()
 	end)
+
+	-- キャンディひりょう（使い切り。育っている途中の作物に使うと、ぐんぐん育つ）
+	local fert = Style.make("Frame", {
+		Name = "FertilizerRow",
+		LayoutOrder = 101,
+		Size = UDim2.new(1, -10, 0, 88),
+		BackgroundColor3 = Color3.fromRGB(255, 248, 225),
+		ZIndex = 11,
+	}, scroll)
+	Style.round(fert, 20)
+	Style.stroke(fert, Color3.fromRGB(240, 200, 100), 3)
+	Style.label({
+		Position = UDim2.fromOffset(8, 0),
+		Size = UDim2.fromOffset(64, 88),
+		Text = "🌟",
+		TextSize = 44,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, fert)
+	Style.label({
+		Position = UDim2.fromOffset(78, 10),
+		Size = UDim2.new(0.68, -102, 0, 32),
+		Text = t("ui.fertilizer"),
+		TextSize = 22,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, fert)
+	fertDetail = Style.label({
+		Position = UDim2.fromOffset(78, 46),
+		Size = UDim2.new(0.68, -102, 0, 30),
+		Text = "",
+		TextSize = 15,
+		TextColor3 = C.TextMuted,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, fert)
+	local fertBuy = Style.button({
+		Name = "Buy",
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -10, 0.5, 0),
+		Size = UDim2.new(0.32, 0, 0, 64),
+		Text = "🟡 " .. Style.formatNumber(Config.Fertilizer.price),
+		TextSize = 22,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, fert)
+	Style.make("UISizeConstraint", { MaxSize = Vector2.new(136, 64) }, fertBuy)
+	fertBuy.Activated:Connect(function()
+		Remotes.BuyFertilizer:FireServer()
+	end)
 end
 
 -- じょうろの表示（残り・ショップの行）を、サーバーから届いた状態に合わせる
 local function refreshWater(state)
+	fertDetail.Text = t("ui.fertilizerDesc", state.fertilizer or 0)
 	local water = state.water
 	if not water then
 		return
@@ -1014,7 +1067,14 @@ function UI.toastText(text: string, seconds: number?)
 end
 
 function UI.toast(key: string, ...)
-	UI.toastText(t(key, ...))
+	-- 「@pet.gummybear」のような引数は、その人の言語の名前にしてから入れる
+	local args = table.pack(...)
+	for i = 1, args.n do
+		if type(args[i]) == "string" and string.sub(args[i], 1, 1) == "@" then
+			args[i] = t(string.sub(args[i], 2))
+		end
+	end
+	UI.toastText(t(key, table.unpack(args, 1, args.n)))
 end
 
 function UI.gui(): ScreenGui

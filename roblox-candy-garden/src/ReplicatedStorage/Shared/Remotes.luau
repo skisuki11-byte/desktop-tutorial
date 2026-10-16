@@ -27,6 +27,7 @@ local NAMES = {
 	"SetMusic",
 	"StarGift",
 	"UpgradeCan",
+	"BuyFertilizer",
 }
 
 local folder
