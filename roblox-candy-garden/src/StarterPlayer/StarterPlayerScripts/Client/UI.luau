@@ -176,18 +176,31 @@ local function buildBottom()
 	}, bottom)
 	Style.setScale(bottom, 1)
 
-	seedBar = Style.make("Frame", {
+	-- 種えらび: 横にスライドできる列。種が多くても1つ1つを小さくしない（入りきらない分は指で横に送る）
+	seedBar = Style.make("ScrollingFrame", {
 		Name = "SeedBar",
 		LayoutOrder = 1,
-		Size = UDim2.fromOffset(DOCK_WIDTH, 0),
-		AutomaticSize = Enum.AutomaticSize.Y, -- 種が無いときは高さ0（場所を取らない）
+		Size = UDim2.fromOffset(DOCK_WIDTH, 84),
 		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollingDirection = Enum.ScrollingDirection.X,
+		CanvasSize = UDim2.new(),
+		AutomaticCanvasSize = Enum.AutomaticSize.X,
+		ScrollBarThickness = 3, -- 細い線で「まだ横にある」と分かる
+		ScrollBarImageColor3 = C.Outline,
+		ElasticBehavior = Enum.ElasticBehavior.Always,
 	}, bottom)
+	Style.make("UIPadding", {
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4),
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 6),
+	}, seedBar)
 	Style.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
-		Padding = UDim.new(0, 8),
+		Padding = UDim.new(0, 6),
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		VerticalAlignment = Enum.VerticalAlignment.Bottom,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, seedBar)
 
@@ -365,45 +378,73 @@ local function buildTravel()
 	place("GoTree", 2, "🌳 " .. t("ui.toTree"), C.Mint, "tree")
 end
 
+local SEED_PHONE = 54 -- スマホの種カード（縮めない。指で押せる44以上）
+local latestState = nil -- 配置が変わったときに、種カードを作り直すため
+local seedCount = 0
+
 local function refreshSeedBar(state)
 	for _, child in seedBar:GetChildren() do
 		if child:IsA("TextButton") then
 			child:Destroy()
 		end
 	end
+	seedCount = 0
+	local selectedButton = nil
 	for order, cropId in Config.CropOrder do
 		local count = state.seeds[cropId] or 0
 		if count > 0 then
+			seedCount += 1
 			local crop = Config.CropById[cropId]
 			local selected = state.selected == cropId
+			local size = if compact
+				then UDim2.fromOffset(SEED_PHONE, SEED_PHONE)
+				else UDim2.fromOffset(selected and 84 or 72, selected and 76 or 66)
 			local button = Style.button({
 				Name = cropId,
 				LayoutOrder = order,
-				Size = UDim2.fromOffset(selected and 84 or 72, selected and 76 or 66),
+				Size = size,
 				BackgroundColor3 = selected and C.Yellow or C.Surface,
 			}, seedBar)
 			if selected then
 				button:FindFirstChildOfClass("UIStroke").Color = C.Accent
+				selectedButton = button
 			end
 			Style.label({
-				Position = UDim2.fromOffset(0, 2),
-				Size = UDim2.new(1, 0, 0.6, 0),
+				Position = UDim2.fromScale(0, 0.04),
+				Size = UDim2.fromScale(1, 0.58),
 				Text = crop.icon,
-				TextSize = 34,
+				TextSize = if compact then 28 else 34,
 				TextWrapped = false,
 			}, button)
 			Style.label({
 				AnchorPoint = Vector2.new(0.5, 1),
 				Position = UDim2.new(0.5, 0, 1, -2),
-				Size = UDim2.new(1, 0, 0.36, 0),
+				Size = UDim2.fromScale(1, 0.38),
 				Text = "×" .. count,
-				TextSize = 20,
+				TextSize = if compact then 16 else 20,
 				TextWrapped = false,
 			}, button)
 			button.Activated:Connect(function()
 				Remotes.SelectSeed:FireServer(cropId)
 			end)
 		end
+	end
+	-- 選んでいる種が見える位置まで、列を送る
+	if selectedButton then
+		task.defer(function()
+			if not selectedButton.Parent then
+				return
+			end
+			local left = selectedButton.AbsolutePosition.X - seedBar.AbsolutePosition.X + seedBar.CanvasPosition.X
+			local view = seedBar.AbsoluteSize.X
+			local x = seedBar.CanvasPosition.X
+			if left < x then
+				x = left - 4
+			elseif left + selectedButton.AbsoluteSize.X > x + view then
+				x = left + selectedButton.AbsoluteSize.X - view + 8
+			end
+			seedBar.CanvasPosition = Vector2.new(math.max(0, x), 0)
+		end)
 	end
 end
 
@@ -515,6 +556,7 @@ local function applyLayout(mode: string)
 		Style.setScale(travel, PHONE_ROW / 54)
 		local travelWidth = (54 * 2 + 6) * PHONE_ROW / 54
 		if treeChip then
+			treeChip.Size = UDim2.fromOffset(150, 58) -- スマホでは細く（種えらびの場所を広げる）
 			Style.setScale(treeChip, PHONE_ROW / 58) -- レベル表示も同じ高さ
 		end
 		if portrait then
@@ -533,7 +575,7 @@ local function applyLayout(mode: string)
 			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 			if weatherChip then
 				weatherChip.AnchorPoint = Vector2.new(0, 0)
-				weatherChip.Position = UDim2.fromOffset(12, row2 + PHONE_ROW + 8)
+				weatherChip.Position = UDim2.fromOffset(12, row2 + SEED_PHONE + 18) -- 種えらびの列の下
 				Style.setScale(weatherChip, 36 / 40)
 			end
 		else
@@ -582,6 +624,7 @@ local function applyLayout(mode: string)
 		if treeChip then
 			-- みんなの木のレベルは、上の移動ボタンの右（右上より）
 			treeChip.AnchorPoint = Vector2.new(0, 0)
+			treeChip.Size = UDim2.fromOffset(230, 58)
 			treeChip.Position = UDim2.new(0.5, 170, 0, 2)
 			Style.setScale(treeChip, 0.85)
 		end
@@ -594,11 +637,16 @@ local function applyLayout(mode: string)
 		actionStack.Position = UDim2.fromOffset(16, leftTop + 72)
 	end
 	-- 案内とお知らせは、種えらびの下に
-	local bannerY = if compact then (if portrait then leftTop + PHONE_ROW * 2 + 24 else leftTop + PHONE_ROW + 12) else 130
+	local bannerY = if compact
+		then (if portrait then leftTop + PHONE_ROW + SEED_PHONE + 36 else leftTop + SEED_PHONE + 20)
+		else 130
 	banner.Position = UDim2.new(0.5, 0, 0, bannerY)
 	toastLabel.Position = UDim2.new(0.5, 0, 0, bannerY + 60)
 	Style.setScale(banner, if compact then 0.8 else 1)
 	Style.setScale(toastLabel, if compact then 0.8 else 1)
+	if latestState then
+		refreshSeedBar(latestState)
+	end
 	UI.showPanel(UI.currentPanel)
 end
 
@@ -651,22 +699,19 @@ local function fitBottom()
 	if bannerLabel then
 		bannerLabel.MaxWidth.MaxSize = Vector2.new(math.max(160, width * 0.9 - 60), math.huge)
 	end
-	-- 種えらびは、画面の幅に収まる大きさに（種1つ＝ボタン72〜84＋すき間8）
+	-- 種えらび: スマホは縮めずに、使える幅に合わせて列の幅を決める（入りきらない分は横にスライド）
 	if topSeeds then
-		local count = 0
-		for _, child in seedBar:GetChildren() do
-			if child:IsA("TextButton") then
-				count += 1
-			end
+		local chipWidth = 150 * PHONE_ROW / 58
+		if compact then
+			local room = if portrait then width - 24 - chipWidth - 12
+				else width - 2 * (12 + chipWidth + 8 + 114 * PHONE_ROW / 54 + 8)
+			local content = seedCount * (SEED_PHONE + 6) + 8
+			Style.setScale(topSeeds, 1)
+			seedBar.Size = UDim2.fromOffset(math.max(SEED_PHONE + 8, math.min(room, content)), SEED_PHONE + 12)
+		else
+			Style.setScale(topSeeds, 0.85)
+			seedBar.Size = UDim2.fromOffset(math.min(DOCK_WIDTH, width / 0.85 - 24), 84)
 		end
-		local base = if compact then PHONE_ROW / 76 else 0.85
-		-- 横持ちのスマホは、左右の表示のあいだ（画面の半分くらい）に収める
-		-- スマホ縦持ち: レベル表示の左の残り幅 / 横持ち: コイン・メニューと、レベル・庭・木のあいだ
-		local chipWidth = 230 * PHONE_ROW / 58
-		local room = if compact and portrait then width - 24 - chipWidth - 12
-			elseif compact then width - 2 * (12 + chipWidth + 8 + 114 * PHONE_ROW / 54 + 8)
-			else width - 24
-		Style.setScale(topSeeds, math.min(base, room / math.max(1, count * 82)))
 	end
 	-- メニューの一覧は、画面に収まる大きさに
 	if side then
@@ -958,6 +1003,7 @@ function UI.update(state)
 	-- はじめてのたまごが買えるようになったら、ペットに「!」（1回目だけの案内。出しすぎない）
 	local egg = Config.Eggs[1]
 	palsBadge.Visible = #(state.pets or {}) == 0 and coins >= egg.price
+	latestState = state
 	refreshSeedBar(state)
 	fitBottom() -- 種の数が変わったら、種えらびの大きさを合わせ直す
 	UI.refreshMusic()
