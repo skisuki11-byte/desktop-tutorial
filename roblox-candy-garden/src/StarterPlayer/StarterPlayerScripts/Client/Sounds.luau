@@ -70,6 +70,7 @@ local WATER_TOASTS = {
 	["toast.helped"] = true,
 }
 local JINGLE_TOASTS = {
+	["toast.expanded"] = true,
 	["toast.canUpgraded"] = true,
 	["toast.dailyGot"] = true,
 }

@@ -90,6 +90,10 @@ local function refreshPrompts()
 			local prompt = tile:FindFirstChild("Prompt")
 			if prompt and prompt:IsA("ProximityPrompt") then
 				local crop = tile:GetAttribute("Crop")
+				if tile:GetAttribute("Locked") then
+					prompt.Enabled = false -- まだ広げていない畑
+					continue
+				end
 				-- 育っている途中で、まだ水をあげていなければ「水やり」（ほかの人の畑も手伝える）
 				local growing = crop ~= nil and not tile:GetAttribute("Ready")
 				local canWater = growing and not tile:GetAttribute("Watered")

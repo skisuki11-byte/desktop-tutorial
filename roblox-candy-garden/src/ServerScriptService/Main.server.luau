@@ -57,6 +57,7 @@ end)
 World.pumpPrompt().Triggered:Connect(Garden.refill)
 Remotes.UpgradeCan.OnServerEvent:Connect(Garden.upgradeCan)
 Remotes.BuyFertilizer.OnServerEvent:Connect(Garden.buyFertilizer)
+Remotes.ExpandPlot.OnServerEvent:Connect(Garden.expand)
 Garden.startGrowthLoop()
 Data.startAutoSave()
 

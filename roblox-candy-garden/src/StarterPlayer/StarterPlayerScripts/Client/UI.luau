@@ -48,6 +48,7 @@ local actionStack, topSeeds
 local waterMeter, waterLabel -- じょうろの残り（3つのボタンの上）
 local canDetail, canButton -- ショップの「じょうろ」の行
 local fertDetail -- ショップの「ひりょう」の行
+local expandDetail, expandButton -- ショップの「はたけを ひろげる」の行
 local treeChipUntil = 0 -- みんなの木の表示を、この時刻まで出す（進んだときだけ少し見せる）
 
 local COMPACT_MAX_HEIGHT = 600 -- これより低いタッチ画面をスマホとみなす
@@ -928,11 +929,80 @@ local function buildShop()
 	fertBuy.Activated:Connect(function()
 		Remotes.BuyFertilizer:FireServer()
 	end)
+
+	-- はたけを ひろげる（大きな目標。いちばん上に出す）
+	local expand = Style.make("Frame", {
+		Name = "ExpandRow",
+		LayoutOrder = -20,
+		Size = UDim2.new(1, -10, 0, 88),
+		BackgroundColor3 = Color3.fromRGB(232, 250, 238),
+		ZIndex = 11,
+	}, scroll)
+	Style.round(expand, 20)
+	Style.stroke(expand, Color3.fromRGB(120, 200, 150), 3)
+	Style.label({
+		Position = UDim2.fromOffset(8, 0),
+		Size = UDim2.fromOffset(64, 88),
+		Text = "🌱",
+		TextSize = 44,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, expand)
+	Style.label({
+		Position = UDim2.fromOffset(78, 10),
+		Size = UDim2.new(0.68, -102, 0, 32),
+		Text = t("ui.expand"),
+		TextSize = 22,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, expand)
+	expandDetail = Style.label({
+		Position = UDim2.fromOffset(78, 46),
+		Size = UDim2.new(0.68, -102, 0, 30),
+		Text = "",
+		TextSize = 15,
+		TextColor3 = C.TextMuted,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, expand)
+	expandButton = Style.button({
+		Name = "Expand",
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -10, 0.5, 0),
+		Size = UDim2.new(0.32, 0, 0, 64),
+		Text = "",
+		TextSize = 22,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, expand)
+	Style.make("UISizeConstraint", { MaxSize = Vector2.new(136, 64) }, expandButton)
+	expandButton.Activated:Connect(function()
+		Remotes.ExpandPlot:FireServer()
+	end)
 end
 
 -- じょうろの表示（残り・ショップの行）を、サーバーから届いた状態に合わせる
 local function refreshWater(state)
 	fertDetail.Text = t("ui.fertilizerDesc", state.fertilizer or 0)
+	-- はたけを ひろげる
+	local tiles = state.plotTiles or Config.PlotTiles
+	local nextUpgrade
+	for _, upgrade in Config.PlotUpgrades do
+		if upgrade.tiles > tiles then
+			nextUpgrade = upgrade
+			break
+		end
+	end
+	if nextUpgrade then
+		expandDetail.Text = t("ui.expandNext", tiles, nextUpgrade.tiles)
+		expandButton.Text = "🟡 " .. Style.formatNumber(nextUpgrade.price)
+		expandButton.BackgroundColor3 = C.Accent
+	else
+		expandDetail.Text = t("ui.expandMax", tiles)
+		expandButton.Text = "⭐"
+		expandButton.BackgroundColor3 = C.Mint
+	end
 	local water = state.water
 	if not water then
 		return

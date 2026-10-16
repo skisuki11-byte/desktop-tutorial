@@ -134,6 +134,8 @@ function Garden.attach(player: Player)
 	if not plot then
 		return
 	end
+	local d = Data.get(player)
+	World.setUnlocked(player, (d and d.plotTiles) or Config.PlotTiles)
 	for i = 1, #plot.tiles do
 		syncTile(player, i)
 	end
@@ -287,8 +289,8 @@ function Garden.interact(player: Player, tile: BasePart)
 		return
 	end
 	local tileIndex = tile:GetAttribute("TileIndex")
-	if type(tileIndex) ~= "number" then
-		return
+	if type(tileIndex) ~= "number" or tile:GetAttribute("Locked") then
+		return -- まだ広げていない畑は使えない
 	end
 	if model:GetAttribute("OwnerUserId") ~= player.UserId then
 		local owner = Players:GetPlayerByUserId(model:GetAttribute("OwnerUserId") or 0)
@@ -316,6 +318,37 @@ function Garden.interact(player: Player, tile: BasePart)
 		fertilize(player, player, tileIndex)
 	end
 	Data.push(player)
+end
+
+-- 畑を広げる（Config.PlotUpgrades の次の段階）
+function Garden.expand(player: Player)
+	if not RateLimit.ok(player, "expand", 0.5) then
+		return
+	end
+	local d = Data.get(player)
+	if not d then
+		return
+	end
+	local nextUpgrade
+	for _, upgrade in Config.PlotUpgrades do
+		if upgrade.tiles > d.plotTiles then
+			nextUpgrade = upgrade
+			break
+		end
+	end
+	if not nextUpgrade then
+		return
+	end
+	if d.coins < nextUpgrade.price then
+		Remotes.Toast:FireClient(player, "toast.noCoins")
+		return
+	end
+	d.coins -= nextUpgrade.price
+	d.plotTiles = nextUpgrade.tiles
+	World.setUnlocked(player, d.plotTiles)
+	Remotes.Toast:FireClient(player, "toast.expanded", d.plotTiles)
+	Data.push(player)
+	Data.save(player) -- 大きな買い物は、すぐ保存する
 end
 
 -- ひりょうを1つ買う

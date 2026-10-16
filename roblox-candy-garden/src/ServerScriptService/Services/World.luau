@@ -25,8 +25,26 @@ local SOIL = C(120, 82, 60) -- ふかふかの土
 local FENCE = C(255, 250, 244) -- 白い柵
 local COOKIE = C(226, 178, 120) -- 飛び石のクッキー
 
-local PLOT_RADIUS = 62
+local PLOT_RADIUS = 70 -- 畑を広げられるようにしたので、庭どうしの間も少し広げた
 local TILE_SIZE = Vector3.new(7, 0.6, 7)
+local PLOT_HALF = Vector3.new(19, 0, 16.5) -- 庭の床の半分の大きさ（4列×3段の畑＋入口・名札のすき間）
+
+-- 畑の番号 → 庭の中の位置（1〜6: まん中の2列 / 7〜9: 左の列 / 10〜12: 右の列）
+local function tileOffset(i: number): (number, number)
+	local columns = { -4.5, 4.5, -13.5, 13.5 }
+	local column, row
+	if i <= 6 then
+		column = columns[((i - 1) % 2) + 1]
+		row = math.floor((i - 1) / 2)
+	elseif i <= 9 then
+		column = columns[3]
+		row = i - 7
+	else
+		column = columns[4]
+		row = i - 10
+	end
+	return column, (row - 1) * 9
+end
 local pumpPrompt: ProximityPrompt
 local POND = { angle = math.rad(22.5), radius = 108, size = 15 } -- 池（庭と庭のあいだの外側）
 
@@ -269,13 +287,13 @@ local function isFree(pos: Vector3, taken: { Vector3 }, spacing: number): boolea
 	for i = 1, Config.MaxPlots do
 		local a = ((i - 1) / Config.MaxPlots) * math.pi * 2
 		local center = Vector3.new(math.cos(a) * PLOT_RADIUS, 0, math.sin(a) * PLOT_RADIUS)
-		if (flat - center).Magnitude < 24 then
+		if (flat - center).Magnitude < 28 then
 			return false -- 庭
 		end
 		-- 広場から庭への道
 		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
 		local along = flat:Dot(dir)
-		if along > 15 and along < 52 and (flat - dir * along).Magnitude < 5 then
+		if along > 15 and along < PLOT_RADIUS - 16 and (flat - dir * along).Magnitude < 5 then
 			return false
 		end
 	end
@@ -405,7 +423,7 @@ end
 -- ふだんは通り抜けられない。ジャンプすれば乗り越えられる高さ（3stud）にして、横からでも入れる
 local function buildFence(model: Model, origin: CFrame, color: Color3)
 	local fence = make("Folder", { Name = "Fence" }, model)
-	local halfX, halfZ = 15, 12
+	local halfX, halfZ = PLOT_HALF.X, PLOT_HALF.Z
 	local postHeight = 2.6
 	local function post(x: number, z: number)
 		pillar(fence, postHeight, 0.55, origin * CFrame.new(x, 1 + postHeight / 2, z), FENCE)
@@ -436,13 +454,18 @@ local function buildFence(model: Model, origin: CFrame, color: Color3)
 		end
 	end
 	-- 柱（6studごと）
-	for x = -halfX, halfX, 6 do
+	-- 柱は、各辺に だいたい6studごと（はしにも必ず立てる）
+	local nx = math.ceil(halfX * 2 / 6)
+	for k = 0, nx do
+		local x = -halfX + k * (halfX * 2 / nx)
 		post(x, halfZ)
 		if math.abs(x) > 4 then
 			post(x, -halfZ)
 		end
 	end
-	for z = -halfZ + 6, halfZ - 6, 6 do
+	local nz = math.ceil(halfZ * 2 / 6)
+	for k = 1, nz - 1 do
+		local z = -halfZ + k * (halfZ * 2 / nz)
 		post(-halfX, z)
 		post(halfX, z)
 	end
@@ -469,7 +492,7 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 	-- 木の板の床（木目の質感）
 	local platform = block({
 		Name = "Platform",
-		Size = Vector3.new(30, 1, 24),
+		Size = Vector3.new(PLOT_HALF.X * 2, 1, PLOT_HALF.Z * 2),
 		CFrame = origin * CFrame.new(0, 0.5, 0),
 		Color = WOOD,
 		Material = Enum.Material.WoodPlanks,
@@ -477,14 +500,11 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 	model.PrimaryPart = platform
 	buildFence(model, origin, accent)
 
-	-- 畑のタイル（3列×最大2段から開始）。ふかふかの土＋まわりの木枠
+	-- 畑のタイル（4列×3段＝最大12枚）。ふかふかの土＋まわりの木枠
+	-- 番号の順番: 1〜6 が まん中の2列（最初から使える）、7〜9 が左の列、10〜12 が右の列（広げると使える）
 	local tiles = {}
-	local perRow = 3
-	for i = 1, Config.PlotTiles do
-		local col = (i - 1) % perRow
-		local row = math.floor((i - 1) / perRow)
-		local x = (col - 1) * 9
-		local z = (row - 0.5) * 9
+	for i = 1, Config.PlotMaxTiles do
+		local x, z = tileOffset(i)
 		block({
 			Name = "Bed",
 			Size = Vector3.new(TILE_SIZE.X + 0.8, 0.5, TILE_SIZE.Z + 0.8),
@@ -530,8 +550,8 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 		Neutral = true,
 		CanCollide = false,
 		Duration = 0,
-		Size = Vector3.new(6, 0.2, 6),
-		CFrame = origin * CFrame.new(0, 1.1, -9.5),
+		Size = Vector3.new(6, 0.2, 3),
+		CFrame = origin * CFrame.new(0, 1.1, -(PLOT_HALF.Z - 2)),
 		Color = accent,
 		Material = Enum.Material.SmoothPlastic,
 		Transparency = 0.5,
@@ -542,7 +562,7 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 	local signPost = block({
 		Name = "SignPost",
 		Size = Vector3.new(0.8, 6, 0.8),
-		CFrame = origin * CFrame.new(0, 4, 11),
+		CFrame = origin * CFrame.new(0, 4, PLOT_HALF.Z - 1.5),
 		Color = C(170, 120, 84),
 		Material = Enum.Material.Wood,
 	}, model)
@@ -591,6 +611,7 @@ function World.build(onTile: (Player, BasePart) -> ())
 	local plotsFolder = make("Folder", { Name = "Plots" }, workspace)
 	for i = 1, Config.MaxPlots do
 		buildPlot(i, plotsFolder, onTile)
+		World.resetLocks(plots[i])
 	end
 
 	-- 水くみポンプ（池のほとり、広場がわ）。じょうろの水をくむ場所
@@ -634,6 +655,36 @@ function World.build(onTile: (Player, BasePart) -> ())
 	}, spot)
 end
 
+-- 畑1枚を「使える / まだ使えない（灰色）」の見た目にする。水やりの「もとの土の色」もここで決める
+local LOCKED_SOIL = C(170, 160, 165)
+local function setLockLook(tile: BasePart, locked: boolean)
+	tile:SetAttribute("Locked", locked)
+	tile:SetAttribute("DryColor", if locked then LOCKED_SOIL else SOIL)
+	tile:SetAttribute("Watered", false)
+	tile:SetAttribute("Fertilized", false)
+	tile.Color = if locked then LOCKED_SOIL else SOIL
+	tile.Material = if locked then Enum.Material.Slate else Enum.Material.Ground
+	tile.Transparency = if locked then 0.35 else 0
+end
+
+-- 使える畑の枚数に合わせて、まだ使えない畑を灰色にする（ここまで広げられる、と見せる）
+function World.setUnlocked(player: Player, count: number)
+	local plot = World.plotOf(player)
+	if not plot then
+		return
+	end
+	for i, tile in plot.tiles do
+		setLockLook(tile, i > count)
+	end
+end
+
+-- 持ち主がいない庭は、最初の枚数に戻す
+function World.resetLocks(plot)
+	for i, tile in plot.tiles do
+		setLockLook(tile, i > Config.PlotTiles)
+	end
+end
+
 -- 水くみポンプのボタン（Main で、押されたら水をくむ処理につなぐ）
 function World.pumpPrompt(): ProximityPrompt
 	return pumpPrompt
@@ -671,6 +722,7 @@ function World.release(player: Player)
 					visual:Destroy()
 				end
 			end
+			World.resetLocks(plot)
 		end
 	end
 end

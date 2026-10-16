@@ -13,7 +13,15 @@ Config.JumpHeight = 8.5
 Config.StartSeeds = { gummyberry = 3 }
 
 Config.MaxPlots = 8 -- 同時に遊べる人数分の庭。StudioのMax Playersも8にする
-Config.PlotTiles = 6 -- 最初の畑の枚数（最大24まで拡張予定）
+Config.PlotTiles = 6 -- 最初の畑の枚数
+Config.PlotMaxTiles = 12 -- 広げたときの最大（4列×3段）
+-- 畑を広げる（コインの大きな使い道）。値段は「慣れた人が1分に2,400〜7,000コイン稼ぐ」ことを基準に決めた:
+--   6→9マス: 慣れた人で約10分 / はじめたばかりの人で1〜2時間の目標
+--   9→12マス: 慣れた人で約30〜40分の目標
+Config.PlotUpgrades = {
+	{ tiles = 9, price = 30000 },
+	{ tiles = 12, price = 150000 },
+}
 
 Config.SparkleChance = 0.1 -- 収穫時の「きらきら」確率
 

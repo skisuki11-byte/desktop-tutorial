@@ -35,6 +35,7 @@ local NAMES = {
 	"TradeReady",
 	"TradeCancel",
 	"TradeState",
+	"ExpandPlot",
 }
 
 local folder
