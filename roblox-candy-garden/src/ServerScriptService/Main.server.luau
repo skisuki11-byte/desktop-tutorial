@@ -51,6 +51,9 @@ Remotes.SetMusic.OnServerEvent:Connect(function(player, on)
 		Data.saveSoon(player)
 	end
 end)
+-- じょうろ: 池のポンプで水をくむ / ショップで大きくする
+World.pumpPrompt().Triggered:Connect(Garden.refill)
+Remotes.UpgradeCan.OnServerEvent:Connect(Garden.upgradeCan)
 Garden.startGrowthLoop()
 Data.startAutoSave()
 

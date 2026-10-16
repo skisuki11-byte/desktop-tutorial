@@ -45,6 +45,8 @@ local layoutMode = "pc"
 local compact = false -- スマホのとき true
 local portrait = false -- スマホの縦持ち
 local actionStack, topSeeds
+local waterMeter, waterLabel -- じょうろの残り（3つのボタンの上）
+local canDetail, canButton -- ショップの「じょうろ」の行
 local treeChipUntil = 0 -- みんなの木の表示を、この時刻まで出す（進んだときだけ少し見せる）
 
 local COMPACT_MAX_HEIGHT = 600 -- これより低いタッチ画面をスマホとみなす
@@ -449,6 +451,33 @@ local function refreshSeedBar(state)
 end
 
 -- よく使う3つのボタンの入れ物と、上の種えらびの入れ物
+-- じょうろの残りの表示。3つのボタン（ショップ・収穫・売る）のすぐ上について回る
+local function buildWaterMeter()
+	waterMeter = Style.make("Frame", {
+		Name = "WaterMeter",
+		AnchorPoint = Vector2.new(0.5, 1),
+		Size = UDim2.fromOffset(74, 30),
+		BackgroundColor3 = Color3.fromRGB(215, 236, 255),
+	}, gui)
+	Style.round(waterMeter, 15)
+	Style.stroke(waterMeter, C.Outline, 3)
+	waterLabel = Style.label({
+		Size = UDim2.fromScale(1, 1),
+		Text = "💧",
+		TextSize = 17,
+		TextWrapped = false,
+	}, waterMeter)
+	local function follow()
+		local at = actionStack.AbsolutePosition - gui.AbsolutePosition
+		waterMeter.Position = UDim2.fromOffset(at.X + actionStack.AbsoluteSize.X / 2, at.Y - 6)
+		waterMeter.Visible = actionStack.Visible
+	end
+	actionStack:GetPropertyChangedSignal("AbsolutePosition"):Connect(follow)
+	actionStack:GetPropertyChangedSignal("AbsoluteSize"):Connect(follow)
+	actionStack:GetPropertyChangedSignal("Visible"):Connect(follow)
+	follow()
+end
+
 local function buildCompactFrames()
 	actionStack = Style.make("Frame", {
 		Name = "ActionStack",
@@ -683,7 +712,7 @@ local function fitBottom()
 	if actionStack then
 		-- 3つのボタン: スマホは画面に合わせて小さく（ジャンプボタンの上に収める）、パソコンはコインの下に収まる大きさ
 		if compact then
-			local room = (screenY - JUMP_RESERVE - (if portrait then 200 else leftTop + 52)) / 214
+			local room = (screenY - JUMP_RESERVE - (if portrait then 200 else leftTop + 52) - 40) / 214
 			Style.setScale(actionStack, math.clamp(math.min(phoneScale(), room), 0.55, 0.85))
 		else
 			Style.setScale(actionStack, math.clamp((screenY - leftTop - 72 - 12) / 214, 0.6, 1))
@@ -795,6 +824,82 @@ local function buildShop()
 		buy.Activated:Connect(function()
 			Remotes.BuySeed:FireServer(cropId, 1)
 		end)
+	end
+
+	-- じょうろを大きくする（コインの使い道。1回分ずつしか増えないので、快適にしすぎない）
+	local row = Style.make("Frame", {
+		Name = "CanRow",
+		LayoutOrder = 100,
+		Size = UDim2.new(1, -10, 0, 88),
+		BackgroundColor3 = Color3.fromRGB(235, 245, 255),
+		ZIndex = 11,
+	}, scroll)
+	Style.round(row, 20)
+	Style.stroke(row, Color3.fromRGB(150, 200, 255), 3)
+	Style.label({
+		Position = UDim2.fromOffset(8, 0),
+		Size = UDim2.fromOffset(64, 88),
+		Text = "💧",
+		TextSize = 44,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, row)
+	Style.label({
+		Position = UDim2.fromOffset(78, 10),
+		Size = UDim2.new(0.68, -102, 0, 32),
+		Text = t("ui.can"),
+		TextSize = 22,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, row)
+	canDetail = Style.label({
+		Position = UDim2.fromOffset(78, 46),
+		Size = UDim2.new(0.68, -102, 0, 30),
+		Text = "",
+		TextSize = 15,
+		TextColor3 = C.TextMuted,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, row)
+	canButton = Style.button({
+		Name = "Upgrade",
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -10, 0.5, 0),
+		Size = UDim2.new(0.32, 0, 0, 64),
+		Text = "",
+		TextSize = 22,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, row)
+	Style.make("UISizeConstraint", { MaxSize = Vector2.new(136, 64) }, canButton)
+	canButton.Activated:Connect(function()
+		Remotes.UpgradeCan:FireServer()
+	end)
+end
+
+-- じょうろの表示（残り・ショップの行）を、サーバーから届いた状態に合わせる
+local function refreshWater(state)
+	local water = state.water
+	if not water then
+		return
+	end
+	local cans = Config.Water.cans
+	local cap = cans[water.level] or cans[1]
+	waterLabel.Text = "💧 " .. water.amount .. "/" .. cap
+	-- からっぽのときは、色で知らせる（池でくもう）
+	waterMeter.BackgroundColor3 = if water.amount <= 0 then Color3.fromRGB(255, 205, 210) else Color3.fromRGB(215, 236, 255)
+	local nextCap = cans[water.level + 1]
+	if nextCap then
+		canDetail.Text = t("ui.canNext", cap, nextCap) .. "\n" .. t("ui.canHint")
+		canButton.Text = "🟡 " .. Style.formatNumber(Config.Water.canPrices[water.level + 1])
+		canButton.BackgroundColor3 = C.Accent
+		canButton.Active = true
+	else
+		canDetail.Text = t("ui.canTimes", cap) .. "\n" .. t("ui.canHint")
+		canButton.Text = t("ui.canMax")
+		canButton.BackgroundColor3 = C.Mint
+		canButton.Active = false
 	end
 end
 
@@ -1004,6 +1109,7 @@ function UI.update(state)
 	local egg = Config.Eggs[1]
 	palsBadge.Visible = #(state.pets or {}) == 0 and coins >= egg.price
 	latestState = state
+	refreshWater(state)
 	refreshSeedBar(state)
 	fitBottom() -- 種の数が変わったら、種えらびの大きさを合わせ直す
 	UI.refreshMusic()
@@ -1055,6 +1161,7 @@ function UI.init()
 	buildToast()
 	buildBanner()
 	buildCompactFrames()
+	buildWaterMeter()
 
 	fitBottom()
 	local camera = workspace.CurrentCamera

@@ -48,6 +48,8 @@ local NOPE_TOASTS = {
 	["toast.petFull"] = true,
 	["toast.alreadyOwned"] = true,
 	["toast.limitedAlready"] = true,
+	["toast.noWater"] = true,
+	["toast.waterFull"] = true,
 }
 -- ちょっとうれしいもの（キラキラ）と、大きなごほうび（和音）
 local SPARKLE_TOASTS = {
@@ -57,11 +59,13 @@ local SPARKLE_TOASTS = {
 	["toast.questDone"] = true,
 }
 local WATER_TOASTS = {
+	["toast.refilled"] = true,
 	["toast.watered"] = true,
 	["toast.wateredFriend"] = true,
 	["toast.helped"] = true,
 }
 local JINGLE_TOASTS = {
+	["toast.canUpgraded"] = true,
 	["toast.dailyGot"] = true,
 }
 

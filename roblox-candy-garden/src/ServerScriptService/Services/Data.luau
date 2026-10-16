@@ -62,6 +62,7 @@ local function newData()
 		lastSeen = 0, -- 最後に保存した時刻（おかえりメッセージ用）
 		music = true, -- BGMを流すか（次に来たときも同じ設定にする）
 		starGift = false, -- ほしぞらのおくりものを受け取ったか
+		water = { amount = 3, level = 1 }, -- じょうろの水（残り回数）と大きさ（Config.Water.cans）
 	}
 end
 
@@ -230,6 +231,7 @@ function Data.push(player: Player)
 		selected = Data.selected(player),
 		tutorialDone = d.tutorialDone,
 		music = d.music,
+		water = d.water,
 		plotId = player:GetAttribute("PlotId"),
 	})
 end

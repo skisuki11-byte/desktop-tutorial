@@ -202,9 +202,17 @@ local function water(helper: Player, owner: Player, tileIndex: number): boolean
 	local d = Data.get(owner)
 	local slot = d and d.plots[tostring(tileIndex)]
 	local cropCfg = slot and Config.CropById[slot.crop]
-	if not cropCfg or slot.watered or isReady(slot) then
+	local hd = Data.get(helper)
+	if not cropCfg or not hd or slot.watered or isReady(slot) then
 		return false
 	end
+	-- じょうろの水を1つ使う（からっぽなら、池でくむように案内する）
+	if hd.water.amount <= 0 then
+		Remotes.Toast:FireClient(helper, "toast.noWater")
+		return false
+	end
+	hd.water.amount -= 1
+	Data.push(helper)
 	local remaining = cropCfg.growTime - (now() - slot.plantedAt)
 	local skip = math.max(0, math.min(cropCfg.growTime * Config.Water.speedUp, remaining - 1))
 	slot.plantedAt -= skip
@@ -218,11 +226,8 @@ local function water(helper: Player, owner: Player, tileIndex: number): boolean
 		Remotes.Toast:FireClient(helper, "toast.watered")
 	else
 		-- ほかの人の畑を手伝った: 手伝った人にお礼、持ち主には「○○さんが水をあげてくれた」
-		local hd = Data.get(helper)
-		if hd then
-			hd.coins += Config.Water.helperCoins
-			Data.push(helper)
-		end
+		hd.coins += Config.Water.helperCoins
+		Data.push(helper)
 		Remotes.Toast:FireClient(helper, "toast.wateredFriend", Config.Water.helperCoins)
 		Remotes.Toast:FireClient(owner, "toast.helped", helper.DisplayName)
 	end
@@ -266,6 +271,52 @@ function Garden.interact(player: Player, tile: BasePart)
 		water(player, player, tileIndex)
 	end
 	Data.push(player)
+end
+
+-- 池のポンプで、じょうろに水をくむ（タダ。いっぱいまで）
+function Garden.refill(player: Player)
+	if not RateLimit.ok(player, "refill", 0.5) then
+		return
+	end
+	local d = Data.get(player)
+	if not d then
+		return
+	end
+	local cap = Config.Water.cans[d.water.level] or Config.Water.cans[1]
+	if d.water.amount >= cap then
+		Remotes.Toast:FireClient(player, "toast.waterFull")
+		return
+	end
+	d.water.amount = cap
+	Remotes.Toast:FireClient(player, "toast.refilled", cap)
+	Data.push(player)
+	Data.saveSoon(player)
+end
+
+-- じょうろを大きくする（コインを使う）。大きくしたら、そのまま満タンにする
+function Garden.upgradeCan(player: Player)
+	if not RateLimit.ok(player, "upgradeCan", 0.5) then
+		return
+	end
+	local d = Data.get(player)
+	if not d then
+		return
+	end
+	local nextLevel = d.water.level + 1
+	local price = Config.Water.canPrices[nextLevel]
+	if not price then
+		return
+	end
+	if d.coins < price then
+		Remotes.Toast:FireClient(player, "toast.noCoins")
+		return
+	end
+	d.coins -= price
+	d.water.level = nextLevel
+	d.water.amount = Config.Water.cans[nextLevel]
+	Remotes.Toast:FireClient(player, "toast.canUpgraded", Config.Water.cans[nextLevel])
+	Data.push(player)
+	Data.saveSoon(player)
 end
 
 -- 収穫できる（熟した）作物の数（おかえりメッセージ用）

@@ -30,7 +30,7 @@ local function isHarvest(prompt: ProximityPrompt): boolean
 end
 
 local function isWater(prompt: ProximityPrompt): boolean
-	return prompt.ActionText == t("prompt.water")
+	return prompt.ActionText == t("prompt.water") or prompt.ActionText == t("prompt.refill")
 end
 
 -- 絵: 収穫は畑の作物、植えるは選んでいる種（ObjectText に作物の名前が入っている）
@@ -175,6 +175,16 @@ local function show(prompt: ProximityPrompt)
 end
 
 function PromptUI.init()
+	-- 池の水くみポンプの文字（端末の言語で）
+	task.spawn(function()
+		local pump = workspace:WaitForChild("WaterPump", 30)
+		local spot = pump and pump:WaitForChild("Spot", 30)
+		local prompt = spot and spot:WaitForChild("Prompt", 30)
+		if prompt then
+			prompt.ActionText = t("prompt.refill")
+			prompt.ObjectText = ""
+		end
+	end)
 	ProximityPromptService.PromptShown:Connect(function(prompt)
 		if prompt.Style == Enum.ProximityPromptStyle.Custom then
 			show(prompt)

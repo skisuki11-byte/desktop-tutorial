@@ -27,6 +27,7 @@ local COOKIE = C(226, 178, 120) -- 飛び石のクッキー
 
 local PLOT_RADIUS = 62
 local TILE_SIZE = Vector3.new(7, 0.6, 7)
+local pumpPrompt: ProximityPrompt
 local POND = { angle = math.rad(22.5), radius = 108, size = 15 } -- 池（庭と庭のあいだの外側）
 
 local plots = {} -- { model, tiles, spawn, label, owner }
@@ -591,6 +592,51 @@ function World.build(onTile: (Player, BasePart) -> ())
 	for i = 1, Config.MaxPlots do
 		buildPlot(i, plotsFolder, onTile)
 	end
+
+	-- 水くみポンプ（池のほとり、広場がわ）。じょうろの水をくむ場所
+	local p = pondCenter()
+	local toward = (Vector3.new(0, 0, 0) - p) * Vector3.new(1, 0, 1)
+	local pos = p + toward.Unit * (POND.size + 3)
+	local pump = make("Model", { Name = "WaterPump" }, workspace)
+	local base = block({
+		Name = "Base",
+		Size = Vector3.new(3, 0.6, 3),
+		CFrame = CFrame.lookAt(pos + Vector3.new(0, 0.3, 0), p * Vector3.new(1, 0, 1) + Vector3.new(0, 0.3, 0)),
+		Color = C(255, 240, 246),
+		Material = Enum.Material.Marble,
+	}, pump)
+	pillar(pump, 3.4, 0.9, base.CFrame * CFrame.new(0, 2, 0), C(255, 140, 190), nil, true)
+	ball(pump, 1.3, (base.CFrame * CFrame.new(0, 3.9, 0)).Position, C(255, 220, 120))
+	-- 池のほうへのびる注ぎ口
+	deco({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(1.4, 0.45, 0.45),
+		CFrame = base.CFrame * CFrame.new(0, 3, -0.9) * CFrame.Angles(0, math.pi / 2, 0),
+		Color = C(200, 230, 255),
+	}, pump)
+	ball(pump, 0.9, (base.CFrame * CFrame.new(0, 2.2, -1.9)).Position, C(150, 210, 255), Enum.Material.Glass)
+	local spot = block({
+		Name = "Spot",
+		Size = Vector3.new(1, 1, 1),
+		CFrame = base.CFrame * CFrame.new(0, 2.5, 0),
+		Transparency = 1,
+		CanCollide = false,
+	}, pump)
+	pumpPrompt = make("ProximityPrompt", {
+		Name = "Prompt",
+		ActionText = "",
+		ObjectText = "",
+		HoldDuration = 0,
+		MaxActivationDistance = 10,
+		RequiresLineOfSight = false,
+		KeyboardKeyCode = Enum.KeyCode.E,
+		Style = Enum.ProximityPromptStyle.Custom, -- 見た目はクライアントの小さなボタン（PromptUI）
+	}, spot)
+end
+
+-- 水くみポンプのボタン（Main で、押されたら水をくむ処理につなぐ）
+function World.pumpPrompt(): ProximityPrompt
+	return pumpPrompt
 end
 
 -- 空いている庭を割り当てる。満員ならnil。
