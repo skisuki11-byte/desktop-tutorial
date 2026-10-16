@@ -43,7 +43,7 @@ local function buildChip(gui: ScreenGui)
 	Style.stroke(chip, C.Mint, 3)
 	chipLevel = Style.label({
 		Position = UDim2.fromOffset(12, 4),
-		Size = UDim2.new(0.5, 0, 0, 28),
+		Size = UDim2.new(0.5, -16, 0, 28), -- 右の数字と重ならないよう、すき間を空ける
 		Text = "",
 		TextSize = 18,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -52,7 +52,7 @@ local function buildChip(gui: ScreenGui)
 	chipCount = Style.label({
 		AnchorPoint = Vector2.new(1, 0),
 		Position = UDim2.new(1, -12, 0, 4),
-		Size = UDim2.new(0.5, 0, 0, 28),
+		Size = UDim2.new(0.5, -16, 0, 28),
 		Text = "",
 		TextSize = 16,
 		TextColor3 = C.TextMuted,
