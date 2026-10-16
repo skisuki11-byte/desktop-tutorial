@@ -62,6 +62,36 @@ local function renderTile(tile: BasePart, cropCfg, progress: number)
 	CropModels.setReady(visual, progress >= 1)
 end
 
+-- 水をあげた土は、しっとり濃い色にする（もとの色は属性に覚えておく）
+local function setWet(tile: BasePart, wet: boolean)
+	if tile:GetAttribute("DryColor") == nil then
+		tile:SetAttribute("DryColor", tile.Color)
+	end
+	local dry = tile:GetAttribute("DryColor")
+	tile.Color = if wet then dry:Lerp(Color3.fromRGB(60, 40, 45), 0.45) else dry
+	tile:SetAttribute("Watered", wet)
+end
+
+-- 水しぶき（みんなに見える）
+local function splash(tile: BasePart)
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	emitter.Color = ColorSequence.new(Color3.fromRGB(140, 200, 255), Color3.fromRGB(220, 240, 255))
+	emitter.Speed = NumberRange.new(4, 8)
+	emitter.SpreadAngle = Vector2.new(60, 60)
+	emitter.EmissionDirection = Enum.NormalId.Top
+	emitter.Acceleration = Vector3.new(0, -20, 0)
+	emitter.Lifetime = NumberRange.new(0.5, 0.9)
+	emitter.Size = NumberSequence.new(0.5, 0.1)
+	emitter.LightEmission = 0.5
+	emitter.Rate = 0
+	emitter.Parent = tile
+	emitter:Emit(30)
+	task.delay(1.5, function()
+		emitter:Destroy()
+	end)
+end
+
 -- profile.plots[i] の内容をタイルの属性と見た目に反映する
 local function syncTile(player: Player, tileIndex: number)
 	local plot = World.plotOf(player)
@@ -81,8 +111,10 @@ local function syncTile(player: Player, tileIndex: number)
 		tile:SetAttribute("PlantedAt", slot.plantedAt)
 		tile:SetAttribute("GrowTime", cropCfg.growTime)
 		tile:SetAttribute("Ready", progress >= 1)
+		setWet(tile, slot.watered == true)
 		renderTile(tile, cropCfg, progress)
 	else
+		setWet(tile, false)
 		tile:SetAttribute("Crop", nil)
 		tile:SetAttribute("PlantedAt", nil)
 		tile:SetAttribute("GrowTime", nil)
@@ -121,7 +153,11 @@ local function harvest(player: Player, tileIndex: number): boolean
 	if not slot or not isReady(slot) then
 		return false
 	end
-	local sparkle = rng:NextNumber() < Weather.sparkleChance()
+	local chance = Weather.sparkleChance()
+	if slot.watered then
+		chance = math.min(0.9, chance + Config.Water.sparkleBonus) -- 水をあげた作物は、きらきらが出やすい
+	end
+	local sparkle = rng:NextNumber() < chance
 	local bucket = sparkle and d.basketSparkle or d.basket
 	local cropId = slot.crop
 	bucket[cropId] = (bucket[cropId] or 0) + 1
@@ -160,25 +196,74 @@ local function plant(player: Player, tileIndex: number)
 	syncTile(player, tileIndex)
 end
 
+-- 水やり: 育っている途中の作物に、1回植えるごとに1回まで。育つ時間の一部を早める（実る1秒前まで）
+-- helper: 水をあげた人 / owner: 畑の持ち主（同じ人のこともある）
+local function water(helper: Player, owner: Player, tileIndex: number): boolean
+	local d = Data.get(owner)
+	local slot = d and d.plots[tostring(tileIndex)]
+	local cropCfg = slot and Config.CropById[slot.crop]
+	if not cropCfg or slot.watered or isReady(slot) then
+		return false
+	end
+	local remaining = cropCfg.growTime - (now() - slot.plantedAt)
+	local skip = math.max(0, math.min(cropCfg.growTime * Config.Water.speedUp, remaining - 1))
+	slot.plantedAt -= skip
+	slot.watered = true
+	syncTile(owner, tileIndex)
+	local plot = World.plotOf(owner)
+	if plot and plot.tiles[tileIndex] then
+		splash(plot.tiles[tileIndex])
+	end
+	if helper == owner then
+		Remotes.Toast:FireClient(helper, "toast.watered")
+	else
+		-- ほかの人の畑を手伝った: 手伝った人にお礼、持ち主には「○○さんが水をあげてくれた」
+		local hd = Data.get(helper)
+		if hd then
+			hd.coins += Config.Water.helperCoins
+			Data.push(helper)
+		end
+		Remotes.Toast:FireClient(helper, "toast.wateredFriend", Config.Water.helperCoins)
+		Remotes.Toast:FireClient(owner, "toast.helped", helper.DisplayName)
+	end
+	Data.push(owner)
+	Data.saveSoon(owner)
+	return true
+end
+
 -- ProximityPrompt から呼ばれる
+-- 自分の畑: 空なら植える / 実っていたら収穫 / 育っている途中なら水やり
+-- ほかの人の畑: 育っている途中なら水やり（手伝い）だけ。植える・収穫はできない（奪い合いをしない）
 function Garden.interact(player: Player, tile: BasePart)
 	local model = tile.Parent
-	if not model or model:GetAttribute("OwnerUserId") ~= player.UserId then
+	if not model then
 		return
 	end
 	if not RateLimit.ok(player, "interact", 0.12) then
 		return
 	end
-	local d = Data.get(player)
 	local tileIndex = tile:GetAttribute("TileIndex")
-	if not d or type(tileIndex) ~= "number" then
+	if type(tileIndex) ~= "number" then
+		return
+	end
+	if model:GetAttribute("OwnerUserId") ~= player.UserId then
+		local owner = Players:GetPlayerByUserId(model:GetAttribute("OwnerUserId") or 0)
+		if owner then
+			water(player, owner, tileIndex)
+		end
+		return
+	end
+	local d = Data.get(player)
+	if not d then
 		return
 	end
 	local slot = d.plots[tostring(tileIndex)]
 	if slot == nil then
 		plant(player, tileIndex)
-	else
+	elseif isReady(slot) then
 		harvest(player, tileIndex)
+	else
+		water(player, player, tileIndex)
 	end
 	Data.push(player)
 end

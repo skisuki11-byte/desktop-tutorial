@@ -29,8 +29,15 @@ local function isHarvest(prompt: ProximityPrompt): boolean
 	return prompt.ActionText == t("prompt.harvest")
 end
 
+local function isWater(prompt: ProximityPrompt): boolean
+	return prompt.ActionText == t("prompt.water")
+end
+
 -- 絵: 収穫は畑の作物、植えるは選んでいる種（ObjectText に作物の名前が入っている）
 local function iconFor(prompt: ProximityPrompt): string
+	if isWater(prompt) then
+		return "💧"
+	end
 	local tile = prompt.Parent
 	local crop = tile and tile:GetAttribute("Crop")
 	if isHarvest(prompt) and crop and Config.CropById[crop] then
@@ -134,7 +141,10 @@ local function show(prompt: ProximityPrompt)
 
 	local function refresh()
 		local harvest = isHarvest(prompt)
-		button.BackgroundColor3 = if harvest then C.Yellow else C.Mint
+		-- 植える=ミント / 収穫=黄色 / 水やり=水色
+		button.BackgroundColor3 = if harvest then C.Yellow
+			elseif isWater(prompt) then Color3.fromRGB(140, 200, 255)
+			else C.Mint
 		label.Text = prompt.ActionText
 		icon.Text = iconFor(prompt)
 	end

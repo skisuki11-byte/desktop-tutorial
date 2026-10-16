@@ -16,6 +16,14 @@ Config.MaxPlots = 8 -- 同時に遊べる人数分の庭。StudioのMax Players�
 Config.PlotTiles = 6 -- 最初の畑の枚数（最大24まで拡張予定）
 
 Config.SparkleChance = 0.1 -- 収穫時の「きらきら」確率
+
+-- 水やり（あげなくても普通に育つ。あげると少し早く・きらきらが出やすくなる。忘れても損はしない）
+-- 自分の畑にも、ほかの人の畑にもあげられる（手伝うと、お礼にコイン）。1回植えるごとに1回まで
+Config.Water = {
+	speedUp = 0.25, -- 育つ時間の25%ぶん、早く実る
+	sparkleBonus = 0.15, -- 収穫のきらきら確率が+15%
+	helperCoins = 10, -- ほかの人の畑に水をあげたときのお礼
+}
 Config.SparkleMultiplier = 2
 
 -- icon: 絵文字 / color: 実の色

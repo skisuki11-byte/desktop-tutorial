@@ -37,6 +37,7 @@ local EFFECTS = {
 		{ "coin", 2, 0.36, 0.55 },
 	},
 	wobble = { { "pop", 0.65, 0, 0.45 } },
+	water = { { "pop", 1.7, 0, 0.45 }, { "pop", 1.9, 0.07, 0.4 }, { "pop", 2.1, 0.14, 0.35 } }, -- ちゃぷちゃぷ
 }
 
 -- サーバーからのお知らせ（Toast）のうち、できなかったときのもの
@@ -54,6 +55,11 @@ local SPARKLE_TOASTS = {
 	["toast.styleBought"] = true,
 	["toast.limitedBought"] = true,
 	["toast.questDone"] = true,
+}
+local WATER_TOASTS = {
+	["toast.watered"] = true,
+	["toast.wateredFriend"] = true,
+	["toast.helped"] = true,
 }
 local JINGLE_TOASTS = {
 	["toast.dailyGot"] = true,
@@ -111,7 +117,9 @@ function Sounds.hatch()
 end
 
 function Sounds.toast(key: string)
-	if NOPE_TOASTS[key] then
+	if WATER_TOASTS[key] then
+		Sounds.play("water")
+	elseif NOPE_TOASTS[key] then
 		Sounds.play("nope")
 	elseif JINGLE_TOASTS[key] then
 		Sounds.play("jingle")

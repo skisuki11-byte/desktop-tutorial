@@ -89,10 +89,16 @@ local function refreshPrompts()
 		for _, tile in model:GetChildren() do
 			local prompt = tile:FindFirstChild("Prompt")
 			if prompt and prompt:IsA("ProximityPrompt") then
-				if not mine then
+				local crop = tile:GetAttribute("Crop")
+				-- 育っている途中で、まだ水をあげていなければ「水やり」（ほかの人の畑も手伝える）
+				local canWater = crop ~= nil and not tile:GetAttribute("Ready") and not tile:GetAttribute("Watered")
+				if canWater then
+					prompt.Enabled = true
+					prompt.ActionText = t("prompt.water")
+					prompt.ObjectText = t("crop." .. crop)
+				elseif not mine then
 					prompt.Enabled = false
 				else
-					local crop = tile:GetAttribute("Crop")
 					if crop == nil then
 						prompt.Enabled = hasSeed()
 						prompt.ActionText = t("prompt.plant")
