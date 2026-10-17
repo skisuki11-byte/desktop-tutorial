@@ -148,38 +148,55 @@ local function refreshDex()
 		if have then
 			found += 1
 		end
+		-- ずかんのカード: 絵（3D）が主役。下に名前と、レア度の色の帯（カタログと同じ見せ方）
+		local rarityColor = RARITY_COLOR[cfg.rarity]
 		local cell = Style.make("Frame", {
 			LayoutOrder = cfg.rarity * 100 + i,
-			BackgroundColor3 = if have then Color3.fromRGB(255, 255, 255) else Color3.fromRGB(235, 228, 240),
+			BackgroundColor3 = if have then Color3.fromRGB(255, 255, 255) else Color3.fromRGB(238, 232, 244),
 			ZIndex = 12,
 		}, dexGrid)
-		Style.round(cell, 14)
-		Style.stroke(cell, if have then RARITY_COLOR[cfg.rarity] else C.Dim, 3)
+		Style.round(cell, 16)
+		Style.stroke(cell, if have then rarityColor else C.Dim, 3)
+		if have then
+			-- 上から下へ、レア度の色が うっすら にじむ背景
+			Style.make("UIGradient", {
+				Rotation = 90,
+				Color = ColorSequence.new(Color3.new(1, 1, 1), rarityColor:Lerp(Color3.new(1, 1, 1), 0.75)),
+			}, cell)
+		end
 		local face = Style.label({
-			Position = UDim2.fromOffset(0, 4),
-			Size = UDim2.new(1, 0, 0, 40),
+			Position = UDim2.fromOffset(6, 6),
+			Size = UDim2.new(1, -12, 1, -66),
 			Text = "？",
-			TextSize = 32,
+			TextSize = 64,
 			TextColor3 = if have then C.Text else C.TextMuted,
 			ZIndex = 13,
 		}, cell)
 		-- まだ会っていないペットは、シルエットと「？？？」（形だけ見せて、何が出るかの楽しみは残す）
 		Style.setIcon(face, "pet_" .. cfg.id, cfg.icon, not have)
 		Style.label({
-			Position = UDim2.fromOffset(3, 46),
-			Size = UDim2.new(1, -6, 0, 22),
+			Position = UDim2.new(0, 4, 1, -58),
+			Size = UDim2.new(1, -8, 0, 24),
 			Text = if have then t("pet." .. cfg.id) else t("ui.unknownPet"),
-			TextSize = 12,
+			TextSize = 16,
+			TextColor3 = if have then C.Text else C.TextMuted,
 			ZIndex = 13,
 		}, cell)
+		local band = Style.make("Frame", {
+			Position = UDim2.new(0, 8, 1, -31),
+			Size = UDim2.new(1, -16, 0, 24),
+			-- まだのペットも、レア度の色は うすく見せる（「すごいのが いるかも」のわくわく）
+			BackgroundColor3 = if have then rarityColor else rarityColor:Lerp(Color3.fromRGB(200, 194, 210), 0.45),
+			ZIndex = 13,
+		}, cell)
+		Style.round(band, 12)
 		Style.label({
-			Position = UDim2.fromOffset(0, 68),
-			Size = UDim2.new(1, 0, 0, 18),
+			Size = UDim2.fromScale(1, 1),
 			Text = t("rarity." .. cfg.rarity),
-			TextSize = 12,
-			TextColor3 = RARITY_COLOR[cfg.rarity]:Lerp(C.Text, 0.5),
-			ZIndex = 13,
-		}, cell)
+			TextSize = 13,
+			TextColor3 = Color3.new(1, 1, 1),
+			ZIndex = 14,
+		}, band)
 	end
 	dexTitle.Text = t("ui.dex", found, #Config.Pets)
 	local nextReward = nil
@@ -396,11 +413,23 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 		BackgroundTransparency = 1,
 		ZIndex = 11,
 	}, scroll)
-	Style.make("UIGridLayout", {
-		CellSize = UDim2.fromOffset(84, 92),
-		CellPadding = UDim2.fromOffset(8, 8),
+	local dexLayout = Style.make("UIGridLayout", {
+		CellSize = UDim2.fromOffset(150, 186),
+		CellPadding = UDim2.fromOffset(10, 10),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, dexGrid)
+	-- ずかんは ここの目玉なので、カードを大きく。横はばいっぱいに 3まい（広い画面は 4まい）ならべる
+	local function fitDex()
+		local width = dexGrid.AbsoluteSize.X
+		if width < 10 then
+			return
+		end
+		local columns = if width >= 640 then 4 else 3
+		local cellWidth = math.floor((width - (columns - 1) * 10) / columns)
+		dexLayout.CellSize = UDim2.fromOffset(cellWidth, math.floor(cellWidth * 1.22))
+	end
+	dexGrid:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitDex)
+	fitDex()
 
 	-- 孵化の演出（全画面）。中身は PalsUI.playHatch で、画面の高さに合わせて並べる
 	hatchOverlay = Style.make("Frame", {

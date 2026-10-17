@@ -34,9 +34,8 @@ local function fit(entry)
 	local model=entry.model
 	local cf,size=model:GetBoundingBox()
 	local aspect=math.max(.25,entry.viewport.AbsoluteSize.X/math.max(1,entry.viewport.AbsoluteSize.Y))
-	-- 横長の小窓では、見える広さ（FieldOfView）が横はばの方にかかるので、たての大きさを横長の分だけ大きく見つもる
-	local span=if aspect>=1 then math.max(size.Y*aspect,size.X,size.Z) else math.max(size.Y,size.X/aspect,size.Z)
-	local dist=span*.64/math.tan(math.rad(18))
+	-- 小窓いっぱいに大きく見せる（.55 で、たて・よこの いちばん大きい所が 小窓の ほぼ全部になる）
+	local dist=math.max(size.Y,size.X/aspect,size.Z)*.55/math.tan(math.rad(18))
 	entry.camera.CFrame=CFrame.lookAt(cf.Position+Vector3.new(dist*.22,dist*.16,-dist),cf.Position)
 	entry.base=model:GetPivot()
 end
@@ -47,6 +46,13 @@ local function silhouette(view,dim)
 	view.LightColor=if dim then Color3.new(0,0,0) else Color3.fromRGB(255,247,235)
 	view.ImageColor3=Color3.new(1,1,1)
 	view.ImageTransparency=if dim then .35 else 0
+	-- 光る部分（目のキラキラなど）は、光を消しても白く残るので、シルエットの間は かくす
+	for _,o in view:GetDescendants() do
+		if o:IsA("BasePart") and o.Material==Enum.Material.Neon then
+			if dim and o:GetAttribute("ShownTransparency")==nil then o:SetAttribute("ShownTransparency",o.Transparency);o.Transparency=1
+			elseif not dim and o:GetAttribute("ShownTransparency")~=nil then o.Transparency=o:GetAttribute("ShownTransparency");o:SetAttribute("ShownTransparency",nil) end
+		end
+	end
 end
 function CatalogViewport.clear(label)
 	local entry=entries[label]
@@ -80,7 +86,7 @@ RunService.RenderStepped:Connect(function()
 				if model then
 					local world=Instance.new("WorldModel");world.Parent=entry.viewport;model.Parent=world
 					for _,o in model:GetDescendants() do if o:IsA("ParticleEmitter") or o:IsA("BillboardGui") then o:Destroy() end end
-					entry.model=model;fit(entry);Animator.prepare(model)
+					entry.model=model;fit(entry);Animator.prepare(model);silhouette(entry.viewport,entry.dim)
  local loading=Instance.new("TextLabel");loading.Name="Loading3D";loading.BackgroundTransparency=1;loading.Size=UDim2.fromScale(1,1);loading.Text="3D…";loading.TextSize=12;loading.TextColor3=Color3.fromRGB(120,110,140);loading.ZIndex=entry.viewport.ZIndex+1;loading.Parent=entry.viewport
  task.spawn(function()
   local ok=pcall(function() ContentProvider:PreloadAsync({model}) end)
