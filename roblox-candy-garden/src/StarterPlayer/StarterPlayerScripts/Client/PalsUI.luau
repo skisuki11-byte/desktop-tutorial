@@ -12,16 +12,8 @@ local PalsUI = {}
 local C = Style.Color
 local t = I18n.t
 
--- レア度の色。色だけに頼らず、必ずレア度の文字も一緒に出す
-local RARITY_COLOR = {
-	Color3.fromRGB(190, 180, 205),
-	Color3.fromRGB(120, 220, 180),
-	Color3.fromRGB(120, 170, 255),
-	Color3.fromRGB(190, 130, 255),
-	Color3.fromRGB(255, 190, 40),
-	Color3.fromRGB(140, 160, 255), -- まもりがみ
-	Color3.fromRGB(255, 120, 200), -- ゆめいろ
-}
+-- レア度の色（カタログと同じ。Style.Rarity）
+local RARITY_COLOR = Style.Rarity
 
 local panel, scroll, grid, countLabel, bonusLabel, hatchOverlay
 local lastState = nil
@@ -171,12 +163,12 @@ local function refreshDex()
 			TextColor3 = if have then C.Text else C.TextMuted,
 			ZIndex = 13,
 		}, cell)
-		-- まだ会っていないペットは「？」（何が出るかの楽しみは残す）
+		-- まだ会っていないペットは、シルエットと「？？？」（形だけ見せて、何が出るかの楽しみは残す）
 		Style.setIcon(face, "pet_" .. cfg.id, cfg.icon, not have)
 		Style.label({
 			Position = UDim2.fromOffset(3, 46),
 			Size = UDim2.new(1, -6, 0, 22),
-			Text = t("pet." .. cfg.id),
+			Text = if have then t("pet." .. cfg.id) else t("ui.unknownPet"),
 			TextSize = 12,
 			ZIndex = 13,
 		}, cell)

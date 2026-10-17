@@ -38,6 +38,14 @@ local function fit(entry)
 	entry.camera.CFrame=CFrame.lookAt(cf.Position+Vector3.new(dist*.22,dist*.16,-dist),cf.Position)
 	entry.base=model:GetPivot()
 end
+-- まだ会っていない物は、まっくろなシルエットに（光を消して、かげの形だけ見せる）
+local function silhouette(view,dim)
+	view:SetAttribute("Undiscovered",dim)
+	view.Ambient=if dim then Color3.new(0,0,0) else Color3.fromRGB(200,200,210)
+	view.LightColor=if dim then Color3.new(0,0,0) else Color3.fromRGB(255,247,235)
+	view.ImageColor3=Color3.new(1,1,1)
+	view.ImageTransparency=if dim then .35 else 0
+end
 function CatalogViewport.clear(label)
 	local entry=entries[label]
 	if entry then if entry.resizeConnection then entry.resizeConnection:Disconnect() end;if entry.model then Animator.release(entry.model) end;entry.viewport:Destroy();entries[label]=nil end
@@ -45,12 +53,12 @@ end
 function CatalogViewport.attach(label: GuiObject,key: string?,dim: boolean?,options): boolean
 	if not supported(key) then CatalogViewport.clear(label);return false end
 	local entry=entries[label]
-	if entry and entry.key==key then entry.dim=dim==true;entry.viewport:SetAttribute("Undiscovered",dim==true);entry.viewport.ImageTransparency=if dim then .48 else 0;entry.viewport.ImageColor3=if dim then Color3.fromRGB(225,228,235) else Color3.new(1,1,1);entry.options=options or entry.options;return true end
+	if entry and entry.key==key then entry.dim=dim==true;silhouette(entry.viewport,dim==true);entry.options=options or entry.options;return true end
 	CatalogViewport.clear(label)
 	local view=Instance.new("ViewportFrame")
 	view.Name="Catalog3D";view.Size=UDim2.fromScale(1,1);view.BackgroundTransparency=1;view.ZIndex=label.ZIndex;view.Active=false
-	view.Ambient=Color3.fromRGB(200,200,210);view.LightColor=Color3.fromRGB(255,247,235);view.LightDirection=Vector3.new(-1,-1,-1)
-	view.ImageTransparency=if dim then .48 else 0;view.ImageColor3=if dim then Color3.fromRGB(225,228,235) else Color3.new(1,1,1);view:SetAttribute("Undiscovered",dim==true);view.Parent=label
+	view.LightDirection=Vector3.new(-1,-1,-1)
+	silhouette(view,dim==true);view.Parent=label
 	local camera=Instance.new("Camera");camera.FieldOfView=36;camera.Parent=view;view.CurrentCamera=camera
 	entry={key=key,viewport=view,camera=camera,dim=dim==true,options=options or {}}
 	entries[label]=entry

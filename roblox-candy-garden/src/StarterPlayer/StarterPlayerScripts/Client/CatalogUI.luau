@@ -24,16 +24,21 @@ end
 local function mystery(entry)
 	return (entry.category=="variant" or entry.category=="pet" or entry.category=="crop" or entry.category=="cos" or entry.category=="decor") and owned(entry)~=true
 end
+-- まだ会っていないペットは、名前も「？？？」（シルエットと同じく、出るまでの楽しみ）
+local function displayName(entry)
+	if entry.category=="pet" and mystery(entry) then return tr("？？？","???") end
+	return if ja() then entry.name else entry.en
+end
 local function status(entry)
 	local have=owned(entry)
 	if have==true then return tr("みつけた！","Discovered!") end
-	if mystery(entry) then return tr("まだ ひみつ… あつめて色をみよう！","A little mystery… collect to reveal!") end
+	if mystery(entry) then return tr("まだ ひみつ… あつめて すがたを みよう！","A little mystery… collect to reveal!") end
 	return tr("みためと 入手方法をチェック！","Explore the model and how to get it")
 end
 local function showDetail(entry)
 	selected=entry
 	detail.Visible=true;scroll.Visible=false
-	detailTitle.Text=if ja() then entry.name else entry.en
+	detailTitle.Text=displayName(entry)
 	detailInfo.Text=if ja() then entry.info else entry.infoEn
 	detailStatus.Text=status(entry)
 	View.attach(detailView,entry.key,mystery(entry),{animate=true,spin=true})
@@ -49,10 +54,10 @@ local function refresh()
 			count+=1
 			local card=Style.button({Name="Entry_"..entry.key,LayoutOrder=i,Text="",BackgroundColor3=Color3.new(1,1,1),ZIndex=12},scroll)
 			local border=card:FindFirstChildOfClass("UIStroke")
-			if entry.rarity then border.Transparency=if mystery(entry) then .65 else 0;border.Color=Color3.fromHSV((8-entry.rarity)*.095,.35,.95) end
+			if entry.rarity then border.Transparency=if mystery(entry) then .65 else 0;border.Color=Style.Rarity[entry.rarity] or Style.Color.Dim end
 			local frame=Style.make("Frame",{Name="Preview",Position=UDim2.fromOffset(5,4),Size=UDim2.new(1,-10,0,if compactCards then 70 else 126),BackgroundTransparency=1,ZIndex=13},card)
 			View.attach(frame,entry.key,mystery(entry))
-			Style.label({Name="EntryName",Position=UDim2.fromOffset(5,if compactCards then 76 else 132),Size=UDim2.new(1,-10,0,if compactCards then 22 else 30),Text=if ja() then entry.name else entry.en,TextSize=14,ZIndex=13},card)
+			Style.label({Name="EntryName",Position=UDim2.fromOffset(5,if compactCards then 76 else 132),Size=UDim2.new(1,-10,0,if compactCards then 22 else 30),Text=displayName(entry),TextSize=14,ZIndex=13},card)
 			Style.label({Name="CollectionStatus",Position=UDim2.fromOffset(4,if compactCards then 100 else 164),Size=UDim2.new(1,-8,0,if compactCards then 18 else 24),Text=if entry.rarity then string.rep("★",entry.rarity).." · "..status(entry) else status(entry),TextSize=10,TextColor3=Style.Color.TextMuted,ZIndex=13},card)
 			card.Activated:Connect(function() showDetail(entry) end)
 		end
@@ -108,5 +113,8 @@ function CatalogUI.update(value)
  state=value or {}
  if selected then detailStatus.Text=status(selected);View.attach(detailView,selected.key,mystery(selected),{animate=true,spin=true}) end
  if scroll then for _,entry in Data.entries do local card=scroll:FindFirstChild("Entry_"..entry.key);if card then local preview=card:FindFirstChild("Preview");if preview then View.attach(preview,entry.key,mystery(entry)) end;local statusLabel=card:FindFirstChild("CollectionStatus");if statusLabel then statusLabel.Text=if entry.rarity then string.rep("★",entry.rarity).." · "..status(entry) else status(entry) end;local border=card:FindFirstChildOfClass("UIStroke");if border and entry.rarity then border.Transparency=if mystery(entry) then .65 else 0 end end end end
+ -- 会えたペットは、名前も見せる
+ if selected and detailTitle then detailTitle.Text=displayName(selected) end
+ if scroll then for _,entry in Data.entries do local card=scroll:FindFirstChild("Entry_"..entry.key);local name=card and card:FindFirstChild("EntryName");if name then name.Text=displayName(entry) end end end
 end
 return CatalogUI

@@ -12,6 +12,19 @@ local Icons = require(ReplicatedStorage.Shared.Icons)
 local CatalogViewport = require(script.Parent.CatalogViewport)
 local Style = {}
 
+-- レア度（★1〜★7）の色。カタログ（docs/candy-garden-catalog.html の tier-1〜7）と同じ色にそろえる。
+-- ★1 グレー、★2 みどり、★3 あお、★4 むらさき、★5 きん、★6 よぞらのこん、★7 ゆめいろピンク。
+-- 色だけに頼らず、必ず「★いくつ」の文字も一緒に出す
+Style.Rarity = {
+	Color3.fromHex("8f99a4"),
+	Color3.fromHex("54a57f"),
+	Color3.fromHex("538bc3"),
+	Color3.fromHex("a576cf"),
+	Color3.fromHex("d4a03b"),
+	Color3.fromHex("5a4d91"),
+	Color3.fromHex("d077a8"),
+}
+
 Style.Color = {
 	Accent = Color3.fromRGB(255, 111, 168), -- 主役のピンク（1画面に主役は1つ）
 	AccentDark = Color3.fromRGB(214, 70, 128),
@@ -384,7 +397,7 @@ end
 
 -- アイコンを出す。イラスト（Shared.Icons）があれば絵を、なければ絵文字（fallback）を出す。
 -- label = アイコン用の TextLabel（大きさ・位置はそのまま。絵はその枠いっぱいに、形をくずさず入れる）。
--- dim = まだ持っていない物を、うすく出すとき
+-- dim = まだ会っていない物を、シルエット（黒いかげ）で出すとき
 function Style.setIcon(label: TextLabel, key: string?, fallback: string?, dim: boolean?)
 	if CatalogViewport.attach(label,key,dim) then
 		label.Text=""
@@ -408,8 +421,8 @@ function Style.setIcon(label: TextLabel, key: string?, fallback: string?, dim: b
 		end
 		image.Image = id
 		image.Visible = true
-		image.ImageTransparency = if dim then 0.55 else 0
-		image.ImageColor3 = if dim then Color3.fromRGB(150, 140, 160) else Color3.new(1, 1, 1)
+		image.ImageTransparency = if dim then 0.35 else 0
+		image.ImageColor3 = if dim then Color3.new(0, 0, 0) else Color3.new(1, 1, 1)
 	else
 		label.Text = fallback or ""
 		if image then
