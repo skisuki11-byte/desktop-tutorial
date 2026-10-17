@@ -43,6 +43,7 @@ local function newData()
 		basketV = {}, -- ふしぎな作物 [variantId] = { [cropId] = 個数 }（きらきらは basketSparkle）
 		cropDex = {}, -- 作物ずかん [cropId] = { [variantId か "normal"] = true }
 		cropDexClaimed = 0, -- 受け取った作物ずかんのごほうびの数
+		seedShop = { round = 0, bought = {} }, -- 種屋: いまの入荷の回で買った数 [cropId] = 個数
 		plots = {}, -- [tostring(tileIndex)] = { crop, plantedAt }
 		tutorialDone = false,
 		pets = {}, -- { { uid, pet } }
@@ -257,6 +258,7 @@ function Data.push(player: Player)
 		limited = extra.limited,
 		quests = extra.quests,
 		decor = extra.decor,
+		seedShop = extra.seedShop,
 		pets = d.pets,
 		equipped = d.equipped,
 		sellBonus = 1 + Data.petBonus(d),

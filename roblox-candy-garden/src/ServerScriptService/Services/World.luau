@@ -47,7 +47,15 @@ local function tileOffset(i: number): (number, number)
 	return column, (row - 1) * 9
 end
 local pumpPrompt: ProximityPrompt
-local POND = { angle = math.rad(22.5), radius = 108, size = 15 } -- 池（庭と庭のあいだの外側）
+local POND = { angle = math.rad(22.5), radius = 108, size = 15 } -- 池（庭と庭のあいだの外側。景色）
+-- みんなの広場: 「みんなの木」へ移動したときに降りる場所（+Z がわ）の左右に、ふんすい（水くみ）と たねや。
+-- どの庭からも同じくらいの近さで、みんなが同じ場所に集まる
+local PLAZA_RADIUS = 32
+local FOUNTAIN_ANGLE = math.rad(67.5)
+local SEEDSHOP_ANGLE = math.rad(112.5)
+local function plazaSpot(angle: number): Vector3
+	return Vector3.new(math.cos(angle) * PLAZA_RADIUS, 0, math.sin(angle) * PLAZA_RADIUS)
+end
 
 local plots = {} -- { model, tiles, spawn, label, owner }
 
@@ -299,6 +307,10 @@ local function isFree(pos: Vector3, taken: { Vector3 }, spacing: number): boolea
 		end
 	end
 	if (flat - pondCenter()).Magnitude < POND.size + 6 then
+		return false
+	end
+	-- ふんすいと たねや のまわり
+	if (flat - plazaSpot(FOUNTAIN_ANGLE)).Magnitude < 12 or (flat - plazaSpot(SEEDSHOP_ANGLE)).Magnitude < 13 then
 		return false
 	end
 	for _, other in taken do
@@ -592,6 +604,169 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 	plots[index] = { model = model, tiles = tiles, spawn = spawn, label = label, owner = nil }
 end
 
+-- ---- みんなの広場: いちごミルクのふんすい（水くみ）と たねや ----
+
+-- 広場のものを置く CFrame。ひろばの入口から木へ向かう道（x=0 の線）のほうを向く（-Z が道がわ）
+local function facingTree(spot: Vector3, y: number): CFrame
+	return CFrame.lookAt(spot + Vector3.new(0, y, 0), Vector3.new(0, y, spot.Z))
+end
+
+local function addPrompt(parent: Model, at: CFrame, distance: number): ProximityPrompt
+	local spot = block({
+		Name = "Spot",
+		Size = Vector3.new(1, 1, 1),
+		CFrame = at,
+		Transparency = 1,
+		CanCollide = false,
+		CanQuery = false,
+		CanTouch = false,
+	}, parent)
+	return make("ProximityPrompt", {
+		Name = "Prompt",
+		ActionText = "",
+		ObjectText = "",
+		HoldDuration = 0,
+		MaxActivationDistance = distance,
+		RequiresLineOfSight = false,
+		KeyboardKeyCode = Enum.KeyCode.E,
+		Style = Enum.ProximityPromptStyle.Custom, -- 見た目はクライアントの小さなボタン（PromptUI）
+	}, spot)
+end
+
+-- いちごミルクのふんすい。まわりのどこからでも水をくめる
+local function buildFountain()
+	local spot = plazaSpot(FOUNTAIN_ANGLE)
+	local model = make("Model", { Name = "WaterFountain" }, workspace)
+	local base = facingTree(spot, 0)
+	-- 石のふち（ジャンプしなくても近づけるよう、低め）
+	pillar(model, 1.4, 11, base * CFrame.new(0, 0.7, 0), C(255, 240, 246), Enum.Material.Marble, true)
+	-- いちごミルクの水
+	deco({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.3, 9.6, 9.6),
+		CFrame = base * CFrame.new(0, 1.35, 0) * CFrame.Angles(0, 0, math.pi / 2),
+		Color = C(255, 170, 210),
+		Material = Enum.Material.Glass,
+		Transparency = 0.15,
+	}, model)
+	-- まん中の柱と、上の小さなお皿
+	pillar(model, 4.2, 1.2, base * CFrame.new(0, 3.2, 0), C(255, 230, 240), Enum.Material.Marble, true)
+	pillar(model, 0.6, 4.2, base * CFrame.new(0, 5.3, 0), C(255, 240, 246), Enum.Material.Marble)
+	pillar(model, 0.2, 3.6, base * CFrame.new(0, 5.62, 0), C(255, 170, 210), Enum.Material.Glass)
+	local top = ball(model, 1.4, (base * CFrame.new(0, 6.3, 0)).Position, C(255, 120, 170), Enum.Material.Glass)
+	-- 上から ふき出す しぶき
+	local spray = Instance.new("ParticleEmitter")
+	spray.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	spray.Color = ColorSequence.new(C(255, 190, 220), C(255, 255, 255))
+	spray.Rate = 25
+	spray.Speed = NumberRange.new(5, 8)
+	spray.SpreadAngle = Vector2.new(25, 25)
+	spray.EmissionDirection = Enum.NormalId.Top
+	spray.Acceleration = Vector3.new(0, -22, 0)
+	spray.Lifetime = NumberRange.new(0.7, 1)
+	spray.Size = NumberSequence.new(0.45, 0.15)
+	spray.LightEmission = 0.4
+	spray.Parent = top
+	pumpPrompt = addPrompt(model, base * CFrame.new(0, 3, 0), 11)
+end
+
+-- たねや の屋台。しましまの屋根、カウンターに種の箱、上に「つぎの入荷まで」の看板
+local function buildSeedShop()
+	local spot = plazaSpot(SEEDSHOP_ANGLE)
+	local model = make("Model", { Name = "SeedShop" }, workspace)
+	local base = facingTree(spot, 0) -- -Z が木のほう（お客さんがわ）
+	block({
+		Name = "Floor",
+		Size = Vector3.new(14, 0.4, 9),
+		CFrame = base * CFrame.new(0, 0.2, 0),
+		Color = COOKIE,
+		Material = Enum.Material.Sandstone,
+	}, model)
+	-- カウンター（お客さんがわ）
+	block({
+		Name = "Counter",
+		Size = Vector3.new(12, 3, 2.2),
+		CFrame = base * CFrame.new(0, 1.9, -2.6),
+		Color = C(255, 236, 244),
+		Material = Enum.Material.Wood,
+	}, model)
+	block({
+		Name = "CounterTop",
+		Size = Vector3.new(12.6, 0.4, 2.8),
+		CFrame = base * CFrame.new(0, 3.6, -2.6),
+		Color = C(255, 150, 190),
+	}, model)
+	-- 柱
+	for _, x in { -6.3, 6.3 } do
+		for _, z in { -3.6, 3.6 } do
+			pillar(model, 8, 0.6, base * CFrame.new(x, 4.2, z), C(255, 250, 244), nil, true)
+		end
+	end
+	-- しましまの屋根（ピンクと白を交互に）
+	for i = 0, 6 do
+		deco({
+			Size = Vector3.new(2.1, 0.35, 10.5),
+			CFrame = base * CFrame.new(-6.3 + i * 2.1, 8.6, 0) * CFrame.Angles(math.rad(-10), 0, 0),
+			Color = if i % 2 == 0 then C(255, 120, 170) else C(255, 252, 250),
+		}, model)
+	end
+	-- 屋根のふちの丸い飾り
+	for i = 0, 6 do
+		ball(model, 0.9, (base * CFrame.new(-6.3 + i * 2.1, 7.6, -5.3)).Position, if i % 2 == 0 then C(255, 120, 170) else C(255, 220, 120))
+	end
+	-- カウンターの上の種の箱（作物の色の実を入れておく）
+	for i, crop in Config.Crops do
+		local x = -5 + (i - 1) * 2
+		deco({
+			Size = Vector3.new(1.6, 0.7, 1.6),
+			CFrame = base * CFrame.new(x, 4.15, -2.6),
+			Color = C(214, 168, 120),
+			Material = Enum.Material.Wood,
+		}, model)
+		for k = 1, 3 do
+			ball(model, 0.55, (base * CFrame.new(x - 0.35 + (k - 1) * 0.35, 4.6, -2.6 + (k % 2) * 0.3)).Position, crop.color, Enum.Material.Glass)
+		end
+	end
+	-- 看板（文字はクライアントが、その人の言語で入れる。のこり時間もクライアントが数える）
+	local board = deco({
+		Name = "Board",
+		Size = Vector3.new(7, 2.4, 0.4),
+		CFrame = base * CFrame.new(0, 10.4, -4.4),
+		Transparency = 1, -- 文字だけを見せる（板があると、うしろの文字が隠れる）
+	}, model)
+	local sign = make("BillboardGui", {
+		Name = "Sign",
+		Size = UDim2.fromScale(12, 4.2),
+		StudsOffsetWorldSpace = Vector3.new(0, 1.6, 0),
+		LightInfluence = 0,
+		MaxDistance = 120,
+	}, board)
+	make("TextLabel", {
+		Name = "Title",
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 0.6),
+		Font = Enum.Font.FredokaOne,
+		TextScaled = true,
+		TextColor3 = C(92, 52, 110),
+		TextStrokeColor3 = C(255, 255, 255),
+		TextStrokeTransparency = 0,
+		Text = "🌱",
+	}, sign)
+	make("TextLabel", {
+		Name = "Timer",
+		BackgroundTransparency = 1,
+		Position = UDim2.fromScale(0, 0.6),
+		Size = UDim2.fromScale(1, 0.4),
+		Font = Enum.Font.FredokaOne,
+		TextScaled = true,
+		TextColor3 = C(255, 255, 255),
+		TextStrokeColor3 = C(200, 80, 140),
+		TextStrokeTransparency = 0,
+		Text = "",
+	}, sign)
+	addPrompt(model, base * CFrame.new(0, 3, -3.2), 10)
+end
+
 function World.build(onTile: (Player, BasePart) -> ())
 	setupLighting()
 
@@ -615,45 +790,8 @@ function World.build(onTile: (Player, BasePart) -> ())
 		World.resetLocks(plots[i])
 	end
 
-	-- 水くみポンプ（池のほとり、広場がわ）。じょうろの水をくむ場所
-	local p = pondCenter()
-	local toward = (Vector3.new(0, 0, 0) - p) * Vector3.new(1, 0, 1)
-	local pos = p + toward.Unit * (POND.size + 3)
-	local pump = make("Model", { Name = "WaterPump" }, workspace)
-	local base = block({
-		Name = "Base",
-		Size = Vector3.new(3, 0.6, 3),
-		CFrame = CFrame.lookAt(pos + Vector3.new(0, 0.3, 0), p * Vector3.new(1, 0, 1) + Vector3.new(0, 0.3, 0)),
-		Color = C(255, 240, 246),
-		Material = Enum.Material.Marble,
-	}, pump)
-	pillar(pump, 3.4, 0.9, base.CFrame * CFrame.new(0, 2, 0), C(255, 140, 190), nil, true)
-	ball(pump, 1.3, (base.CFrame * CFrame.new(0, 3.9, 0)).Position, C(255, 220, 120))
-	-- 池のほうへのびる注ぎ口
-	deco({
-		Shape = Enum.PartType.Cylinder,
-		Size = Vector3.new(1.4, 0.45, 0.45),
-		CFrame = base.CFrame * CFrame.new(0, 3, -0.9) * CFrame.Angles(0, math.pi / 2, 0),
-		Color = C(200, 230, 255),
-	}, pump)
-	ball(pump, 0.9, (base.CFrame * CFrame.new(0, 2.2, -1.9)).Position, C(150, 210, 255), Enum.Material.Glass)
-	local spot = block({
-		Name = "Spot",
-		Size = Vector3.new(1, 1, 1),
-		CFrame = base.CFrame * CFrame.new(0, 2.5, 0),
-		Transparency = 1,
-		CanCollide = false,
-	}, pump)
-	pumpPrompt = make("ProximityPrompt", {
-		Name = "Prompt",
-		ActionText = "",
-		ObjectText = "",
-		HoldDuration = 0,
-		MaxActivationDistance = 10,
-		RequiresLineOfSight = false,
-		KeyboardKeyCode = Enum.KeyCode.E,
-		Style = Enum.ProximityPromptStyle.Custom, -- 見た目はクライアントの小さなボタン（PromptUI）
-	}, spot)
+	buildFountain()
+	buildSeedShop()
 end
 
 -- 畑1枚を「使える / まだ使えない」にする。まだ使えない畑は見えなくする（広げたときに、ポンと現れる）
@@ -774,7 +912,8 @@ function World.teleport(player: Player, dest: string)
 			target = plot.spawn.CFrame * CFrame.new(0, 3.5, 0)
 		end
 	elseif dest == "tree" then
-		target = CFrame.lookAt(Vector3.new(0, 4, 16), Vector3.new(0, 4, 0))
+		-- 広場の入口に降りる。左右に たねや と ふんすい、正面に みんなの木 が見える
+		target = CFrame.lookAt(Vector3.new(0, 4, 42), Vector3.new(0, 4, 0))
 	end
 	if target then
 		character:PivotTo(target)

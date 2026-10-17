@@ -38,7 +38,14 @@ local function isFertilize(prompt: ProximityPrompt): boolean
 	return prompt.ActionText == t("prompt.fertilize")
 end
 
+local function isShop(prompt: ProximityPrompt): boolean
+	return prompt.ActionText == t("prompt.shop")
+end
+
 local function iconFor(prompt: ProximityPrompt): string
+	if isShop(prompt) then
+		return "🛒"
+	end
 	if isWater(prompt) then
 		return "💧"
 	end
@@ -150,6 +157,7 @@ local function show(prompt: ProximityPrompt)
 		local harvest = isHarvest(prompt)
 		-- 植える=ミント / 収穫=黄色 / 水やり=水色
 		button.BackgroundColor3 = if harvest then C.Yellow
+			elseif isShop(prompt) then C.Mint
 			elseif isWater(prompt) then Color3.fromRGB(140, 200, 255)
 			elseif isFertilize(prompt) then Color3.fromRGB(255, 225, 140)
 			else C.Mint
@@ -182,15 +190,47 @@ local function show(prompt: ProximityPrompt)
 	}
 end
 
-function PromptUI.init()
-	-- 池の水くみポンプの文字（端末の言語で）
+local function formatClock(seconds: number): string
+	seconds = math.max(0, math.ceil(seconds))
+	return string.format("%d:%02d", seconds // 60, seconds % 60)
+end
+
+-- ui: お店の画面を開くため（UI.showPanel）
+function PromptUI.init(ui)
+	-- ひろばの ふんすい（水くみ）の文字（端末の言語で）
 	task.spawn(function()
-		local pump = workspace:WaitForChild("WaterPump", 30)
-		local spot = pump and pump:WaitForChild("Spot", 30)
+		local fountain = workspace:WaitForChild("WaterFountain", 30)
+		local spot = fountain and fountain:WaitForChild("Spot", 30)
 		local prompt = spot and spot:WaitForChild("Prompt", 30)
 		if prompt then
 			prompt.ActionText = t("prompt.refill")
 			prompt.ObjectText = ""
+		end
+	end)
+	-- ひろばの たねや: 近づくと「お店」ボタン。看板に「つぎの入荷まで」
+	task.spawn(function()
+		local shop = workspace:WaitForChild("SeedShop", 30)
+		local spot = shop and shop:WaitForChild("Spot", 30)
+		local prompt = spot and spot:WaitForChild("Prompt", 30)
+		if prompt then
+			prompt.ActionText = t("prompt.shop")
+			prompt.ObjectText = ""
+			prompt.Triggered:Connect(function()
+				ui.showPanel("shop")
+			end)
+		end
+		local board = shop and shop:WaitForChild("Board", 30)
+		local sign = board and board:WaitForChild("Sign", 30)
+		if not sign then
+			return
+		end
+		sign:WaitForChild("Title").Text = t("ui.shopSign")
+		local timer = sign:WaitForChild("Timer")
+		while sign.Parent do
+			local now = workspace:GetServerTimeNow()
+			local nextAt = (Config.seedRound(now) + 1) * Config.SeedShop.restockSeconds
+			timer.Text = t("ui.restockIn", formatClock(nextAt - now))
+			task.wait(1)
 		end
 	end)
 	ProximityPromptService.PromptShown:Connect(function(prompt)

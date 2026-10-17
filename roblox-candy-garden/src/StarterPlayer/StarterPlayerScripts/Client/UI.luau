@@ -34,6 +34,8 @@ local sellButton, harvestButton, shopButton, palsButton, styleButton
 local palsBadge
 local sellWiggling = false
 local shopPanel
+local seedRows = {} -- 種屋の行 [cropId] = { row, info, buy }（入荷の数に合わせて表示を変える）
+local restockLabel -- 「つぎの入荷まで 3:12」
 local toastLabel
 local bannerLabel, banner
 local lastCoins = nil
@@ -818,6 +820,26 @@ local function buildShop()
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 12,
 	}, scroll)
+	-- 入荷の時計（5分ごとに品ぞろえが変わる）
+	restockLabel = Style.label({
+		Name = "RestockTimer",
+		LayoutOrder = 0,
+		Size = UDim2.new(1, -10, 0, 22),
+		Text = "",
+		TextSize = 16,
+		TextColor3 = C.AccentDark,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, scroll)
+	task.spawn(function()
+		while restockLabel.Parent do
+			local now = workspace:GetServerTimeNow()
+			local nextAt = (Config.seedRound(now) + 1) * Config.SeedShop.restockSeconds
+			local left = math.max(0, math.ceil(nextAt - now))
+			restockLabel.Text = "🕒 " .. t("ui.restockIn", string.format("%d:%02d", left // 60, left % 60))
+			task.wait(1)
+		end
+	end)
 
 	for order, cropId in Config.CropOrder do
 		local crop = Config.CropById[cropId]
@@ -848,7 +870,7 @@ local function buildShop()
 			TextWrapped = false,
 			ZIndex = 12,
 		}, row)
-		Style.label({
+		local info = Style.label({
 			Position = UDim2.fromOffset(78, 46),
 			Size = UDim2.new(0.68, -102, 0, 30),
 			Text = "⏱ " .. t("ui.growTimeText", I18n.duration(crop.growTime)) .. "  💰 " .. Style.formatNumber(crop.sellPrice),
@@ -872,6 +894,7 @@ local function buildShop()
 		buy.Activated:Connect(function()
 			Remotes.BuySeed:FireServer(cropId, 1)
 		end)
+		seedRows[cropId] = { row = row, info = info, buy = buy }
 	end
 
 	-- じょうろを大きくする（コインの使い道。1回分ずつしか増えないので、快適にしすぎない）
@@ -1026,6 +1049,42 @@ local function buildShop()
 	expandButton.Activated:Connect(function()
 		Remotes.ExpandPlot:FireServer()
 	end)
+end
+
+-- 種屋の行: のこりの数 / うりきれ / こんかいは なし
+local function refreshSeedShop(state)
+	local shop = state.seedShop
+	if not shop then
+		return
+	end
+	for cropId, entry in seedRows do
+		local crop = Config.CropById[cropId]
+		local left = shop.left[cropId]
+		local base = "⏱ " .. t("ui.growTimeText", I18n.duration(crop.growTime)) .. "  💰 " .. Style.formatNumber(crop.sellPrice)
+		if left == nil then
+			-- この回は入荷していない（行を うすくして、ボタンは押せない）
+			entry.info.Text = base
+			entry.buy.Text = t("ui.notInStock")
+			entry.buy.TextSize = 16
+			entry.buy.BackgroundColor3 = C.Dim
+			entry.buy.Active = false
+			entry.row.BackgroundColor3 = Color3.fromRGB(240, 236, 244)
+		elseif left <= 0 then
+			entry.info.Text = base .. "  ・ " .. t("ui.soldOut")
+			entry.buy.Text = t("ui.soldOut")
+			entry.buy.TextSize = 18
+			entry.buy.BackgroundColor3 = C.Dim
+			entry.buy.Active = false
+			entry.row.BackgroundColor3 = Color3.fromRGB(240, 236, 244)
+		else
+			entry.info.Text = base .. "  ・ " .. t("ui.seedLeft", left)
+			entry.buy.Text = "🟡 " .. Style.formatNumber(crop.seedPrice)
+			entry.buy.TextSize = 22
+			entry.buy.BackgroundColor3 = C.Accent
+			entry.buy.Active = true
+			entry.row.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		end
+	end
 end
 
 -- じょうろの表示（残り・ショップの行）を、サーバーから届いた状態に合わせる
@@ -1288,6 +1347,7 @@ function UI.update(state)
 	palsBadge.Visible = #(state.pets or {}) == 0 and coins >= egg.price
 	latestState = state
 	refreshWater(state)
+	refreshSeedShop(state)
 	refreshSeedBar(state)
 	fitBottom() -- 種の数が変わったら、種えらびの大きさを合わせ直す
 	UI.refreshMusic()

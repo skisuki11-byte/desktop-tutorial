@@ -126,6 +126,44 @@ Config.Crops = {
 	{ id = "mooncandy", icon = "🌙", seedPrice = 2000, growTime = 28800, sellPrice = 20000, color = Color3.fromRGB(150, 140, 255) },
 }
 
+-- 種屋の入れ替わり（Grow a Garden の種屋と同じ考え方）。restockSeconds ごとに品ぞろえが変わる。
+-- 品ぞろえは時刻から決まるので、どのサーバーでも同じ（「いま スターケーキが 入ってるよ」と話せる）。
+-- 数は ひとりずつ別（取り合いにならない）。グミベリーは毎回かならず入る（種がなくて困らないように）
+-- chance=その回に入荷する確率 / min〜max=入荷する数
+Config.SeedShop = {
+	restockSeconds = 300,
+	stock = {
+		gummyberry = { chance = 1, min = 10, max = 20 },
+		peropero = { chance = 1, min = 4, max = 8 },
+		wataame = { chance = 0.8, min = 2, max = 5 },
+		nijimelon = { chance = 0.5, min = 1, max = 3 },
+		mooncandy = { chance = 0.35, min = 1, max = 2 },
+		starcake = { chance = 0.25, min = 1, max = 2 },
+	},
+	rare = { starcake = true, mooncandy = true }, -- 入荷したら、みんなにお知らせする
+}
+
+-- いまの入荷の回（時刻から計算。サーバーとクライアントで同じ値になる）
+function Config.seedRound(serverTime: number): number
+	return math.floor(serverTime / Config.SeedShop.restockSeconds)
+end
+
+-- その回の品ぞろえ [cropId] = 入荷した数（入荷しなかった種は入らない）
+function Config.seedStock(round: number): { [string]: number }
+	local rng = Random.new(round * 7919 + 104729)
+	local stock = {}
+	for _, cropId in Config.CropOrder do
+		local rule = Config.SeedShop.stock[cropId]
+		-- 抽選の回数をそろえるため、入荷しない種でも乱数を2回引く
+		local roll = rng:NextNumber()
+		local count = rng:NextInteger(rule and rule.min or 0, rule and rule.max or 0)
+		if rule and roll < rule.chance then
+			stock[cropId] = count
+		end
+	end
+	return stock
+end
+
 Config.CropById = {}
 Config.CropOrder = {}
 for _, crop in Config.Crops do

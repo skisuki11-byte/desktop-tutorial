@@ -27,7 +27,7 @@ WeatherClient.init(UI)
 TreeClient.init(UI)
 UI.relayout()
 DayNight.init()
-PromptUI.init()
+PromptUI.init(UI)
 StarGiftUI.init(UI)
 TradeUI.init(UI)
 PalsUI.onTrade = TradeUI.openPicker
