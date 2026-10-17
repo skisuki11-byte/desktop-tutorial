@@ -643,14 +643,17 @@ local function applyLayout(mode: string)
 			treeChip.Size = UDim2.fromOffset(150, 58) -- スマホでは細く（種えらびの場所を広げる）
 			Style.setScale(treeChip, PHONE_ROW / 58) -- レベル表示も同じ高さ
 		end
+		-- 種えらびの列は、横はばを いっぱいに使う（道具と種が スライドしなくても見えるように）。
+		-- みんなの木のレベルは、広場にいるときだけ出る表示なので、種の列の横には置かない
+		local row2 = leftTop + PHONE_ROW + 8
 		if portrait then
 			-- 縦持ち: 1段目 [コイン][メニュー] … [庭][木]
-			--         2段目 [種えらび] … [みんなの木のレベル]
-			--         3段目 [お天気]（お天気のときだけ）
-			local row2 = leftTop + PHONE_ROW + 8
+			--         2段目 [種えらび（はしからはしまで）]
+			--         3段目 [お天気] … [みんなの木のレベル]
+			local row3 = row2 + SEED_PHONE + 18
 			if treeChip then
 				treeChip.AnchorPoint = Vector2.new(1, 0)
-				treeChip.Position = UDim2.new(1, -12, 0, row2)
+				treeChip.Position = UDim2.new(1, -12, 0, row3)
 			end
 			topSeeds.AnchorPoint = Vector2.new(0, 0)
 			topSeeds.Position = UDim2.fromOffset(12, row2)
@@ -659,25 +662,29 @@ local function applyLayout(mode: string)
 			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 			if weatherChip then
 				weatherChip.AnchorPoint = Vector2.new(0, 0)
-				weatherChip.Position = UDim2.fromOffset(12, row2 + SEED_PHONE + 18) -- 種えらびの列の下
+				weatherChip.Position = UDim2.fromOffset(12, row3)
 				Style.setScale(weatherChip, 36 / 40)
 			end
 		else
-			-- 横持ち: 1段目 [コイン][メニュー] … [種えらび] … [みんなの木のレベル][庭][木]
-			--         2段目 [お天気]（お天気のときだけ）
-			-- 右側の縦は、ショップ・収穫・売るのために空けておく
+			-- 横持ち: 1段目 [コイン][メニュー][種えらび（庭のボタンの手前まで）][庭][木]
+			--         2段目 [みんなの木のレベル]（広場にいるときだけ）
+			--         3段目 [お天気]（お天気のときだけ）
+			-- 左はしの縦にまとめる。右側の縦は、ショップ・収穫・売るのために空けておく
 			if treeChip then
-				treeChip.AnchorPoint = Vector2.new(1, 0)
-				treeChip.Position = UDim2.new(1, -12 - travelWidth - 8, 0, leftTop)
+				treeChip.AnchorPoint = Vector2.new(0, 0)
+				treeChip.Position = UDim2.fromOffset(12, row2)
 			end
+			-- 列は、メニューの右と 庭のボタンの左の あいだの まん中に置く
+			local leftEdge = 12 + coinWidth + 6 + PHONE_ROW + 8
+			local rightEdge = 12 + travelWidth + 8
 			topSeeds.AnchorPoint = Vector2.new(0.5, 0)
-			topSeeds.Position = UDim2.new(0.5, 0, 0, leftTop)
+			topSeeds.Position = UDim2.new(0.5, (leftEdge - rightEdge) / 2, 0, leftTop)
 			seedBar.AnchorPoint = Vector2.new(0.5, 0)
 			seedBar.Position = UDim2.fromScale(0.5, 0)
 			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 			if weatherChip then
 				weatherChip.AnchorPoint = Vector2.new(0, 0)
-				weatherChip.Position = UDim2.fromOffset(12, leftTop + PHONE_ROW + 8)
+				weatherChip.Position = UDim2.fromOffset(12, row2 + PHONE_ROW + 8)
 				Style.setScale(weatherChip, 36 / 40)
 			end
 		end
@@ -722,7 +729,7 @@ local function applyLayout(mode: string)
 	end
 	-- 案内とお知らせは、種えらびの下に
 	local bannerY = if compact
-		then (if portrait then leftTop + PHONE_ROW + SEED_PHONE + 36 else leftTop + SEED_PHONE + 20)
+		then (if portrait then leftTop + PHONE_ROW + SEED_PHONE + 36 + PHONE_ROW + 8 else leftTop + SEED_PHONE + 20)
 		else 130
 	banner.Position = UDim2.new(0.5, 0, 0, bannerY)
 	toastY = bannerY + 60
@@ -786,10 +793,10 @@ local function fitBottom()
 	end
 	-- 種えらび: スマホは縮めずに、使える幅に合わせて列の幅を決める（入りきらない分は横にスライド）
 	if topSeeds then
-		local chipWidth = 150 * PHONE_ROW / 58
 		if compact then
-			local room = if portrait then width - 24 - chipWidth - 12
-				else width - 2 * (12 + chipWidth + 8 + 114 * PHONE_ROW / 54 + 8)
+			-- 使える幅: 縦持ちは はしからはしまで、横持ちはメニューの右から 庭のボタンの左まで
+			local room = if portrait then width - 24
+				else width - (12 + 210 * PHONE_ROW / 60 + 6 + PHONE_ROW + 8) - (12 + 114 * PHONE_ROW / 54 + 8)
 			local content = seedCount * (SEED_PHONE + 6) + 8
 			Style.setScale(topSeeds, 1)
 			seedBar.Size = UDim2.fromOffset(math.max(SEED_PHONE + 8, math.min(room, content)), SEED_PHONE + 12)
