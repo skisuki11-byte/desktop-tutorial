@@ -399,12 +399,54 @@ local function refreshSeedBar(state)
 	end
 	seedCount = 0
 	local selectedButton = nil
+	-- 列の先頭に、道具（じょうろ・ひりょう）。選んだときだけ、畑に「水やり」「ひりょう」が出る
+	local cans = Config.Water.cans
+	local water = state.water
+	local tools = {
+		{ id = "water", icon = "💧", count = if water then water.amount .. "/" .. (cans[water.level] or cans[1]) else "" },
+		{ id = "fertilizer", icon = "🌟", count = "×" .. (state.fertilizer or 0) },
+	}
+	for order, tool in tools do
+		seedCount += 1
+		local holding = state.tool == tool.id
+		local button = Style.button({
+			Name = "Tool_" .. tool.id,
+			LayoutOrder = order - 10,
+			Size = if compact
+				then UDim2.fromOffset(SEED_PHONE, SEED_PHONE)
+				else UDim2.fromOffset(holding and 84 or 72, holding and 76 or 66),
+			-- 道具は水色の札で、種と見分けやすく
+			BackgroundColor3 = if holding then C.Yellow else Color3.fromRGB(215, 236, 255),
+		}, seedBar)
+		if holding then
+			button:FindFirstChildOfClass("UIStroke").Color = C.Accent
+			selectedButton = button
+		end
+		Style.label({
+			Position = UDim2.fromScale(0, 0.04),
+			Size = UDim2.fromScale(1, 0.58),
+			Text = tool.icon,
+			TextSize = if compact then 28 else 34,
+			TextWrapped = false,
+		}, button)
+		Style.label({
+			AnchorPoint = Vector2.new(0.5, 1),
+			Position = UDim2.new(0.5, 0, 1, -2),
+			Size = UDim2.fromScale(1, 0.38),
+			Text = tool.count,
+			TextSize = if compact then 14 else 18,
+			TextWrapped = false,
+		}, button)
+		button.Activated:Connect(function()
+			Remotes.SelectTool:FireServer(tool.id)
+		end)
+	end
 	for order, cropId in Config.CropOrder do
 		local count = state.seeds[cropId] or 0
 		if count > 0 then
 			seedCount += 1
 			local crop = Config.CropById[cropId]
-			local selected = state.selected == cropId
+			local selected = state.tool == nil and state.selected == cropId
 			local size = if compact
 				then UDim2.fromOffset(SEED_PHONE, SEED_PHONE)
 				else UDim2.fromOffset(selected and 84 or 72, selected and 76 or 66)

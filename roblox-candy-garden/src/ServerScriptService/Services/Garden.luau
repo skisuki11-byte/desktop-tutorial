@@ -278,8 +278,9 @@ local function water(helper: Player, owner: Player, tileIndex: number): boolean
 end
 
 -- ProximityPrompt から呼ばれる
--- 自分の畑: 空なら植える / 実っていたら収穫 / 育っている途中なら水やり
--- ほかの人の畑: 育っている途中なら水やり（手伝い）だけ。植える・収穫はできない（奪い合いをしない）
+-- 自分の畑: 空なら植える / 実っていたら収穫 / 育っている途中は、持っている道具（じょうろ・ひりょう）を使う
+-- ほかの人の畑: 道具を持っていれば水やり・ひりょう（手伝い）だけ。植える・収穫はできない（奪い合いをしない）
+-- 道具を持っていないときは、水やり・ひりょうはしない（自分で道具を選んで世話をする）
 function Garden.interact(player: Player, tile: BasePart)
 	local model = tile.Parent
 	if not model then
@@ -296,11 +297,13 @@ function Garden.interact(player: Player, tile: BasePart)
 		local owner = Players:GetPlayerByUserId(model:GetAttribute("OwnerUserId") or 0)
 		local od = owner and Data.get(owner)
 		local slot = od and od.plots[tostring(tileIndex)]
-		if slot and not slot.watered then
+		local tool = Data.tool(player)
+		if slot and tool == "water" then
 			water(player, owner, tileIndex)
-		elseif slot then
+		elseif slot and tool == "fertilizer" then
 			fertilize(player, owner, tileIndex)
 		end
+		Data.push(player)
 		return
 	end
 	local d = Data.get(player)
@@ -308,13 +311,16 @@ function Garden.interact(player: Player, tile: BasePart)
 		return
 	end
 	local slot = d.plots[tostring(tileIndex)]
+	local tool = Data.tool(player)
 	if slot == nil then
-		plant(player, tileIndex)
+		if tool == nil then
+			plant(player, tileIndex)
+		end
 	elseif isReady(slot) then
 		harvest(player, tileIndex)
-	elseif not slot.watered then
+	elseif tool == "water" then
 		water(player, player, tileIndex)
-	else
+	elseif tool == "fertilizer" then
 		fertilize(player, player, tileIndex)
 	end
 	Data.push(player)
@@ -355,6 +361,29 @@ function Garden.expand(player: Player)
 end
 
 -- ひりょうを1つ買う
+-- 道具を持つ / しまう（同じ道具をもう一度えらぶと、しまって種にもどる）
+function Garden.selectTool(player: Player, tool: any)
+	if not RateLimit.ok(player, "selectTool", 0.1) then
+		return
+	end
+	local d = Data.get(player)
+	if not d or (tool ~= "water" and tool ~= "fertilizer" and tool ~= nil) then
+		return
+	end
+	if tool ~= nil and Data.tool(player) == tool then
+		tool = nil
+	end
+	if tool == "fertilizer" and (d.fertilizer or 0) <= 0 then
+		Remotes.Toast:FireClient(player, "toast.noFertilizer")
+		return
+	end
+	Data.setTool(player, tool)
+	if tool then
+		Remotes.Toast:FireClient(player, if tool == "water" then "toast.holdWater" else "toast.holdFertilizer")
+	end
+	Data.push(player)
+end
+
 function Garden.buyFertilizer(player: Player)
 	if not RateLimit.ok(player, "buyFertilizer", 0.25) then
 		return

@@ -113,7 +113,7 @@ function Data.load(player: Player)
 	data = reconcile(type(data) == "table" and data or {})
 	-- いなかった時間（前回の保存から今まで）。初めての人は 0
 	local away = data.lastSeen > 0 and math.max(0, os.time() - data.lastSeen) or 0
-	profiles[player] = { data = data, runtime = { selected = nil, awaySeconds = away }, canSave = canSave }
+	profiles[player] = { data = data, runtime = { selected = nil, tool = nil, awaySeconds = away }, canSave = canSave }
 end
 
 -- 前回からいなかった秒数（おかえりメッセージ用）
@@ -185,6 +185,28 @@ function Data.setSelected(player: Player, cropId: string)
 	local profile = profiles[player]
 	if profile then
 		profile.runtime.selected = cropId
+		profile.runtime.tool = nil -- 種を持ったら、道具はしまう（手に持つのは1つだけ）
+	end
+end
+
+-- 手に持っている道具（"water" = じょうろ / "fertilizer" = ひりょう / nil = 種）。
+-- 水やり・ひりょうは、自分で道具を選んだときだけできる（植えたらすぐ出てくるのではなく、自分で世話をする）
+function Data.tool(player: Player): string?
+	local profile = profiles[player]
+	if not profile then
+		return nil
+	end
+	-- ひりょうを使い切ったら、自動でしまう
+	if profile.runtime.tool == "fertilizer" and (profile.data.fertilizer or 0) <= 0 then
+		profile.runtime.tool = nil
+	end
+	return profile.runtime.tool
+end
+
+function Data.setTool(player: Player, tool: string?)
+	local profile = profiles[player]
+	if profile then
+		profile.runtime.tool = tool
 	end
 end
 
@@ -236,6 +258,7 @@ function Data.push(player: Player)
 		basket = d.basket,
 		basketSparkle = d.basketSparkle,
 		selected = Data.selected(player),
+		tool = Data.tool(player),
 		tutorialDone = d.tutorialDone,
 		music = d.music,
 		water = d.water,

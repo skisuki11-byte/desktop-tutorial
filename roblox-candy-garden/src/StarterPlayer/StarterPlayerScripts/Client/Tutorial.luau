@@ -94,12 +94,12 @@ local function refreshPrompts()
 					prompt.Enabled = false -- まだ広げていない畑
 					continue
 				end
-				-- 育っている途中で、まだ水をあげていなければ「水やり」（ほかの人の畑も手伝える）
+				-- 水やり・ひりょうは、道具（じょうろ・ひりょう）を自分で選んで持っているときだけ出す
+				-- （植えたらすぐ出すと、世話をしなくても進んでしまう。ほかの人の畑も手伝える）
 				local growing = crop ~= nil and not tile:GetAttribute("Ready")
-				local canWater = growing and not tile:GetAttribute("Watered")
-				-- 水をあげたあとは、ひりょうを持っていれば「ひりょう」
+				local canWater = growing and state.tool == "water" and not tile:GetAttribute("Watered")
 				local canFertilize = growing
-					and not canWater
+					and state.tool == "fertilizer"
 					and not tile:GetAttribute("Fertilized")
 					and (state.fertilizer or 0) > 0
 				if canWater or canFertilize then
@@ -110,7 +110,7 @@ local function refreshPrompts()
 					prompt.Enabled = false
 				else
 					if crop == nil then
-						prompt.Enabled = hasSeed()
+						prompt.Enabled = hasSeed() and state.tool == nil -- 道具を持っているときは植えない
 						prompt.ActionText = t("prompt.plant")
 						prompt.ObjectText = state.selected and t("crop." .. state.selected) or ""
 					elseif tile:GetAttribute("Ready") then
