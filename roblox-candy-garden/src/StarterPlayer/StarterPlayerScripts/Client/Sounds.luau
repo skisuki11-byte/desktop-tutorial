@@ -9,7 +9,10 @@
 --   BGM    = DistrokidOfficial（Robloxと提携した、ライセンス済みの曲）
 -- 和音は、1つのコインの音の高さを変えて重ねて作る（ド・ミ・ソ・ド = 1, 1.26, 1.5, 2 倍）。
 local ContentProvider = game:GetService("ContentProvider")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
+
+local Config = require(ReplicatedStorage.Shared.Config)
 
 local Sounds = {}
 
@@ -58,6 +61,7 @@ local SPARKLE_TOASTS = {
 	["toast.fertilizedFriend"] = true,
 	["toast.helpedFertilizer"] = true,
 	["toast.sparkle"] = true,
+	["toast.cropDexNew"] = true,
 	["toast.styleBought"] = true,
 	["toast.limitedBought"] = true,
 	["toast.questDone"] = true,
@@ -73,6 +77,10 @@ local JINGLE_TOASTS = {
 	["toast.expanded"] = true,
 	["toast.canUpgraded"] = true,
 	["toast.dailyGot"] = true,
+	["toast.variantReady"] = true,
+	["toast.variantHarvest"] = true,
+	["toast.rainbowNews"] = true,
+	["toast.cropDexReward"] = true,
 }
 
 local templates: { [string]: Sound } = {}
@@ -172,7 +180,7 @@ function Sounds.onState(state)
 	local now = {
 		coins = state.coins or 0,
 		seeds = total(state.seeds),
-		basket = total(state.basket) + total(state.basketSparkle),
+		basket = select(2, Config.basketValue(state)),
 	}
 	if prev then
 		if now.basket > prev.basket then

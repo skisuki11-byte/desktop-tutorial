@@ -20,6 +20,7 @@ local LimitedShopUI = require(script.Parent.LimitedShopUI)
 local QuestsUI = require(script.Parent.QuestsUI)
 local Sounds = require(script.Parent.Sounds)
 local DecorUI = require(script.Parent.DecorUI)
+local CropDexUI = require(script.Parent.CropDexUI)
 
 local UI = {}
 
@@ -62,13 +63,7 @@ local JUMP_RESERVE = 100
 local PHONE_ROW = 44 -- スマホの上の段の高さ（指で押せる大きさの目安44pt） -- タッチ端末で、右下のジャンプボタンのために空ける高さ
 
 local function basketValue(state): number
-	local total = 0
-	for cropId, n in state.basket do
-		total += Config.sellValue(cropId, false) * n
-	end
-	for cropId, n in state.basketSparkle do
-		total += Config.sellValue(cropId, true) * n
-	end
+	local total = Config.basketValue(state)
 	return math.floor(total * (state.sellBonus or 1) * (state.coinMultiplier or 1))
 end
 
@@ -335,6 +330,10 @@ local function buildMenu()
 			CaptionSize = 13,
 		}, side)
 	end
+	local cropDexButton = item("CropDex", 8, "📖", t("ui.cropDex"), Color3.fromRGB(255, 210, 150))
+	cropDexButton.Activated:Connect(function()
+		UI.showPanel(if CropDexUI.isVisible() then nil else "cropdex")
+	end)
 	local decorButton = item("Decor", 7, "🏡", t("ui.decorate"), Color3.fromRGB(150, 210, 160))
 	decorButton.Activated:Connect(function()
 		UI.showPanel(if DecorUI.isVisible() then nil else "decor")
@@ -1158,6 +1157,7 @@ function UI.showPanel(name: string?)
 	CosmeticsUI.setVisible(name == "style")
 	DailyUI.setVisible(name == "daily")
 	DecorUI.setVisible(name == "decor")
+	CropDexUI.setVisible(name == "cropdex")
 end
 
 function UI.setShopVisible(visible: boolean)
@@ -1294,6 +1294,7 @@ function UI.update(state)
 	PalsUI.update(state)
 	CosmeticsUI.update(state)
 	DecorUI.update(state)
+	CropDexUI.update(state)
 	DailyUI.update(state)
 	SeasonUI.update(state)
 	LimitedShopUI.update(state)
@@ -1319,6 +1320,7 @@ function UI.init()
 	PalsUI.build(gui, closeAll)
 	CosmeticsUI.build(gui, closeAll)
 	DecorUI.build(gui, closeAll)
+	CropDexUI.build(gui, closeAll)
 	buildMenu()
 	buildMusicButton()
 	buildTravel()

@@ -156,13 +156,8 @@ local function refreshTutorial()
 		end
 	end
 
-	local hasBasket = false
-	for _, n in state.basket do
-		hasBasket = hasBasket or n > 0
-	end
-	for _, n in state.basketSparkle do
-		hasBasket = hasBasket or n > 0
-	end
+	local _, basketCount = Config.basketValue(state)
+	local hasBasket = basketCount > 0
 
 	UI.highlight(nil)
 	pointAt(nil)

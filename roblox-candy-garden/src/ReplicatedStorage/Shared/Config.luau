@@ -78,6 +78,41 @@ Config.PetHelp = {
 }
 Config.SparkleMultiplier = 2
 
+-- ふしぎな作物: 実った瞬間に、まれに特別な姿になる（何になるかは実ったときに決まるので、畑を見に来るのが楽しみになる）。
+-- 畑の上でも見た目が変わるので、ほかの人にも見せられる。上から順に抽選する。
+-- chance=ふだんの確率 / weather=その天気の間に実ったときの確率 / wateredBonus・fertilizedBonus=世話をした作物は出やすい
+-- sparkle（きらきら）の確率は今までどおり Weather.sparkleChance ＋ 水やりのボーナス
+Config.Variants = {
+	{ id = "rainbow", icon = "🌈", multiplier = 10, chance = 0.01, weather = { rainbow = 0.08 } },
+	{ id = "golden", icon = "👑", multiplier = 5, chance = 0.03, weather = { starfall = 0.12 }, wateredBonus = 0.03 },
+	{
+		id = "jumbo",
+		icon = "🍭",
+		multiplier = 3,
+		chance = 0.05,
+		weather = { sprinkles = 0.12 },
+		fertilizedBonus = 0.1,
+		scale = 1.6, -- ジャンボは大きく実る
+	},
+	{ id = "sparkle", icon = "✨", multiplier = 2 },
+}
+Config.VariantById = {}
+for _, v in Config.Variants do
+	Config.VariantById[v.id] = v
+end
+-- 作物ずかんに並べる順（ふつう → きらきら → ジャンボ → きんいろ → にじいろ）
+Config.VariantOrder = { "normal", "sparkle", "jumbo", "golden", "rainbow" }
+
+-- 作物ずかん: 作物 × 姿（ふつう・きらきら・ジャンボ・きんいろ・にじいろ）を集める。集めた数でごほうび（1回ずつ）
+Config.CropDex = {
+	rewards = {
+		{ count = 5, coins = 500 },
+		{ count = 10, coins = 3000, fertilizer = 3 },
+		{ count = 18, coins = 15000, fertilizer = 5 },
+		{ count = 30, coins = 100000 }, -- ぜんぶ（6しゅるい × 5つの姿）
+	},
+}
+
 -- icon: 絵文字 / color: 実の色
 -- 育つ時間は、水やり・ひりょう・ペットのお手伝いで早められる前提で、少し長め（もとの1.5倍）。
 -- ムーンキャンディは「寝る前に植えて翌朝」のための作物なので、8時間のまま
@@ -430,13 +465,45 @@ function Config.eggOddsPercent(egg, petId: string): number
 	return math.floor(weight / total * 1000 + 0.5) / 10
 end
 
-function Config.sellValue(cropId: string, sparkle: boolean): number
+-- variant: ふしぎな姿のid（"sparkle" / "golden" など）。true は きらきら（前からの書き方）。nil・false・"normal" はふつう
+function Config.sellValue(cropId: string, variant: any): number
 	local crop = Config.CropById[cropId]
 	local price = crop.sellPrice
-	if sparkle then
-		price *= Config.SparkleMultiplier
+	if variant == true then
+		variant = "sparkle"
+	end
+	local v = type(variant) == "string" and Config.VariantById[variant]
+	if v then
+		price *= v.multiplier
 	end
 	return math.floor(price)
+end
+
+-- かごの中身（ふつう・きらきら・ふしぎな作物）を1つずつ数える。fn(cropId, variantId?, 個数)
+function Config.eachBasket(state, fn: (string, string?, number) -> ())
+	for cropId, n in state.basket or {} do
+		fn(cropId, nil, n)
+	end
+	for cropId, n in state.basketSparkle or {} do
+		fn(cropId, "sparkle", n)
+	end
+	for variant, crops in state.basketV or {} do
+		for cropId, n in crops do
+			fn(cropId, variant, n)
+		end
+	end
+end
+
+-- かごの売値の合計（ペット・ゲームパスのボーナスをかける前）と、個数
+function Config.basketValue(state): (number, number)
+	local total, count = 0, 0
+	Config.eachBasket(state, function(cropId, variant, n)
+		if Config.CropById[cropId] then
+			total += Config.sellValue(cropId, variant) * n
+			count += n
+		end
+	end)
+	return total, count
 end
 
 return Config

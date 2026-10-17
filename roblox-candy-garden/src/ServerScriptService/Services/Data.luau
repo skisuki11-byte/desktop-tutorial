@@ -40,6 +40,9 @@ local function newData()
 		seeds = seeds, -- [cropId] = 個数
 		basket = {}, -- [cropId] = 通常の個数
 		basketSparkle = {}, -- [cropId] = きらきらの個数
+		basketV = {}, -- ふしぎな作物 [variantId] = { [cropId] = 個数 }（きらきらは basketSparkle）
+		cropDex = {}, -- 作物ずかん [cropId] = { [variantId か "normal"] = true }
+		cropDexClaimed = 0, -- 受け取った作物ずかんのごほうびの数
 		plots = {}, -- [tostring(tileIndex)] = { crop, plantedAt }
 		tutorialDone = false,
 		pets = {}, -- { { uid, pet } }
@@ -261,6 +264,8 @@ function Data.push(player: Player)
 		seeds = d.seeds,
 		basket = d.basket,
 		basketSparkle = d.basketSparkle,
+		basketV = d.basketV,
+		cropDex = d.cropDex,
 		selected = Data.selected(player),
 		tool = Data.tool(player),
 		tutorialDone = d.tutorialDone,

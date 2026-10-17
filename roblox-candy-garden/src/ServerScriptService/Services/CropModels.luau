@@ -209,4 +209,129 @@ function CropModels.setReady(model: Model, ready: boolean)
 	end
 end
 
+-- ---- ふしぎな作物の見た目（Config.Variants）。実ったあとに Garden から呼ぶ ----
+
+local VARIANT_ICON = { sparkle = "✨", jumbo = "🍭", golden = "👑", rainbow = "🌈" }
+local GOLD = C(255, 204, 60)
+
+-- 葉っぱ・茎・幹は そのままにして、実だけ色を変える（メロンは緑でも実なので、色が近いかで見分ける）
+local LEAFY_COLORS = { LEAF, LEAF_LIGHT, C(120, 150, 110), C(110, 160, 130), C(110, 160, 90) }
+local function isLeafy(p: BasePart): boolean
+	if p.Material == Enum.Material.Grass or p.Material == Enum.Material.Wood then
+		return true
+	end
+	for _, c in LEAFY_COLORS do
+		local d = Vector3.new(p.Color.R - c.R, p.Color.G - c.G, p.Color.B - c.B).Magnitude
+		if d < 0.04 then
+			return true
+		end
+	end
+	return false
+end
+
+local function topPart(model: Model): BasePart?
+	local top: BasePart? = nil
+	for _, p in model:GetDescendants() do
+		if p:IsA("BasePart") and (not top or p.Position.Y + p.Size.Y / 2 > top.Position.Y + top.Size.Y / 2) then
+			top = p
+		end
+	end
+	return top
+end
+
+local function addEmitter(parent: BasePart, colors: ColorSequence, rate: number, size: number)
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Name = "VariantSparkle"
+	emitter.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	emitter.Rate = rate
+	emitter.Lifetime = NumberRange.new(0.8, 1.4)
+	emitter.Speed = NumberRange.new(1.5, 3.5)
+	emitter.SpreadAngle = Vector2.new(180, 180)
+	emitter.Size = NumberSequence.new(size, 0.1)
+	emitter.LightEmission = 0.9
+	emitter.Color = colors
+	emitter.Parent = parent
+end
+
+-- variant: "sparkle" / "jumbo" / "golden" / "rainbow" / nil（ふつう）。同じ姿なら何もしない（1回だけ作る）
+function CropModels.setVariant(model: Model, variant: string?)
+	if (model:GetAttribute("Variant") or "") == (variant or "") then
+		return
+	end
+	model:SetAttribute("Variant", variant)
+	if not variant then
+		return
+	end
+	local parts = {}
+	for _, p in model:GetDescendants() do
+		if p:IsA("BasePart") and not isLeafy(p) then
+			table.insert(parts, p)
+		end
+	end
+	local top = topPart(model)
+	if variant == "golden" then
+		-- 実が金色に光る
+		for _, p in parts do
+			p.Color = p.Color:Lerp(GOLD, 0.8)
+			p.Material = Enum.Material.Foil
+			p.Reflectance = 0.15
+		end
+		if top then
+			addEmitter(top, ColorSequence.new(C(255, 230, 120), C(255, 200, 40)), 10, 0.7)
+			local light = Instance.new("PointLight")
+			light.Color = GOLD
+			light.Range = 10
+			light.Brightness = 1.2
+			light.Parent = top
+		end
+	elseif variant == "rainbow" then
+		-- 実を1つずつ、ちがう色に（にじいろ）
+		for i, p in parts do
+			p.Color = Color3.fromHSV(((i - 1) / math.max(1, #parts)) % 1, 0.55, 1)
+			p.Material = Enum.Material.Glass
+		end
+		if top then
+			addEmitter(
+				top,
+				ColorSequence.new({
+					ColorSequenceKeypoint.new(0, C(255, 120, 150)),
+					ColorSequenceKeypoint.new(0.25, C(255, 220, 110)),
+					ColorSequenceKeypoint.new(0.5, C(140, 240, 160)),
+					ColorSequenceKeypoint.new(0.75, C(130, 190, 255)),
+					ColorSequenceKeypoint.new(1, C(200, 150, 255)),
+				}),
+				14,
+				0.8
+			)
+		end
+	elseif variant == "jumbo" then
+		-- 大きさは Garden が変える。ここでは ピンクのキラキラだけ
+		if top then
+			addEmitter(top, ColorSequence.new(C(255, 160, 210), C(255, 255, 255)), 6, 0.9)
+		end
+	elseif variant == "sparkle" then
+		if top then
+			addEmitter(top, ColorSequence.new(C(255, 255, 255), C(200, 230, 255)), 8, 0.6)
+		end
+	end
+	-- 上に姿のマーク（遠くからでも、ほかの人からも分かる）
+	if top and VARIANT_ICON[variant] then
+		local badge = Instance.new("BillboardGui")
+		badge.Name = "VariantBadge"
+		badge.Size = UDim2.fromScale(2.2, 2.2)
+		badge.StudsOffsetWorldSpace = Vector3.new(0, top.Size.Y / 2 + 1.6, 0)
+		badge.LightInfluence = 0
+		badge.MaxDistance = 90
+		badge.Adornee = top
+		local label = Instance.new("TextLabel")
+		label.BackgroundTransparency = 1
+		label.Size = UDim2.fromScale(1, 1)
+		label.TextScaled = true
+		label.Font = Enum.Font.FredokaOne
+		label.Text = VARIANT_ICON[variant]
+		label.Parent = badge
+		badge.Parent = top
+	end
+end
+
 return CropModels

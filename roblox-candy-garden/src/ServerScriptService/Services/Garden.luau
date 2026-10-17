@@ -1,6 +1,7 @@
 -- 植える・育てる・収穫するの本体。乱数・在庫・時間は全てサーバーが決める。
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -46,7 +47,7 @@ local function ensureVisual(tile: BasePart, kind: string): (Model, boolean)
 	return visual, true
 end
 
-local function renderTile(tile: BasePart, cropCfg, progress: number)
+local function renderTile(tile: BasePart, cropCfg, progress: number, variant: string?)
 	local sprout = progress < SPROUT_UNTIL
 	local visual, created = ensureVisual(tile, sprout and "sprout" or cropCfg.id)
 	local scale
@@ -55,11 +56,17 @@ local function renderTile(tile: BasePart, cropCfg, progress: number)
 	else
 		scale = 0.45 + 0.55 * math.clamp((progress - SPROUT_UNTIL) / (1 - SPROUT_UNTIL), 0, 1)
 	end
+	-- 実ったら、ふしぎな姿を見せる（ジャンボは大きく）
+	local v = progress >= 1 and variant and Config.VariantById[variant]
+	if v and v.scale then
+		scale *= v.scale
+	end
 	-- 大きさが変わったときだけ ScaleTo（毎秒の通信を減らす）
 	if created or math.abs(visual:GetScale() - scale) > 0.01 then
 		visual:ScaleTo(scale)
 	end
 	CropModels.setReady(visual, progress >= 1)
+	CropModels.setVariant(visual, if v then v.id else nil)
 end
 
 -- 水をあげた土は、しっとり濃い色にする（もとの色は属性に覚えておく）
@@ -93,6 +100,91 @@ local function splash(tile: BasePart, color: Color3?)
 	end)
 end
 
+-- ---- ふしぎな作物（Config.Variants） ----
+
+-- 実ったときに、どの姿になるかを決める（1回だけ。決まった姿は slot.variant に保存する。ふつうは "none"）
+local function pickVariant(slot): string
+	-- Studioでの確認用: workspace の属性 DebugVariant に姿のidを入れると、必ずその姿になる（本番では効かない）
+	local debugVariant = RunService:IsStudio() and workspace:GetAttribute("DebugVariant")
+	if debugVariant and (Config.VariantById[debugVariant] or debugVariant == "none") then
+		return debugVariant
+	end
+	local weather = workspace:GetAttribute("Weather")
+	for _, v in Config.Variants do
+		local chance
+		if v.id == "sparkle" then
+			chance = Weather.sparkleChance()
+			if slot.watered then
+				chance = math.min(0.9, chance + Config.Water.sparkleBonus) -- 水をあげた作物は、きらきらが出やすい
+			end
+		else
+			chance = (weather and v.weather and v.weather[weather]) or v.chance
+			if slot.watered and v.wateredBonus then
+				chance += v.wateredBonus
+			end
+			if slot.fertilized and v.fertilizedBonus then
+				chance += v.fertilizedBonus
+			end
+		end
+		if rng:NextNumber() < chance then
+			return v.id
+		end
+	end
+	return "none"
+end
+
+-- announce: 実った瞬間なら、持ち主に知らせる（にじいろは、サーバーのみんなにも）
+function Garden.rollVariant(player: Player, slot, announce: boolean)
+	if slot.variant ~= nil then
+		return
+	end
+	slot.variant = pickVariant(slot)
+	local v = Config.VariantById[slot.variant]
+	if not v then
+		return
+	end
+	Data.saveSoon(player)
+	-- きらきらは よく出るので、実ったときのお知らせはしない（収穫したときに知らせる）
+	if announce and v.id ~= "sparkle" then
+		Remotes.Toast:FireClient(player, "toast.variantReady", v.icon, "@variant." .. v.id, "@crop." .. slot.crop)
+		if v.id == "rainbow" then
+			for _, other in Players:GetPlayers() do
+				if other ~= player then
+					Remotes.Toast:FireClient(other, "toast.rainbowNews", player.DisplayName, "@crop." .. slot.crop)
+				end
+			end
+		end
+	end
+end
+
+-- 作物ずかん: 集めた（作物 × 姿）の数でごほうび（1回ずつ）
+local function checkCropDexRewards(player: Player, d)
+	local count = 0
+	for _, variants in d.cropDex do
+		for _ in variants do
+			count += 1
+		end
+	end
+	local rewards = Config.CropDex.rewards
+	while rewards[d.cropDexClaimed + 1] and count >= rewards[d.cropDexClaimed + 1].count do
+		d.cropDexClaimed += 1
+		local reward = rewards[d.cropDexClaimed]
+		d.coins += reward.coins or 0
+		d.fertilizer = math.min(Config.Fertilizer.max, (d.fertilizer or 0) + (reward.fertilizer or 0))
+		Remotes.Toast:FireClient(player, "toast.cropDexReward", reward.coins or 0)
+	end
+end
+
+local function markCropDex(player: Player, d, cropId: string, variant: string)
+	d.cropDex[cropId] = d.cropDex[cropId] or {}
+	if d.cropDex[cropId][variant] then
+		return false
+	end
+	d.cropDex[cropId][variant] = true
+	checkCropDexRewards(player, d)
+	return true
+end
+
 -- profile.plots[i] の内容をタイルの属性と見た目に反映する
 local function syncTile(player: Player, tileIndex: number)
 	local plot = World.plotOf(player)
@@ -108,16 +200,21 @@ local function syncTile(player: Player, tileIndex: number)
 	if slot and Config.CropById[slot.crop] then
 		local cropCfg = Config.CropById[slot.crop]
 		local progress = math.clamp((now() - slot.plantedAt) / cropCfg.growTime, 0, 1)
+		if progress >= 1 then
+			Garden.rollVariant(player, slot, false) -- いない間に実った作物も、ここで姿が決まる
+		end
 		tile:SetAttribute("Crop", slot.crop)
 		tile:SetAttribute("PlantedAt", slot.plantedAt)
 		tile:SetAttribute("GrowTime", cropCfg.growTime)
 		tile:SetAttribute("Ready", progress >= 1)
 		setWet(tile, slot.watered == true)
 		tile:SetAttribute("Fertilized", slot.fertilized == true)
-		renderTile(tile, cropCfg, progress)
+		tile:SetAttribute("Variant", if slot.variant ~= "none" then slot.variant else nil)
+		renderTile(tile, cropCfg, progress, slot.variant)
 	else
 		setWet(tile, false)
 		tile:SetAttribute("Fertilized", false)
+		tile:SetAttribute("Variant", nil)
 		tile:SetAttribute("Crop", nil)
 		tile:SetAttribute("PlantedAt", nil)
 		tile:SetAttribute("GrowTime", nil)
@@ -158,14 +255,22 @@ local function harvest(player: Player, tileIndex: number): boolean
 	if not slot or not isReady(slot) then
 		return false
 	end
-	local chance = Weather.sparkleChance()
-	if slot.watered then
-		chance = math.min(0.9, chance + Config.Water.sparkleBonus) -- 水をあげた作物は、きらきらが出やすい
+	-- 姿は実ったときに決まっている（まだなら、ここで決める）
+	Garden.rollVariant(player, slot, false)
+	local variant = slot.variant
+	local sparkle = variant == "sparkle"
+	local bucket
+	if variant == "sparkle" then
+		bucket = d.basketSparkle
+	elseif Config.VariantById[variant] then
+		d.basketV[variant] = d.basketV[variant] or {}
+		bucket = d.basketV[variant]
+	else
+		bucket = d.basket
 	end
-	local sparkle = rng:NextNumber() < chance
-	local bucket = sparkle and d.basketSparkle or d.basket
 	local cropId = slot.crop
 	bucket[cropId] = (bucket[cropId] or 0) + 1
+	local isNew = markCropDex(player, d, cropId, if Config.VariantById[variant] then variant else "normal")
 	d.plots[tostring(tileIndex)] = nil
 	syncTile(player, tileIndex)
 	Tree.add(cropId) -- みんなの木の成長ポイントになる
@@ -176,8 +281,14 @@ local function harvest(player: Player, tileIndex: number): boolean
 	if sparkle then
 		Quests.progress(player, "sparkle", 1)
 	end
-	if sparkle then
+	local v = Config.VariantById[variant]
+	if v and v.id ~= "sparkle" then
+		Remotes.Toast:FireClient(player, "toast.variantHarvest", v.icon, "@variant." .. v.id, "@crop." .. cropId, v.multiplier)
+		Data.saveSoon(player) -- めずらしい作物は、すぐ保存する
+	elseif sparkle then
 		Remotes.Toast:FireClient(player, "toast.sparkle")
+	elseif isNew then
+		Remotes.Toast:FireClient(player, "toast.cropDexNew", "@crop." .. cropId)
 	end
 	return true
 end
@@ -551,8 +662,12 @@ function Garden.startGrowthLoop()
 							local progress = math.clamp((now() - slot.plantedAt) / cropCfg.growTime, 0, 1)
 							local ready = progress >= 1
 							if not ready or not tile:GetAttribute("Ready") then
+								if ready then
+									Garden.rollVariant(player, slot, true) -- 実った瞬間に、ふしぎな姿が決まる
+									tile:SetAttribute("Variant", if slot.variant ~= "none" then slot.variant else nil)
+								end
 								tile:SetAttribute("Ready", ready)
-								renderTile(tile, cropCfg, progress)
+								renderTile(tile, cropCfg, progress, slot.variant)
 							end
 						end
 					end

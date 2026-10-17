@@ -59,13 +59,7 @@ local function sellAll(player: Player)
 	if not d then
 		return
 	end
-	local total = 0
-	for cropId, n in d.basket do
-		total += Config.sellValue(cropId, false) * n
-	end
-	for cropId, n in d.basketSparkle do
-		total += Config.sellValue(cropId, true) * n
-	end
+	local total = Config.basketValue(d)
 	if total <= 0 then
 		Remotes.Toast:FireClient(player, "toast.nothingToSell")
 		return
@@ -73,6 +67,7 @@ local function sellAll(player: Player)
 	total = math.floor(total * (1 + Data.petBonus(d)) * Monetization.coinMultiplier(player))
 	d.basket = {}
 	d.basketSparkle = {}
+	d.basketV = {}
 	d.coins += total
 	d.tutorialDone = true
 	Remotes.Toast:FireClient(player, "toast.sold", total)
