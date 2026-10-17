@@ -5,6 +5,7 @@
 --   ・スマホでも重くならないよう、部品の数は抑える（飾りは数を決めて、固定の並び）
 -- 地面・飾り・ライティング・プレイヤーごとの庭（Plot）を作り、庭の割り当ても担当する。
 local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -506,7 +507,7 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 	for i = 1, Config.PlotMaxTiles do
 		local x, z = tileOffset(i)
 		block({
-			Name = "Bed",
+			Name = "Bed_" .. i,
 			Size = Vector3.new(TILE_SIZE.X + 0.8, 0.5, TILE_SIZE.Z + 0.8),
 			CFrame = origin * CFrame.new(x, 1.15, z),
 			Color = C(176, 126, 86),
@@ -655,26 +656,52 @@ function World.build(onTile: (Player, BasePart) -> ())
 	}, spot)
 end
 
--- 畑1枚を「使える / まだ使えない（灰色）」の見た目にする。水やりの「もとの土の色」もここで決める
-local LOCKED_SOIL = C(170, 160, 165)
-local function setLockLook(tile: BasePart, locked: boolean)
+-- 畑1枚を「使える / まだ使えない」にする。まだ使えない畑は見えなくする（広げたときに、ポンと現れる）
+local function setLockLook(tile: BasePart, locked: boolean, animate: boolean?)
+	local wasLocked = tile:GetAttribute("Locked")
 	tile:SetAttribute("Locked", locked)
-	tile:SetAttribute("DryColor", if locked then LOCKED_SOIL else SOIL)
+	tile:SetAttribute("DryColor", SOIL)
 	tile:SetAttribute("Watered", false)
 	tile:SetAttribute("Fertilized", false)
-	tile.Color = if locked then LOCKED_SOIL else SOIL
-	tile.Material = if locked then Enum.Material.Slate else Enum.Material.Ground
-	tile.Transparency = if locked then 0.35 else 0
+	tile.Color = SOIL
+	tile.Material = Enum.Material.Ground
+	local bed = tile.Parent and tile.Parent:FindFirstChild("Bed_" .. tile:GetAttribute("TileIndex"))
+	for _, part in { tile, bed } do
+		if part then
+			part.Transparency = if locked then 1 else 0
+		end
+	end
+	-- 広げた瞬間: 土が下からせり上がって、キラキラが出る
+	if animate and wasLocked and not locked then
+		local goal = tile.CFrame
+		tile.CFrame = goal * CFrame.new(0, -1.2, 0)
+		TweenService:Create(tile, TweenInfo.new(0.6, Enum.EasingStyle.Back), { CFrame = goal }):Play()
+		local sparkle = Instance.new("ParticleEmitter")
+		sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+		sparkle.Color = ColorSequence.new(Color3.fromRGB(180, 255, 190), Color3.fromRGB(255, 240, 160))
+		sparkle.Speed = NumberRange.new(4, 8)
+		sparkle.SpreadAngle = Vector2.new(70, 70)
+		sparkle.EmissionDirection = Enum.NormalId.Top
+		sparkle.Lifetime = NumberRange.new(0.6, 1)
+		sparkle.Size = NumberSequence.new(0.6, 0.1)
+		sparkle.LightEmission = 0.7
+		sparkle.Rate = 0
+		sparkle.Parent = tile
+		sparkle:Emit(40)
+		task.delay(1.5, function()
+			sparkle:Destroy()
+		end)
+	end
 end
 
--- 使える畑の枚数に合わせて、まだ使えない畑を灰色にする（ここまで広げられる、と見せる）
-function World.setUnlocked(player: Player, count: number)
+-- 使える畑の枚数に合わせて、畑を見せる（animate=true なら、新しく使えるようになった畑がポンと現れる）
+function World.setUnlocked(player: Player, count: number, animate: boolean?)
 	local plot = World.plotOf(player)
 	if not plot then
 		return
 	end
 	for i, tile in plot.tiles do
-		setLockLook(tile, i > count)
+		setLockLook(tile, i > count, animate)
 	end
 end
 

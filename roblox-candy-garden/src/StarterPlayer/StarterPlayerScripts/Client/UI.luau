@@ -19,6 +19,7 @@ local SeasonUI = require(script.Parent.SeasonUI)
 local LimitedShopUI = require(script.Parent.LimitedShopUI)
 local QuestsUI = require(script.Parent.QuestsUI)
 local Sounds = require(script.Parent.Sounds)
+local DecorUI = require(script.Parent.DecorUI)
 
 local UI = {}
 
@@ -334,6 +335,10 @@ local function buildMenu()
 			CaptionSize = 13,
 		}, side)
 	end
+	local decorButton = item("Decor", 7, "🏡", t("ui.decorate"), Color3.fromRGB(150, 210, 160))
+	decorButton.Activated:Connect(function()
+		UI.showPanel(if DecorUI.isVisible() then nil else "decor")
+	end)
 	palsButton = item("Pals", 5, "🐾", t("ui.pals"), C.Lilac)
 	styleButton = item("Style", 6, "👗", t("ui.style"), Color3.fromRGB(255, 190, 220))
 	palsButton.Activated:Connect(function()
@@ -1110,6 +1115,7 @@ function UI.showPanel(name: string?)
 	PalsUI.setVisible(name == "pals")
 	CosmeticsUI.setVisible(name == "style")
 	DailyUI.setVisible(name == "daily")
+	DecorUI.setVisible(name == "decor")
 end
 
 function UI.setShopVisible(visible: boolean)
@@ -1245,6 +1251,7 @@ function UI.update(state)
 	UI.refreshMusic()
 	PalsUI.update(state)
 	CosmeticsUI.update(state)
+	DecorUI.update(state)
 	DailyUI.update(state)
 	SeasonUI.update(state)
 	LimitedShopUI.update(state)
@@ -1269,6 +1276,7 @@ function UI.init()
 	end
 	PalsUI.build(gui, closeAll)
 	CosmeticsUI.build(gui, closeAll)
+	DecorUI.build(gui, closeAll)
 	buildMenu()
 	buildMusicButton()
 	buildTravel()

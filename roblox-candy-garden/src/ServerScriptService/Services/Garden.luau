@@ -345,7 +345,10 @@ function Garden.expand(player: Player)
 	end
 	d.coins -= nextUpgrade.price
 	d.plotTiles = nextUpgrade.tiles
-	World.setUnlocked(player, d.plotTiles)
+	World.setUnlocked(player, d.plotTiles, true)
+	if Garden.onExpanded then
+		Garden.onExpanded(player) -- 名札のランクを更新（畑の広さもランクに入る）
+	end
 	Remotes.Toast:FireClient(player, "toast.expanded", d.plotTiles)
 	Data.push(player)
 	Data.save(player) -- 大きな買い物は、すぐ保存する

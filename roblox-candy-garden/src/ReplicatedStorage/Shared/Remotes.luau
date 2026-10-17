@@ -36,6 +36,9 @@ local NAMES = {
 	"TradeCancel",
 	"TradeState",
 	"ExpandPlot",
+	"BuyDecor",
+	"PlaceDecor",
+	"RemoveDecor",
 }
 
 local folder

@@ -65,6 +65,8 @@ local function newData()
 		water = { amount = 3, level = 1 }, -- じょうろの水（残り回数）と大きさ（Config.Water.cans）
 		fertilizer = 0, -- キャンディひりょうの数
 		plotTiles = 6, -- 使える畑の枚数（Config.PlotUpgrades で広がる）
+		-- 庭の飾り: owned=持っている [id]=true / slots=置いてある場所（6か所、空きは ""）
+		decor = { owned = {}, slots = { "", "", "", "", "", "" } },
 		dex = {}, -- ペット図鑑: 見つけたペット [petId] = true
 		dexClaimed = 0, -- 受け取った図鑑のごほうびの数（Config.Dex.rewards の何番目まで）
 	}
@@ -225,6 +227,7 @@ function Data.push(player: Player)
 		season = extra.season,
 		limited = extra.limited,
 		quests = extra.quests,
+		decor = extra.decor,
 		pets = d.pets,
 		equipped = d.equipped,
 		sellBonus = 1 + Data.petBonus(d),

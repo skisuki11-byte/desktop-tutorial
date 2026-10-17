@@ -23,6 +23,29 @@ Config.PlotUpgrades = {
 	{ tiles = 12, price = 150000 },
 }
 
+-- 庭の飾り（柵のまわりの6か所に置ける。8種類あるので、どれを飾るか選ぶ楽しさがある）。
+-- 値段は「慣れた人が1分に2,400〜7,000コイン稼ぐ」を基準に、すぐ買える物から、何日も目標にする物まで
+-- points: にぎやかさの点数
+Config.Decor = {
+	{ id = "candylamp", icon = "🕯️", price = 2000, points = 1 },
+	{ id = "flowerbed", icon = "🌷", price = 4000, points = 2 },
+	{ id = "cupcakehouse", icon = "🧁", price = 8000, points = 3 },
+	{ id = "lollitree", icon = "🍭", price = 15000, points = 4 },
+	{ id = "fountain", icon = "⛲", price = 30000, points = 6 },
+	{ id = "bearstatue", icon = "🧸", price = 60000, points = 8 },
+	{ id = "rainbowarch", icon = "🌈", price = 120000, points = 12 },
+	{ id = "castle", icon = "🏰", price = 300000, points = 20 },
+}
+Config.DecorById = {}
+for _, item in Config.Decor do
+	Config.DecorById[item.id] = item
+end
+-- にぎやかさのランク（🌱→🌸→🌟→👑）。飾りの点数＋畑の広さのボーナス
+Config.DecorRank = {
+	thresholds = { 0, 5, 15, 35 },
+	tileBonus = { { tiles = 9, points = 2 }, { tiles = 12, points = 5 } },
+}
+
 Config.SparkleChance = 0.1 -- 収穫時の「きらきら」確率
 
 -- 水やり（あげなくても普通に育つ。あげると少し早く・きらきらが出やすくなる。忘れても損はしない）
