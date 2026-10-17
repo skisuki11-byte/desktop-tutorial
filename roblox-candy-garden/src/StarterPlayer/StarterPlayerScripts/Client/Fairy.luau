@@ -7,7 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
-local Icons = require(ReplicatedStorage.Shared.Icons)
+local CatalogViewport = require(script.Parent.CatalogViewport)
 
 local Fairy = {}
 
@@ -19,18 +19,8 @@ local leaving = false
 
 -- 吹き出しを教えて、ルルを用意する（最初は かくしておく）。gui = 画面の ScreenGui
 function Fairy.attach(gui: ScreenGui, card: GuiObject)
-	local f: GuiObject
-	if Icons.fairy_lulu then
-		local image = Instance.new("ImageLabel")
-		image.Image = Icons.fairy_lulu
-		image.ScaleType = Enum.ScaleType.Fit
-		f = image
-	else
-		local label = Instance.new("TextLabel")
-		label.Text = "🧚"
-		label.TextScaled = true
-		f = label
-	end
+	local f=Instance.new("Frame")
+	CatalogViewport.attach(f,"fairy_lulu",false,{animate=true})
 	f.Name = "Lulu"
 	f.BackgroundTransparency = 1
 	f.AnchorPoint = Vector2.new(0.5, 0.5)

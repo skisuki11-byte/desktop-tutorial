@@ -51,7 +51,7 @@ local function refresh()
 			end
 			cell.frame.BackgroundColor3 = if have then VARIANT_COLOR[variant] else Color3.fromRGB(235, 228, 240)
 			-- 見つけた姿は作物の絵（まだの姿は「？」）
-			Style.setIcon(cell.icon, if have then "crop_" .. cropId else nil, if have then crop.icon else "？")
+			Style.setIcon(cell.icon, "crop_" .. cropId .. ":" .. variant, crop.icon, not have)
 			cell.icon.TextColor3 = if have then C.Text else C.TextMuted
 		end
 	end

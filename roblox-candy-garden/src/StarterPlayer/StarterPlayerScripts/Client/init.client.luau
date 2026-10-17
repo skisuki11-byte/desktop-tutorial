@@ -23,6 +23,7 @@ end
 UI.init()
 Tutorial.init()
 PalRenderer.init()
+require(script.ToolRenderer).init()
 WeatherClient.init(UI)
 TreeClient.init(UI)
 UI.relayout()

@@ -135,10 +135,15 @@ local eggPanel -- たまごの森のお店の画面
 local dexTitle, dexNote, dexGrid
 
 -- 図鑑: 全部のペットを、レア度の順に並べる（見つけていないペットは「？」）
+local previousDexKey = nil
 local function refreshDex()
 	if not dexGrid or not lastState then
 		return
 	end
+	local dexKey=""
+	for _,cfg in Config.Pets do dexKey ..= if (lastState.dex or {})[cfg.id] then "1" else "0" end
+	if dexKey==previousDexKey then return end
+	previousDexKey=dexKey
 	for _, child in dexGrid:GetChildren() do
 		if child:IsA("GuiObject") then
 			child:Destroy()
@@ -167,11 +172,11 @@ local function refreshDex()
 			ZIndex = 13,
 		}, cell)
 		-- まだ会っていないペットは「？」（何が出るかの楽しみは残す）
-		Style.setIcon(face, if have then "pet_" .. cfg.id else nil, if have then cfg.icon else "？")
+		Style.setIcon(face, "pet_" .. cfg.id, cfg.icon, not have)
 		Style.label({
 			Position = UDim2.fromOffset(3, 46),
 			Size = UDim2.new(1, -6, 0, 22),
-			Text = if have then t("pet." .. cfg.id) else t("ui.unknownPet"),
+			Text = t("pet." .. cfg.id),
 			TextSize = 12,
 			ZIndex = 13,
 		}, cell)

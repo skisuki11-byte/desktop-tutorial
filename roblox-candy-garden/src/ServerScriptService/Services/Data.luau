@@ -245,6 +245,7 @@ function Data.addStateExtender(fn: (Player) -> { [string]: any })
 end
 
 function Data.push(player: Player)
+	player:SetAttribute("HeldGardenTool", Data.tool(player) or "")
 	local profile = profiles[player]
 	if not profile then
 		return

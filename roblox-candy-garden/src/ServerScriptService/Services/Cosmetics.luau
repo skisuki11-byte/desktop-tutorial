@@ -10,6 +10,7 @@ local Data = require(script.Parent.Data)
 local Monetization = require(script.Parent.Monetization)
 local RateLimit = require(script.Parent.RateLimit)
 
+local CosmeticVisuals = require(ReplicatedStorage.Shared.CosmeticVisuals)
 local Cosmetics = {}
 
 local C = Color3.fromRGB
@@ -381,9 +382,9 @@ local function attach(character: Model, slot: string, id: string)
 	if not build then
 		return
 	end
-	local model = Instance.new("Model")
+	local model = CosmeticVisuals.build(id)
+	if not model then return end
 	model.Name = "Cosmetic_" .. slot
-	build(model)
 
 	local body, origin
 	if slot == "hat" then

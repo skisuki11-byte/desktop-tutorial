@@ -9,6 +9,7 @@ local TweenService = game:GetService("TweenService")
 
 local Icons = require(ReplicatedStorage.Shared.Icons)
 
+local CatalogViewport = require(script.Parent.CatalogViewport)
 local Style = {}
 
 Style.Color = {
@@ -385,6 +386,11 @@ end
 -- label = アイコン用の TextLabel（大きさ・位置はそのまま。絵はその枠いっぱいに、形をくずさず入れる）。
 -- dim = まだ持っていない物を、うすく出すとき
 function Style.setIcon(label: TextLabel, key: string?, fallback: string?, dim: boolean?)
+	if CatalogViewport.attach(label,key,dim) then
+		label.Text=""
+		local oldImage=label:FindFirstChild("IconImage");if oldImage then oldImage.Visible=false end
+		return
+	end
 	local id = if key then Icons[key] else nil
 	local image = label:FindFirstChild("IconImage") :: ImageLabel?
 	if id then

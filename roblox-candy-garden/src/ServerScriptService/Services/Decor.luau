@@ -10,6 +10,7 @@ local Data = require(script.Parent.Data)
 local World = require(script.Parent.World)
 local RateLimit = require(script.Parent.RateLimit)
 
+local DecorVisuals = require(ReplicatedStorage.Shared.DecorVisuals)
 local Decor = {}
 
 local C = Color3.fromRGB
@@ -224,9 +225,9 @@ function Decor.render(player: Player)
 	for i, id in d.decor.slots do
 		local build = BUILD[id]
 		if build and SLOTS[i] then
-			local model = Instance.new("Model")
+			local model = DecorVisuals.build(id)
+			if not model then continue end
 			model.Name = id
-			build(model)
 			-- 部品は原点のまわりに作ってある。足元の中心＝原点として、向き・高さはそのまま、庭の向きに合わせて置く
 			model.WorldPivot = CFrame.new()
 			-- 庭の外がわから中を向くように回す（前＝-Z を庭の中心へ）

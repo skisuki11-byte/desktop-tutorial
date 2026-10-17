@@ -22,6 +22,7 @@ local Sounds = require(script.Parent.Sounds)
 local DecorUI = require(script.Parent.DecorUI)
 local CropDexUI = require(script.Parent.CropDexUI)
 local Fairy = require(script.Parent.Fairy)
+local CatalogUI = require(script.Parent.CatalogUI)
 
 local UI = {}
 
@@ -336,6 +337,8 @@ local function buildMenu()
 			CaptionSize = 13,
 		}, side)
 	end
+	local catalogButton=item("Catalog",9,"📚",if I18n.language()=="ja" then "3Dずかん" else "3D Guide",Color3.fromRGB(170,225,200))
+	catalogButton.Activated:Connect(function() UI.showPanel(if CatalogUI.isVisible() then nil else "catalog") end)
 	local cropDexButton = item("CropDex", 8, "📖", t("ui.cropDex"), Color3.fromRGB(255, 210, 150))
 	cropDexButton.Activated:Connect(function()
 		UI.showPanel(if CropDexUI.isVisible() then nil else "cropdex")
@@ -1333,7 +1336,19 @@ end
 -- ---- 公開する関数 ----
 
 -- どのパネルを開くか。同時に開くのは1つだけ（nil で全部閉じる）
+local function syncTouchControls(open: boolean)
+ local touch=Players.LocalPlayer.PlayerGui:FindFirstChild("TouchGui")
+ if not touch then return end
+ local previous=touch:GetAttribute("CandyBeforeModal")
+ if open then
+  if previous==nil then touch:SetAttribute("CandyBeforeModal",touch.Enabled) end
+  touch.Enabled=false
+ elseif previous~=nil then
+  touch.Enabled=previous;touch:SetAttribute("CandyBeforeModal",nil)
+ end
+end
 function UI.showPanel(name: string?)
+ syncTouchControls(name~=nil)
 	UI.currentPanel = name
 	-- パネルを開いている間は、下と右の操作ボタンを隠して画面を広く使う
 	bottom.Visible = false -- 下はいつも空けておく（畑と足元を見やすく）
@@ -1363,6 +1378,7 @@ function UI.showPanel(name: string?)
 	DailyUI.setVisible(name == "daily")
 	DecorUI.setVisible(name == "decor")
 	CropDexUI.setVisible(name == "cropdex")
+	CatalogUI.setVisible(name == "catalog")
 end
 
 function UI.setShopVisible(visible: boolean)
@@ -1537,6 +1553,7 @@ function UI.update(state)
 	CosmeticsUI.update(state)
 	DecorUI.update(state)
 	CropDexUI.update(state)
+	CatalogUI.update(state)
 	DailyUI.update(state)
 	SeasonUI.update(state)
 	LimitedShopUI.update(state)
@@ -1544,7 +1561,8 @@ function UI.update(state)
 end
 
 function UI.init()
-	local player = Players.LocalPlayer
+ local player = Players.LocalPlayer
+ player.PlayerGui.ChildAdded:Connect(function(child) if child.Name=="TouchGui" then syncTouchControls(UI.currentPanel~=nil) end end)
 	gui = Style.make("ScreenGui", {
 		Name = "CandyUI",
 		ResetOnSpawn = false,
@@ -1563,6 +1581,7 @@ function UI.init()
 	CosmeticsUI.build(gui, closeAll)
 	DecorUI.build(gui, closeAll)
 	CropDexUI.build(gui, closeAll)
+	CatalogUI.build(gui, closeAll)
 	buildMenu()
 	buildMusicButton()
 	buildTravel()

@@ -1,3 +1,4 @@
+local MiscVisuals=require(game:GetService("ReplicatedStorage").Shared.MiscVisuals)
 -- お菓子の庭のマップを全てコードで生成する（素材は使わない）。
 -- 方針「かわいい形 × リアルな光と質感」（例: あつまれ どうぶつの森）。
 --   ・形と色はかわいいまま（明るいパステル、丸い形）
@@ -920,14 +921,8 @@ local function buildEggForest()
 	for i, egg in { { C(255, 245, 220), -5 }, { C(255, 214, 90), 5 } } do
 		local at = house * CFrame.new(egg[2], 0, -12)
 		pillar(model, 2.4, 2.6, at * CFrame.new(0, 1.2, 0), C(255, 236, 244), Enum.Material.Marble, true)
-		local e = deco({
-			Shape = Enum.PartType.Ball,
-			Size = Vector3.new(2.2, 2.8, 2.2),
-			CFrame = at * CFrame.new(0, 3.8, 0),
-			Color = egg[1],
-			Material = if i == 2 then Enum.Material.Neon else Enum.Material.SmoothPlastic,
-		}, model)
-		sparkles(e, if i == 2 then 8 else 3)
+		local visual=MiscVisuals.build(if i==2 then "egg_staregg" else "egg_candyegg")
+		visual:ScaleTo(1.2);visual.WorldPivot=CFrame.identity;visual:PivotTo(at*CFrame.new(0,2.4,0));visual.Parent=model
 	end
 	-- 名前の立て看板は、入口の横に（入口の前はあけておく）
 	shopSign(model, house * CFrame.new(10, 0, -13) * CFrame.Angles(0, math.rad(-20), 0), "place.eggForest")
@@ -963,15 +958,10 @@ local function buildToolShop()
 	-- カウンター
 	block({ Size = Vector3.new(14, 3, 2), CFrame = base * CFrame.new(0, 1.9, -4), Color = C(190, 130, 100), Material = Enum.Material.Wood }, model)
 	block({ Size = Vector3.new(14.6, 0.4, 2.6), CFrame = base * CFrame.new(0, 3.6, -4), Color = C(120, 190, 140) }, model)
-	-- カウンターの上の品物（じょうろ・ひりょうの袋・しずくのびん）
-	pillar(model, 1.4, 1.2, base * CFrame.new(-4, 4.5, -4), C(150, 200, 255))
-	deco({ Size = Vector3.new(1.4, 1.6, 1), CFrame = base * CFrame.new(0, 4.6, -4), Color = C(255, 225, 140), Material = Enum.Material.Fabric }, model)
-	local bottle = ball(model, 1.2, (base * CFrame.new(4, 4.4, -4)).Position, C(200, 160, 255), Enum.Material.Glass)
-	local glow = Instance.new("PointLight")
-	glow.Color = C(200, 160, 255)
-	glow.Range = 6
-	glow.Parent = bottle
-	sparkles(bottle, 4)
+	-- The shop and guide use the same complete 3D tool models.
+	for i,key in {"tool_water","tool_fertilizer","tool_drop"} do
+		local visual=MiscVisuals.build(key);visual.WorldPivot=CFrame.identity;visual:PivotTo(base*CFrame.new((i-2)*4,3.85,-4));visual.Parent=model
+	end
 	-- 屋根の上の大きな じょうろ（遠くからでも分かる目印）
 	local can = base * CFrame.new(0, 15.5, 0)
 	pillar(model, 3.4, 3.2, can, C(150, 200, 255))

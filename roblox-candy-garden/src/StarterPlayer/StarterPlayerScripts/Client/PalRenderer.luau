@@ -5,6 +5,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local PetVisuals = require(ReplicatedStorage.Shared.PetVisuals)
+local PetAnimator = require(ReplicatedStorage.Shared.PetAnimator)
 
 local PalRenderer = {}
 
@@ -36,6 +38,10 @@ end
 -- 原点に作って、体(Body)を基準にしてあとで動かす。前は -Z。
 local function buildPet(cfg): (Model, number)
 	local size = 1.8 + cfg.rarity * 0.25
+	local meshModel = PetVisuals.create(cfg, size)
+	if meshModel then
+		return meshModel, size
+	end
 	local model = Instance.new("Model")
 	model.Name = cfg.id
 	local ball = Enum.PartType.Ball
@@ -233,6 +239,7 @@ local function clear(player: Player)
 	local entry = entries[player]
 	if entry then
 		for _, pal in entry.pals do
+			PetAnimator.release(pal.model)
 			pal.model:Destroy()
 		end
 		entries[player] = nil
@@ -300,6 +307,7 @@ function PalRenderer.init()
 						look = Vector3.new(0, 0, -1)
 					end
 					pal.model:PivotTo(CFrame.lookAt(pos + Vector3.new(0, bob, 0), pos + Vector3.new(0, bob, 0) + look))
+					PetAnimator.step(pal.model,now+i,moving)
 				end
 			end
 		end
