@@ -862,6 +862,18 @@ local function sparkles(parent: BasePart, rate: number)
 	sparkle.Parent = parent
 end
 
+-- 建物にとりつける名前の板（足なし。入口をふさがない）
+local function wallSign(parent: Instance, cf: CFrame, key: string)
+	local board = deco({
+		Name = "NameBoard",
+		Size = Vector3.new(9, 2.2, 0.3),
+		CFrame = cf,
+		Color = C(255, 236, 200),
+		Material = Enum.Material.Wood,
+	}, parent)
+	signText(board, Enum.NormalId.Front, key)
+end
+
 -- ---- たまごの森（左）: わたあめの木にかこまれた広場に、大きな たまごの家 ----
 local function buildEggForest()
 	local model = make("Model", { Name = "EggForest" }, workspace)
@@ -917,7 +929,8 @@ local function buildEggForest()
 		}, model)
 		sparkles(e, if i == 2 then 8 else 3)
 	end
-	shopSign(model, house * CFrame.new(0, 0, -18), "place.eggForest")
+	-- 名前の立て看板は、入口の横に（入口の前はあけておく）
+	shopSign(model, house * CFrame.new(10, 0, -13) * CFrame.Angles(0, math.rad(-20), 0), "place.eggForest")
 	addPrompt(model, house * CFrame.new(0, 3, -12), 10)
 end
 
@@ -969,7 +982,8 @@ local function buildToolShop()
 		Color = C(150, 200, 255),
 	}, model)
 	ball(model, 1, (can * CFrame.new(4.2, 1.8, 0)).Position, C(110, 170, 240))
-	shopSign(model, base * CFrame.new(0, 0, -10), "place.toolShop")
+	-- 名前の板は、小屋の正面（屋根の下）に つける
+	wallSign(model, base * CFrame.new(0, 10.2, -7.1), "place.toolShop")
 	addPrompt(model, base * CFrame.new(0, 3, -5), 10)
 end
 

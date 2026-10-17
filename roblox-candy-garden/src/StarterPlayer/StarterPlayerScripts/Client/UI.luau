@@ -39,7 +39,8 @@ local dropDetail
 local seedRows = {} -- 種屋の行 [cropId] = { row, info, buy }（入荷の数に合わせて表示を変える）
 local restockLabel -- 「つぎの入荷まで 3:12」
 local toastLabel
-local bannerLabel, banner
+local bannerLabel, banner, bannerButtons
+local toastY = 120 -- お知らせのふだんの高さ（画面の大きさで変わる）
 local lastCoins = nil
 local toastToken = 0
 local menuButton, menuBadge
@@ -723,7 +724,8 @@ local function applyLayout(mode: string)
 		then (if portrait then leftTop + PHONE_ROW + SEED_PHONE + 36 else leftTop + SEED_PHONE + 20)
 		else 130
 	banner.Position = UDim2.new(0.5, 0, 0, bannerY)
-	toastLabel.Position = UDim2.new(0.5, 0, 0, bannerY + 60)
+	toastY = bannerY + 60
+	toastLabel.Position = UDim2.new(0.5, 0, 0, toastY)
 	Style.setScale(banner, if compact then 0.8 else 1)
 	Style.setScale(toastLabel, if compact then 0.8 else 1)
 	if latestState then
@@ -1256,15 +1258,82 @@ local function buildBanner()
 		PaddingTop = UDim.new(0, 14),
 		PaddingBottom = UDim.new(0, 14),
 	}, banner)
+	-- 森の妖精「ルル」がしゃべる吹き出し: 左に顔、右に名前・セリフ・ボタン
+	Style.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		Padding = UDim.new(0, 14),
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, banner)
+	local face = Style.make("Frame", {
+		Name = "FairyFace",
+		LayoutOrder = 1,
+		Size = UDim2.fromOffset(64, 64),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		ZIndex = 6,
+	}, banner)
+	Style.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, face)
+	Style.stroke(face, C.Outline, 3)
+	Style.label({
+		Size = UDim2.fromScale(1, 1),
+		Text = "🧚",
+		TextSize = 44,
+		TextWrapped = false,
+		ZIndex = 7,
+	}, face)
+	local column = Style.make("Frame", {
+		Name = "Column",
+		LayoutOrder = 2,
+		Size = UDim2.fromOffset(0, 0),
+		AutomaticSize = Enum.AutomaticSize.XY,
+		BackgroundTransparency = 1,
+		ZIndex = 6,
+	}, banner)
+	Style.make("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }, column)
+	Style.label({
+		Name = "Speaker",
+		LayoutOrder = 1,
+		Size = UDim2.fromOffset(0, 0),
+		AutomaticSize = Enum.AutomaticSize.XY,
+		Text = t("fairy.name"),
+		TextSize = 16,
+		TextColor3 = Color3.fromRGB(255, 240, 160),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = false,
+		ZIndex = 7,
+	}, column)
 	bannerLabel = Style.label({
+		LayoutOrder = 2,
 		Size = UDim2.fromOffset(0, 0),
 		-- 長い案内は、画面幅に合わせて折り返す（fitBottomで上限を設定）
 		AutomaticSize = Enum.AutomaticSize.XY,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
-		TextSize = 26,
+		TextSize = 24,
 		TextWrapped = true,
-	}, banner)
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 7,
+	}, column)
 	Style.make("UISizeConstraint", { Name = "MaxWidth" }, bannerLabel)
+	-- ボタンの列: セリフの幅いっぱいにして、右下にそろえる（「つぎへ」がいちばん右。スキップは その左に控えめに）
+	bannerButtons = Style.make("Frame", {
+		Name = "Buttons",
+		LayoutOrder = 3,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		Visible = false,
+		ZIndex = 6,
+	}, column)
+	Style.make("UIPadding", { PaddingTop = UDim.new(0, 8) }, bannerButtons)
+	Style.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		HorizontalAlignment = Enum.HorizontalAlignment.Right,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, 12),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, bannerButtons)
+	-- セリフが短くても、ボタンが窮屈にならない幅にする
+	Style.make("UISizeConstraint", { MinSize = Vector2.new(300, 0) }, column)
 end
 
 -- ---- 公開する関数 ----
@@ -1315,6 +1384,13 @@ function UI.toastText(text: string, seconds: number?)
 	local token = toastToken
 	toastLabel.Text = text
 	toastLabel.Visible = true
+	-- 妖精の吹き出しが出ているときは、その下に出す（重ならないように）
+	if banner and banner.Visible then
+		local y = banner.AbsolutePosition.Y - gui.AbsolutePosition.Y + banner.AbsoluteSize.Y + 8
+		toastLabel.Position = UDim2.new(0.5, 0, 0, y)
+	else
+		toastLabel.Position = UDim2.new(0.5, 0, 0, toastY)
+	end
 	toastLabel.BackgroundTransparency = 0
 	toastLabel.TextTransparency = 0
 	Style.pop(toastLabel, 1.15)
@@ -1341,14 +1417,43 @@ function UI.gui(): ScreenGui
 	return gui
 end
 
-function UI.setBanner(text: string?)
+-- 妖精の吹き出し。buttons = { { text, onPress }, ... } を渡すと、セリフの下にボタンを出す（つぎへ・スキップ）
+local bannerKey = nil
+function UI.setBanner(text: string?, buttons: { { any } }?)
 	if text then
+		-- 同じセリフ・同じボタンなら作り直さない（0.4秒ごとに呼ばれるため）
+		local key = text .. "|" .. tostring(buttons ~= nil and #buttons or 0)
+		local changed = key ~= bannerKey
+		bannerKey = key
 		bannerLabel.Text = text
+		if changed then
+			for _, child in bannerButtons:GetChildren() do
+				if child:IsA("GuiButton") then
+					child:Destroy()
+				end
+			end
+			bannerButtons.Visible = buttons ~= nil and #buttons > 0
+			for i, entry in buttons or {} do
+				-- 1つめ（つぎへ・わかった）が主役: 右はしに大きく。2つめ（スキップ）は左に小さく
+				local primary = i == 1
+				local button = Style.button({
+					Name = "Choice" .. i,
+					LayoutOrder = if primary then 2 else 1,
+					Size = if primary then UDim2.fromOffset(150, 48) else UDim2.fromOffset(104, 40),
+					Text = entry[1],
+					TextSize = if primary then 20 else 16,
+					BackgroundColor3 = if primary then C.Yellow else C.Surface,
+					ZIndex = 7,
+				}, bannerButtons)
+				button.Activated:Connect(entry[2])
+			end
+		end
 		if not banner.Visible then
 			banner.Visible = true
 			Style.pop(banner, 0.9)
 		end
 	else
+		bannerKey = nil
 		banner.Visible = false
 	end
 end

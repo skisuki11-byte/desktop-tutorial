@@ -8,6 +8,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local I18n = require(ReplicatedStorage.Shared.I18n)
 local Style = require(script.Parent.Style)
 local UI = require(script.Parent.UI)
+local Fairy = require(script.Parent.Fairy)
 
 local Tutorial = {}
 
@@ -134,17 +135,96 @@ local function refreshPrompts()
 	end
 end
 
+-- ---- 森の妖精ルルの おはなし ----
+-- はじめて来た人に: 最初に短い あいさつ（3つ）→ 遊びながら ひとことずつ案内 → はじめて売ったら ひろば・森・どうぐ屋を紹介して帰る。
+-- 一度終わったら もう出てこない（何度も出てくる案内役は、うるさがられる）
+local INTRO = { "fairy.hello1", "fairy.hello2", "fairy.hello3" }
+local OUTRO = { "fairy.bye1", "fairy.bye2", "fairy.bye3" }
+local script_: { string }? = nil -- いま話している おはなし（INTRO か OUTRO）
+local line = 1
+local introDone = false
+local wasDone: boolean? = nil -- この回のはじめに、案内が終わっていたか
+
+local function talk(): boolean
+	if not script_ then
+		return false
+	end
+	local isLast = line >= #script_
+	local buttons = {
+		{
+			if isLast then t("fairy.ok") else t("fairy.next"),
+			function()
+				line += 1
+				if script_ and line > #script_ then
+					if script_ == OUTRO then
+						Fairy.leave()
+					end
+					script_ = nil
+					introDone = true
+				end
+			end,
+		},
+	}
+	if script_ == INTRO and not isLast then
+		table.insert(buttons, {
+			t("fairy.skip"),
+			function()
+				script_ = nil
+				introDone = true
+			end,
+		})
+	end
+	UI.setBanner(t(script_[line]), buttons)
+	return true
+end
+
 local function refreshTutorial()
-	if not state or state.tutorialDone then
+	if not state then
+		return
+	end
+	if wasDone == nil then
+		wasDone = state.tutorialDone == true
+	end
+	-- はじめて売って、案内が終わった瞬間: さいごの おはなし（ひろば・森・どうぐ屋）
+	if state.tutorialDone and not wasDone then
+		wasDone = true
+		script_ = OUTRO
+		line = 1
+	end
+	-- パネル（まいにちボーナスなど）や、お祝い・たまごの画面が出ている間は、話さない（画面を重ねない）
+	local gui = player.PlayerGui:FindFirstChild("CandyUI")
+	local hatch = gui and gui:FindFirstChild("HatchOverlay", true)
+	local busy = UI.currentPanel ~= nil
+		or (gui ~= nil and gui:FindFirstChild("StarGift") ~= nil)
+		or (hatch ~= nil and hatch.Visible)
+	if busy then
 		UI.setBanner(nil)
+		return
+	end
+	if state.tutorialDone then
 		UI.highlight(nil)
 		pointAt(nil)
+		if not talk() then
+			UI.setBanner(nil)
+		end
+		return
+	end
+	Fairy.show()
+	-- 最初のあいさつ
+	if not introDone then
+		if not script_ then
+			script_ = INTRO
+			line = 1
+		end
+		UI.highlight(nil)
+		pointAt(nil)
+		talk()
 		return
 	end
 
 	local buttons = UI.buttons()
 	local tiles = myTiles()
-	local readyTile, emptyTile, growingTile = nil, nil, nil
+	local readyTile, emptyTile, growingTile, dryTile = nil, nil, nil, nil
 	local waitLeft = math.huge
 
 	for _, tile in tiles do
@@ -155,6 +235,9 @@ local function refreshTutorial()
 			readyTile = readyTile or tile
 		else
 			growingTile = growingTile or tile
+			if not tile:GetAttribute("Watered") then
+				dryTile = dryTile or tile -- まだ水をあげていない畑
+			end
 			local left = (tile:GetAttribute("PlantedAt") + tile:GetAttribute("GrowTime")) - workspace:GetServerTimeNow()
 			waitLeft = math.min(waitLeft, left)
 		end
@@ -175,6 +258,16 @@ local function refreshTutorial()
 	elseif hasSeed() and emptyTile then
 		UI.setBanner("🌱 " .. t("tutorial.plant"))
 		pointAt(emptyTile)
+	elseif dryTile and state.water and state.water.amount > 0 then
+		-- 待っている間に、じょうろを使ってみる（道具は自分でえらぶ）
+		if state.tool == "water" then
+			UI.setBanner("💧 " .. t("tutorial.waterUse"))
+			pointAt(dryTile)
+		else
+			UI.setBanner("💧 " .. t("tutorial.waterPick"))
+			local bar = player.PlayerGui:FindFirstChild("SeedBar", true)
+			UI.highlight(bar and bar:FindFirstChild("Tool_water"))
+		end
 	elseif growingTile then
 		UI.setBanner("⏳ " .. t("tutorial.wait", math.max(0, math.ceil(waitLeft))))
 	else

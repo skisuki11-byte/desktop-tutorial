@@ -115,6 +115,11 @@ function Data.load(player: Player)
 	if not canSave then
 		warn("[Data] 保存は無効です（Studioで「Enable Studio Access to API Services」がオフ、またはDataStore障害）")
 	end
+	-- Studioでの確認用: workspace の属性 DebugFreshData を オンにすると、はじめての人として遊べる（保存はしない。本番では効かない）
+	if RunService:IsStudio() and workspace:GetAttribute("DebugFreshData") then
+		data = nil
+		canSave = false
+	end
 	data = reconcile(type(data) == "table" and data or {})
 	-- いなかった時間（前回の保存から今まで）。初めての人は 0
 	local away = data.lastSeen > 0 and math.max(0, os.time() - data.lastSeen) or 0
