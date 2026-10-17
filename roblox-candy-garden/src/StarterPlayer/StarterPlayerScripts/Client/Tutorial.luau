@@ -97,7 +97,11 @@ local function refreshPrompts()
 				-- 水やり・ひりょうは、道具（じょうろ・ひりょう）を自分で選んで持っているときだけ出す
 				-- （植えたらすぐ出すと、世話をしなくても進んでしまう。ほかの人の畑も手伝える）
 				local growing = crop ~= nil and not tile:GetAttribute("Ready")
-				local canWater = growing and state.tool == "water" and not tile:GetAttribute("Watered")
+				local canWater = growing
+					and state.tool == "water"
+					and not tile:GetAttribute("Watered")
+					and state.water ~= nil
+					and state.water.amount > 0
 				local canFertilize = growing
 					and state.tool == "fertilizer"
 					and not tile:GetAttribute("Fertilized")

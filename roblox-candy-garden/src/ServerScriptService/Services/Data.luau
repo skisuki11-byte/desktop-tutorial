@@ -196,8 +196,12 @@ function Data.tool(player: Player): string?
 	if not profile then
 		return nil
 	end
-	-- ひりょうを使い切ったら、自動でしまう
-	if profile.runtime.tool == "fertilizer" and (profile.data.fertilizer or 0) <= 0 then
+	-- ひりょうを使い切ったら・じょうろの水がなくなったら、自動でしまう
+	local tool = profile.runtime.tool
+	if
+		(tool == "fertilizer" and (profile.data.fertilizer or 0) <= 0)
+		or (tool == "water" and (profile.data.water == nil or profile.data.water.amount <= 0))
+	then
 		profile.runtime.tool = nil
 	end
 	return profile.runtime.tool

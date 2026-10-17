@@ -264,7 +264,8 @@ local function water(helper: Player, owner: Player, tileIndex: number): boolean
 		splash(plot.tiles[tileIndex])
 	end
 	if helper == owner then
-		Remotes.Toast:FireClient(helper, "toast.watered")
+		-- 最後の1回なら、じょうろをしまったことと、池でくむことを伝える
+		Remotes.Toast:FireClient(helper, if hd.water.amount <= 0 then "toast.canEmptied" else "toast.watered")
 	else
 		-- ほかの人の畑を手伝った: 手伝った人にお礼、持ち主には「○○さんが水をあげてくれた」
 		hd.coins += Config.Water.helperCoins
@@ -375,6 +376,10 @@ function Garden.selectTool(player: Player, tool: any)
 	end
 	if tool == "fertilizer" and (d.fertilizer or 0) <= 0 then
 		Remotes.Toast:FireClient(player, "toast.noFertilizer")
+		return
+	end
+	if tool == "water" and d.water.amount <= 0 then
+		Remotes.Toast:FireClient(player, "toast.noWater") -- からっぽのじょうろは持てない（池でくもう）
 		return
 	end
 	Data.setTool(player, tool)
