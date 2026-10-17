@@ -1255,30 +1255,19 @@ local function buildBanner()
 	Style.gloss(banner)
 	Style.make("UIPadding", {
 		PaddingLeft = UDim.new(0, 30),
-		PaddingRight = UDim.new(0, 30),
+		PaddingRight = UDim.new(0, 90), -- 右上に重ねるルルの体に、セリフがかくれないように
 		PaddingTop = UDim.new(0, 14),
 		PaddingBottom = UDim.new(0, 14),
 	}, banner)
-	-- 森の妖精「ルル」がしゃべる吹き出し: 左に顔、右に名前・セリフ・ボタン
+	-- 森の妖精「ルル」がしゃべる吹き出し: 名前・セリフ・ボタン（ルルは右上に重ねて出す）
 	Style.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Horizontal,
 		Padding = UDim.new(0, 14),
 		VerticalAlignment = Enum.VerticalAlignment.Center,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, banner)
-	-- CanvasGroup にすると、角丸（まる）の形で 中の顔を くり抜ける
-	local face = Style.make("CanvasGroup", {
-		Name = "FairyFace",
-		LayoutOrder = 1,
-		Size = UDim2.fromOffset(64, 64),
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		ZIndex = 6,
-	}, banner)
-	Style.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, face)
-	Style.stroke(face, C.Outline, 3)
-	-- 顔は、画面に飛んでいるルルと同じすがたを映す（絵文字の妖精だと、ルルとちがう人に見える）
-	Fairy.portrait(face)
-	Fairy.setAnchor(banner) -- 3Dのルルは、この吹き出しの右どなりに浮かぶ
+	-- ルル本人は、吹き出しの右上に少し重ねて 手前に出す（Fairy）。この子が話している、と分かるように
+	Fairy.attach(gui, banner)
 	local column = Style.make("Frame", {
 		Name = "Column",
 		LayoutOrder = 2,

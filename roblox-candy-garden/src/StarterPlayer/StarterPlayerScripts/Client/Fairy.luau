@@ -1,26 +1,24 @@
--- 森の妖精「ルル」の すがた。はじめて遊ぶ人の画面で、羽をぱたぱたさせて ふわふわ飛ぶ。
--- 自分の画面にだけ出す（ほかの人には見えない）。いつも こちら（カメラ）を向いて、顔が見えるようにする。
--- 話しているときは、吹き出し（コメントカード）の右どなりに浮かぶ（だれが話しているか分かるように）。
--- 吹き出しの中の顔も、同じルルを小さな窓（ViewportFrame）に映して出す。
--- 案内が終わったら、くるっと回って 空へ飛んで帰る。
--- すがた: まるい顔（目・ほっぺ）、ピンクの かみの毛、花びらの ドレス、うすい4枚の羽、ほんのり光る
+-- 森の妖精「ルル」の すがた。はじめて遊ぶ人の案内役。
+-- 吹き出し（コメントカード）の右上に、少し重ねて 手前に出す（この子が話している、と ひと目で分かるように）。
+-- 画面の部品（ViewportFrame）として出すので、吹き出しより手前に出せる（マップの3Dの物は、画面の部品の うしろになる）。
+-- 羽を ぱたぱた、ふわふわ上下に浮かぶ。案内が終わったら、くるっと回って 上へ飛んで帰る。
+-- すがた: まるい顔（目・ほっぺ）、ピンクの かみの毛、花びらの ドレス、うすい4枚の羽
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local Fairy = {}
 
 local C = Color3.fromRGB
-local S = 1.6 -- 大きさ（小さすぎると、キャラクターや吹き出しに隠れて見えない）
-local DEPTH = 13 -- カメラから どれくらい前に浮かぶか（遠いほど小さく見える）
+local S = 1 -- 部品の大きさの基準
+local SIZE = 150 -- 画面に出す大きさ（px）
 
 type Piece = { part: BasePart, offset: CFrame, wing: number? }
 
-local model: Model? = nil
-local pieces: { Piece } = {}
-local anchor: GuiObject? = nil -- この吹き出しの右どなりに浮かぶ
-local connection: RBXScriptConnection? = nil
+local frame: ViewportFrame? = nil
+local shown = false
 local leaving = false
 
--- ルルの部品を作る。list に部品と位置（顔の中心からのずれ）を入れていく
+-- ルルの部品を作る
 local function build(): (Model, { Piece })
 	local m = Instance.new("Model")
 	m.Name = "FairyLulu"
@@ -60,7 +58,7 @@ local function build(): (Model, { Piece })
 	oval(Vector3.new(0.75, 0.55, 0.75), C(255, 182, 214), CFrame.new(0, -0.6 * S, 0))
 	oval(Vector3.new(1.05, 0.35, 1.05), C(255, 150, 200), CFrame.new(0, -0.82 * S, 0))
 	-- 羽（4枚。うしろがわで ぱたぱた動く）。wing: 1=右上 2=左上 3=右下 4=左下
-	local wingProps = { Material = Enum.Material.Glass, Transparency = 0.25 }
+	local wingProps = { Material = Enum.Material.Glass, Transparency = 0.2 }
 	oval(Vector3.new(1.2, 0.85, 0.08), C(180, 225, 255), CFrame.new(0.55 * S, -0.1 * S, 0.35 * S), wingProps, 1)
 	oval(Vector3.new(1.2, 0.85, 0.08), C(180, 225, 255), CFrame.new(-0.55 * S, -0.1 * S, 0.35 * S), wingProps, 2)
 	oval(Vector3.new(0.8, 0.6, 0.08), C(255, 200, 235), CFrame.new(0.45 * S, -0.55 * S, 0.35 * S), wingProps, 3)
@@ -83,140 +81,86 @@ local function pose(list: { Piece }, at: CFrame, flap: number)
 	end
 end
 
--- 浮かぶ場所: 吹き出しが出ていれば、その右どなり（画面に入りきらなければ、吹き出しの右下）。なければ画面の右下
-local function goalPosition(cam: Camera, bob: number): Vector3
-	local view = cam.ViewportSize
-	if anchor and anchor.Visible and anchor.AbsoluteSize.X > 0 then
-		local pos, size = anchor.AbsolutePosition, anchor.AbsoluteSize
-		local x = pos.X + size.X + 50
-		local y = pos.Y + size.Y * 0.5
-		if x > view.X - 50 then
-			x = pos.X + size.X - 60
-			y = pos.Y + size.Y + 60
-		end
-		local ray = cam:ScreenPointToRay(x, y + bob * 12) -- GUI と同じ座標（上のバーの分も考える）
-		return ray.Origin + ray.Direction * DEPTH
-	end
-	return (cam.CFrame * CFrame.new(4.8, -3.4 + bob * 0.3, -DEPTH)).Position
-end
-
--- 吹き出しを教える（この右どなりに浮かぶ）
-function Fairy.setAnchor(gui: GuiObject?)
-	anchor = gui
-end
-
--- 出てくる（もう出ていれば何もしない）
-function Fairy.show()
-	if model then
-		return
-	end
-	leaving = false
-	model, pieces = build()
-	local m = model
-	local head = m.Body
-	local light = Instance.new("PointLight")
-	light.Color = C(255, 220, 240)
-	light.Range = 7
-	light.Brightness = 0.8
-	light.Parent = head
-	local dust = Instance.new("ParticleEmitter")
-	dust.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	dust.Rate = 8
-	dust.Lifetime = NumberRange.new(0.6, 1)
-	dust.Speed = NumberRange.new(0.2, 0.6)
-	dust.SpreadAngle = Vector2.new(180, 180)
-	dust.Size = NumberSequence.new(0.22, 0)
-	dust.LightEmission = 1
-	dust.Color = ColorSequence.new(C(255, 230, 160), C(255, 190, 230))
-	dust.Parent = head
-	m.Parent = workspace
-	local current: Vector3? = nil
+-- 吹き出しを教えて、ルルを用意する（最初は かくしておく）。gui = 画面の ScreenGui
+function Fairy.attach(gui: ScreenGui, card: GuiObject)
+	local f = Instance.new("ViewportFrame")
+	f.Name = "Lulu"
+	f.BackgroundTransparency = 1
+	f.AnchorPoint = Vector2.new(0.5, 0.5)
+	f.Size = UDim2.fromOffset(SIZE, SIZE)
+	f.Ambient = C(225, 215, 225)
+	f.LightColor = C(255, 245, 250)
+	f.LightDirection = Vector3.new(-0.4, -1, -0.6)
+	f.ZIndex = card.ZIndex + 10 -- 吹き出しより手前
+	f.Visible = false
+	f.Parent = gui
+	frame = f
+	local m, list = build()
+	m.Parent = f
+	local cam = Instance.new("Camera")
+	cam.FieldOfView = 30
+	cam.CFrame = CFrame.lookAt(Vector3.new(0, -0.12, -4.7), Vector3.new(0, -0.12, 0))
+	cam.Parent = f
+	f.CurrentCamera = cam
+	local face = CFrame.lookAt(Vector3.zero, Vector3.new(0, 0, -1)) -- こちらを向く
 	local t0 = os.clock()
-	connection = RunService.RenderStepped:Connect(function(dt)
-		if not model or leaving then
+	local connection
+	connection = RunService.RenderStepped:Connect(function()
+		if not f.Parent then
+			connection:Disconnect()
+			return
+		end
+		if leaving then
+			return
+		end
+		local visible = shown and card.Visible
+		f.Visible = visible
+		if not visible then
 			return
 		end
 		local t = os.clock() - t0
-		local cam = workspace.CurrentCamera
-		local goal = goalPosition(cam, math.sin(t * 2.2))
-		-- カメラが動いても置いていかれないよう、すばやく ついていく
-		current = if current then current:Lerp(goal, math.clamp(dt * 10, 0, 1)) else goal
-		-- いつも カメラのほうを向く（顔が見えるように）
-		local eye = cam.CFrame.Position
-		local at = CFrame.lookAt(current, Vector3.new(eye.X, current.Y, eye.Z))
-		pose(pieces, at, math.rad(20) + math.sin(t * 16) * math.rad(30))
+		-- 吹き出しの右上の角に、少し重ねる（ルルの体の左下が、吹き出しに かかるくらい）
+		local pos = card.AbsolutePosition - gui.AbsolutePosition
+		local size = card.AbsoluteSize
+		f.Position = UDim2.fromOffset(pos.X + size.X - SIZE * 0.2, pos.Y + SIZE * 0.1 + math.sin(t * 2.2) * 4)
+		-- 少し体をかたむけて、羽を ぱたぱた
+		local tilt = math.rad(-8) + math.sin(t * 1.3) * math.rad(4)
+		pose(list, face * CFrame.Angles(0, 0, tilt), math.rad(20) + math.sin(t * 14) * math.rad(28))
 	end)
 end
 
--- 吹き出しの中の顔: 同じルルを、小さな窓に映す（羽も ゆっくり動く）
-function Fairy.portrait(parent: GuiObject): ViewportFrame
-	local frame = Instance.new("ViewportFrame")
-	frame.Name = "LuluPortrait"
-	frame.BackgroundTransparency = 1
-	frame.Size = UDim2.fromScale(1, 1)
-	frame.Ambient = C(220, 210, 220)
-	frame.LightColor = C(255, 245, 250)
-	frame.LightDirection = Vector3.new(-0.4, -1, -0.6)
-	frame.ZIndex = parent.ZIndex + 1
-	local m, list = build()
-	m.Parent = frame
-	local cam = Instance.new("Camera")
-	cam.FieldOfView = 30
-	cam.Parent = frame
-	frame.CurrentCamera = cam
-	-- 顔とかみの毛が まるの中に大きく入るように、正面から見る
-	local at = CFrame.lookAt(Vector3.zero, Vector3.new(0, 0, -1))
-	cam.CFrame = CFrame.lookAt(Vector3.new(0, 0.1 * S, -4.6), Vector3.new(0, 0.1 * S, 0))
-	pose(list, at, math.rad(25))
-	frame.Parent = parent
-	local t0 = os.clock()
-	task.spawn(function()
-		while frame.Parent do
-			if frame.Visible and parent.Visible then
-				pose(list, at, math.rad(20) + math.sin((os.clock() - t0) * 6) * math.rad(20))
-			end
-			task.wait(1 / 20)
-		end
-	end)
-	return frame
+-- 出てくる
+function Fairy.show()
+	if leaving then
+		return
+	end
+	shown = true
 end
 
--- 空へ飛んで帰る（くるっと回って、上へ のぼりながら消える）
+-- 上へ飛んで帰る（くるっと回りながら、のぼって消える）
 function Fairy.leave()
-	if not model or leaving then
+	local f = frame
+	if not f or not shown or leaving then
 		return
 	end
 	leaving = true
-	local m = model
-	local list = pieces
-	local start = m.Body.CFrame
-	task.spawn(function()
-		local t0 = os.clock()
-		while os.clock() - t0 < 1.6 do
-			local k = (os.clock() - t0) / 1.6
-			local at = start * CFrame.new(-k * 10, k * 18, 0) * CFrame.Angles(0, k * math.pi * 4, 0)
-			pose(list, at, math.rad(20) + math.sin(os.clock() * 24) * math.rad(35))
-			for _, p in m:GetChildren() do
-				if p:IsA("BasePart") then
-					p.LocalTransparencyModifier = k
-				end
-			end
-			RunService.RenderStepped:Wait()
-		end
-		if connection then
-			connection:Disconnect()
-			connection = nil
-		end
-		m:Destroy()
-		if model == m then
-			model = nil
-			pieces = {}
-		end
+	f.Visible = true
+	local goal = f.Position + UDim2.fromOffset(SIZE * 0.6, -SIZE * 1.6)
+	TweenService:Create(f, TweenInfo.new(1.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		Position = goal,
+		Rotation = 360,
+		ImageTransparency = 1,
+		Size = UDim2.fromOffset(SIZE * 0.4, SIZE * 0.4),
+	}):Play()
+	task.delay(1.5, function()
+		f:Destroy()
+		frame = nil
+		shown = false
 	end)
 end
 
 function Fairy.isShown(): boolean
-	return model ~= nil and not leaving
+	return shown and not leaving
 end
 
 return Fairy
