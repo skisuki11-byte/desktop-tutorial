@@ -21,6 +21,7 @@ local QuestsUI = require(script.Parent.QuestsUI)
 local Sounds = require(script.Parent.Sounds)
 local DecorUI = require(script.Parent.DecorUI)
 local CropDexUI = require(script.Parent.CropDexUI)
+local Fairy = require(script.Parent.Fairy)
 
 local UI = {}
 
@@ -1265,7 +1266,8 @@ local function buildBanner()
 		VerticalAlignment = Enum.VerticalAlignment.Center,
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, banner)
-	local face = Style.make("Frame", {
+	-- CanvasGroup にすると、角丸（まる）の形で 中の顔を くり抜ける
+	local face = Style.make("CanvasGroup", {
 		Name = "FairyFace",
 		LayoutOrder = 1,
 		Size = UDim2.fromOffset(64, 64),
@@ -1274,13 +1276,9 @@ local function buildBanner()
 	}, banner)
 	Style.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, face)
 	Style.stroke(face, C.Outline, 3)
-	Style.label({
-		Size = UDim2.fromScale(1, 1),
-		Text = "🧚",
-		TextSize = 44,
-		TextWrapped = false,
-		ZIndex = 7,
-	}, face)
+	-- 顔は、画面に飛んでいるルルと同じすがたを映す（絵文字の妖精だと、ルルとちがう人に見える）
+	Fairy.portrait(face)
+	Fairy.setAnchor(banner) -- 3Dのルルは、この吹き出しの右どなりに浮かぶ
 	local column = Style.make("Frame", {
 		Name = "Column",
 		LayoutOrder = 2,
