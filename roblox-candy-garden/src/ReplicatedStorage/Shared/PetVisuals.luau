@@ -27,6 +27,11 @@ function PetVisuals.create(cfg, size: number): Model?
 			object.CanTouch = false
 			object.CanQuery = false
 			object.CastShadow = false
+            if object:IsA("MeshPart") then
+                object.Color=Color3.new(1,1,1)
+                object.Material=Enum.Material.SmoothPlastic
+                object.Reflectance=0
+            end
 		end
 	end
 	-- The follower keeps its pivot size/2 above the ground.

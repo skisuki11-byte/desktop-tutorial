@@ -34,7 +34,9 @@ local function fit(entry)
 	local model=entry.model
 	local cf,size=model:GetBoundingBox()
 	local aspect=math.max(.25,entry.viewport.AbsoluteSize.X/math.max(1,entry.viewport.AbsoluteSize.Y))
-	local dist=math.max(size.Y,size.X/aspect,size.Z)*.64/math.tan(math.rad(18))
+	-- 横長の小窓では、見える広さ（FieldOfView）が横はばの方にかかるので、たての大きさを横長の分だけ大きく見つもる
+	local span=if aspect>=1 then math.max(size.Y*aspect,size.X,size.Z) else math.max(size.Y,size.X/aspect,size.Z)
+	local dist=span*.64/math.tan(math.rad(18))
 	entry.camera.CFrame=CFrame.lookAt(cf.Position+Vector3.new(dist*.22,dist*.16,-dist),cf.Position)
 	entry.base=model:GetPivot()
 end

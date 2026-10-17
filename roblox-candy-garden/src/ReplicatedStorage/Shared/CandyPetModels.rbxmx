@@ -4,356 +4,6 @@
     <Properties>
       <string name="Name">CandyPetModels</string>
     </Properties>
-    <Item class="Model" referent="RBX_MODEL_0">
-      <Properties>
-        <string name="Name">cottoncat</string>
-        <Ref name="PrimaryPart">RBX_ROOT_0</Ref>
-      </Properties>
-      <Item class="Part" referent="RBX_ROOT_0">
-        <Properties>
-          <string name="Name">TemplatePivot</string>
-          <Vector3 name="size">
-            <X>0.05</X>
-            <Y>0.05</Y>
-            <Z>0.05</Z>
-          </Vector3>
-          <float name="Transparency">1</float>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <CoordinateFrame name="CFrame">
-            <X>0</X>
-            <Y>0</Y>
-            <Z>0</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>0</R02>
-            <R10>0</R10>
-            <R11>1</R11>
-            <R12>0</R12>
-            <R20>0</R20>
-            <R21>0</R21>
-            <R22>1</R22>
-          </CoordinateFrame>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="RBX_0_0">
-        <Properties>
-          <string name="Name">body</string>
-          <Vector3 name="size">
-            <X>1.3702991008758545</X>
-            <Y>1.1285860538482666</Y>
-            <Z>2.068760633468628</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0.0010902329813688993</X>
-            <Y>-0.6335729956626892</Y>
-            <Z>-0.14512014389038086</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>1.7484555314695172e-07</R02>
-            <R10>0</R10>
-            <R11>1</R11>
-            <R12>0</R12>
-            <R20>-1.7484555314695172e-07</R20>
-            <R21>0</R21>
-            <R22>1</R22>
-          </CoordinateFrame>
-          <Color3 name="Color">
-            <R>0.6392157077789307</R>
-            <G>0.6352941393852234</G>
-            <B>0.6470588445663452</B>
-          </Color3>
-          <float name="Transparency">0</float>
-          <float name="Reflectance">0</float>
-          <token name="Material">256</token>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CastShadow">false</bool>
-          <Content name="MeshId">
-            <url>rbxassetid://121872821263264</url>
-          </Content>
-          <Content name="TextureID">
-            <url>rbxassetid://127825403517641</url>
-          </Content>
-          <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="RBX_0_1">
-        <Properties>
-          <string name="Name">head and ears</string>
-          <Vector3 name="size">
-            <X>1.9753544330596924</X>
-            <Y>1.884131669998169</Y>
-            <Z>1.7834649085998535</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0.006449442356824875</X>
-            <Y>0.3675898313522339</Y>
-            <Z>-0.44550228118896484</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>1.7484555314695172e-07</R02>
-            <R10>0</R10>
-            <R11>1</R11>
-            <R12>0</R12>
-            <R20>-1.7484555314695172e-07</R20>
-            <R21>0</R21>
-            <R22>1</R22>
-          </CoordinateFrame>
-          <Color3 name="Color">
-            <R>0.6392157077789307</R>
-            <G>0.6352941393852234</G>
-            <B>0.6470588445663452</B>
-          </Color3>
-          <float name="Transparency">0</float>
-          <float name="Reflectance">0</float>
-          <token name="Material">256</token>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CastShadow">false</bool>
-          <Content name="MeshId">
-            <url>rbxassetid://123232899636606</url>
-          </Content>
-          <Content name="TextureID">
-            <url>rbxassetid://100613965264027</url>
-          </Content>
-          <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="RBX_0_2">
-        <Properties>
-          <string name="Name">left front leg</string>
-          <Vector3 name="size">
-            <X>0.6281659007072449</X>
-            <Y>0.9505783915519714</Y>
-            <Z>0.6453986167907715</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-0.27447548508644104</X>
-            <Y>-0.8345757722854614</Y>
-            <Z>-0.6256747245788574</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>1.7484555314695172e-07</R02>
-            <R10>0</R10>
-            <R11>1</R11>
-            <R12>0</R12>
-            <R20>-1.7484555314695172e-07</R20>
-            <R21>0</R21>
-            <R22>1</R22>
-          </CoordinateFrame>
-          <Color3 name="Color">
-            <R>0.6392157077789307</R>
-            <G>0.6352941393852234</G>
-            <B>0.6470588445663452</B>
-          </Color3>
-          <float name="Transparency">0</float>
-          <float name="Reflectance">0</float>
-          <token name="Material">256</token>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CastShadow">false</bool>
-          <Content name="MeshId">
-            <url>rbxassetid://138502350626472</url>
-          </Content>
-          <Content name="TextureID">
-            <url>rbxassetid://104513003552158</url>
-          </Content>
-          <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="RBX_0_3">
-        <Properties>
-          <string name="Name">right front leg</string>
-          <Vector3 name="size">
-            <X>0.6255838871002197</X>
-            <Y>0.9504902958869934</Y>
-            <Z>0.6424198746681213</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0.2853192687034607</X>
-            <Y>-0.8328590393066406</Y>
-            <Z>-0.6284527778625488</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>1.7484555314695172e-07</R02>
-            <R10>0</R10>
-            <R11>1</R11>
-            <R12>0</R12>
-            <R20>-1.7484555314695172e-07</R20>
-            <R21>0</R21>
-            <R22>1</R22>
-          </CoordinateFrame>
-          <Color3 name="Color">
-            <R>0.6392157077789307</R>
-            <G>0.6352941393852234</G>
-            <B>0.6470588445663452</B>
-          </Color3>
-          <float name="Transparency">0</float>
-          <float name="Reflectance">0</float>
-          <token name="Material">256</token>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CastShadow">false</bool>
-          <Content name="MeshId">
-            <url>rbxassetid://122135599643775</url>
-          </Content>
-          <Content name="TextureID">
-            <url>rbxassetid://90307638706862</url>
-          </Content>
-          <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="RBX_0_4">
-        <Properties>
-          <string name="Name">left back leg</string>
-          <Vector3 name="size">
-            <X>0.759699821472168</X>
-            <Y>0.9005324840545654</Y>
-            <Z>0.805140495300293</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>-0.33437514305114746</X>
-            <Y>-0.8688740730285645</Y>
-            <Z>0.09537893533706665</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>1.7484555314695172e-07</R02>
-            <R10>0</R10>
-            <R11>1</R11>
-            <R12>0</R12>
-            <R20>-1.7484555314695172e-07</R20>
-            <R21>0</R21>
-            <R22>1</R22>
-          </CoordinateFrame>
-          <Color3 name="Color">
-            <R>0.6392157077789307</R>
-            <G>0.6352941393852234</G>
-            <B>0.6470588445663452</B>
-          </Color3>
-          <float name="Transparency">0</float>
-          <float name="Reflectance">0</float>
-          <token name="Material">256</token>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CastShadow">false</bool>
-          <Content name="MeshId">
-            <url>rbxassetid://91014948739503</url>
-          </Content>
-          <Content name="TextureID">
-            <url>rbxassetid://104768334433076</url>
-          </Content>
-          <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="RBX_0_5">
-        <Properties>
-          <string name="Name">right back leg</string>
-          <Vector3 name="size">
-            <X>0.7632530927658081</X>
-            <Y>0.9015297889709473</Y>
-            <Z>0.8029786348342896</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0.34279823303222656</X>
-            <Y>-0.8683948516845703</Y>
-            <Z>0.09464830160140991</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>1.7484555314695172e-07</R02>
-            <R10>0</R10>
-            <R11>1</R11>
-            <R12>0</R12>
-            <R20>-1.7484555314695172e-07</R20>
-            <R21>0</R21>
-            <R22>1</R22>
-          </CoordinateFrame>
-          <Color3 name="Color">
-            <R>0.6392157077789307</R>
-            <G>0.6352941393852234</G>
-            <B>0.6470588445663452</B>
-          </Color3>
-          <float name="Transparency">0</float>
-          <float name="Reflectance">0</float>
-          <token name="Material">256</token>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CastShadow">false</bool>
-          <Content name="MeshId">
-            <url>rbxassetid://110463863502926</url>
-          </Content>
-          <Content name="TextureID">
-            <url>rbxassetid://105471127449787</url>
-          </Content>
-          <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
-        </Properties>
-      </Item>
-      <Item class="MeshPart" referent="RBX_0_6">
-        <Properties>
-          <string name="Name">tail</string>
-          <Vector3 name="size">
-            <X>1.6795958280563354</X>
-            <Y>1.0277795791625977</Y>
-            <Z>0.9301085472106934</Z>
-          </Vector3>
-          <CoordinateFrame name="CFrame">
-            <X>0.004422583617269993</X>
-            <Y>-0.3696025609970093</Y>
-            <Z>0.8977112770080566</Z>
-            <R00>1</R00>
-            <R01>0</R01>
-            <R02>1.7484555314695172e-07</R02>
-            <R10>0</R10>
-            <R11>1</R11>
-            <R12>0</R12>
-            <R20>-1.7484555314695172e-07</R20>
-            <R21>0</R21>
-            <R22>1</R22>
-          </CoordinateFrame>
-          <Color3 name="Color">
-            <R>0.6392157077789307</R>
-            <G>0.6352941393852234</G>
-            <B>0.6470588445663452</B>
-          </Color3>
-          <float name="Transparency">0</float>
-          <float name="Reflectance">0</float>
-          <token name="Material">256</token>
-          <bool name="Anchored">true</bool>
-          <bool name="CanCollide">false</bool>
-          <bool name="CanTouch">false</bool>
-          <bool name="CanQuery">false</bool>
-          <bool name="CastShadow">false</bool>
-          <Content name="MeshId">
-            <url>rbxassetid://113684763954305</url>
-          </Content>
-          <Content name="TextureID">
-            <url>rbxassetid://88200763469836</url>
-          </Content>
-          <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
-        </Properties>
-      </Item>
-    </Item>
     <Item class="Model" referent="RBX_MODEL_1">
       <Properties>
         <string name="Name">cottonwhale</string>
@@ -430,7 +80,7 @@
             <url>rbxassetid://109060925184897</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_1_1">
@@ -475,7 +125,7 @@
             <url>rbxassetid://93162139940946</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_1_2">
@@ -520,7 +170,7 @@
             <url>rbxassetid://85946345764336</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_1_3">
@@ -565,7 +215,7 @@
             <url>rbxassetid://102394586272506</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_1_4">
@@ -610,7 +260,7 @@
             <url>rbxassetid://106923683594501</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
     </Item>
@@ -690,7 +340,7 @@
             <url>rbxassetid://125485814683119</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_2_1">
@@ -735,7 +385,7 @@
             <url>rbxassetid://105745817393884</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_2_2">
@@ -780,7 +430,7 @@
             <url>rbxassetid://71937190585087</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_2_3">
@@ -825,7 +475,7 @@
             <url>rbxassetid://131220389939084</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_2_4">
@@ -870,7 +520,7 @@
             <url>rbxassetid://123827648899418</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_2_5">
@@ -915,7 +565,7 @@
             <url>rbxassetid://109687415208732</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
     </Item>
@@ -995,7 +645,7 @@
             <url>rbxassetid://86609786616587</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_3_1">
@@ -1040,7 +690,7 @@
             <url>rbxassetid://82803698399053</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_3_2">
@@ -1085,7 +735,7 @@
             <url>rbxassetid://128425738220877</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_3_3">
@@ -1130,7 +780,7 @@
             <url>rbxassetid://140462280657077</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_3_4">
@@ -1175,7 +825,7 @@
             <url>rbxassetid://132912953230032</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_3_5">
@@ -1220,7 +870,7 @@
             <url>rbxassetid://101144686132345</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_3_6">
@@ -1265,7 +915,7 @@
             <url>rbxassetid://124900437183478</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="Part" referent="RBX_3_7">
@@ -1497,7 +1147,7 @@
             <url>rbxassetid://97134236823298</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_4_1">
@@ -1542,7 +1192,7 @@
             <url>rbxassetid://72828725145273</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_4_2">
@@ -1587,7 +1237,7 @@
             <url>rbxassetid://95778329407445</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_4_3">
@@ -1632,7 +1282,7 @@
             <url>rbxassetid://135837942905069</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_4_4">
@@ -1677,7 +1327,7 @@
             <url>rbxassetid://91354960961652</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_4_5">
@@ -1722,7 +1372,7 @@
             <url>rbxassetid://106360816141549</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_4_6">
@@ -1767,7 +1417,7 @@
             <url>rbxassetid://83714055750259</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
     </Item>
@@ -1847,7 +1497,7 @@
             <url>rbxassetid://132447303474810</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_5_1">
@@ -1892,7 +1542,7 @@
             <url>rbxassetid://116265329908395</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_5_2">
@@ -1937,7 +1587,7 @@
             <url>rbxassetid://89570231283857</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_5_3">
@@ -1982,7 +1632,7 @@
             <url>rbxassetid://79684193020715</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_5_4">
@@ -2027,7 +1677,7 @@
             <url>rbxassetid://128423640983447</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_5_5">
@@ -2072,7 +1722,7 @@
             <url>rbxassetid://113433864933193</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_5_6">
@@ -2117,7 +1767,7 @@
             <url>rbxassetid://103152821026678</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
     </Item>
@@ -2197,7 +1847,7 @@
             <url>rbxassetid://113716306186156</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_6_1">
@@ -2242,7 +1892,7 @@
             <url>rbxassetid://138366624086132</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_6_2">
@@ -2287,7 +1937,7 @@
             <url>rbxassetid://127326266241758</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_6_3">
@@ -2332,7 +1982,7 @@
             <url>rbxassetid://100340324611396</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_6_4">
@@ -2377,7 +2027,7 @@
             <url>rbxassetid://109570090894295</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_6_5">
@@ -2422,7 +2072,7 @@
             <url>rbxassetid://84112399823392</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_6_6">
@@ -2467,7 +2117,7 @@
             <url>rbxassetid://93503097711668</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
     </Item>
@@ -2547,7 +2197,7 @@
             <url>rbxassetid://137767034622439</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_7_1">
@@ -2592,7 +2242,7 @@
             <url>rbxassetid://105791018429424</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_7_2">
@@ -2637,7 +2287,7 @@
             <url>rbxassetid://136824546438862</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_7_3">
@@ -2682,7 +2332,7 @@
             <url>rbxassetid://74390007574982</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_7_4">
@@ -2727,7 +2377,7 @@
             <url>rbxassetid://87730690113988</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_7_5">
@@ -2772,7 +2422,7 @@
             <url>rbxassetid://119603749638283</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
       <Item class="MeshPart" referent="RBX_7_6">
@@ -2817,7 +2467,357 @@
             <url>rbxassetid://86674848422625</url>
           </Content>
           <bool name="DoubleSided">false</bool>
-          <token name="RenderFidelity">0</token>
+          <token name="RenderFidelity">1</token>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="Model" referent="CatRepair_RBX_MODEL_0">
+      <Properties>
+        <string name="Name">cottoncat</string>
+        <Ref name="PrimaryPart">CatRepair_RBX_ROOT_0</Ref>
+      </Properties>
+      <Item class="Part" referent="CatRepair_RBX_ROOT_0">
+        <Properties>
+          <string name="Name">TemplatePivot</string>
+          <Vector3 name="size">
+            <X>0.05</X>
+            <Y>0.05</Y>
+            <Z>0.05</Z>
+          </Vector3>
+          <float name="Transparency">1</float>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+          <CoordinateFrame name="CFrame">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="CatRepair_RBX_0_0">
+        <Properties>
+          <string name="Name">head_geom</string>
+          <Vector3 name="size">
+            <X>2.0237178802490234</X>
+            <Y>1.751469373703003</Y>
+            <Z>1.6768810749053955</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.0015316009521484375</X>
+            <Y>0.5375491380691528</Y>
+            <Z>-0.5050048828125</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>0.9999998807907104</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>0.9999998807907104</R22>
+          </CoordinateFrame>
+          <Color3 name="Color">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="Transparency">0</float>
+          <float name="Reflectance">0</float>
+          <token name="Material">272</token>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CastShadow">false</bool>
+          <Content name="MeshId">
+            <url>rbxassetid://122619063636769</url>
+          </Content>
+          <Content name="TextureID">
+            <url>rbxassetid://139621530925504</url>
+          </Content>
+          <bool name="DoubleSided">false</bool>
+          <token name="RenderFidelity">1</token>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="CatRepair_RBX_0_1">
+        <Properties>
+          <string name="Name">tail_geom</string>
+          <Vector3 name="size">
+            <X>0.9151012897491455</X>
+            <Y>1.1110213994979858</Y>
+            <Z>0.9749554395675659</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.42818260192871094</X>
+            <Y>-0.48115819692611694</Y>
+            <Z>0.8690719604492188</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>0.9999998807907104</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>0.9999998807907104</R22>
+          </CoordinateFrame>
+          <Color3 name="Color">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="Transparency">0</float>
+          <float name="Reflectance">0</float>
+          <token name="Material">272</token>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CastShadow">false</bool>
+          <Content name="MeshId">
+            <url>rbxassetid://85866167133763</url>
+          </Content>
+          <Content name="TextureID">
+            <url>rbxassetid://138688501965804</url>
+          </Content>
+          <bool name="DoubleSided">false</bool>
+          <token name="RenderFidelity">1</token>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="CatRepair_RBX_0_2">
+        <Properties>
+          <string name="Name">body</string>
+          <Vector3 name="size">
+            <X>1.3551424741744995</X>
+            <Y>1.33915114402771</Y>
+            <Z>2.0948638916015625</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-0.08486679196357727</X>
+            <Y>-0.7495731711387634</Y>
+            <Z>-0.13686370849609375</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3 name="Color">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="Transparency">0</float>
+          <float name="Reflectance">0</float>
+          <token name="Material">272</token>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CastShadow">false</bool>
+          <Content name="MeshId">
+            <url>rbxassetid://90490256723637</url>
+          </Content>
+          <Content name="TextureID">
+            <url>rbxassetid://79482987851727</url>
+          </Content>
+          <bool name="DoubleSided">false</bool>
+          <token name="RenderFidelity">1</token>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="CatRepair_RBX_0_3">
+        <Properties>
+          <string name="Name">left front leg</string>
+          <Vector3 name="size">
+            <X>0.5455551147460938</X>
+            <Y>0.8094455003738403</Y>
+            <Z>0.5912436842918396</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.29400500655174255</X>
+            <Y>-0.9850270748138428</Y>
+            <Z>0.39436984062194824</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3 name="Color">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="Transparency">0</float>
+          <float name="Reflectance">0</float>
+          <token name="Material">272</token>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CastShadow">false</bool>
+          <Content name="MeshId">
+            <url>rbxassetid://104858880573918</url>
+          </Content>
+          <Content name="TextureID">
+            <url>rbxassetid://79482987851727</url>
+          </Content>
+          <bool name="DoubleSided">false</bool>
+          <token name="RenderFidelity">1</token>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="CatRepair_RBX_0_4">
+        <Properties>
+          <string name="Name">right front leg</string>
+          <Vector3 name="size">
+            <X>0.5275378227233887</X>
+            <Y>0.7966453433036804</Y>
+            <Z>0.5755391120910645</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-0.2812570631504059</X>
+            <Y>-0.9900006055831909</Y>
+            <Z>0.4112244248390198</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3 name="Color">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="Transparency">0</float>
+          <float name="Reflectance">0</float>
+          <token name="Material">272</token>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CastShadow">false</bool>
+          <Content name="MeshId">
+            <url>rbxassetid://74983707970622</url>
+          </Content>
+          <Content name="TextureID">
+            <url>rbxassetid://79482987851727</url>
+          </Content>
+          <bool name="DoubleSided">false</bool>
+          <token name="RenderFidelity">1</token>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="CatRepair_RBX_0_5">
+        <Properties>
+          <string name="Name">left back leg</string>
+          <Vector3 name="size">
+            <X>0.5365614295005798</X>
+            <Y>0.7875844240188599</Y>
+            <Z>0.5647127628326416</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>-0.2737288475036621</X>
+            <Y>-0.9932451844215393</Y>
+            <Z>0.41030383110046387</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3 name="Color">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="Transparency">0</float>
+          <float name="Reflectance">0</float>
+          <token name="Material">272</token>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CastShadow">false</bool>
+          <Content name="MeshId">
+            <url>rbxassetid://89119404556657</url>
+          </Content>
+          <Content name="TextureID">
+            <url>rbxassetid://79482987851727</url>
+          </Content>
+          <bool name="DoubleSided">false</bool>
+          <token name="RenderFidelity">1</token>
+        </Properties>
+      </Item>
+      <Item class="MeshPart" referent="CatRepair_RBX_0_6">
+        <Properties>
+          <string name="Name">right back leg</string>
+          <Vector3 name="size">
+            <X>0.5993328094482422</X>
+            <Y>0.843906044960022</Y>
+            <Z>0.9434376955032349</Z>
+          </Vector3>
+          <CoordinateFrame name="CFrame">
+            <X>0.4745398759841919</X>
+            <Y>-0.9978510141372681</Y>
+            <Z>-0.3261154890060425</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <Color3 name="Color">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="Transparency">0</float>
+          <float name="Reflectance">0</float>
+          <token name="Material">272</token>
+          <bool name="Anchored">true</bool>
+          <bool name="CanCollide">false</bool>
+          <bool name="CanTouch">false</bool>
+          <bool name="CanQuery">false</bool>
+          <bool name="CastShadow">false</bool>
+          <Content name="MeshId">
+            <url>rbxassetid://101873882616868</url>
+          </Content>
+          <Content name="TextureID">
+            <url>rbxassetid://79482987851727</url>
+          </Content>
+          <bool name="DoubleSided">false</bool>
+          <token name="RenderFidelity">1</token>
         </Properties>
       </Item>
     </Item>

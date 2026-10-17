@@ -665,7 +665,7 @@ local function applyLayout(mode: string)
 			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 			if weatherChip then
 				weatherChip.AnchorPoint = Vector2.new(0, 0)
-				weatherChip.Position = UDim2.fromOffset(12, row3)
+				weatherChip.Position = UDim2.fromOffset(12, row3 + PHONE_ROW + 8)
 				Style.setScale(weatherChip, 36 / 40)
 			end
 		else
@@ -1336,7 +1336,16 @@ end
 -- ---- 公開する関数 ----
 
 -- どのパネルを開くか。同時に開くのは1つだけ（nil で全部閉じる）
+local playerListBeforeModal=nil
 local function syncTouchControls(open: boolean)
+ local starterGui=game:GetService("StarterGui")
+ if open then
+  if playerListBeforeModal==nil then local ok,on=pcall(function() return starterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList) end);if ok then playerListBeforeModal=on end end
+  pcall(function() starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList,false) end)
+ elseif playerListBeforeModal~=nil then
+  local previous=playerListBeforeModal;playerListBeforeModal=nil
+  pcall(function() starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList,previous) end)
+ end
  local touch=Players.LocalPlayer.PlayerGui:FindFirstChild("TouchGui")
  if not touch then return end
  local previous=touch:GetAttribute("CandyBeforeModal")
