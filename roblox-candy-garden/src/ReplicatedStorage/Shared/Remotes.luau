@@ -29,6 +29,7 @@ local NAMES = {
 	"UpgradeCan",
 	"BuyFertilizer",
 	"SelectTool",
+	"BuyDrop",
 	"TradeRequest",
 	"TradeInvite",
 	"TradeRespond",

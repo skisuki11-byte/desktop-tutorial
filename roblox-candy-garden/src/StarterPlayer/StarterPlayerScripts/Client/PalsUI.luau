@@ -131,6 +131,7 @@ local function buildEggCard(parent: Instance, egg, order: number)
 	end
 end
 
+local eggPanel -- たまごの森のお店の画面
 local dexTitle, dexNote, dexGrid
 
 -- 図鑑: 全部のペットを、レア度の順に並べる（見つけていないペットは「？」）
@@ -278,9 +279,23 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 	panel, scroll = Style.modal(gui, "PalsPanel", "🐾 " .. t("ui.pals"), onClose, C.Lilac)
 	Style.make("UIListLayout", { Padding = UDim.new(0, 12), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 
-	-- たまご（ふつうの たまご・ほしのたまご）
+	-- たまご（ふつうの たまご・ほしのたまご）は、たまごの森のお店でだけ買える。ここでは案内だけ
+	Style.label({
+		LayoutOrder = 1,
+		Size = UDim2.new(1, -8, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Text = t("ui.eggsAtForest"),
+		TextSize = 18,
+		TextColor3 = C.AccentDark,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = true,
+		ZIndex = 12,
+	}, scroll)
+	local eggScroll
+	eggPanel, eggScroll = Style.modal(gui, "EggShopPanel", t("place.eggForest"), onClose, Color3.fromRGB(150, 210, 150))
+	Style.make("UIListLayout", { Padding = UDim.new(0, 12), SortOrder = Enum.SortOrder.LayoutOrder }, eggScroll)
 	for i, egg in Config.Eggs do
-		buildEggCard(scroll, egg, i)
+		buildEggCard(eggScroll, egg, i)
 	end
 	-- 図鑑とこうかんの入り口
 	local tools = Style.make("Frame", {
@@ -417,6 +432,17 @@ end
 
 function PalsUI.isVisible(): boolean
 	return panel.Visible
+end
+
+-- たまごの森のお店の画面
+function PalsUI.setEggShopVisible(visible: boolean)
+	if not eggPanel or visible == eggPanel.Visible then
+		return
+	end
+	eggPanel.Visible = visible
+	if visible then
+		Style.pop(eggPanel, 0.92)
+	end
 end
 
 function PalsUI.update(state)

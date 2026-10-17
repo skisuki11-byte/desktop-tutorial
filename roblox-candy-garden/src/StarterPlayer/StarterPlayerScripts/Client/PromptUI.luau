@@ -42,9 +42,20 @@ local function isShop(prompt: ProximityPrompt): boolean
 	return prompt.ActionText == t("prompt.shop")
 end
 
+-- お店ごとの絵（プロンプトの親の親が お店の Model）
+local SHOP_ICON = { SeedShop = "🛒", EggForest = "🥚", ToolShop = "🔧" }
+
+local function isDrop(prompt: ProximityPrompt): boolean
+	return prompt.ActionText == t("prompt.drop")
+end
+
 local function iconFor(prompt: ProximityPrompt): string
 	if isShop(prompt) then
-		return "🛒"
+		local shop = prompt.Parent and prompt.Parent.Parent
+		return shop and SHOP_ICON[shop.Name] or "🛒"
+	end
+	if isDrop(prompt) then
+		return "🔮"
 	end
 	if isWater(prompt) then
 		return "💧"
@@ -158,6 +169,7 @@ local function show(prompt: ProximityPrompt)
 		-- 植える=ミント / 収穫=黄色 / 水やり=水色
 		button.BackgroundColor3 = if harvest then C.Yellow
 			elseif isShop(prompt) then C.Mint
+			elseif isDrop(prompt) then Color3.fromRGB(205, 180, 255)
 			elseif isWater(prompt) then Color3.fromRGB(140, 200, 255)
 			elseif isFertilize(prompt) then Color3.fromRGB(255, 225, 140)
 			else C.Mint
@@ -207,18 +219,47 @@ function PromptUI.init(ui)
 			prompt.ObjectText = ""
 		end
 	end)
-	-- ひろばの たねや: 近づくと「お店」ボタン。看板に「つぎの入荷まで」
+	-- お店: 近づくと「お店」ボタン。押すと、そのお店の画面を開く（たまご・どうぐは、そこでしか買えない）
+	for modelName, panelName in { SeedShop = "shop", EggForest = "eggs", ToolShop = "tools" } do
+		task.spawn(function()
+			local shop = workspace:WaitForChild(modelName, 30)
+			local spot = shop and shop:WaitForChild("Spot", 30)
+			local prompt = spot and spot:WaitForChild("Prompt", 30)
+			if prompt then
+				prompt.ActionText = t("prompt.shop")
+				prompt.ObjectText = ""
+				prompt.Triggered:Connect(function()
+					ui.showPanel(panelName)
+				end)
+				-- たまご・どうぐのお店から はなれたら、画面を閉じる（種屋は🛒ボタンからも開けるので、そのまま）
+				ProximityPromptService.PromptHidden:Connect(function(hidden)
+					if hidden == prompt and panelName ~= "shop" and ui.currentPanel == panelName then
+						ui.showPanel(nil)
+					end
+				end)
+			end
+		end)
+	end
+	-- 看板の文字（TextLabel の属性 I18n）を、その人の言語で入れる。矢印つきの道しるべも
+	local function localize(label: Instance)
+		if label:IsA("TextLabel") and label:GetAttribute("I18n") then
+			local text = t(label:GetAttribute("I18n"))
+			local arrow = label:GetAttribute("Arrow")
+			if arrow then
+				text = if label:GetAttribute("ArrowFirst") then arrow .. " " .. text else text .. " " .. arrow
+			end
+			label.Text = text
+		end
+	end
+	for _, d in workspace:GetDescendants() do
+		localize(d)
+	end
+	workspace.DescendantAdded:Connect(function(d)
+		task.defer(localize, d)
+	end)
+	-- ひろばの たねや の看板に「つぎの入荷まで」
 	task.spawn(function()
 		local shop = workspace:WaitForChild("SeedShop", 30)
-		local spot = shop and shop:WaitForChild("Spot", 30)
-		local prompt = spot and spot:WaitForChild("Prompt", 30)
-		if prompt then
-			prompt.ActionText = t("prompt.shop")
-			prompt.ObjectText = ""
-			prompt.Triggered:Connect(function()
-				ui.showPanel("shop")
-			end)
-		end
 		local board = shop and shop:WaitForChild("Board", 30)
 		local sign = board and board:WaitForChild("Sign", 30)
 		if not sign then

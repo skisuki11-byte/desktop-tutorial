@@ -56,6 +56,9 @@ local SEEDSHOP_ANGLE = math.rad(112.5)
 local function plazaSpot(angle: number): Vector3
 	return Vector3.new(math.cos(angle) * PLAZA_RADIUS, 0, math.sin(angle) * PLAZA_RADIUS)
 end
+-- 遠くのお店: 左（西）に たまごの森、右（東）に どうぐ屋。庭の外がわの広い野原
+local EGG_FOREST = Vector3.new(-130, 0, 0)
+local TOOL_SHOP = Vector3.new(130, 0, -6)
 
 local plots = {} -- { model, tiles, spawn, label, owner }
 
@@ -311,6 +314,13 @@ local function isFree(pos: Vector3, taken: { Vector3 }, spacing: number): boolea
 	end
 	-- ふんすいと たねや のまわり
 	if (flat - plazaSpot(FOUNTAIN_ANGLE)).Magnitude < 12 or (flat - plazaSpot(SEEDSHOP_ANGLE)).Magnitude < 13 then
+		return false
+	end
+	if (flat - EGG_FOREST).Magnitude < 30 or (flat - TOOL_SHOP).Magnitude < 22 then
+		return false
+	end
+	-- ひろばの道しるべ
+	if (flat - Vector3.new(5, 0, 47)).Magnitude < 5 or (flat - Vector3.new(-5, 0, -47)).Magnitude < 5 then
 		return false
 	end
 	for _, other in taken do
@@ -767,6 +777,202 @@ local function buildSeedShop()
 	addPrompt(model, base * CFrame.new(0, 3, -3.2), 10)
 end
 
+-- ---- 立て看板 ----
+
+-- 文字はクライアントが、その人の言語で入れる（TextLabel の属性 I18n に、言葉のキーを入れておく）
+local function signText(parent: Instance, face: Enum.NormalId, key: string, arrow: string?, arrowFirst: boolean?)
+	local gui = make("SurfaceGui", {
+		Face = face,
+		SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud,
+		PixelsPerStud = 40,
+		LightInfluence = 0.3,
+	}, parent)
+	local label = make("TextLabel", {
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 1),
+		Font = Enum.Font.FredokaOne,
+		TextScaled = true,
+		TextColor3 = C(92, 52, 110),
+		Text = "",
+	}, gui)
+	make("UIPadding", {
+		PaddingLeft = UDim.new(0.04, 0),
+		PaddingRight = UDim.new(0.04, 0),
+		PaddingTop = UDim.new(0.12, 0),
+		PaddingBottom = UDim.new(0.12, 0),
+	}, label)
+	label:SetAttribute("I18n", key)
+	if arrow then
+		label:SetAttribute("Arrow", arrow)
+		label:SetAttribute("ArrowFirst", arrowFirst == true)
+	end
+	return label
+end
+
+-- 矢印の看板（道しるべ）。targets = { { 言葉のキー, 行き先の位置 } }。板は行き先の向きに伸びる
+local function signpost(parent: Instance, at: Vector3, targets: { { any } })
+	local model = make("Model", { Name = "Signpost" }, parent)
+	local height = 4.5 + #targets * 1.5
+	pillar(model, height, 0.6, CFrame.new(at + Vector3.new(0, height / 2, 0)), C(170, 120, 90), Enum.Material.Wood, true)
+	ball(model, 1, at + Vector3.new(0, height + 0.3, 0), C(255, 150, 190))
+	for i, target in targets do
+		local dir = (target[2] - at) * Vector3.new(1, 0, 1)
+		dir = if dir.Magnitude > 0.01 then dir.Unit else Vector3.xAxis
+		local y = height - 1 - (i - 1) * 1.5
+		-- 板の +X が行き先。前の面から見ると行き先は左、うしろの面から見ると右
+		local board = deco({
+			Name = "Board",
+			Size = Vector3.new(6.4, 1.2, 0.25),
+			CFrame = CFrame.fromMatrix(at + dir * 3 + Vector3.new(0, y, 0), dir, Vector3.yAxis),
+			Color = C(255, 236, 200),
+			Material = Enum.Material.Wood,
+		}, model)
+		signText(board, Enum.NormalId.Front, target[1], "←", true)
+		signText(board, Enum.NormalId.Back, target[1], "→", false)
+	end
+	return model
+end
+
+-- お店の前の、名前の立て看板（2本の足と板）
+local function shopSign(parent: Instance, cf: CFrame, key: string)
+	for _, x in { -2.6, 2.6 } do
+		pillar(parent, 4, 0.4, cf * CFrame.new(x, 2, 0), C(170, 120, 90), Enum.Material.Wood, true)
+	end
+	local board = deco({
+		Name = "NameBoard",
+		Size = Vector3.new(6.6, 2, 0.3),
+		CFrame = cf * CFrame.new(0, 4, 0),
+		Color = C(255, 236, 200),
+		Material = Enum.Material.Wood,
+	}, parent)
+	signText(board, Enum.NormalId.Front, key)
+	signText(board, Enum.NormalId.Back, key)
+end
+
+local function sparkles(parent: BasePart, rate: number)
+	local sparkle = Instance.new("ParticleEmitter")
+	sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	sparkle.Rate = rate
+	sparkle.Lifetime = NumberRange.new(0.8, 1.4)
+	sparkle.Speed = NumberRange.new(1, 2)
+	sparkle.SpreadAngle = Vector2.new(180, 180)
+	sparkle.Size = NumberSequence.new(0.5, 0.1)
+	sparkle.LightEmission = 0.8
+	sparkle.Color = ColorSequence.new(C(255, 240, 160), C(255, 255, 255))
+	sparkle.Parent = parent
+end
+
+-- ---- たまごの森（左）: わたあめの木にかこまれた広場に、大きな たまごの家 ----
+local function buildEggForest()
+	local model = make("Model", { Name = "EggForest" }, workspace)
+	local base = CFrame.lookAt(EGG_FOREST, Vector3.zero) -- -Z が ひろばのほう
+	-- 森の地面（こけ色の丸い広場）
+	deco({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.3, 40, 40),
+		CFrame = base * CFrame.new(0, 0.12, 0) * CFrame.Angles(0, 0, math.pi / 2),
+		Color = C(150, 210, 150),
+		Material = Enum.Material.Grass,
+	}, model)
+	-- まわりの わたあめの木（ひろばがわは あけておく）
+	local colors = { C(255, 190, 220), C(200, 180, 255), C(180, 220, 255), C(255, 214, 170) }
+	for i = 0, 9 do
+		local a = math.rad(70 + i * 22)
+		local at = (base * CFrame.new(math.sin(a) * 19, 0, -math.cos(a) * 19)).Position
+		cottonTree(model, at, colors[(i % #colors) + 1], 1.1 + (i % 3) * 0.2)
+	end
+	-- 大きな たまごの家（白に水玉）
+	local house = base * CFrame.new(0, 0, 6)
+	local shell = block({
+		Name = "EggHouse",
+		Size = Vector3.new(16, 21, 16),
+		CFrame = house * CFrame.new(0, 10.5, 0),
+		Color = C(255, 250, 240),
+	}, model)
+	make("SpecialMesh", { MeshType = Enum.MeshType.Sphere }, shell) -- たて長の たまごの形
+	-- 水玉もよう（たまごの表面に）
+	for i = 1, 16 do
+		local a = i * 2.4
+		local y = 3 + (i % 8) * 2.2
+		local r = 8 * math.sqrt(math.max(0, 1 - ((y - 10.5) / 10.5) ^ 2))
+		ball(model, 1.7, (house * CFrame.new(math.cos(a) * r, y, math.sin(a) * r)).Position, colors[(i % #colors) + 1])
+	end
+	-- 入口（ひろばがわ）
+	deco({
+		Size = Vector3.new(4, 6, 1),
+		CFrame = house * CFrame.new(0, 3, -7.6),
+		Color = C(190, 130, 100),
+		Material = Enum.Material.Wood,
+	}, model)
+	-- 入口の前の、たまごの台（ふつうのたまご・ほしのたまご）
+	for i, egg in { { C(255, 245, 220), -5 }, { C(255, 214, 90), 5 } } do
+		local at = house * CFrame.new(egg[2], 0, -12)
+		pillar(model, 2.4, 2.6, at * CFrame.new(0, 1.2, 0), C(255, 236, 244), Enum.Material.Marble, true)
+		local e = deco({
+			Shape = Enum.PartType.Ball,
+			Size = Vector3.new(2.2, 2.8, 2.2),
+			CFrame = at * CFrame.new(0, 3.8, 0),
+			Color = egg[1],
+			Material = if i == 2 then Enum.Material.Neon else Enum.Material.SmoothPlastic,
+		}, model)
+		sparkles(e, if i == 2 then 8 else 3)
+	end
+	shopSign(model, house * CFrame.new(0, 0, -18), "place.eggForest")
+	addPrompt(model, house * CFrame.new(0, 3, -12), 10)
+end
+
+-- ---- どうぐ屋（右）: 木の小屋。屋根の上に大きな じょうろ ----
+local function buildToolShop()
+	local model = make("Model", { Name = "ToolShop" }, workspace)
+	local base = CFrame.lookAt(TOOL_SHOP, Vector3.zero) -- -Z が ひろばのほう
+	block({
+		Name = "Floor",
+		Size = Vector3.new(18, 0.4, 14),
+		CFrame = base * CFrame.new(0, 0.2, 0),
+		Color = C(214, 168, 120),
+		Material = Enum.Material.WoodPlanks,
+	}, model)
+	-- 小屋（うしろと左右の壁。前は大きく あけたお店）
+	local wall = C(255, 228, 196)
+	block({ Size = Vector3.new(18, 9, 0.8), CFrame = base * CFrame.new(0, 4.9, 6.6), Color = wall, Material = Enum.Material.WoodPlanks }, model)
+	for _, x in { -8.6, 8.6 } do
+		block({ Size = Vector3.new(0.8, 9, 14), CFrame = base * CFrame.new(x, 4.9, 0), Color = wall, Material = Enum.Material.WoodPlanks }, model)
+	end
+	-- 三角屋根（2枚の板）
+	for _, side in { -1, 1 } do
+		deco({
+			Size = Vector3.new(10.6, 0.6, 16),
+			CFrame = base * CFrame.new(side * 4.6, 11.4, 0) * CFrame.Angles(0, 0, side * math.rad(-28)),
+			Color = C(120, 190, 140),
+			CanCollide = true,
+		}, model)
+	end
+	-- カウンター
+	block({ Size = Vector3.new(14, 3, 2), CFrame = base * CFrame.new(0, 1.9, -4), Color = C(190, 130, 100), Material = Enum.Material.Wood }, model)
+	block({ Size = Vector3.new(14.6, 0.4, 2.6), CFrame = base * CFrame.new(0, 3.6, -4), Color = C(120, 190, 140) }, model)
+	-- カウンターの上の品物（じょうろ・ひりょうの袋・しずくのびん）
+	pillar(model, 1.4, 1.2, base * CFrame.new(-4, 4.5, -4), C(150, 200, 255))
+	deco({ Size = Vector3.new(1.4, 1.6, 1), CFrame = base * CFrame.new(0, 4.6, -4), Color = C(255, 225, 140), Material = Enum.Material.Fabric }, model)
+	local bottle = ball(model, 1.2, (base * CFrame.new(4, 4.4, -4)).Position, C(200, 160, 255), Enum.Material.Glass)
+	local glow = Instance.new("PointLight")
+	glow.Color = C(200, 160, 255)
+	glow.Range = 6
+	glow.Parent = bottle
+	sparkles(bottle, 4)
+	-- 屋根の上の大きな じょうろ（遠くからでも分かる目印）
+	local can = base * CFrame.new(0, 15.5, 0)
+	pillar(model, 3.4, 3.2, can, C(150, 200, 255))
+	deco({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(4, 0.6, 0.6),
+		CFrame = can * CFrame.new(2.6, 0.6, 0) * CFrame.Angles(0, 0, math.rad(35)),
+		Color = C(150, 200, 255),
+	}, model)
+	ball(model, 1, (can * CFrame.new(4.2, 1.8, 0)).Position, C(110, 170, 240))
+	shopSign(model, base * CFrame.new(0, 0, -10), "place.toolShop")
+	addPrompt(model, base * CFrame.new(0, 3, -5), 10)
+end
+
 function World.build(onTile: (Player, BasePart) -> ())
 	setupLighting()
 
@@ -792,6 +998,16 @@ function World.build(onTile: (Player, BasePart) -> ())
 
 	buildFountain()
 	buildSeedShop()
+	buildEggForest()
+	buildToolShop()
+	-- ひろばの道しるべ（入口と、反対がわ）
+	for _, at in { Vector3.new(5, 0, 47), Vector3.new(-5, 0, -47) } do
+		signpost(scenery, at, {
+			{ "place.tree", Vector3.zero },
+			{ "place.eggForest", EGG_FOREST },
+			{ "place.toolShop", TOOL_SHOP },
+		})
+	end
 end
 
 -- 畑1枚を「使える / まだ使えない」にする。まだ使えない畑は見えなくする（広げたときに、ポンと現れる）
@@ -918,6 +1134,18 @@ function World.teleport(player: Player, dest: string)
 	if target then
 		character:PivotTo(target)
 	end
+end
+
+-- お店の近くにいるか（そこでしか買えないお店を、サーバーで確かめる）。name = "EggForest" / "ToolShop" など
+function World.isNear(player: Player, name: string): boolean
+	local model = workspace:FindFirstChild(name)
+	local spot = model and model:FindFirstChild("Spot")
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not spot or not root then
+		return false
+	end
+	return (root.Position - spot.Position).Magnitude <= Config.ShopReach
 end
 
 function World.allPlots()

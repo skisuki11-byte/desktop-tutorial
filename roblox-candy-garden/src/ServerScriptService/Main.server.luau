@@ -56,11 +56,12 @@ Remotes.SetMusic.OnServerEvent:Connect(function(player, on)
 		Data.saveSoon(player)
 	end
 end)
--- じょうろ: 池のポンプで水をくむ / ショップで大きくする
+-- じょうろ: ひろばのふんすいで水をくむ / どうぐ屋で大きくする
 World.pumpPrompt().Triggered:Connect(Garden.refill)
 Remotes.UpgradeCan.OnServerEvent:Connect(Garden.upgradeCan)
 Remotes.BuyFertilizer.OnServerEvent:Connect(Garden.buyFertilizer)
 Remotes.SelectTool.OnServerEvent:Connect(Garden.selectTool)
+Remotes.BuyDrop.OnServerEvent:Connect(Garden.buyDrop)
 Remotes.ExpandPlot.OnServerEvent:Connect(Garden.expand)
 Garden.startGrowthLoop()
 Data.startAutoSave()

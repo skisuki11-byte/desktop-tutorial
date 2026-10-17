@@ -34,6 +34,8 @@ local sellButton, harvestButton, shopButton, palsButton, styleButton
 local palsBadge
 local sellWiggling = false
 local shopPanel
+local toolPanel -- どうぐ屋の画面（ひりょう・じょうろ・ふしぎのしずく）
+local dropDetail
 local seedRows = {} -- 種屋の行 [cropId] = { row, info, buy }（入荷の数に合わせて表示を変える）
 local restockLabel -- 「つぎの入荷まで 3:12」
 local toastLabel
@@ -406,6 +408,7 @@ local function refreshSeedBar(state)
 	local tools = {
 		{ id = "water", icon = "💧", count = if water then water.amount .. "/" .. (cans[water.level] or cans[1]) else "" },
 		{ id = "fertilizer", icon = "🌟", count = "×" .. (state.fertilizer or 0) },
+		{ id = "drop", icon = "🔮", count = "×" .. (state.drops or 0) },
 	}
 	for order, tool in tools do
 		seedCount += 1
@@ -897,6 +900,27 @@ local function buildShop()
 		seedRows[cropId] = { row = row, info = info, buy = buy }
 	end
 
+	-- 種屋の画面のいちばん下に「どうぐは どうぐ屋で」の案内
+	Style.label({
+		Name = "ToolsHint",
+		LayoutOrder = 200,
+		Size = UDim2.new(1, -10, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Text = t("ui.toolsAtShop") .. "\n" .. t("ui.eggsAtForest"),
+		TextSize = 16,
+		TextColor3 = C.AccentDark,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = true,
+		ZIndex = 12,
+	}, scroll)
+
+	-- ---- どうぐ屋（ひろばの右の小屋でだけ開く）----
+	local shopScroll = scroll
+	toolPanel, scroll = Style.modal(gui, "ToolShopPanel", t("place.toolShop"), function()
+		UI.showPanel(nil)
+	end, Color3.fromRGB(120, 190, 140))
+	Style.make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
+
 	-- じょうろを大きくする（コインの使い道。1回分ずつしか増えないので、快適にしすぎない）
 	local row = Style.make("Frame", {
 		Name = "CanRow",
@@ -999,6 +1023,58 @@ local function buildShop()
 		Remotes.BuyFertilizer:FireServer()
 	end)
 
+	-- ふしぎのしずく（どうぐ屋だけ。ふしぎな作物が出やすくなる）
+	local drop = Style.make("Frame", {
+		Name = "DropRow",
+		LayoutOrder = 102,
+		Size = UDim2.new(1, -10, 0, 88),
+		BackgroundColor3 = Color3.fromRGB(242, 234, 255),
+		ZIndex = 11,
+	}, scroll)
+	Style.round(drop, 20)
+	Style.stroke(drop, Color3.fromRGB(190, 160, 255), 3)
+	Style.label({
+		Position = UDim2.fromOffset(8, 0),
+		Size = UDim2.fromOffset(64, 88),
+		Text = "🔮",
+		TextSize = 44,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, drop)
+	Style.label({
+		Position = UDim2.fromOffset(78, 10),
+		Size = UDim2.new(0.68, -102, 0, 32),
+		Text = t("ui.drop"),
+		TextSize = 22,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, drop)
+	dropDetail = Style.label({
+		Position = UDim2.fromOffset(78, 46),
+		Size = UDim2.new(0.68, -102, 0, 30),
+		Text = "",
+		TextSize = 15,
+		TextColor3 = C.TextMuted,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, drop)
+	local dropBuy = Style.button({
+		Name = "Buy",
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -10, 0.5, 0),
+		Size = UDim2.new(0.32, 0, 0, 64),
+		Text = "🟡 " .. Style.formatNumber(Config.Drop.price),
+		TextSize = 22,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, drop)
+	Style.make("UISizeConstraint", { MaxSize = Vector2.new(136, 64) }, dropBuy)
+	dropBuy.Activated:Connect(function()
+		Remotes.BuyDrop:FireServer()
+	end)
+	scroll = shopScroll -- ここから下は、また種屋の画面
+
 	-- はたけを ひろげる（大きな目標。いちばん上に出す）
 	local expand = Style.make("Frame", {
 		Name = "ExpandRow",
@@ -1090,6 +1166,7 @@ end
 -- じょうろの表示（残り・ショップの行）を、サーバーから届いた状態に合わせる
 local function refreshWater(state)
 	fertDetail.Text = t("ui.fertilizerDesc", state.fertilizer or 0)
+	dropDetail.Text = t("ui.dropDesc", state.drops or 0)
 	-- はたけを ひろげる
 	local tiles = state.plotTiles or Config.PlotTiles
 	local nextUpgrade
@@ -1213,6 +1290,12 @@ function UI.showPanel(name: string?)
 		Style.pop(shopPanel, 0.92)
 	end
 	PalsUI.setVisible(name == "pals")
+	PalsUI.setEggShopVisible(name == "eggs")
+	local wasTools = toolPanel.Visible
+	toolPanel.Visible = name == "tools"
+	if toolPanel.Visible and not wasTools then
+		Style.pop(toolPanel, 0.92)
+	end
 	CosmeticsUI.setVisible(name == "style")
 	DailyUI.setVisible(name == "daily")
 	DecorUI.setVisible(name == "decor")

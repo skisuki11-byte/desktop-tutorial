@@ -125,6 +125,9 @@ local function pickVariant(slot): string
 			if slot.fertilized and v.fertilizedBonus then
 				chance += v.fertilizedBonus
 			end
+			if slot.drop then
+				chance *= Config.Drop.multiplier -- ふしぎのしずくを使った作物は、ふしぎな姿が出やすい
+			end
 		end
 		if rng:NextNumber() < chance then
 			return v.id
@@ -209,11 +212,13 @@ local function syncTile(player: Player, tileIndex: number)
 		tile:SetAttribute("Ready", progress >= 1)
 		setWet(tile, slot.watered == true)
 		tile:SetAttribute("Fertilized", slot.fertilized == true)
+		tile:SetAttribute("Drop", slot.drop == true)
 		tile:SetAttribute("Variant", if slot.variant ~= "none" then slot.variant else nil)
 		renderTile(tile, cropCfg, progress, slot.variant)
 	else
 		setWet(tile, false)
 		tile:SetAttribute("Fertilized", false)
+		tile:SetAttribute("Drop", false)
 		tile:SetAttribute("Variant", nil)
 		tile:SetAttribute("Crop", nil)
 		tile:SetAttribute("PlantedAt", nil)
@@ -350,6 +355,35 @@ local function fertilize(helper: Player, owner: Player, tileIndex: number): bool
 	return true
 end
 
+-- ふしぎのしずく: 育っている途中の作物に、植えるごとに1回まで。実ったときに ふしぎな姿が出やすくなる
+local function useDrop(helper: Player, owner: Player, tileIndex: number): boolean
+	local d = Data.get(owner)
+	local slot = d and d.plots[tostring(tileIndex)]
+	local cropCfg = slot and Config.CropById[slot.crop]
+	local hd = Data.get(helper)
+	if not cropCfg or not hd or slot.drop or isReady(slot) or (hd.drops or 0) <= 0 then
+		return false
+	end
+	hd.drops -= 1
+	slot.drop = true
+	syncTile(owner, tileIndex)
+	local plot = World.plotOf(owner)
+	if plot and plot.tiles[tileIndex] then
+		splash(plot.tiles[tileIndex], Color3.fromRGB(200, 160, 255))
+	end
+	if helper == owner then
+		Remotes.Toast:FireClient(helper, "toast.dropUsed")
+	else
+		Remotes.Toast:FireClient(helper, "toast.dropUsedFriend")
+		Remotes.Toast:FireClient(owner, "toast.helpedDrop", helper.DisplayName)
+	end
+	Data.push(helper)
+	Data.push(owner)
+	Data.saveSoon(helper)
+	Data.saveSoon(owner)
+	return true
+end
+
 -- 水やり: 育っている途中の作物に、1回植えるごとに1回まで。育つ時間の一部を早める（実る1秒前まで）
 -- helper: 水をあげた人 / owner: 畑の持ち主（同じ人のこともある）
 local function water(helper: Player, owner: Player, tileIndex: number): boolean
@@ -414,6 +448,8 @@ function Garden.interact(player: Player, tile: BasePart)
 			water(player, owner, tileIndex)
 		elseif slot and tool == "fertilizer" then
 			fertilize(player, owner, tileIndex)
+		elseif slot and tool == "drop" then
+			useDrop(player, owner, tileIndex)
 		end
 		Data.push(player)
 		return
@@ -434,6 +470,8 @@ function Garden.interact(player: Player, tile: BasePart)
 		water(player, player, tileIndex)
 	elseif tool == "fertilizer" then
 		fertilize(player, player, tileIndex)
+	elseif tool == "drop" then
+		useDrop(player, player, tileIndex)
 	end
 	Data.push(player)
 end
@@ -479,7 +517,7 @@ function Garden.selectTool(player: Player, tool: any)
 		return
 	end
 	local d = Data.get(player)
-	if not d or (tool ~= "water" and tool ~= "fertilizer" and tool ~= nil) then
+	if not d or (tool ~= "water" and tool ~= "fertilizer" and tool ~= "drop" and tool ~= nil) then
 		return
 	end
 	if tool ~= nil and Data.tool(player) == tool then
@@ -489,13 +527,18 @@ function Garden.selectTool(player: Player, tool: any)
 		Remotes.Toast:FireClient(player, "toast.noFertilizer")
 		return
 	end
+	if tool == "drop" and (d.drops or 0) <= 0 then
+		Remotes.Toast:FireClient(player, "toast.noDrop")
+		return
+	end
 	if tool == "water" and d.water.amount <= 0 then
 		Remotes.Toast:FireClient(player, "toast.noWater") -- からっぽのじょうろは持てない（池でくもう）
 		return
 	end
 	Data.setTool(player, tool)
 	if tool then
-		Remotes.Toast:FireClient(player, if tool == "water" then "toast.holdWater" else "toast.holdFertilizer")
+		local key = if tool == "water" then "toast.holdWater" elseif tool == "drop" then "toast.holdDrop" else "toast.holdFertilizer"
+		Remotes.Toast:FireClient(player, key)
 	end
 	Data.push(player)
 end
@@ -506,6 +549,10 @@ function Garden.buyFertilizer(player: Player)
 	end
 	local d = Data.get(player)
 	if not d then
+		return
+	end
+	if not World.isNear(player, "ToolShop") then
+		Remotes.Toast:FireClient(player, "toast.goToolShop")
 		return
 	end
 	if (d.fertilizer or 0) >= Config.Fertilizer.max then
@@ -519,6 +566,34 @@ function Garden.buyFertilizer(player: Player)
 	d.coins -= Config.Fertilizer.price
 	d.fertilizer = (d.fertilizer or 0) + 1
 	Remotes.Toast:FireClient(player, "toast.boughtFertilizer", d.fertilizer)
+	Data.push(player)
+	Data.saveSoon(player)
+end
+
+-- ふしぎのしずくを買う（どうぐ屋の近くでだけ）
+function Garden.buyDrop(player: Player)
+	if not RateLimit.ok(player, "buyDrop", 0.25) then
+		return
+	end
+	local d = Data.get(player)
+	if not d then
+		return
+	end
+	if not World.isNear(player, "ToolShop") then
+		Remotes.Toast:FireClient(player, "toast.goToolShop")
+		return
+	end
+	if (d.drops or 0) >= Config.Drop.max then
+		Remotes.Toast:FireClient(player, "toast.dropFull")
+		return
+	end
+	if d.coins < Config.Drop.price then
+		Remotes.Toast:FireClient(player, "toast.noCoins")
+		return
+	end
+	d.coins -= Config.Drop.price
+	d.drops = (d.drops or 0) + 1
+	Remotes.Toast:FireClient(player, "toast.boughtDrop", d.drops)
 	Data.push(player)
 	Data.saveSoon(player)
 end
@@ -594,6 +669,10 @@ function Garden.upgradeCan(player: Player)
 	local nextLevel = d.water.level + 1
 	local price = Config.Water.canPrices[nextLevel]
 	if not price then
+		return
+	end
+	if not World.isNear(player, "ToolShop") then
+		Remotes.Toast:FireClient(player, "toast.goToolShop")
 		return
 	end
 	if d.coins < price then

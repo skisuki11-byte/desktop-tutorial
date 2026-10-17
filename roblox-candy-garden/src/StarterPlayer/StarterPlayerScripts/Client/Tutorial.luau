@@ -106,9 +106,13 @@ local function refreshPrompts()
 					and state.tool == "fertilizer"
 					and not tile:GetAttribute("Fertilized")
 					and (state.fertilizer or 0) > 0
-				if canWater or canFertilize then
+				local canDrop = growing
+					and state.tool == "drop"
+					and not tile:GetAttribute("Drop")
+					and (state.drops or 0) > 0
+				if canWater or canFertilize or canDrop then
 					prompt.Enabled = true
-					prompt.ActionText = t(if canWater then "prompt.water" else "prompt.fertilize")
+					prompt.ActionText = t(if canWater then "prompt.water" elseif canDrop then "prompt.drop" else "prompt.fertilize")
 					prompt.ObjectText = t("crop." .. crop)
 				elseif not mine then
 					prompt.Enabled = false

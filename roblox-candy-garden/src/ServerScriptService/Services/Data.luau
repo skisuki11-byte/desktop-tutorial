@@ -68,6 +68,7 @@ local function newData()
 		starGift = false, -- ほしぞらのおくりものを受け取ったか
 		water = { amount = 3, level = 1 }, -- じょうろの水（残り回数）と大きさ（Config.Water.cans）
 		fertilizer = 0, -- キャンディひりょうの数
+		drops = 0, -- ふしぎのしずくの数
 		plotTiles = 6, -- 使える畑の枚数（Config.PlotUpgrades で広がる）
 		-- 庭の飾り: owned=持っている [id]=true / slots=置いてある場所（6か所、空きは ""）
 		decor = { owned = {}, slots = { "", "", "", "", "", "" } },
@@ -204,6 +205,7 @@ function Data.tool(player: Player): string?
 	local tool = profile.runtime.tool
 	if
 		(tool == "fertilizer" and (profile.data.fertilizer or 0) <= 0)
+		or (tool == "drop" and (profile.data.drops or 0) <= 0)
 		or (tool == "water" and (profile.data.water == nil or profile.data.water.amount <= 0))
 	then
 		profile.runtime.tool = nil
@@ -274,6 +276,7 @@ function Data.push(player: Player)
 		music = d.music,
 		water = d.water,
 		fertilizer = d.fertilizer,
+		drops = d.drops,
 		plotTiles = d.plotTiles,
 		dex = d.dex,
 		plotId = player:GetAttribute("PlotId"),

@@ -5,6 +5,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
 local Data = require(script.Parent.Data)
+local World = require(script.Parent.World)
 local RateLimit = require(script.Parent.RateLimit)
 local Quests = require(script.Parent.Quests)
 
@@ -98,6 +99,11 @@ local function buyEgg(player: Player, eggId: any)
 	end
 	local d = Data.get(player)
 	if not d then
+		return
+	end
+	-- たまごは、たまごの森でだけ買える
+	if not World.isNear(player, "EggForest") then
+		Remotes.Toast:FireClient(player, "toast.goEggForest")
 		return
 	end
 	local egg = Config.EggById[eggId]
