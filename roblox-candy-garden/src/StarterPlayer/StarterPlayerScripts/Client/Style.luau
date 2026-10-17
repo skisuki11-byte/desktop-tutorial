@@ -4,7 +4,10 @@
 --   ・丸いフォント、短い文字、大きなアイコン（絵文字）
 --   ・タップ領域は大きく（64px前後）、押したら弾む
 --   ・アクセントはピンク1色。文字は濃い紫で、背景とのコントラストを確保
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+
+local Icons = require(ReplicatedStorage.Shared.Icons)
 
 local Style = {}
 
@@ -376,6 +379,37 @@ function Style.modal(gui: Instance, name: string, title: string, onClose: () -> 
 		PaddingBottom = UDim.new(0, 12),
 	}, scroll)
 	return panel, scroll
+end
+
+-- アイコンを出す。イラスト（Shared.Icons）があれば絵を、なければ絵文字（fallback）を出す。
+-- label = アイコン用の TextLabel（大きさ・位置はそのまま。絵はその枠いっぱいに、形をくずさず入れる）。
+-- dim = まだ持っていない物を、うすく出すとき
+function Style.setIcon(label: TextLabel, key: string?, fallback: string?, dim: boolean?)
+	local id = if key then Icons[key] else nil
+	local image = label:FindFirstChild("IconImage") :: ImageLabel?
+	if id then
+		label.Text = ""
+		if not image then
+			image = Style.make("ImageLabel", {
+				Name = "IconImage",
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = UDim2.fromScale(1, 1),
+				BackgroundTransparency = 1,
+				ScaleType = Enum.ScaleType.Fit,
+				ZIndex = label.ZIndex,
+			}, label)
+		end
+		image.Image = id
+		image.Visible = true
+		image.ImageTransparency = if dim then 0.55 else 0
+		image.ImageColor3 = if dim then Color3.fromRGB(150, 140, 160) else Color3.new(1, 1, 1)
+	else
+		label.Text = fallback or ""
+		if image then
+			image.Visible = false
+		end
+	end
 end
 
 function Style.formatNumber(n: number): string

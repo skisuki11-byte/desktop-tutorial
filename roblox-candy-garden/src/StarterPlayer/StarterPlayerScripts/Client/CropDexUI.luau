@@ -50,7 +50,8 @@ local function refresh()
 				found += 1
 			end
 			cell.frame.BackgroundColor3 = if have then VARIANT_COLOR[variant] else Color3.fromRGB(235, 228, 240)
-			cell.icon.Text = if have then crop.icon else "？"
+			-- 見つけた姿は作物の絵（まだの姿は「？」）
+			Style.setIcon(cell.icon, if have then "crop_" .. cropId else nil, if have then crop.icon else "？")
 			cell.icon.TextColor3 = if have then C.Text else C.TextMuted
 		end
 	end
@@ -143,7 +144,9 @@ function CropDexUI.build(gui: ScreenGui, onClose: () -> ())
 			Style.round(frame, 12)
 			Style.stroke(frame, C.Dim, 2)
 			local icon = Style.label({
-				Size = UDim2.fromScale(1, 1),
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = UDim2.fromScale(0.86, 0.86),
 				Text = "？",
 				TextSize = 26,
 				TextWrapped = false,

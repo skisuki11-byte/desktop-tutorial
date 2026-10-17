@@ -81,14 +81,14 @@ function DecorUI.build(gui: ScreenGui, onClose: () -> ())
 		}, scroll)
 		Style.round(row, 18)
 		Style.stroke(row, C.Dim, 3)
-		Style.label({
+		Style.setIcon(Style.label({
 			Position = UDim2.fromOffset(8, 0),
 			Size = UDim2.fromOffset(60, 80),
 			Text = item.icon,
 			TextSize = 40,
 			TextWrapped = false,
 			ZIndex = 12,
-		}, row)
+		}, row), "decor_" .. item.id, item.icon)
 		Style.label({
 			Position = UDim2.fromOffset(72, 10),
 			Size = UDim2.new(0.66, -96, 0, 30),

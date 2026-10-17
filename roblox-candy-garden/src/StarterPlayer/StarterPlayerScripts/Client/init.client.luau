@@ -39,9 +39,9 @@ Remotes.Toast.OnClientEvent:Connect(function(key, ...)
 	end
 end)
 
-Remotes.EggResult.OnClientEvent:Connect(function(petId)
+Remotes.EggResult.OnClientEvent:Connect(function(petId, eggId)
 	if type(petId) == "string" and Config.PetById[petId] then
-		UI.playHatch(petId)
+		UI.playHatch(petId, if type(eggId) == "string" then eggId else nil)
 		Sounds.hatch()
 	end
 end)

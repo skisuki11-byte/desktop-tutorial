@@ -58,12 +58,12 @@ local function buildEggCard(parent: Instance, egg, order: number)
 		BackgroundTransparency = 1,
 		ZIndex = 11,
 	}, card)
-	Style.label({
+	Style.setIcon(Style.label({
 		Size = UDim2.fromOffset(64, 64),
 		Text = egg.icon,
 		TextSize = 52,
 		ZIndex = 12,
-	}, top)
+	}, top), "egg_" .. egg.id, egg.icon)
 	Style.label({
 		Position = UDim2.fromOffset(72, 0),
 		Size = UDim2.new(0.62, -84, 1, 0), -- 買うボタンの左の残り幅（狭い画面では文字が小さくなる）
@@ -104,12 +104,12 @@ local function buildEggCard(parent: Instance, egg, order: number)
 			BackgroundTransparency = 1,
 			ZIndex = 11,
 		}, card)
-		Style.label({
+		Style.setIcon(Style.label({
 			Size = UDim2.fromOffset(34, 30),
 			Text = pet.icon,
 			TextSize = 22,
 			ZIndex = 12,
-		}, row)
+		}, row), "pet_" .. pet.id, pet.icon)
 		Style.label({
 			Position = UDim2.fromOffset(38, 0),
 			Size = UDim2.new(1, -150, 1, 0),
@@ -158,14 +158,16 @@ local function refreshDex()
 		}, dexGrid)
 		Style.round(cell, 14)
 		Style.stroke(cell, if have then RARITY_COLOR[cfg.rarity] else C.Dim, 3)
-		Style.label({
+		local face = Style.label({
 			Position = UDim2.fromOffset(0, 4),
 			Size = UDim2.new(1, 0, 0, 40),
-			Text = if have then cfg.icon else "？",
+			Text = "？",
 			TextSize = 32,
 			TextColor3 = if have then C.Text else C.TextMuted,
 			ZIndex = 13,
 		}, cell)
+		-- まだ会っていないペットは「？」（何が出るかの楽しみは残す）
+		Style.setIcon(face, if have then "pet_" .. cfg.id else nil, if have then cfg.icon else "？")
 		Style.label({
 			Position = UDim2.fromOffset(3, 46),
 			Size = UDim2.new(1, -6, 0, 22),
@@ -237,13 +239,13 @@ local function refresh()
 			local border = card:FindFirstChildOfClass("UIStroke")
 			border.Color = on and C.Accent or RARITY_COLOR[cfg.rarity]
 			border.Thickness = on and 6 or 4
-			Style.label({
+			Style.setIcon(Style.label({
 				Position = UDim2.fromOffset(0, 4),
 				Size = UDim2.new(1, 0, 0, 40),
 				Text = cfg.icon,
 				TextSize = 34,
 				ZIndex = 13,
-			}, card)
+			}, card), "pet_" .. cfg.id, cfg.icon)
 			Style.label({
 				Position = UDim2.fromOffset(2, 44),
 				Size = UDim2.new(1, -4, 0, 18),
@@ -453,7 +455,7 @@ function PalsUI.update(state)
 end
 
 -- たまごが揺れて、ペットが出てくる演出
-function PalsUI.playHatch(petId: string)
+function PalsUI.playHatch(petId: string, eggId: string?)
 	local cfg = Config.PetById[petId]
 	if not cfg then
 		return
@@ -503,6 +505,9 @@ function PalsUI.playHatch(petId: string)
 		TextWrapped = false,
 		ZIndex = 32,
 	}, column)
+	-- 割る前のたまご（買った たまごの絵）
+	local shownEgg = (eggId and Config.EggById[eggId]) or Config.Eggs[1]
+	Style.setIcon(egg, "egg_" .. shownEgg.id, shownEgg.icon)
 	local name = line(3, t("pet." .. cfg.id) .. "（" .. t("rarity." .. cfg.rarity) .. "）", 34, 26,
 		RARITY_COLOR[cfg.rarity]:Lerp(Color3.new(1, 1, 1), 0.35))
 	local bonus = line(4, t("ui.petBonus", math.floor(cfg.bonus * 100 + 0.5)), 26, 20, white)
@@ -530,13 +535,14 @@ function PalsUI.playHatch(petId: string)
 	task.spawn(function()
 		for i = 1, 6 do
 			local angle = (i % 2 == 0) and 14 or -14
-			TweenService:Create(egg, TweenInfo.new(0.12, Enum.EasingStyle.Sine), { Rotation = angle }):Play()
+			-- 絵のときは絵を回す（親の Rotation は子の絵に伝わらないため）
+			TweenService:Create(egg:FindFirstChild("IconImage") or egg, TweenInfo.new(0.12, Enum.EasingStyle.Sine), { Rotation = angle }):Play()
 			task.wait(0.14)
 		end
-		TweenService:Create(egg, TweenInfo.new(0.1), { Rotation = 0 }):Play()
+		TweenService:Create(egg:FindFirstChild("IconImage") or egg, TweenInfo.new(0.1), { Rotation = 0 }):Play()
 		task.wait(0.15)
 
-		egg.Text = cfg.icon
+		Style.setIcon(egg, "pet_" .. cfg.id, cfg.icon)
 		Style.pop(egg, 1.5)
 		for _, item in { title, name, bonus } do
 			item.TextTransparency = 0

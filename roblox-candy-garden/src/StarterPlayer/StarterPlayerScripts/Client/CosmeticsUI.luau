@@ -85,14 +85,14 @@ local function refreshGrid()
 			border.Color = worn and C.Accent or C.Outline
 			border.Thickness = worn and 6 or 4
 
-			Style.label({
+			Style.setIcon(Style.label({
 				Position = UDim2.fromOffset(0, 4),
 				Size = UDim2.new(1, 0, 0, 52),
 				Text = item.icon,
 				TextSize = 44,
 				TextWrapped = false,
 				ZIndex = 13,
-			}, card)
+			}, card), "cos_" .. item.id, item.icon)
 			Style.label({
 				Position = UDim2.fromOffset(4, 58),
 				Size = UDim2.new(1, -8, 0, 36),

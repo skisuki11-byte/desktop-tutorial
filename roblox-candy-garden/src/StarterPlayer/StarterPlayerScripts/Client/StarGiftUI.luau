@@ -121,12 +121,12 @@ local function showCelebration(level: number)
 	}, gifts)
 	local items = {}
 	local pet = Config.PetById[Config.StarGift.pet]
-	table.insert(items, { icon = pet.icon, name = t("pet." .. pet.id) })
+	table.insert(items, { icon = pet.icon, key = "pet_" .. pet.id, name = t("pet." .. pet.id) })
 	for _, id in Config.StarGift.cosmetics do
 		local item = Config.CosmeticById[id]
-		table.insert(items, { icon = item.icon, name = t("cos." .. id) })
+		table.insert(items, { icon = item.icon, key = "cos_" .. id, name = t("cos." .. id) })
 	end
-	table.insert(items, { icon = "🟡", name = Style.formatNumber(Config.StarGift.coins) })
+	table.insert(items, { icon = "🟡", key = "ui_coins", name = Style.formatNumber(Config.StarGift.coins) })
 	for i, gift in items do
 		local box = Style.make("Frame", {
 			LayoutOrder = i,
@@ -136,14 +136,14 @@ local function showCelebration(level: number)
 		}, gifts)
 		Style.round(box, 18)
 		Style.stroke(box, Color3.fromRGB(255, 220, 120), 4)
-		Style.label({
+		Style.setIcon(Style.label({
 			Position = UDim2.fromScale(0, 0.06),
 			Size = UDim2.fromScale(1, 0.5),
 			Text = gift.icon,
 			TextSize = 40,
 			TextWrapped = false,
 			ZIndex = 55,
-		}, box)
+		}, box), gift.key, gift.icon)
 		Style.label({
 			Position = UDim2.new(0, 4, 0.58, 0),
 			Size = UDim2.new(1, -8, 0.38, 0),

@@ -32,12 +32,12 @@ local function petCard(parent: Instance, petId: string, order: number, size: num
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 		ZIndex = 42,
 	}, parent)
-	Style.label({
+	Style.setIcon(Style.label({
 		Size = UDim2.fromScale(1, 0.62),
 		Text = cfg and cfg.icon or "?",
 		TextSize = 30,
 		ZIndex = 43,
-	}, card)
+	}, card), cfg and ("pet_" .. cfg.id), cfg and cfg.icon or "?")
 	Style.label({
 		Position = UDim2.fromScale(0.04, 0.62),
 		Size = UDim2.fromScale(0.92, 0.34),

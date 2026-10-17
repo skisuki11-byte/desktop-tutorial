@@ -428,13 +428,13 @@ local function refreshSeedBar(state)
 			button:FindFirstChildOfClass("UIStroke").Color = C.Accent
 			selectedButton = button
 		end
-		Style.label({
+		Style.setIcon(Style.label({
 			Position = UDim2.fromScale(0, 0.04),
 			Size = UDim2.fromScale(1, 0.58),
 			Text = tool.icon,
 			TextSize = if compact then 28 else 34,
 			TextWrapped = false,
-		}, button)
+		}, button), "tool_" .. tool.id, tool.icon)
 		Style.label({
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.new(0.5, 0, 1, -2),
@@ -466,13 +466,13 @@ local function refreshSeedBar(state)
 				button:FindFirstChildOfClass("UIStroke").Color = C.Accent
 				selectedButton = button
 			end
-			Style.label({
+			Style.setIcon(Style.label({
 				Position = UDim2.fromScale(0, 0.04),
 				Size = UDim2.fromScale(1, 0.58),
 				Text = crop.icon,
 				TextSize = if compact then 28 else 34,
 				TextWrapped = false,
-			}, button)
+			}, button), "crop_" .. cropId, crop.icon)
 			Style.label({
 				AnchorPoint = Vector2.new(0.5, 1),
 				Position = UDim2.new(0.5, 0, 1, -2),
@@ -865,14 +865,14 @@ local function buildShop()
 		}, scroll)
 		Style.round(row, 20)
 		Style.stroke(row, C.Dim, 3)
-		Style.label({
+		Style.setIcon(Style.label({
 			Position = UDim2.fromOffset(8, 0),
 			Size = UDim2.fromOffset(64, 88),
 			Text = crop.icon,
 			TextSize = 46,
 			TextWrapped = false,
 			ZIndex = 12,
-		}, row)
+		}, row), "crop_" .. cropId, crop.icon)
 		Style.label({
 			Position = UDim2.fromOffset(78, 10),
 			-- 名前と説明は、買うボタンの左の残り幅に（狭い画面では文字が自動で小さくなる）
@@ -941,14 +941,14 @@ local function buildShop()
 	}, scroll)
 	Style.round(row, 20)
 	Style.stroke(row, Color3.fromRGB(150, 200, 255), 3)
-	Style.label({
+	Style.setIcon(Style.label({
 		Position = UDim2.fromOffset(8, 0),
 		Size = UDim2.fromOffset(64, 88),
 		Text = "💧",
 		TextSize = 44,
 		TextWrapped = false,
 		ZIndex = 12,
-	}, row)
+	}, row), "tool_water", "💧")
 	Style.label({
 		Position = UDim2.fromOffset(78, 10),
 		Size = UDim2.new(0.68, -102, 0, 32),
@@ -992,14 +992,14 @@ local function buildShop()
 	}, scroll)
 	Style.round(fert, 20)
 	Style.stroke(fert, Color3.fromRGB(240, 200, 100), 3)
-	Style.label({
+	Style.setIcon(Style.label({
 		Position = UDim2.fromOffset(8, 0),
 		Size = UDim2.fromOffset(64, 88),
 		Text = "🌟",
 		TextSize = 44,
 		TextWrapped = false,
 		ZIndex = 12,
-	}, fert)
+	}, fert), "tool_fertilizer", "🌟")
 	Style.label({
 		Position = UDim2.fromOffset(78, 10),
 		Size = UDim2.new(0.68, -102, 0, 32),
@@ -1043,14 +1043,14 @@ local function buildShop()
 	}, scroll)
 	Style.round(drop, 20)
 	Style.stroke(drop, Color3.fromRGB(190, 160, 255), 3)
-	Style.label({
+	Style.setIcon(Style.label({
 		Position = UDim2.fromOffset(8, 0),
 		Size = UDim2.fromOffset(64, 88),
 		Text = "🔮",
 		TextSize = 44,
 		TextWrapped = false,
 		ZIndex = 12,
-	}, drop)
+	}, drop), "tool_drop", "🔮")
 	Style.label({
 		Position = UDim2.fromOffset(78, 10),
 		Size = UDim2.new(0.68, -102, 0, 32),
@@ -1487,9 +1487,9 @@ function UI.buttons()
 	return { shop = shopButton, sell = sellButton, harvest = harvestButton }
 end
 
-function UI.playHatch(petId: string)
+function UI.playHatch(petId: string, eggId: string?)
 	UI.showPanel(nil)
-	PalsUI.playHatch(petId)
+	PalsUI.playHatch(petId, eggId)
 end
 
 function UI.update(state)

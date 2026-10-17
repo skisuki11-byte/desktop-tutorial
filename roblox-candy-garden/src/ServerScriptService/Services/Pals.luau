@@ -129,7 +129,7 @@ local function buyEgg(player: Player, eggId: any)
 	Pals.markDex(player, petId, false) -- 孵化の演出で見せるので、お知らせは出さない
 	Pals.refreshAttribute(player)
 	Data.push(player)
-	Remotes.EggResult:FireClient(player, petId)
+	Remotes.EggResult:FireClient(player, petId, eggId)
 	Quests.progress(player, "egg", 1)
 	Data.saveSoon(player) -- 抽選結果は、すぐ(数秒以内に)保存する
 end

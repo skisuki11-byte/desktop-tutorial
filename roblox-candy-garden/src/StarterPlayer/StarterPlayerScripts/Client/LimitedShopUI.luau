@@ -21,19 +21,19 @@ local function formatLeft(seconds: number): string
 	return ("%d:%02d:%02d"):format(seconds // 3600, (seconds % 3600) // 60, seconds % 60)
 end
 
-local function entryInfo(entry): (string, string)
+local function entryInfo(entry): (string, string, string?)
 	if entry.cosmetic then
 		local item = Config.CosmeticById[entry.cosmetic]
-		return item.icon, t("cos." .. item.id)
+		return item.icon, t("cos." .. item.id), "cos_" .. item.id
 	end
 	local parts = {}
-	local icon = ""
+	local icon, key = "", nil
 	for cropId, n in entry.seeds do
 		local crop = Config.CropById[cropId]
-		icon = crop.icon
+		icon, key = crop.icon, "crop_" .. cropId
 		table.insert(parts, t("crop." .. cropId) .. " ×" .. n)
 	end
-	return icon, table.concat(parts, " ")
+	return icon, table.concat(parts, " "), key
 end
 
 local function render(state)
@@ -46,7 +46,7 @@ local function render(state)
 	for slot, poolIndex in limited.items do
 		local entry = Config.LimitedShop.pool[poolIndex]
 		if entry then
-			local icon, name = entryInfo(entry)
+			local icon, name, iconKey = entryInfo(entry)
 			local bought = limited.bought[tostring(slot)] == true
 			local owned = entry.cosmetic ~= nil and state.cosmetics.owned[entry.cosmetic] == true
 			local card = Style.make("Frame", {
@@ -58,14 +58,14 @@ local function render(state)
 			}, cards)
 			Style.round(card, 18)
 			Style.stroke(card, C.Outline, 4)
-			Style.label({
+			Style.setIcon(Style.label({
 				Position = UDim2.fromOffset(0, 6),
 				Size = UDim2.new(1, 0, 0, 44),
 				Text = icon,
 				TextSize = 38,
 				TextWrapped = false,
 				ZIndex = 13,
-			}, card)
+			}, card), iconKey, icon)
 			Style.label({
 				Position = UDim2.fromOffset(4, 50),
 				Size = UDim2.new(1, -8, 0, 34),
