@@ -32,8 +32,8 @@ end
 local function status(entry)
 	local have=owned(entry)
 	if have==true then return tr("みつけた！","Discovered!") end
-	if mystery(entry) then return tr("まだ ひみつ… あつめて すがたを みよう！","A little mystery… collect to reveal!") end
-	return tr("みためと 入手方法をチェック！","Explore the model and how to get it")
+	if mystery(entry) then return tr("まだ ひみつ","Not found yet") end
+	return tr("タップで くわしく","Tap for details")
 end
 local function showDetail(entry)
 	selected=entry

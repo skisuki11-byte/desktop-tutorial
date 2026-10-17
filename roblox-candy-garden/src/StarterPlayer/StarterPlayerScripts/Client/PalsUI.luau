@@ -253,37 +253,44 @@ local function refresh()
 			local border = card:FindFirstChildOfClass("UIStroke")
 			border.Color = on and C.Accent or RARITY_COLOR[cfg.rarity]
 			border.Thickness = on and 6 or 4
+			-- 絵（3D）を大きく。カードの上 6わりは ペットの絵
 			Style.setIcon(Style.label({
-				Position = UDim2.fromOffset(0, 4),
-				Size = UDim2.new(1, 0, 0, 40),
+				Position = UDim2.new(0, 6, 0, 6),
+				Size = UDim2.new(1, -12, 1, -76),
 				Text = cfg.icon,
-				TextSize = 34,
+				TextSize = 48,
 				ZIndex = 13,
 			}, card), "pet_" .. cfg.id, cfg.icon)
 			Style.label({
-				Position = UDim2.fromOffset(2, 44),
-				Size = UDim2.new(1, -4, 0, 18),
+				Position = UDim2.new(0, 4, 1, -70),
+				Size = UDim2.new(1, -8, 0, 22),
 				Text = t("pet." .. cfg.id),
-				TextSize = 12,
-				TextScaled = false,
+				TextSize = 15,
 				ZIndex = 13,
 			}, card)
 			Style.label({
-				Position = UDim2.fromOffset(0, 62),
-				Size = UDim2.new(1, 0, 0, 16),
+				Position = UDim2.new(0, 4, 1, -49),
+				Size = UDim2.new(1, -8, 0, 16),
 				Text = t("ui.petBonus", math.floor(cfg.bonus * 100 + 0.5)),
 				TextSize = 12,
 				TextColor3 = C.TextMuted,
 				ZIndex = 13,
 			}, card)
-			Style.label({
-				Position = UDim2.fromOffset(0, 80),
-				Size = UDim2.new(1, 0, 0, 18),
-				Text = on and ("⭐ " .. t("ui.equipped")) or t("rarity." .. cfg.rarity),
-				TextSize = 13,
-				TextColor3 = on and C.AccentDark or RARITY_COLOR[cfg.rarity]:Lerp(C.Text, 0.55),
+			-- いちばん下の帯: 連れているときは ピンクの「★ いっしょ」、それ以外は レア度の色
+			local band = Style.make("Frame", {
+				Position = UDim2.new(0, 8, 1, -30),
+				Size = UDim2.new(1, -16, 0, 24),
+				BackgroundColor3 = on and C.Accent or RARITY_COLOR[cfg.rarity],
 				ZIndex = 13,
 			}, card)
+			Style.round(band, 12)
+			Style.label({
+				Size = UDim2.fromScale(1, 1),
+				Text = on and ("★ " .. t("ui.equipped")) or t("rarity." .. cfg.rarity),
+				TextSize = 13,
+				TextColor3 = Color3.new(1, 1, 1),
+				ZIndex = 14,
+			}, band)
 			card.Activated:Connect(function()
 				Remotes.EquipPet:FireServer(entry.uid)
 			end)
@@ -381,11 +388,23 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 		BackgroundTransparency = 1,
 		ZIndex = 11,
 	}, scroll)
-	Style.make("UIGridLayout", {
-		CellSize = UDim2.fromOffset(112, 108),
-		CellPadding = UDim2.fromOffset(8, 8),
+	local gridLayout = Style.make("UIGridLayout", {
+		CellSize = UDim2.fromOffset(120, 150),
+		CellPadding = UDim2.fromOffset(14, 14),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, grid)
+	-- 横はばいっぱいに 3まい（広い画面は 4まい）。指で押しやすい大きさ（たて 150 以上）にする
+	local function fitGrid()
+		local width = grid.AbsoluteSize.X
+		if width < 10 then
+			return
+		end
+		local columns = if width >= 640 then 4 else 3
+		local cellWidth = math.floor((width - (columns - 1) * 14) / columns)
+		gridLayout.CellSize = UDim2.fromOffset(cellWidth, math.max(150, math.floor(cellWidth * 1.3)))
+	end
+	grid:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitGrid)
+	fitGrid()
 
 	-- ペット図鑑（見つけた種類。まだのペットは「？」）
 	dexTitle = Style.label({

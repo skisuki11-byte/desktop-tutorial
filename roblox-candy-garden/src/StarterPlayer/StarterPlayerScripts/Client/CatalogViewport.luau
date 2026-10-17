@@ -34,8 +34,8 @@ local function fit(entry)
 	local model=entry.model
 	local cf,size=model:GetBoundingBox()
 	local aspect=math.max(.25,entry.viewport.AbsoluteSize.X/math.max(1,entry.viewport.AbsoluteSize.Y))
-	-- 小窓いっぱいに大きく見せる（.55 で、たて・よこの いちばん大きい所が 小窓の ほぼ全部になる）
-	local dist=math.max(size.Y,size.X/aspect,size.Z)*.55/math.tan(math.rad(18))
+	-- 小窓いっぱいに大きく見せる。ただし上から見下ろすぶん 耳や頭が近くて大きく写るので、上が切れないよう少し余白（.62）
+	local dist=math.max(size.Y,size.X/aspect,size.Z)*.62/math.tan(math.rad(18))
 	entry.camera.CFrame=CFrame.lookAt(cf.Position+Vector3.new(dist*.22,dist*.16,-dist),cf.Position)
 	entry.base=model:GetPivot()
 end
