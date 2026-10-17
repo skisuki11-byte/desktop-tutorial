@@ -13,6 +13,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Icons = require(ReplicatedStorage.Shared.Icons)
 local I18n = require(ReplicatedStorage.Shared.I18n)
 local Style = require(script.Parent.Style)
 
@@ -44,36 +45,40 @@ end
 
 -- お店ごとの絵（プロンプトの親の親が お店の Model）
 local SHOP_ICON = { SeedShop = "🛒", EggForest = "🥚", ToolShop = "🔧" }
+-- お店の絵（カタログのイラスト）
+local SHOP_IMAGE = { SeedShop = "place_seedshop", EggForest = "place_eggforest", ToolShop = "place_toolshop" }
 
 local function isDrop(prompt: ProximityPrompt): boolean
 	return prompt.ActionText == t("prompt.drop")
 end
 
-local function iconFor(prompt: ProximityPrompt): string
+-- ボタンの左の絵。（絵文字, イラストの名前）を返す。イラストは軽い 2D の絵（Shared.Icons）を使う
+local function iconFor(prompt: ProximityPrompt): (string, string?)
 	if isShop(prompt) then
 		local shop = prompt.Parent and prompt.Parent.Parent
-		return shop and SHOP_ICON[shop.Name] or "🛒"
+		local name = shop and shop.Name
+		return name and SHOP_ICON[name] or "🛒", name and SHOP_IMAGE[name]
 	end
 	if isDrop(prompt) then
-		return "🔮"
+		return "🔮", "tool_drop"
 	end
 	if isWater(prompt) then
-		return "💧"
+		return "💧", "tool_water"
 	end
 	if isFertilize(prompt) then
-		return "🌟"
+		return "🌟", "tool_fertilizer"
 	end
 	local tile = prompt.Parent
 	local crop = tile and tile:GetAttribute("Crop")
 	if isHarvest(prompt) and crop and Config.CropById[crop] then
-		return Config.CropById[crop].icon
+		return Config.CropById[crop].icon, "crop_" .. crop
 	end
 	for _, c in Config.Crops do
 		if t("crop." .. c.id) == prompt.ObjectText then
-			return c.icon
+			return c.icon, "crop_" .. c.id
 		end
 	end
-	return if isHarvest(prompt) then "🧺" else "🌱"
+	return if isHarvest(prompt) then "🧺" else "🌱", nil
 end
 
 local function hide(prompt: ProximityPrompt)
@@ -131,6 +136,16 @@ local function show(prompt: ProximityPrompt)
 		TextWrapped = false,
 		ZIndex = 3,
 	}, badge)
+	local iconImage = Style.make("ImageLabel", {
+		Name = "IconImage",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromScale(0.86, 0.86),
+		BackgroundTransparency = 1,
+		ScaleType = Enum.ScaleType.Fit,
+		Visible = false,
+		ZIndex = 3,
+	}, badge)
 
 	-- 右の文字（「植える」「収穫」だけ。短く大きく）
 	local label = Style.label({
@@ -174,7 +189,11 @@ local function show(prompt: ProximityPrompt)
 			elseif isFertilize(prompt) then Color3.fromRGB(255, 225, 140)
 			else C.Mint
 		label.Text = prompt.ActionText
-		icon.Text = iconFor(prompt)
+		local emoji, key = iconFor(prompt)
+		local image = key and Icons[key]
+		iconImage.Image = image or ""
+		iconImage.Visible = image ~= nil
+		icon.Text = if image then "" else emoji
 	end
 	refresh()
 	Style.pop(button, 0.7)

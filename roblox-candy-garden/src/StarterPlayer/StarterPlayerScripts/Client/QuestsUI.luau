@@ -18,6 +18,21 @@ local HEADER_COLOR = Color3.fromRGB(255, 196, 120)
 local panel, list, nextLabel, button, badge
 local lastState = nil
 
+-- おねがいの絵（カタログのイラスト）。なければ絵文字のまま
+local QUEST_ICON = {
+	harvest = "crop_gummyberry",
+	plant = "place_seedshop",
+	sell = "ui_coins",
+	sparkle = "variant_sparkle",
+	egg = "egg_candyegg",
+}
+local function questIconKey(quest): string?
+	if quest.kind == "harvestCrop" and quest.crop then
+		return "crop_" .. quest.crop
+	end
+	return QUEST_ICON[quest.kind]
+end
+
 local function questText(quest): string
 	if quest.kind == "harvestCrop" then
 		return t("quest.harvestCrop", t("crop." .. quest.crop), quest.goal)
@@ -68,14 +83,14 @@ local function render(state)
 			}, list)
 			Style.round(card, 18)
 			Style.stroke(card, done and not claimed and C.Accent or C.Outline, done and not claimed and 6 or 4)
-			Style.label({
-				Position = UDim2.fromOffset(8, 0),
-				Size = UDim2.fromOffset(56, 96),
+			Style.setIcon(Style.label({
+				Position = UDim2.fromOffset(8, 18),
+				Size = UDim2.fromOffset(56, 60),
 				Text = quest.icon,
 				TextSize = 38,
 				TextWrapped = false,
 				ZIndex = 13,
-			}, card)
+			}, card), questIconKey(quest), quest.icon)
 			Style.label({
 				Position = UDim2.fromOffset(68, 8),
 				Size = UDim2.new(1, -210, 0, 28),

@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Icons = require(ReplicatedStorage.Shared.Icons)
 local I18n = require(ReplicatedStorage.Shared.I18n)
 local Style = require(script.Parent.Style)
 
@@ -12,7 +13,7 @@ local WeatherClient = {}
 local C = Style.Color
 local t = I18n.t
 
-local chip, chipLabel
+local chip, chipLabel, chipIcon
 local anchor: Part?
 local emitter: ParticleEmitter?
 local currentId: string? = nil
@@ -33,8 +34,24 @@ local function buildChip(gui: ScreenGui)
 	}, gui)
 	Style.round(chip, 20)
 	Style.stroke(chip, C.Dim, 3)
-	Style.make("UIPadding", { PaddingLeft = UDim.new(0, 16), PaddingRight = UDim.new(0, 16) }, chip)
+	Style.make("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 16) }, chip)
+	Style.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Horizontal,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		Padding = UDim.new(0, 6),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, chip)
+	-- お天気の絵（カタログと同じイラスト）。絵がないときは、文字の前の絵文字で出す
+	chipIcon = Style.make("ImageLabel", {
+		Name = "WeatherIcon",
+		LayoutOrder = 1,
+		Size = UDim2.fromOffset(34, 34),
+		BackgroundTransparency = 1,
+		ScaleType = Enum.ScaleType.Fit,
+		Visible = false,
+	}, chip)
 	chipLabel = Style.label({
+		LayoutOrder = 2,
 		Size = UDim2.fromOffset(0, 40),
 		AutomaticSize = Enum.AutomaticSize.X,
 		TextSize = 18,
@@ -101,8 +118,10 @@ local function refreshChip()
 	chip.Visible = weather ~= nil
 	if weather then
 		local left = (workspace:GetAttribute("WeatherEndsAt") or serverNow) - serverNow
-		chipLabel.Text = weather.icon
-			.. " "
+		local image = Icons["weather_" .. weather.id]
+		chipIcon.Image = image or ""
+		chipIcon.Visible = image ~= nil
+		chipLabel.Text = (if image then "" else weather.icon .. " ")
 			.. t("weather." .. weather.id)
 			.. "  "
 			.. t("ui.weatherNow", math.floor(weather.sparkleChance * 100 + 0.5), math.max(0, math.ceil(left)))
@@ -110,6 +129,7 @@ local function refreshChip()
 		chipLabel.TextColor3 = C.Text
 	else
 		local untilNext = (workspace:GetAttribute("NextWeatherAt") or serverNow) - serverNow
+		chipIcon.Visible = false
 		chipLabel.Text = "☀️ " .. t("ui.weatherNext", formatClock(untilNext))
 		chip.BackgroundColor3 = C.Surface
 		chipLabel.TextColor3 = C.TextMuted

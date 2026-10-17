@@ -15,7 +15,8 @@ local function supported(key)
 	if group=="crop" then return Config.CropById[id:match("^[^:]+") or id]~=nil end
 	if group=="cos" then return Config.CosmeticById[id]~=nil end
 	if group=="decor" then return Config.DecorById[id]~=nil end
-	return group=="egg" or group=="tool" or group=="variant" or group=="weather" or group=="place" or key=="fairy_lulu" or key=="ui_coins" or key=="ui_dex" or key=="ui_gift" or key=="ui_shop"
+	-- コイン・ずかん・プレゼントなどの小さな印（ui_）は、3Dだと平たい板に見えるので、2Dのイラストのまま
+	return group=="egg" or group=="tool" or group=="variant" or group=="weather" or group=="place" or key=="fairy_lulu"
 end
 local function visible(label)
 	local pos,size=label.AbsolutePosition,label.AbsoluteSize
