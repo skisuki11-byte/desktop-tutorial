@@ -71,7 +71,7 @@ local function refreshGrid()
 		-- コード限定は、持っているときだけ出す
 		local visible = item.slot == currentSlot
 			and (item.pass == nil or have or passId > 0)
-			and (not (item.codeOnly or item.seasonOnly or item.shopOnly or item.starOnly) or have)
+			and (not (item.codeOnly or item.seasonOnly or item.shopOnly or item.starOnly or item.friendOnly) or have)
 		if visible then
 			order += 1
 			local worn = equipped[item.slot] == item.id

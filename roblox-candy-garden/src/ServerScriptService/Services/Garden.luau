@@ -14,6 +14,7 @@ local Tree = require(script.Parent.Tree)
 local Season = require(script.Parent.Season)
 local Quests = require(script.Parent.Quests)
 local CropModels = require(script.Parent.CropModels)
+local Friends = require(script.Parent.Friends)
 
 local Garden = {}
 
@@ -347,6 +348,7 @@ local function fertilize(helper: Player, owner: Player, tileIndex: number): bool
 		hd.coins += Config.Water.helperCoins
 		Remotes.Toast:FireClient(helper, "toast.fertilizedFriend", Config.Water.helperCoins)
 		Remotes.Toast:FireClient(owner, "toast.helpedFertilizer", helper.DisplayName)
+		Friends.onHelp(helper, owner) -- 友だちなら、なかよしポイント
 	end
 	Data.push(helper)
 	Data.push(owner)
@@ -376,6 +378,7 @@ local function useDrop(helper: Player, owner: Player, tileIndex: number): boolea
 	else
 		Remotes.Toast:FireClient(helper, "toast.dropUsedFriend")
 		Remotes.Toast:FireClient(owner, "toast.helpedDrop", helper.DisplayName)
+		Friends.onHelp(helper, owner) -- 友だちなら、なかよしポイント
 	end
 	Data.push(helper)
 	Data.push(owner)
@@ -417,6 +420,7 @@ local function water(helper: Player, owner: Player, tileIndex: number): boolean
 		Data.push(helper)
 		Remotes.Toast:FireClient(helper, "toast.wateredFriend", Config.Water.helperCoins)
 		Remotes.Toast:FireClient(owner, "toast.helped", helper.DisplayName)
+		Friends.onHelp(helper, owner) -- 友だちなら、なかよしポイント
 	end
 	Data.push(owner)
 	Data.saveSoon(owner)

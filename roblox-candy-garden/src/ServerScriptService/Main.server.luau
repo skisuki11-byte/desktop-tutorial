@@ -21,6 +21,7 @@ local LimitedShop = require(Services.LimitedShop)
 local Quests = require(Services.Quests)
 local Trade = require(Services.Trade)
 local Decor = require(Services.Decor)
+local Friends = require(Services.Friends)
 local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
 
@@ -40,6 +41,7 @@ LimitedShop.init()
 Quests.init()
 Trade.init()
 Decor.init()
+Friends.init()
 Garden.onExpanded = Decor.render
 Weather.start()
 
@@ -95,6 +97,7 @@ local function onPlayerAdded(player: Player)
 	Season.sync(player) -- シーズンの切り替えと、取りこぼしの受け取り
 	Garden.attach(player)
 	Decor.render(player) -- 庭の飾りと、名札のランク
+	Friends.onPlayerReady(player) -- やくそくの鉢（と、友だちが水をあげていたら さかせる）
 	Pals.refreshAttribute(player)
 	Cosmetics.track(player)
 
@@ -125,6 +128,7 @@ end
 
 local function onPlayerRemoving(player: Player)
 	Decor.clear(player)
+	Friends.clear(player)
 	Data.release(player)
 	World.release(player)
 	Monetization.release(player)

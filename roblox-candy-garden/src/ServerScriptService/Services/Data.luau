@@ -74,6 +74,11 @@ local function newData()
 		decor = { owned = {}, slots = { "", "", "", "", "", "" } },
 		dex = {}, -- ペット図鑑: 見つけたペット [petId] = true
 		dexClaimed = 0, -- 受け取った図鑑のごほうびの数（Config.Dex.rewards の何番目まで）
+		-- なかよしレベル: [tostring(userId)] = { name, pts, lv, day, together, helped }（together・helped は その日にたまった数）
+		friendship = {},
+		-- やくそくの種（1つだけ）: id がなければ なし。{ id, partner, partnerName, day=植えた日, watered, bloomed }
+		promise = {},
+		promiseDay = 0, -- 最後に やくそくの種を もらった日（1日1回）
 	}
 end
 
@@ -265,6 +270,8 @@ function Data.push(player: Player)
 		season = extra.season,
 		limited = extra.limited,
 		quests = extra.quests,
+		friends = extra.friends,
+		promise = extra.promise,
 		decor = extra.decor,
 		seedShop = extra.seedShop,
 		pets = d.pets,

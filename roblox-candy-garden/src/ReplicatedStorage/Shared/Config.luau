@@ -352,6 +352,8 @@ Config.Cosmetics = {
 	-- ほしぞらの木（みんなの木 レベル20）のごほうびでだけ手に入る
 	{ id = "starcrown", slot = "hat", icon = "👑", starOnly = true },
 	{ id = "starwings", slot = "back", icon = "🌌", starOnly = true },
+	-- やくそくの花が さいたときだけ もらえる（友だちとの やくそくの しるし）
+	{ id = "flowercrown", slot = "hat", icon = "🌼", friendOnly = true },
 	{ id = "sparkletrail", slot = "trail", icon = "✨", price = 300 },
 	{ id = "hearttrail", slot = "trail", icon = "💗", price = 700 },
 	{ id = "rainbowtrail", slot = "trail", icon = "🌈", price = 1500 },
@@ -407,6 +409,29 @@ end
 
 -- きょうのおねがい（デイリークエスト）。毎日 UTC 0時に、pool から3つ選ぶ。達成したら「もらう」でごほうび。
 -- kind: harvest=収穫した数 / harvestCrop=決まった作物の収穫数 / plant=植えた数 / sell=売って得たコイン / sparkle=きらきら / egg=たまご
+-- なかよしレベル（Robloxの友だちごと）。同じサーバーで いっしょに遊ぶ・畑を手伝うと ポイントがたまる。
+-- 1日にたまる量に上限をつけて、「長くいるほど得」ではなく「毎日ちょっとずつ」にする（ポケモンGOのなかよし度と同じ考え方）
+Config.Friendship = {
+	levels = { 0, 10, 30, 60, 100 }, -- Lv1〜Lv5 に必要なポイント
+	togetherEvery = 60, -- いっしょにいると、この秒数ごとに 1ポイント
+	helpPoints = 2, -- 友だちの畑に 水やり・ひりょう・しずく をあげると（あげた人も、もらった人も）
+	dailyCap = { together = 10, helped = 10 }, -- 1日にたまる上限（友だちごと）
+	rewards = { -- そのレベルになったときの ごほうび
+		[2] = { coins = 300 },
+		[3] = { coins = 800, fertilizer = 2 },
+		[4] = { coins = 1500, drops = 1 },
+		[5] = { coins = 3000, fertilizer = 3, drops = 1 },
+	},
+}
+-- やくそくの種: 友だちと いっしょに遊ぶと 2人の庭に 1つずつ植わる。
+-- 次の日から、それぞれが自分の鉢に水をあげると「ゆうじょうの花」がさく。来られない日があっても 枯れずに待つ（休んでも損をしない）
+Config.Promise = {
+	togetherMinutes = 3, -- その日に いっしょに いた時間（分）がこれをこえると もらえる
+	coins = 1500, -- さいたときの ごほうび（2人とも）
+	cosmetic = "flowercrown", -- さいたときの ごほうびの おしゃれ（はじめての1回）
+	replaceAfterDays = 7, -- さかないまま この日数がすぎたら、べつの友だちとの やくそくに かえられる
+}
+
 Config.Quests = {
 	count = 3,
 	pool = {

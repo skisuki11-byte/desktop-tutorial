@@ -294,6 +294,14 @@ function PromptUI.init(ui)
 		end
 	end)
 	ProximityPromptService.PromptShown:Connect(function(prompt)
+		-- やくそくの鉢: 持ち主にだけ「水やり」を出す（ほかの人の鉢には出さない）
+		if prompt.Name == "PromisePrompt" then
+			if prompt:GetAttribute("OwnerUserId") ~= Players.LocalPlayer.UserId then
+				prompt.Enabled = false
+				return
+			end
+			prompt.ActionText = t("prompt.water")
+		end
 		if prompt.Style == Enum.ProximityPromptStyle.Custom then
 			show(prompt)
 		end

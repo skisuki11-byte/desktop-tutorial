@@ -119,6 +119,24 @@ BUILD.ribbon = function(m)
 	end
 end
 
+-- ゆうじょうの花かんむり（やくそくの花が さいたときの ごほうび。お店では買えない）
+BUILD.flowercrown = function(m)
+	local colors = { C(255, 150, 190), C(255, 220, 120), C(170, 200, 255), C(255, 170, 120), C(200, 160, 255), C(255, 255, 255), C(150, 225, 170) }
+	for i = 1, 14 do
+		local a = (i / 14) * math.pi * 2
+		ball(m, 0.32, CFrame.new(math.cos(a) * 1.0, 0.25, math.sin(a) * 1.0), C(110, 200, 120))
+	end
+	for i = 1, 7 do
+		local a = (i / 7) * math.pi * 2
+		local center = CFrame.new(math.cos(a) * 1.02, 0.42, math.sin(a) * 1.02)
+		for k = 1, 5 do
+			local b = (k / 5) * math.pi * 2
+			ball(m, 0.24, center * CFrame.new(math.cos(b) * 0.15, math.sin(b) * 0.15, 0), colors[i])
+		end
+		ball(m, 0.16, center * CFrame.new(0, 0, -0.04), C(255, 210, 80))
+	end
+end
+
 BUILD.berryhat = function(m)
 	local red = C(240, 60, 90)
 	ellipsoid(m, Vector3.new(1.9, 1.7, 1.9), CFrame.new(0, 0.7, 0), red)
