@@ -17,7 +17,10 @@ function PetVisuals.create(cfg, size: number): Model?
 		model:Destroy()
 		return nil
 	end
-	local factor = math.min(size * 1.4 / bounds.Y, size * 2.2 / bounds.X, size * 2.2 / bounds.Z)
+	-- 背の高さ: ★1 で 2.5、★ひとつごとに 0.1 ずつ大きく（★7 で 3.1）。
+	-- プレイヤー（背 5）の半分くらいにして、畑や足元が かくれないようにする
+	local height = 2.4 + cfg.rarity * 0.1
+	local factor = math.min(height / bounds.Y, height * 1.6 / bounds.X, height * 1.6 / bounds.Z)
 	model:ScaleTo(model:GetScale() * factor)
 	boundsCF, bounds = model:GetBoundingBox()
 	for _, object in model:GetDescendants() do
