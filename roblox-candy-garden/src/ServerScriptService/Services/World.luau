@@ -312,6 +312,10 @@ local function isFree(pos: Vector3, taken: { Vector3 }, spacing: number): boolea
 		-- 広場から庭への道
 		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
 		local along = flat:Dot(dir)
+		-- 庭のうしろの ひみつきち（家）の場所
+		if along > PLOT_RADIUS + 14 and along < PLOT_RADIUS + 52 and (flat - dir * along).Magnitude < 20 then
+			return false
+		end
 		if along > 15 and along < PLOT_RADIUS - 16 and (flat - dir * along).Magnitude < 5 then
 			return false
 		end

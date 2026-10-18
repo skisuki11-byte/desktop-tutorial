@@ -18,7 +18,7 @@ local Reform = {}
 Reform.onChanged = nil :: ((Player) -> ())? -- 段が上がったとき（名札のランクを直す。Decor がつなぐ）
 
 local C = Color3.fromRGB
-local BASE_SPOT = Vector3.new(0, 0, 24.5) -- ひみつきちの場所（庭の床の中心から。+Z が庭のうしろ＝外がわ）
+local BASE_FRONT = 25 -- ひみつきちの 前のかべの位置（庭の床の中心から。+Z が庭のうしろ＝外がわ）
 
 -- ---- 部品づくり ----
 local function part(parent: Instance, props: { [string]: any }): Part
@@ -85,10 +85,6 @@ local function window(parent: Instance, pos: Vector3, size: Vector2?)
 	box(parent, Vector3.new(s.X, s.Y, 0.2), pos, C(255, 236, 160), Enum.Material.Neon) -- 夜も あかりがついて見える
 end
 
-local function door(parent: Instance, pos: Vector3, color: Color3)
-	box(parent, Vector3.new(1.8, 2.8, 0.3), pos + Vector3.new(0, 1.4, 0), color, Enum.Material.Wood)
-	ball(parent, 0.25, pos + Vector3.new(0.55, 1.4, -0.2), C(255, 220, 120))
-end
 
 -- 入口の上の かざり（リボン）。名前は 畑の名札にあるので、ここには出さない（名前を1か所にする）
 local function ribbon(parent: Instance, pos: Vector3)
@@ -113,99 +109,75 @@ local function ribbon(parent: Instance, pos: Vector3)
 	ball(parent, 0.6, pos, C(255, 200, 225)) -- まん中の むすびめ
 end
 
--- ---- ひみつきちの形（足元の中心が原点。前（-Z）が庭のほう） ----
-local BASE = {}
+-- ---- ひみつきち（中に歩いて入れる家）。床の まん中が原点。前（-Z）が庭のほう ----
+-- 段ごとに 広さ（中の よこ w・おく d・かべの高さ h）と 見た目が変わる。
+-- 屋根の部品には 属性 Roof を付ける（中に入った持ち主の画面では 屋根を消して、へやを上から見られるように）
+-- とびら（Door）は だれにでも閉まっている。持ち主の画面でだけ あいて、通れる（ほかの人は入れない）
+local DOOR_W, DOOR_H = 5, 6.5
+local HOUSES = {
+	{ w = 14, d = 12, h = 7, wall = C(255, 240, 246), trim = C(255, 150, 190), floor = C(245, 225, 205) }, -- テント
+	{ w = 16, d = 14, h = 8, wall = C(255, 175, 205), trim = C(255, 250, 252), floor = C(240, 220, 210) }, -- カップケーキのこや
+	{ w = 20, d = 18, h = 9, wall = C(255, 236, 200), trim = C(140, 85, 60), floor = C(214, 168, 120) }, -- キャンディのおうち
+	{ w = 22, d = 20, h = 12, wall = C(255, 214, 230), trim = C(255, 120, 170), floor = C(230, 200, 160) }, -- 2かいだて
+	{ w = 26, d = 22, h = 13, wall = C(255, 228, 240), trim = C(190, 150, 255), floor = C(245, 215, 235) }, -- パレス
+}
 
--- 1: テント
-BASE[1] = function(m)
+local function roofPart(p: BasePart): BasePart
+	p:SetAttribute("Roof", true)
+	return p
+end
+
+-- 屋根（段ごと）。どれも かべの上（y = h）に のせる
+local ROOFS = {}
+
+ROOFS[1] = function(m, w, d, h) -- しましまの テント屋根
 	local stripes = { C(255, 150, 190), C(255, 255, 255) }
-	for i = 1, 4 do
-		local z = -3 + (i - 0.5) * 1.5
+	local n = 6
+	for i = 1, n do
+		local z = -d / 2 - 1 + (i - 0.5) * ((d + 2) / n)
 		local color = stripes[(i % 2) + 1]
-		wedge(m, Vector3.new(1.5, 4, 2.5), CFrame.new(-1.25, 2, z) * CFrame.Angles(0, math.pi / 2, 0), color)
-		wedge(m, Vector3.new(1.5, 4, 2.5), CFrame.new(1.25, 2, z) * CFrame.Angles(0, -math.pi / 2, 0), color)
+		roofPart(wedge(m, Vector3.new((d + 2) / n, 5, w / 2 + 1), CFrame.new(-(w / 2 + 1) / 2, h + 2.5, z) * CFrame.Angles(0, math.pi / 2, 0), color))
+		roofPart(wedge(m, Vector3.new((d + 2) / n, 5, w / 2 + 1), CFrame.new((w / 2 + 1) / 2, h + 2.5, z) * CFrame.Angles(0, -math.pi / 2, 0), color))
 	end
-	box(m, Vector3.new(1.4, 2.2, 0.2), Vector3.new(0, 1.1, -3.05), C(110, 70, 110)) -- 入口
-	pillar(m, 2, 0.15, Vector3.new(0, 4, 0), C(255, 255, 255))
-	box(m, Vector3.new(0.1, 0.8, 1.2), Vector3.new(0, 5.5, 0.6), C(255, 210, 90)) -- はた
-	-- 入口の前に 立て札
-	pillar(m, 1.2, 0.25, Vector3.new(0, 0, -4.4), C(170, 120, 84))
-	return 1.6, 4, -4.6
+	roofPart(pillar(m, 2, 0.2, Vector3.new(0, h + 5, 0), C(255, 255, 255)))
+	roofPart(box(m, Vector3.new(0.1, 1, 1.4), Vector3.new(0, h + 6.4, 0.7), C(255, 210, 90))) -- はた
 end
 
--- 2: カップケーキの こや
-BASE[2] = function(m)
-	pillar(m, 4, 7, Vector3.zero, C(255, 165, 200), nil, true)
-	for k = 0, 11 do -- カップのひだ
-		local a = k * math.pi / 6
-		pillar(m, 4, 0.5, Vector3.new(math.cos(a) * 3.45, 0, math.sin(a) * 3.45), C(255, 195, 220))
+ROOFS[2] = function(m, w, d, h) -- クリームの まるい屋根＋さくらんぼ
+	local dome = roofPart(part(m, { Size = Vector3.new(w + 3, 7, d + 3), Position = Vector3.new(0, h + 1, 0), Color = C(255, 250, 252) }))
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.Sphere
+	mesh.Parent = dome
+	roofPart(ball(m, 2, Vector3.new(0, h + 5, 0), C(230, 40, 70)))
+	for i = 1, 10 do
+		local a = i * math.pi / 5
+		roofPart(ball(m, 0.6, Vector3.new(math.cos(a) * (w / 2 + 0.5), h + 1.6, math.sin(a) * (d / 2 + 0.5)), if i % 2 == 0 then C(120, 200, 255) else C(255, 220, 100), Enum.Material.Neon))
 	end
-	ball(m, 7.6, Vector3.new(0, 5, 0), C(255, 250, 252))
-	ball(m, 1.4, Vector3.new(0, 8.8, 0), C(230, 40, 70))
-	for i = 1, 8 do
-		local a = i * math.pi / 4
-		ball(m, 0.45, Vector3.new(math.cos(a) * 3.2, 6.6, math.sin(a) * 3.2), if i % 2 == 0 then C(120, 200, 255) else C(255, 220, 100), Enum.Material.Neon)
-	end
-	door(m, Vector3.new(0, 0, -3.5), C(170, 110, 80))
-	window(m, Vector3.new(2.1, 2.4, -2.85))
-	return 4.6, 6, -3.95
 end
 
--- 3: キャンディの おうち
-BASE[3] = function(m)
-	box(m, Vector3.new(9, 5, 7), Vector3.new(0, 2.5, 0), C(255, 236, 200), nil, true)
-	roof(m, 10, 8.4, 3.2, 5, C(140, 85, 60)) -- チョコの屋根
-	for x = -4.5, 4.5, 1.5 do -- 屋根のふちの クリーム
-		ball(m, 0.9, Vector3.new(x, 5.1, -4.1), C(255, 250, 252))
+ROOFS[3] = function(m, w, d, h) -- チョコの屋根＋クリームのふち＋キャンディケインの えんとつ
+	local roofH = 5
+	roofPart(wedge(m, Vector3.new(w + 3, roofH, d / 2 + 1.5), CFrame.new(0, h + roofH / 2, -(d / 2 + 1.5) / 2), C(140, 85, 60)))
+	roofPart(wedge(m, Vector3.new(w + 3, roofH, d / 2 + 1.5), CFrame.new(0, h + roofH / 2, (d / 2 + 1.5) / 2) * CFrame.Angles(0, math.pi, 0), C(140, 85, 60)))
+	for x = -w / 2, w / 2, 2 do
+		roofPart(ball(m, 1, Vector3.new(x, h + 0.2, -d / 2 - 1.4), C(255, 250, 252)))
 	end
-	pillar(m, 3.5, 1, Vector3.new(2.8, 5.5, 1.5), C(255, 255, 255)) -- えんとつ（キャンディケイン）
-	pillar(m, 0.6, 1.1, Vector3.new(2.8, 6.4, 1.5), C(230, 50, 70))
-	pillar(m, 0.6, 1.1, Vector3.new(2.8, 7.8, 1.5), C(230, 50, 70))
-	door(m, Vector3.new(0, 0, -3.55), C(230, 90, 120))
-	window(m, Vector3.new(-2.7, 2.8, -3.55))
-	window(m, Vector3.new(2.7, 2.8, -3.55))
-	box(m, Vector3.new(2, 0.5, 0.6), Vector3.new(-2.7, 1.8, -3.8), C(150, 105, 75), Enum.Material.Wood) -- 花だん
-	for k = -1, 1 do
-		ball(m, 0.5, Vector3.new(-2.7 + k * 0.6, 2.2, -3.8), ({ C(255, 120, 170), C(255, 220, 100), C(170, 150, 255) })[k + 2])
-	end
-	return 4.4, 7, -3.7
+	roofPart(pillar(m, 4, 1.2, Vector3.new(w / 4, h + 2, d / 4), C(255, 255, 255)))
+	roofPart(pillar(m, 0.7, 1.3, Vector3.new(w / 4, h + 3, d / 4), C(230, 50, 70)))
+	roofPart(pillar(m, 0.7, 1.3, Vector3.new(w / 4, h + 4.6, d / 4), C(230, 50, 70)))
 end
 
--- 4: 2かいだての おうち
-BASE[4] = function(m)
-	box(m, Vector3.new(10, 4.5, 8), Vector3.new(0, 2.25, 0), C(255, 214, 230), nil, true)
-	box(m, Vector3.new(9, 4, 7.4), Vector3.new(0, 6.5, 0.3), C(220, 240, 255), nil, true)
-	roof(m, 10.6, 9, 3.4, 8.5, C(255, 120, 170))
-	box(m, Vector3.new(6, 0.4, 1.6), Vector3.new(0, 4.7, -4.6), C(255, 255, 255)) -- バルコニー
-	for x = -2.8, 2.8, 0.7 do
-		pillar(m, 1, 0.15, Vector3.new(x, 4.9, -5.3), C(255, 255, 255))
-	end
-	door(m, Vector3.new(0, 0, -4.05), C(170, 110, 80))
-	window(m, Vector3.new(-3.2, 2.5, -4.05))
-	window(m, Vector3.new(3.2, 2.5, -4.05))
-	window(m, Vector3.new(-2.6, 6.6, -3.45), Vector2.new(1.6, 1.8))
-	window(m, Vector3.new(2.6, 6.6, -3.45), Vector2.new(1.6, 1.8))
-	for _, x in { -6.2, 6.2 } do -- ペロペロキャンディの あかり
-		pillar(m, 4, 0.3, Vector3.new(x, 0, -3.5), C(255, 255, 255))
-		ball(m, 1.3, Vector3.new(x, 4.6, -3.5), C(255, 200, 230), Enum.Material.Neon)
-	end
-	return 3.95, 7, -4.25
+ROOFS[4] = function(m, w, d, h) -- ピンクの屋根（2かいだて。かべの まん中に 2かいの線と まど）
+	local roofH = 6
+	roofPart(wedge(m, Vector3.new(w + 3, roofH, d / 2 + 1.5), CFrame.new(0, h + roofH / 2, -(d / 2 + 1.5) / 2), C(255, 120, 170)))
+	roofPart(wedge(m, Vector3.new(w + 3, roofH, d / 2 + 1.5), CFrame.new(0, h + roofH / 2, (d / 2 + 1.5) / 2) * CFrame.Angles(0, math.pi, 0), C(255, 120, 170)))
 end
 
--- 5: ゆめの キャンディパレス
-BASE[5] = function(m)
-	box(m, Vector3.new(11, 6, 8), Vector3.new(0, 3, 0), C(255, 228, 240), Enum.Material.Marble, true)
-	box(m, Vector3.new(7, 3, 6), Vector3.new(0, 7.5, 0.5), C(245, 225, 255), Enum.Material.Marble, true)
-	for _, x in { -5.5, 5.5 } do
-		for _, z in { -4, 4 } do
-			pillar(m, 9, 2.2, Vector3.new(x, 0, z), C(255, 200, 225), Enum.Material.Marble, true)
-			ball(m, 2.6, Vector3.new(x, 9.6, z), C(190, 150, 255))
-			ball(m, 0.7, Vector3.new(x, 11.2, z), C(255, 236, 150), Enum.Material.Neon)
-		end
-	end
-	pillar(m, 13, 3, Vector3.new(0, 0, 1), C(255, 214, 236), Enum.Material.Marble)
-	ball(m, 3.6, Vector3.new(0, 13.6, 1), C(255, 130, 190))
-	local star = ball(m, 1.3, Vector3.new(0, 16, 1), C(255, 240, 150), Enum.Material.Neon)
+ROOFS[5] = function(m, w, d, h) -- パレス: たいらな屋根の上に まるい塔と 星
+	roofPart(box(m, Vector3.new(w + 2.6, 1, d + 2.6), Vector3.new(0, h + 0.5, 0), C(255, 214, 236), Enum.Material.Marble))
+	roofPart(pillar(m, 6, 6, Vector3.new(0, h + 1, 0), C(245, 225, 255), Enum.Material.Marble))
+	roofPart(ball(m, 6.6, Vector3.new(0, h + 8, 0), C(255, 130, 190)))
+	local star = roofPart(ball(m, 1.6, Vector3.new(0, h + 12, 0), C(255, 240, 150), Enum.Material.Neon))
 	local sparkle = Instance.new("ParticleEmitter")
 	sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
 	sparkle.Color = ColorSequence.new(C(255, 240, 170), C(200, 180, 255))
@@ -216,21 +188,89 @@ BASE[5] = function(m)
 	sparkle.Size = NumberSequence.new(0.5, 0)
 	sparkle.LightEmission = 0.8
 	sparkle.Parent = star
-	local light = Instance.new("PointLight") -- 夜に ひかる（ひとつだけ。重くしない）
-	light.Color = C(255, 230, 170)
-	light.Range = 18
-	light.Brightness = 1.2
-	light.Parent = star
-	-- にじの かいだん
+end
+
+-- 段ごとの 外の かざり（屋根いがい。中に入っても 消さない）
+local EXTRAS = {}
+EXTRAS[4] = function(m, w, d, h)
+	-- 2かいの線（白い帯）と 上のまど
+	box(m, Vector3.new(w + 2.2, 0.5, d + 2.2), Vector3.new(0, h / 2 + 0.5, 0), C(255, 255, 255))
+	for _, x in { -w / 4, w / 4 } do
+		window(m, Vector3.new(x, h * 0.75, -d / 2 - 1.05), Vector2.new(2, 2))
+	end
+	for _, x in { -w / 2 - 3, w / 2 + 3 } do -- ペロペロキャンディの あかり
+		pillar(m, 5, 0.35, Vector3.new(x, 0, -d / 2 - 1), C(255, 255, 255))
+		ball(m, 1.5, Vector3.new(x, 5.7, -d / 2 - 1), C(255, 200, 230), Enum.Material.Neon)
+	end
+end
+EXTRAS[5] = function(m, w, d, h)
+	-- 4すみの 塔
+	for _, x in { -w / 2 - 1, w / 2 + 1 } do
+		for _, z in { -d / 2 - 1, d / 2 + 1 } do
+			pillar(m, h + 4, 3, Vector3.new(x, 0, z), C(255, 200, 225), Enum.Material.Marble, true)
+			ball(m, 3.4, Vector3.new(x, h + 5, z), C(190, 150, 255))
+			ball(m, 0.9, Vector3.new(x, h + 7, z), C(255, 236, 150), Enum.Material.Neon)
+		end
+	end
+	-- にじの かいだん（入口の前）
 	local rainbow = { C(255, 110, 140), C(255, 180, 100), C(255, 235, 120), C(140, 225, 160), C(130, 190, 255) }
 	for i, c in rainbow do
-		box(m, Vector3.new(4, 0.4, 1), Vector3.new(0, 0.2 * i - 0.2, -4.2 - (5 - i) * 0.6 + 0.6), c, Enum.Material.Neon)
+		box(m, Vector3.new(DOOR_W + 1, 0.12, 0.8), Vector3.new(0, 0.06, -d / 2 - 1.5 - (i - 1) * 0.8), c, Enum.Material.Neon)
 	end
-	door(m, Vector3.new(0, 0, -4.05), C(255, 120, 170))
-	window(m, Vector3.new(-3, 3.2, -4.05))
-	window(m, Vector3.new(3, 3.2, -4.05))
-	window(m, Vector3.new(0, 7.6, -2.55), Vector2.new(2, 1.6))
-	return 5, 6.4, -4.2
+end
+
+-- 家を作る（足元＝地面の高さ）。返す: Model, 中の広さ（w, d）
+local function buildHouse(level: number): (Model, number, number)
+	local look = HOUSES[math.clamp(level, 1, #HOUSES)]
+	local w, d, h = look.w, look.d, look.h
+	local m = Instance.new("Model")
+	m.Name = "SecretBase"
+	local marble = if level == 5 then Enum.Material.Marble else Enum.Material.SmoothPlastic
+	-- ゆか（中）
+	part(m, { Name = "Floor", Size = Vector3.new(w + 2, 0.6, d + 2), Position = Vector3.new(0, 0.3, 0), Color = look.floor, Material = if level == 3 or level == 4 then Enum.Material.WoodPlanks else Enum.Material.SmoothPlastic, CanCollide = true })
+	-- かべ（ぶつかる）。前のかべは まん中を とびらの分 あける
+	local function wall(size: Vector3, pos: Vector3)
+		part(m, { Size = size, Position = pos, Color = look.wall, Material = marble, CanCollide = true })
+	end
+	wall(Vector3.new(w + 2, h, 1), Vector3.new(0, h / 2, d / 2 + 0.5))
+	wall(Vector3.new(1, h, d), Vector3.new(-w / 2 - 0.5, h / 2, 0))
+	wall(Vector3.new(1, h, d), Vector3.new(w / 2 + 0.5, h / 2, 0))
+	local side = (w + 2 - DOOR_W) / 2
+	wall(Vector3.new(side, h, 1), Vector3.new(-(DOOR_W / 2 + side / 2), h / 2, -d / 2 - 0.5))
+	wall(Vector3.new(side, h, 1), Vector3.new(DOOR_W / 2 + side / 2, h / 2, -d / 2 - 0.5))
+	wall(Vector3.new(DOOR_W, h - DOOR_H, 1), Vector3.new(0, DOOR_H + (h - DOOR_H) / 2, -d / 2 - 0.5))
+	-- とびら（ふだんは しまっている。持ち主の画面でだけ あく）
+	part(m, { Name = "Door", Size = Vector3.new(DOOR_W, DOOR_H, 0.4), Position = Vector3.new(0, DOOR_H / 2, -d / 2 - 0.5), Color = look.trim, Material = Enum.Material.Wood, CanCollide = true })
+	-- かべの ふち（外の 角と 上）
+	for _, x in { -w / 2 - 1, w / 2 + 1 } do
+		for _, z in { -d / 2 - 1, d / 2 + 1 } do
+			part(m, { Size = Vector3.new(0.6, h, 0.6), Position = Vector3.new(x, h / 2, z), Color = look.trim })
+		end
+	end
+	-- まど（左右のかべ。外からは 中が見えない くもりガラス）
+	for _, x in { -w / 2 - 0.5, w / 2 + 0.5 } do
+		for _, z in { -d / 4, d / 4 } do
+			part(m, { Size = Vector3.new(1.3, 3.6, 4), Position = Vector3.new(x, h / 2 + 0.5, z), Color = look.trim })
+			part(m, { Size = Vector3.new(1.4, 3, 3.4), Position = Vector3.new(x, h / 2 + 0.5, z), Color = C(200, 230, 255), Material = Enum.Material.Glass })
+		end
+	end
+	-- 中の あかり（ひとつだけ）
+	local lamp = part(m, { Name = "Lamp", Size = Vector3.one, Position = Vector3.new(0, h - 1, 0), Transparency = 1 })
+	local light = Instance.new("PointLight")
+	light.Range = math.max(w, d)
+	light.Brightness = 0.4 -- 明るすぎると ゆかが 白くとぶ
+	light.Color = C(255, 240, 225)
+	light.Parent = lamp
+	ROOFS[math.clamp(level, 1, #ROOFS)](m, w, d, h)
+	local extra = EXTRAS[level]
+	if extra then
+		extra(m, w, d, h)
+	end
+	-- とびらの上の リボン
+	ribbon(m, Vector3.new(0, DOOR_H + 0.9, -d / 2 - 1.2))
+	m:SetAttribute("Width", w)
+	m:SetAttribute("Depth", d)
+	return m, w, d
 end
 
 -- ---- 柵・名札・ゆか の塗り替え ----
@@ -434,31 +474,17 @@ local function styleSign(plot, level: number, extra: Instance)
 	end
 end
 
--- ひみつきちの とびらの位置（前のかべ。段ごと）
-local DOOR_Z = { -3.2, -3.6, -3.7, -4.2, -4.3 }
-
+-- ひみつきちを 庭のうしろに建てる。前（とびら）が 庭のほうを向く
 local function buildBase(plot, level: number, ownerUserId: number, d, extra: Instance)
-	local build = BASE[math.min(level, #BASE)]
-	if not build then
-		return
-	end
-	local m = Instance.new("Model")
-	m.Name = "SecretBase"
-	local signY, _, signZ = build(m)
-	ribbon(m, Vector3.new(0, signY, signZ - 0.1))
+	local m, w, depth = buildHouse(level)
+	m:SetAttribute("OwnerUserId", ownerUserId) -- この人の画面でだけ とびらが あく
 	m.WorldPivot = CFrame.new()
-	local base = plot.model.PrimaryPart.CFrame * CFrame.new(0, -0.5, 0) * CFrame.new(BASE_SPOT)
-	-- 前（-Z）を庭の中へ向ける
-	local center = plot.model.PrimaryPart.Position
-	local pivot = CFrame.lookAt(base.Position, Vector3.new(center.X, base.Position.Y, center.Z))
+	-- 庭のうしろの かざり（柵の外 z=21）より うしろに、前のかべ を そろえる
+	local front = BASE_FRONT
+	local pivot = plot.model.PrimaryPart.CFrame * CFrame.new(0, -0.5, front + depth / 2 + 1)
 	m:PivotTo(pivot)
+	Room.furnish(m, level, w, depth, d)
 	m.Parent = extra
-	-- 中に入れる（とびらの前で「はいる」）
-	local doorZ = DOOR_Z[math.min(level, #DOOR_Z)]
-	local entrance = part(m, { Name = "Entrance", Size = Vector3.new(3, 3, 0.5), CFrame = pivot * CFrame.new(0, 1.5, doorZ - 0.4), Transparency = 1 })
-	local outside = pivot * CFrame.new(0, 3, doorZ - 4) -- 出たら、とびらの前で 庭のほうを向く
-	local room = Room.build(plot, level, d, extra, outside)
-	Room.addEntrance(entrance, room, ownerUserId)
 end
 
 -- ---- 公開する関数 ----
@@ -484,9 +510,6 @@ function Reform.render(player: Player)
 	end
 	local old = plot.model:FindFirstChild("Reform")
 	-- ひみつきちが なくなるときは、中にいる人を先に外へ
-	if old and Reform.level(d, "base") <= 0 then
-		Room.evacuate(plot)
-	end
 	if old then
 		old:Destroy()
 	end
@@ -508,7 +531,6 @@ function Reform.clear(player: Player)
 	if not plot then
 		return
 	end
-	Room.evacuate(plot) -- へやにいる人を 落とさないように、先に外へ
 	local old = plot.model:FindFirstChild("Reform")
 	if old then
 		old:Destroy()
