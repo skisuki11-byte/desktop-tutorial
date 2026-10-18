@@ -151,7 +151,7 @@ end
 -- ---- 森の妖精ルルの おはなし ----
 -- はじめて来た人に: 最初に短い あいさつ（3つ）→ 遊びながら ひとことずつ案内 → はじめて売ったら ひろば・森・どうぐ屋を紹介して帰る。
 -- 一度終わったら もう出てこない（何度も出てくる案内役は、うるさがられる）
-local INTRO = { "fairy.hello1", "fairy.hello2", "fairy.hello3" }
+local INTRO = { "fairy.hello1", "fairy.hello2", "fairy.hello4", "fairy.hello3" } -- 守り神のお話 → 自分の庭 → さいしょにやること
 local OUTRO = { "fairy.bye1", "fairy.bye2", "fairy.bye3" }
 local script_: { string }? = nil -- いま話している おはなし（INTRO か OUTRO）
 local line = 1

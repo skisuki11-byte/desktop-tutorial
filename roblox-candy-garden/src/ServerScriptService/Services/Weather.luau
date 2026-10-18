@@ -25,6 +25,10 @@ function Weather.sparkleChance(): number
 	if (workspace:GetAttribute("StarFestivalEndsAt") or 0) > now() then
 		chance = math.min(0.9, chance + Config.StarGift.sparkleBonus)
 	end
+	-- しょんぼり雲を はらした お礼（しばらく）
+	if (workspace:GetAttribute("SunnyUntil") or 0) > now() then
+		chance = math.min(0.9, chance + Config.Gloom.sparkleBonus)
+	end
 	return chance
 end
 

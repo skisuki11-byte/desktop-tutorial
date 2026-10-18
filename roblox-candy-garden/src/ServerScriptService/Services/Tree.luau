@@ -583,6 +583,12 @@ function Tree.add(cropId: string)
 	refresh(true)
 end
 
+-- しょんぼり雲を はらしたときなど、作物いがいで木を育てる
+function Tree.addPoints(points: number)
+	pending += math.max(0, math.floor(points))
+	refresh(true)
+end
+
 -- 参加した人の準備ができたら呼ぶ。すでにほしぞらの木なら、おくりものを渡す
 function Tree.onPlayerReady(player: Player)
 	task.delay(3, function() -- 画面が出そろってから

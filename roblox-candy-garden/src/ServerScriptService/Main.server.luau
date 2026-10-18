@@ -22,6 +22,7 @@ local Quests = require(Services.Quests)
 local Trade = require(Services.Trade)
 local Decor = require(Services.Decor)
 local Friends = require(Services.Friends)
+local Gloom = require(Services.Gloom)
 local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
 
@@ -42,6 +43,7 @@ Quests.init()
 Trade.init()
 Decor.init()
 Friends.init()
+Gloom.init()
 Garden.onExpanded = Decor.render
 Weather.start()
 

@@ -88,16 +88,25 @@ local function ensureSign(): Frame?
 	Style.round(frame, 24)
 	Style.stroke(frame, C.Mint, 4)
 	Style.label({
-		Position = UDim2.fromScale(0, 0.06),
-		Size = UDim2.fromScale(1, 0.36),
+		Position = UDim2.fromScale(0, 0.04),
+		Size = UDim2.fromScale(1, 0.28),
 		Text = "🌳 " .. t("ui.tree"),
 		TextSize = 24,
 		TextWrapped = false,
 	}, frame)
+	-- この木は、土地の まもりがみ（育てる理由が ひと目で分かる）
+	Style.label({
+		Position = UDim2.fromScale(0, 0.3),
+		Size = UDim2.fromScale(1, 0.16),
+		Text = t("ui.treeGuardian"),
+		TextSize = 14,
+		TextColor3 = C.TextMuted,
+		TextWrapped = false,
+	}, frame)
 	Style.label({
 		Name = "Level",
-		Position = UDim2.fromScale(0.06, 0.46),
-		Size = UDim2.fromScale(0.44, 0.3),
+		Position = UDim2.fromScale(0.06, 0.5),
+		Size = UDim2.fromScale(0.44, 0.26),
 		Text = "",
 		TextSize = 20,
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -106,8 +115,8 @@ local function ensureSign(): Frame?
 	Style.label({
 		Name = "Count",
 		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.fromScale(0.94, 0.46),
-		Size = UDim2.fromScale(0.44, 0.3),
+		Position = UDim2.fromScale(0.94, 0.5),
+		Size = UDim2.fromScale(0.44, 0.26),
 		Text = "",
 		TextSize = 18,
 		TextColor3 = C.TextMuted,
