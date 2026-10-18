@@ -45,13 +45,16 @@ end
 -- ガチャではなく「必ず手に入る」目標にする（子ども向け。運に お金を使わせない）。
 -- levels[n].price = その段にするコイン（1段目は最初から）。start = 最初の段（ひみつきちは 0＝まだない）
 -- points: 1段あがるごとの にぎやかさの点数
--- 値段は「慣れた人が1分に2,400〜7,000コイン」を基準に、数十分〜何日もかかる目標まで
+-- 値段は試算（種の入荷・育つ時間・ペットのボーナス・ふしぎな姿から、遊んでいる時間の6割で計算）で決めた:
+--   中くらいの人（9マス・ペット+70%）≈ 1,750コイン/分 / 慣れた人（12マス・ペット+160%）≈ 6,000コイン/分
+--   いちばん安い段は 中くらいの人で 6〜17分（その日のうちに1つ届く）。
+--   ひみつきちの最後（150万）は 慣れた人で 約4時間、全部そろえて 約9時間（30分〜1時間ずつ遊んで 2〜3週間の目標）
 Config.Reform = {
-	{ id = "fence", icon = "🎀", start = 1, points = 3, levels = { { price = 0 }, { price = 20000 }, { price = 80000 }, { price = 250000 } } },
-	{ id = "sign", icon = "🏷️", start = 1, points = 2, levels = { { price = 0 }, { price = 15000 }, { price = 60000 }, { price = 200000 } } },
-	{ id = "floor", icon = "🍪", start = 1, points = 3, levels = { { price = 0 }, { price = 30000 }, { price = 100000 }, { price = 300000 } } },
+	{ id = "fence", icon = "🎀", start = 1, points = 3, levels = { { price = 0 }, { price = 15000 }, { price = 50000 }, { price = 150000 } } },
+	{ id = "sign", icon = "🏷️", start = 1, points = 2, levels = { { price = 0 }, { price = 10000 }, { price = 40000 }, { price = 120000 } } },
+	{ id = "floor", icon = "🍪", start = 1, points = 3, levels = { { price = 0 }, { price = 20000 }, { price = 70000 }, { price = 200000 } } },
 	-- じぶんだけの ひみつきち（庭のうしろ。名前が入る）
-	{ id = "base", icon = "🏠", start = 0, points = 4, levels = { { price = 50000 }, { price = 150000 }, { price = 400000 }, { price = 1000000 }, { price = 2500000 } } },
+	{ id = "base", icon = "🏠", start = 0, points = 4, levels = { { price = 30000 }, { price = 100000 }, { price = 300000 }, { price = 700000 }, { price = 1500000 } } },
 }
 Config.ReformById = {}
 for _, item in Config.Reform do
