@@ -466,9 +466,11 @@ function Garden.interact(player: Player, tile: BasePart)
 	local slot = d.plots[tostring(tileIndex)]
 	local tool = Data.tool(player)
 	if slot == nil then
-		if tool == nil then
-			plant(player, tileIndex)
+		-- 道具を持っていても植えられる（道具はしまって、種にもどす）
+		if tool ~= nil then
+			Data.setTool(player, nil)
 		end
+		plant(player, tileIndex)
 	elseif isReady(slot) then
 		harvest(player, tileIndex)
 	elseif tool == "water" then

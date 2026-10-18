@@ -240,7 +240,7 @@ end
 
 -- ペット（Pals）。bonus は売値に足される割合（連れている分の合計）
 Config.MaxPets = 20
-Config.MaxEquipped = 3
+Config.MaxEquipped = 2
 
 -- rarity: 1=ふつう 2=めずらしい 3=レア 4=すごいレア 5=でんせつ 6=まもりがみ 7=ゆめいろ / ears: 見た目の型
 -- giftOnly: たまごからは出ない（ほしぞらのおくりものでだけ会える）

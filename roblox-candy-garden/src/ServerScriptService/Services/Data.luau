@@ -94,6 +94,21 @@ local function reconcile(data)
 			data[key] = value
 		end
 	end
+	-- 連れられるペットの数を減らしたとき（3→2）、前のデータの多い分は 連れるのをやめる（ペットは残る）。
+	-- 売値ボーナスの大きい子を残す（損をしたと感じないように）
+	if #data.equipped > Config.MaxEquipped then
+		local bonusOf = {}
+		for _, entry in data.pets do
+			local cfg = Config.PetById[entry.pet]
+			bonusOf[entry.uid] = cfg and cfg.bonus or 0
+		end
+		table.sort(data.equipped, function(a, b)
+			return (bonusOf[a] or 0) > (bonusOf[b] or 0)
+		end)
+		while #data.equipped > Config.MaxEquipped do
+			table.remove(data.equipped)
+		end
+	end
 	return data
 end
 

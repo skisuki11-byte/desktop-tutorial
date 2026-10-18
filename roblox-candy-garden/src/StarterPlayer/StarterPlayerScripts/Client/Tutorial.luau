@@ -137,7 +137,9 @@ local function refreshPrompts()
 					prompt.Enabled = false
 				else
 					if crop == nil then
-						prompt.Enabled = hasSeed() and state.tool == nil -- 道具を持っているときは植えない
+						-- じょうろなどを持っていても、あいている畑には植えられる（道具は自動でしまう）。
+						-- 持ったままだと「植える」が消えて、なぜ植えられないのか分からなくなるため
+						prompt.Enabled = hasSeed()
 						prompt.ActionText = t("prompt.plant")
 						prompt.ObjectText = state.selected and t("crop." .. state.selected) or ""
 					elseif tile:GetAttribute("Ready") then
