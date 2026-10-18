@@ -119,6 +119,19 @@ function Style.badge(target: GuiObject): Frame
 	return badge
 end
 
+-- 「NEW」の札（Style.badge と同じ名前 "Badge" なので、とじたメニューにも「!」が出る）
+function Style.newBadge(target: GuiObject): Frame
+	local badge = Style.badge(target)
+	badge.Size = UDim2.fromOffset(46, 24)
+	badge.BackgroundColor3 = Color3.fromRGB(255, 120, 60)
+	local mark = badge:FindFirstChildOfClass("TextLabel")
+	if mark then
+		mark.Text = "NEW"
+		mark.TextSize = 14
+	end
+	return badge
+end
+
 -- 数字がふわっと数え上がる（増えたことが目で分かる）
 local counters: { [TextLabel]: NumberValue } = {}
 function Style.countTo(label: TextLabel, from: number, to: number, format: (number) -> string)

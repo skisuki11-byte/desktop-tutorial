@@ -53,6 +53,19 @@ Remotes.Teleport.OnServerEvent:Connect(function(player, dest)
 	end
 end)
 -- BGMのオン/オフ。保存して、次に来たときも同じにする
+-- あたらしい遊びの おしらせを 見た（Config.NewThings の key だけ受け付ける）
+Remotes.MarkSeen.OnServerEvent:Connect(function(player, key)
+	local d = Data.get(player)
+	local version = type(key) == "string" and Config.NewThings[key]
+	if d and version and RateLimit.ok(player, "seen", 0.2) then
+		d.seen = d.seen or {}
+		if d.seen[key] ~= version then
+			d.seen[key] = version
+			Data.push(player)
+			Data.saveSoon(player)
+		end
+	end
+end)
 Remotes.SetMusic.OnServerEvent:Connect(function(player, on)
 	local d = Data.get(player)
 	if d and type(on) == "boolean" and RateLimit.ok(player, "music", 0.5) then

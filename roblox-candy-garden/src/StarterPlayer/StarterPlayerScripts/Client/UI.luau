@@ -24,6 +24,7 @@ local CropDexUI = require(script.Parent.CropDexUI)
 local FriendsUI = require(script.Parent.FriendsUI)
 local Fairy = require(script.Parent.Fairy)
 local CatalogUI = require(script.Parent.CatalogUI)
+local NewTips = require(script.Parent.NewTips)
 
 local UI = {}
 
@@ -51,6 +52,7 @@ local toastY = 120 -- お知らせのふだんの高さ（画面の大きさで�
 local lastCoins = nil
 local toastToken = 0
 local menuButton, menuBadge
+local newBadges = {} -- [key] = 「NEW」の札（Config.NewThings）
 -- 画面の下（畑と足元）は何も置かずに広く見せる。種えらびは上のまん中（空のあたり）。
 -- よく使う3つ（ショップ・収穫・売る）は、パソコンでは左の列、スマホでは右手の親指の近く（ジャンプボタンの上）。
 -- スマホの左下は移動スティック専用に空けておく。
@@ -364,6 +366,16 @@ local function buildMenu()
 	styleButton.Activated:Connect(function()
 		UI.showPanel(if CosmeticsUI.isVisible() then nil else "style")
 	end)
+	-- あたらしい遊びの「NEW」（開いたら消える）
+	newBadges = { decor = Style.newBadge(decorButton), style = Style.newBadge(styleButton) }
+	for key, button in { decor = decorButton, style = styleButton } do
+		button.Activated:Connect(function()
+			if newBadges[key].Visible then
+				newBadges[key].Visible = false
+				Remotes.MarkSeen:FireServer(key)
+			end
+		end)
+	end
 	menuButton.Activated:Connect(function()
 		setMenuOpen(not side.Visible)
 	end)
@@ -1615,6 +1627,11 @@ function UI.update(state)
 	-- はじめてのたまごが買えるようになったら、ペットに「!」（1回目だけの案内。出しすぎない）
 	local egg = Config.Eggs[1]
 	palsBadge.Visible = #(state.pets or {}) == 0 and coins >= egg.price
+	-- 「NEW」は、はじめての案内が終わってから（案内の じゃまをしない）
+	for key, badge in newBadges do
+		badge.Visible = state.tutorialDone == true and ((state.seen or {})[key] or 0) < (Config.NewThings[key] or 0)
+	end
+	NewTips.update(state)
 	latestState = state
 	refreshWater(state)
 	refreshSeedShop(state)
@@ -1676,6 +1693,7 @@ function UI.init()
 	end)
 	palsBadge = Style.badge(palsButton)
 	buildToast()
+	NewTips.init(UI.toastText)
 	buildBanner()
 	buildCompactFrames()
 	buildWaterMeter()
