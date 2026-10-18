@@ -58,8 +58,14 @@ local function plazaSpot(angle: number): Vector3
 	return Vector3.new(math.cos(angle) * PLAZA_RADIUS, 0, math.sin(angle) * PLAZA_RADIUS)
 end
 -- 遠くのお店: 左（西）に たまごの森、右（東）に どうぐ屋。庭の外がわの広い野原
-local EGG_FOREST = Vector3.new(-130, 0, 0)
-local TOOL_SHOP = Vector3.new(130, 0, -6)
+-- たまごの森・どうぐ屋は、庭と庭の「あいだ」の外がわ（庭のうしろの ひみつきちと 重ならない場所）。
+-- 庭は 0°・45°… の向きにあるので、その まん中（22.5°ずれ）に置く
+local function between(angleDeg: number, radius: number): Vector3
+	local a = math.rad(angleDeg)
+	return Vector3.new(math.cos(a) * radius, 0, math.sin(a) * radius)
+end
+local EGG_FOREST = between(157.5, 125)
+local TOOL_SHOP = between(-22.5, 118)
 
 local plots = {} -- { model, tiles, spawn, label, owner }
 
