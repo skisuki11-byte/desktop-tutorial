@@ -191,19 +191,30 @@ BUILD.gemcrown = function(m)
 	ball(m, 0.6, CFrame.new(0, 1.2, 0), C(255, 255, 255), Enum.Material.Neon)
 end
 
--- ほしぞらのかんむり: 夜空色の輪に、光る星を5つ。まん中に大きな星
+-- ほしぞらのかんむり: 夜空色の輪（小さな板を ぐるりと並べた わっか）に、5本の とがった先と 金の星。前に 水色の宝石
 BUILD.starcrown = function(m)
-	pillar(m, 0.5, 2.1, CFrame.new(0, 0.28, 0), C(70, 60, 160), Enum.Material.Neon)
-	pillar(m, 0.18, 2.15, CFrame.new(0, 0.55, 0), C(255, 230, 120), Enum.Material.Neon)
-	for i = 1, 5 do
-		local a = (i / 5) * math.pi * 2
-		ball(m, 0.42, CFrame.new(math.cos(a) * 0.9, 0.85, math.sin(a) * 0.9), C(200, 235, 255), Enum.Material.Neon)
+	local navy = C(60, 55, 150)
+	local gold = C(255, 214, 90)
+	for i = 1, 14 do -- わっか
+		local a = (i / 14) * math.pi * 2
+		part(m, {
+			Size = Vector3.new(0.5, 0.55, 0.22),
+			CFrame = CFrame.new(math.cos(a) * 0.95, 0.3, math.sin(a) * 0.95) * CFrame.Angles(0, -a + math.pi / 2, 0),
+			Color = navy,
+		})
+		ball(m, 0.18, CFrame.new(math.cos(a) * 0.97, 0.6, math.sin(a) * 0.97), gold) -- 金の ふち
 	end
-	part(m, {
-		Size = Vector3.new(0.75, 0.75, 0.75),
-		CFrame = CFrame.new(0, 1.25, 0) * CFrame.Angles(math.rad(45), 0, math.rad(45)),
-		Color = C(255, 240, 150),
-		Material = Enum.Material.Neon,
+	for i = 1, 5 do -- とがった先と 星
+		local a = (i / 5) * math.pi * 2 + math.pi / 2
+		local at = CFrame.new(math.cos(a) * 0.95, 0.85, math.sin(a) * 0.95) * CFrame.Angles(0, -a + math.pi / 2, 0)
+		part(m, { Size = Vector3.new(0.3, 0.75, 0.2), CFrame = at, Color = navy })
+		ball(m, 0.34, at * CFrame.new(0, 0.5, 0), gold, Enum.Material.Neon)
+	end
+	part(m, { -- 前の 宝石
+		Size = Vector3.new(0.32, 0.32, 0.32),
+		CFrame = CFrame.new(0, 0.32, -1.08) * CFrame.Angles(0, 0, math.rad(45)),
+		Color = C(150, 220, 255),
+		Material = Enum.Material.Glass,
 	})
 	local glow = Instance.new("PointLight")
 	glow.Color = C(170, 200, 255)
@@ -212,15 +223,19 @@ BUILD.starcrown = function(m)
 	glow.Parent = m:GetChildren()[1]
 end
 
--- ほしぞらのつばさ: 夜空色の大きなはね。小さな星がちりばめてある
+-- ほしぞらのつばさ: 羽根を 扇のように 4まいずつ広げた、夜空色の つばさ。羽根の先に 小さな星
 BUILD.starwings = function(m)
+	local colors = { C(70, 60, 180), C(100, 80, 210), C(140, 110, 230), C(180, 150, 245) }
 	for _, side in { -1, 1 } do
-		local base = CFrame.new(side * 1.7, 0.6, 0.7) * CFrame.Angles(0, side * math.rad(-22), side * math.rad(-12))
-		ellipsoid(m, Vector3.new(2.4, 1.5, 0.18), base * CFrame.new(side * 0.2, 0.45, 0), C(90, 80, 200), Enum.Material.Neon)
-		ellipsoid(m, Vector3.new(1.9, 1.1, 0.2), base * CFrame.new(side * 0.05, -0.55, 0), C(130, 90, 220), Enum.Material.Neon)
-		for k = 1, 4 do
-			ball(m, 0.22, base * CFrame.new(side * (k * 0.35 - 0.6), 0.3 + (k % 2) * 0.4, -0.12), C(255, 255, 255), Enum.Material.Neon)
+		local base = CFrame.new(side * 0.4, 0.5, 0.75) * CFrame.Angles(0, side * math.rad(-18), 0)
+		for k = 0, 3 do
+			local len = 2.9 - k * 0.4
+			local angle = math.rad(28 - k * 22) -- 上の羽根から 下の羽根へ
+			local root = base * CFrame.Angles(0, 0, side * angle)
+			ellipsoid(m, Vector3.new(len, 0.62 - k * 0.07, 0.16), root * CFrame.new(side * len / 2, 0, 0), colors[k + 1])
+			ball(m, 0.2, root * CFrame.new(side * (len - 0.25), 0, -0.1), C(255, 255, 255), Enum.Material.Neon)
 		end
+		ball(m, 0.55, base, C(60, 50, 160)) -- 羽根の つけね
 	end
 end
 

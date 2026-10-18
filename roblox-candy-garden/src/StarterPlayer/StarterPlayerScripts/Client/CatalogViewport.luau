@@ -50,7 +50,7 @@ local function silhouette(view,dim)
 	view.ImageTransparency=if dim then .35 else 0
 	-- 光る部分（目のキラキラなど）は、光を消しても白く残るので、シルエットの間は かくす
 	for _,o in view:GetDescendants() do
-		if o:IsA("BasePart") and o.Material==Enum.Material.Neon then
+		if o:IsA("BasePart") and (o.Material==Enum.Material.Neon or o:GetAttribute("WasNeon")) then
 			if dim and o:GetAttribute("ShownTransparency")==nil then o:SetAttribute("ShownTransparency",o.Transparency);o.Transparency=1
 			elseif not dim and o:GetAttribute("ShownTransparency")~=nil then o.Transparency=o:GetAttribute("ShownTransparency");o:SetAttribute("ShownTransparency",nil) end
 		end
@@ -116,7 +116,12 @@ local function build(entry,label)
 	local model=Models.build(entry.key)
 	if not model then return end
 	local world=Instance.new("WorldModel");world.Parent=entry.viewport;model.Parent=world
-	for _,o in model:GetDescendants() do if o:IsA("ParticleEmitter") or o:IsA("BillboardGui") then o:Destroy() end end
+	for _,o in model:GetDescendants() do
+		if o:IsA("ParticleEmitter") or o:IsA("BillboardGui") then o:Destroy()
+		-- 小窓（ViewportFrame）の中では、光る素材（ネオン）に かげが つかず、色が のっぺり白っぽく 平らに見える。
+		-- ふつうの素材にして、かげで 立体に見せる（目のキラキラなどは 印を付けておき、シルエットのときは かくす）
+		elseif o:IsA("BasePart") and o.Material==Enum.Material.Neon then o.Material=Enum.Material.SmoothPlastic;o:SetAttribute("WasNeon",true) end
+	end
 	entry.model=model;fit(entry);Animator.prepare(model);silhouette(entry.viewport,entry.dim)
 	if entry.ready or entry.dim then reveal(entry,label,entry.ready==true);return end -- シルエットは色がいらないので すぐ出す
 	entry.viewport.Visible=false
