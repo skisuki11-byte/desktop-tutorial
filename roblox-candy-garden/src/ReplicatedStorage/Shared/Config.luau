@@ -391,7 +391,8 @@ end
 
 -- おしゃれ（アバターアイテム）。ぜんぶコードで作る見た目。コインで買える（無料の道）。
 -- price=0 は最初からもらえる。pass=... は、そのゲームパスを持っている人が使える（コインでは買えない）。
-Config.CosmeticSlots = { "hat", "back", "trail" }
+-- face=かお（めがね など）/ hand=左手に もつ物（右手は じょうろ などの道具）/ outfit=きぐるみ・ドレス（体ぜんぶ）
+Config.CosmeticSlots = { "hat", "face", "back", "hand", "outfit", "trail" }
 Config.Cosmetics = {
 	{ id = "bunnyears", slot = "hat", icon = "🐰", price = 0 },
 	{ id = "catears", slot = "hat", icon = "🐱", price = 150 },
@@ -424,6 +425,23 @@ Config.Cosmetics = {
 	{ id = "sparkletrail", slot = "trail", icon = "✨", price = 300 },
 	{ id = "hearttrail", slot = "trail", icon = "💗", price = 700 },
 	{ id = "rainbowtrail", slot = "trail", icon = "🌈", price = 1500 },
+	-- かお
+	{ id = "cheekhearts", slot = "face", icon = "💗", price = 150 },
+	{ id = "roundglasses", slot = "face", icon = "👓", price = 300 },
+	{ id = "heartglasses", slot = "face", icon = "💕", price = 700 },
+	{ id = "starglasses", slot = "face", icon = "🌟", price = 1500 },
+	-- 左手に もつ物
+	{ id = "lollipophand", slot = "hand", icon = "🍭", price = 250 },
+	{ id = "cottonstick", slot = "hand", icon = "☁️", price = 500 },
+	{ id = "starwand", slot = "hand", icon = "⭐", price = 1200 },
+	{ id = "heartballoon", slot = "hand", icon = "🎈", price = 2000 },
+	-- せなか（追加）
+	{ id = "candybackpack", slot = "back", icon = "🎒", price = 600 },
+	-- いしょう（きぐるみ・ドレス）。このゲームだけの、いちばん目立つ おしゃれ（長く ためる目標）
+	{ id = "bearsuit", slot = "outfit", icon = "🧸", price = 3000 },
+	{ id = "strawberrysuit", slot = "outfit", icon = "🍓", price = 6000 },
+	{ id = "cottondress", slot = "outfit", icon = "☁️", price = 10000 },
+	{ id = "cupcakedress", slot = "outfit", icon = "🧁", price = 15000 },
 }
 Config.CosmeticById = {}
 for _, item in Config.Cosmetics do

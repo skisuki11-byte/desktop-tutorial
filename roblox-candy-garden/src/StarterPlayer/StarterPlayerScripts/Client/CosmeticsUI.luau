@@ -1,4 +1,4 @@
--- おしゃれ画面。ぼうし・せなか・キラキラ を、タブで切り替えて、タップで買う／着る。
+-- おしゃれ画面。ぼうし・かお・せなか・て・いしょう・キラキラ を、タブで切り替えて、タップで買う／着る。
 -- 方針: 全部コインで手に入る（無料の道）。ロバックスのパスは、持っているか買えるものだけを
 --       「スペシャル」に出す（Config.Passes の id が 0 のうちは出さない）。
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -13,7 +13,7 @@ local CosmeticsUI = {}
 local C = Style.Color
 local t = I18n.t
 
-local SLOT_ICON = { hat = "🎩", back = "🎒", trail = "✨" }
+local SLOT_ICON = { hat = "🎩", face = "👓", back = "🎒", hand = "🍭", outfit = "👗", trail = "✨" }
 
 local panel, tabsFrame, grid, specialFrame, hint
 local currentSlot = "hat"
