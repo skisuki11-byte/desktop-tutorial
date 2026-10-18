@@ -604,10 +604,28 @@ function Garden.buyDrop(player: Player)
 end
 
 -- ペットのお手伝い: 連れているペットが、ときどき自分の畑の まだ水をあげていない作物に水をあげる
+local PET_HELP_REACH = 20 -- 畑のどれかのマスから、このくらいの近さにいれば「畑にいる」
 local function petHelp(player: Player)
 	local d = Data.get(player)
 	local plot = World.plotOf(player)
 	if not d or not plot then
+		return
+	end
+	-- ペットのお手伝いは、自分の畑にいるときだけ（いっしょにいるペットが手伝う、という見え方に合わせる）
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+	local near = false
+	for _, tile in plot.tiles do
+		local offset = tile.Position - root.Position
+		if Vector3.new(offset.X, 0, offset.Z).Magnitude <= PET_HELP_REACH then
+			near = true
+			break
+		end
+	end
+	if not near then
 		return
 	end
 	for _, uid in d.equipped do
