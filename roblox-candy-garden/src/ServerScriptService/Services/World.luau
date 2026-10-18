@@ -575,7 +575,8 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 		CanCollide = false,
 		Duration = 0,
 		Size = Vector3.new(6, 0.2, 3),
-		CFrame = origin * CFrame.new(0, 1.1, -(PLOT_HALF.Z - 2)),
+		-- 庭の中（畑の方）を向いて出てくる。入口がわを向くと、畑がカメラのうしろになって「どこに植えるの？」となる
+		CFrame = origin * CFrame.new(0, 1.1, -(PLOT_HALF.Z - 2)) * CFrame.Angles(0, math.pi, 0),
 		Color = accent,
 		Material = Enum.Material.SmoothPlastic,
 		Transparency = 0.5,

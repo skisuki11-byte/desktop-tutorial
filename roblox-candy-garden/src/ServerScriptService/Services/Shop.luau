@@ -10,6 +10,7 @@ local Garden = require(script.Parent.Garden)
 local RateLimit = require(script.Parent.RateLimit)
 local Monetization = require(script.Parent.Monetization)
 local Quests = require(script.Parent.Quests)
+local Tree = require(script.Parent.Tree)
 
 local Shop = {}
 
@@ -102,7 +103,16 @@ local function sellAll(player: Player)
 	d.basketSparkle = {}
 	d.basketV = {}
 	d.coins += total
+	local firstSale = not d.tutorialDone
 	d.tutorialDone = true
+	if firstSale then
+		-- 案内が終わったので、ほしぞらの木の おくりもの（あれば）。ルルの「やったね！」のあいさつを聞き終わるころに出す
+		task.delay(20, function()
+			if player.Parent then
+				Tree.onPlayerReady(player)
+			end
+		end)
+	end
 	Remotes.Toast:FireClient(player, "toast.sold", total)
 	Data.push(player)
 	Quests.progress(player, "sell", total)

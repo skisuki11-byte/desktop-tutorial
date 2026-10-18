@@ -373,6 +373,10 @@ local function giveStarGift(player: Player)
 	if not d or d.starGift or level < Config.StarGift.level then
 		return
 	end
+	-- はじめての人は、案内（植える→収穫→売る）が終わってから わたす（最初の1分は「何をするか」に集中してもらう）
+	if not d.tutorialDone then
+		return
+	end
 	d.starGift = true
 	d.coins += Config.StarGift.coins
 	for _, id in Config.StarGift.cosmetics do

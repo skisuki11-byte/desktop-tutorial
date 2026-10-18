@@ -42,6 +42,10 @@ local dropDetail
 local seedRows = {} -- 種屋の行 [cropId] = { row, info, buy }（入荷の数に合わせて表示を変える）
 local restockLabel -- 「つぎの入荷まで 3:12」
 local toastLabel
+local bannerTopY = 130
+local bannerAtBottom = false
+local placeBanner
+
 local bannerLabel, banner, bannerButtons
 local toastY = 120 -- お知らせのふだんの高さ（画面の大きさで変わる）
 local lastCoins = nil
@@ -739,7 +743,8 @@ local function applyLayout(mode: string)
 	local bannerY = if compact
 		then (if portrait then leftTop + PHONE_ROW + SEED_PHONE + 36 + PHONE_ROW + 8 else leftTop + SEED_PHONE + 20)
 		else 130
-	banner.Position = UDim2.new(0.5, 0, 0, bannerY)
+	bannerTopY = bannerY
+	placeBanner()
 	toastY = bannerY + 60
 	toastLabel.Position = UDim2.new(0.5, 0, 0, toastY)
 	Style.setScale(banner, if compact then 0.8 else 1)
@@ -1444,6 +1449,22 @@ end
 
 -- 妖精の吹き出し。buttons = { { text, onPress }, ... } を渡すと、セリフの下にボタンを出す（つぎへ・スキップ）
 local bannerKey = nil
+-- 案内の吹き出しの場所。
+--   ・ボタンのある会話（つぎへ・わかった）は、上（種えらびの下）
+--   ・「畑をタッチ」など自分で動く場面は、画面の下。上にあると、畑や矢印が かくれてしまう
+placeBanner = function()
+	if not banner then
+		return
+	end
+	if bannerAtBottom then
+		banner.AnchorPoint = Vector2.new(0.5, 1)
+		banner.Position = UDim2.new(0.5, 0, 1, -18)
+	else
+		banner.AnchorPoint = Vector2.new(0.5, 0)
+		banner.Position = UDim2.new(0.5, 0, 0, bannerTopY)
+	end
+end
+
 function UI.setBanner(text: string?, buttons: { { any } }?)
 	if text then
 		-- 同じセリフ・同じボタンなら作り直さない（0.4秒ごとに呼ばれるため）
@@ -1451,6 +1472,11 @@ function UI.setBanner(text: string?, buttons: { { any } }?)
 		local changed = key ~= bannerKey
 		bannerKey = key
 		bannerLabel.Text = text
+		local atBottom = buttons == nil or #buttons == 0
+		if atBottom ~= bannerAtBottom then
+			bannerAtBottom = atBottom
+			placeBanner()
+		end
 		if changed then
 			for _, child in bannerButtons:GetChildren() do
 				if child:IsA("GuiButton") then

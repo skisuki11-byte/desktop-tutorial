@@ -28,11 +28,19 @@ local function myTiles()
 	for _, model in plots:GetChildren() do
 		if model:GetAttribute("OwnerUserId") == player.UserId then
 			for _, child in model:GetChildren() do
-				if child:GetAttribute("IsTile") then
+				-- まだ広げていない畑（見えない畑）は、案内の矢印で指さない
+				if child:GetAttribute("IsTile") and not child:GetAttribute("Locked") then
 					table.insert(result, child)
 				end
 			end
 		end
+	end
+	-- 近い畑から順に（矢印は、いちばん近い畑を指す）
+	local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if root then
+		table.sort(result, function(a, b)
+			return (a.Position - root.Position).Magnitude < (b.Position - root.Position).Magnitude
+		end)
 	end
 	return result
 end
@@ -44,16 +52,21 @@ local function ensureArrow()
 	arrow = Style.make("BillboardGui", {
 		Name = "TutorialArrow",
 		Size = UDim2.fromOffset(80, 80),
-		StudsOffset = Vector3.new(0, 7, 0),
+		-- 畑のすぐ上（高すぎると、画面の上の種えらびに かくれる）
+		StudsOffset = Vector3.new(0, 3.2, 0),
 		AlwaysOnTop = true,
 		ResetOnSpawn = false,
 	}, player:WaitForChild("PlayerGui"))
 	local label = Style.label({
 		Name = "Arrow",
 		Size = UDim2.fromScale(1, 1),
-		Text = "⬇️",
+		-- ⬇️ の絵文字は、端末によって出ないので、ふちどりの ピンクの三角にする
+		Text = "▼",
 		TextSize = 64,
 		TextWrapped = false,
+		TextColor3 = Color3.fromRGB(255, 90, 160),
+		TextStrokeColor3 = Color3.fromRGB(255, 255, 255),
+		TextStrokeTransparency = 0,
 	}, arrow)
 	arrowTween = TweenService:Create(
 		label,
