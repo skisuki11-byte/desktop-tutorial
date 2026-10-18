@@ -313,7 +313,7 @@ local function isFree(pos: Vector3, taken: { Vector3 }, spacing: number): boolea
 		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
 		local along = flat:Dot(dir)
 		-- 庭のうしろの ひみつきち（家）の場所
-		if along > PLOT_RADIUS + 14 and along < PLOT_RADIUS + 52 and (flat - dir * along).Magnitude < 20 then
+		if along > PLOT_RADIUS + 14 and along < PLOT_RADIUS + 45 and (flat - dir * along).Magnitude < 20 then
 			return false
 		end
 		if along > 15 and along < PLOT_RADIUS - 16 and (flat - dir * along).Magnitude < 5 then
@@ -453,7 +453,7 @@ end
 
 -- ---- 庭（Plot） ----
 
--- 白い柵。前（広場がわ、-Z）のまん中は入口としてあける。
+-- 白い柵。前（広場がわ、-Z）のまん中は入口、うしろ（+Z）のまん中は ひみつきちへの出入り口として あける。
 -- ふだんは通り抜けられない。ジャンプすれば乗り越えられる高さ（3stud）にして、横からでも入れる
 local function buildFence(model: Model, origin: CFrame, color: Color3)
 	local fence = make("Folder", { Name = "Fence" }, model)
@@ -492,8 +492,9 @@ local function buildFence(model: Model, origin: CFrame, color: Color3)
 	local nx = math.ceil(halfX * 2 / 6)
 	for k = 0, nx do
 		local x = -halfX + k * (halfX * 2 / nx)
-		post(x, halfZ)
+		-- うしろ（+Z）のまん中も あける（ひみつきちへの 出入り口）
 		if math.abs(x) > 4 then
+			post(x, halfZ)
 			post(x, -halfZ)
 		end
 	end
@@ -505,8 +506,11 @@ local function buildFence(model: Model, origin: CFrame, color: Color3)
 	end
 	post(-4, -halfZ)
 	post(4, -halfZ)
+	post(-4, halfZ)
+	post(4, halfZ)
 	-- 横木
-	rail(-halfX, halfZ, halfX, halfZ)
+	rail(-halfX, halfZ, -4, halfZ)
+	rail(4, halfZ, halfX, halfZ)
 	rail(-halfX, -halfZ, -halfX, halfZ)
 	rail(halfX, -halfZ, halfX, halfZ)
 	rail(-halfX, -halfZ, -4, -halfZ)
@@ -597,7 +601,7 @@ local function buildPlot(index: number, parent: Instance, onTile: (Player, BaseP
 	local signPost = block({
 		Name = "SignPost",
 		Size = Vector3.new(0.8, 6, 0.8),
-		CFrame = origin * CFrame.new(0, 4, PLOT_HALF.Z - 1.5),
+		CFrame = origin * CFrame.new(-9, 4, PLOT_HALF.Z - 1.5), -- うしろの まん中は ひみつきちへの通り道なので、左へ
 		Color = C(170, 120, 84),
 		Material = Enum.Material.Wood,
 	}, model)

@@ -18,7 +18,7 @@ local Reform = {}
 Reform.onChanged = nil :: ((Player) -> ())? -- 段が上がったとき（名札のランクを直す。Decor がつなぐ）
 
 local C = Color3.fromRGB
-local BASE_FRONT = 25 -- ひみつきちの 前のかべの位置（庭の床の中心から。+Z が庭のうしろ＝外がわ）
+local BASE_FRONT = 18 -- ひみつきちの 前のかべの位置（庭の床の中心から。+Z が庭のうしろ＝外がわ）。柵（16.5）の すぐうしろ。とびらは 柵の出入り口の まん前
 
 -- ---- 部品づくり ----
 local function part(parent: Instance, props: { [string]: any }): Part
@@ -109,10 +109,9 @@ local function ribbon(parent: Instance, pos: Vector3)
 	ball(parent, 0.6, pos, C(255, 200, 225)) -- まん中の むすびめ
 end
 
--- ---- ひみつきち（中に歩いて入れる家）。床の まん中が原点。前（-Z）が庭のほう ----
--- 段ごとに 広さ（中の よこ w・おく d・かべの高さ h）と 見た目が変わる。
--- 屋根の部品には 属性 Roof を付ける（中に入った持ち主の画面では 屋根を消して、へやを上から見られるように）
--- とびら（Door）は だれにでも閉まっている。持ち主の画面でだけ あいて、通れる（ほかの人は入れない）
+-- ---- ひみつきち（外から見た家）。床の まん中が原点。前（-Z）が庭のほう ----
+-- 段ごとに 大きさ（よこ w・おく d・かべの高さ h）と 見た目が変わる。
+-- 中には入れない（とびらは しまっている）。持ち主が とびらの前に来ると、画面が切りかわって へや（別の場所）に入る（Room）
 local DOOR_W, DOOR_H = 5, 6.5
 local HOUSES = {
 	{ w = 14, d = 12, h = 7, wall = C(255, 240, 246), trim = C(255, 150, 190), floor = C(245, 225, 205) }, -- テント
@@ -254,13 +253,6 @@ local function buildHouse(level: number): (Model, number, number)
 			part(m, { Size = Vector3.new(1.4, 3, 3.4), Position = Vector3.new(x, h / 2 + 0.5, z), Color = C(200, 230, 255), Material = Enum.Material.Glass })
 		end
 	end
-	-- 中の あかり（ひとつだけ）
-	local lamp = part(m, { Name = "Lamp", Size = Vector3.one, Position = Vector3.new(0, h - 1, 0), Transparency = 1 })
-	local light = Instance.new("PointLight")
-	light.Range = math.max(w, d)
-	light.Brightness = 0.4 -- 明るすぎると ゆかが 白くとぶ
-	light.Color = C(255, 240, 225)
-	light.Parent = lamp
 	ROOFS[math.clamp(level, 1, #ROOFS)](m, w, d, h)
 	local extra = EXTRAS[level]
 	if extra then
@@ -474,17 +466,17 @@ local function styleSign(plot, level: number, extra: Instance)
 	end
 end
 
--- ひみつきちを 庭のうしろに建てる。前（とびら）が 庭のほうを向く
+-- ひみつきちを 庭のうしろに建てる。前（とびら）が 庭のほうを向く。とびらの前に「入口」の しるし
 local function buildBase(plot, level: number, ownerUserId: number, d, extra: Instance)
-	local m, w, depth = buildHouse(level)
-	m:SetAttribute("OwnerUserId", ownerUserId) -- この人の画面でだけ とびらが あく
+	local m, _, depth = buildHouse(level)
+	m:SetAttribute("OwnerUserId", ownerUserId)
 	m.WorldPivot = CFrame.new()
-	-- 庭のうしろの かざり（柵の外 z=21）より うしろに、前のかべ を そろえる
-	local front = BASE_FRONT
-	local pivot = plot.model.PrimaryPart.CFrame * CFrame.new(0, -0.5, front + depth / 2 + 1)
+	local pivot = plot.model.PrimaryPart.CFrame * CFrame.new(0, -0.5, BASE_FRONT + depth / 2 + 1)
+	-- 入口（とびらの すぐ前。ここに 持ち主が来たら へやへ）
+	part(m, { Name = "Entrance", Size = Vector3.new(4, 4, 1), Position = Vector3.new(0, 2, -depth / 2 - 1.6), Transparency = 1 })
 	m:PivotTo(pivot)
-	Room.furnish(m, level, w, depth, d)
 	m.Parent = extra
+	Room.build(plot, level, d, extra)
 end
 
 -- ---- 公開する関数 ----
@@ -509,7 +501,10 @@ function Reform.render(player: Player)
 		return
 	end
 	local old = plot.model:FindFirstChild("Reform")
-	-- ひみつきちが なくなるときは、中にいる人を先に外へ
+	-- ひみつきちが なくなるときは、へやの中にいる人を先に外へ
+	if old and Reform.level(d, "base") <= 0 then
+		Room.evacuate(plot)
+	end
 	if old then
 		old:Destroy()
 	end
@@ -531,6 +526,7 @@ function Reform.clear(player: Player)
 	if not plot then
 		return
 	end
+	Room.evacuate(plot) -- へやにいる人を 落とさないように、先に外へ
 	local old = plot.model:FindFirstChild("Reform")
 	if old then
 		old:Destroy()

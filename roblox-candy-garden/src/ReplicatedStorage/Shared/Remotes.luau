@@ -41,6 +41,7 @@ local NAMES = {
 	"BuyDecor",
 	"BuyReform",
 	"MarkSeen",
+	"RoomDoor",
 	"BuyFurniture",
 	"PlaceFurniture",
 	"RemoveFurniture",
