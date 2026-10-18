@@ -144,7 +144,7 @@ Config.Crops = {
 Config.SeedShop = {
 	restockSeconds = 300,
 	stock = {
-		gummyberry = { chance = 1, min = 10, max = 20 },
+		gummyberry = { chance = 1, min = 30, max = 40 }, -- いちばん安い種は いつも たっぷり（はじめの数分で 種がなくなって 待つだけ、にならないように）
 		peropero = { chance = 1, min = 4, max = 8 },
 		wataame = { chance = 0.8, min = 2, max = 5 },
 		nijimelon = { chance = 0.5, min = 1, max = 3 },
