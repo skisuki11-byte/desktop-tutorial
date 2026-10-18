@@ -441,6 +441,7 @@ local function readStar()
 end
 
 -- 合計（＋このサーバーのまだ足していない分）から表示を更新し、レベルが上がっていたらお祝いする
+local starAnnounced = false -- このサーバーで ほしぞらの木の おくりものを 配ったか
 local function refresh(celebrateLevelUp: boolean)
 	local lv, rest = fromTotal(total + pending)
 	level, progress = lv, rest
@@ -463,8 +464,11 @@ local function refresh(celebrateLevelUp: boolean)
 			Remotes.TreeLevelUp:FireAllClients(lv, reward)
 		end
 	end
-	-- ほしぞらの木になった: まつりを始めて、ここにいる全員におくりもの
-	if lv >= Config.StarGift.level then
+	-- ほしぞらの木に なった瞬間だけ: まつりを始めて、ここにいる全員におくりもの
+	-- （毎回の更新で配ると、案内を終えたばかりの子に ルルのあいさつより先に 出てしまう。
+	--   あとから来た人・案内を終えた人には、Tree.onPlayerReady で ちょうどいいときに渡す）
+	if lv >= Config.StarGift.level and not starAnnounced then
+		starAnnounced = true
 		markStar()
 		for _, player in Players:GetPlayers() do
 			giveStarGift(player)

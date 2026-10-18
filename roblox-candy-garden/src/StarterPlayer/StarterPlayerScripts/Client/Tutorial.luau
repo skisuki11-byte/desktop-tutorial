@@ -81,7 +81,12 @@ local function pointAt(tile: BasePart?)
 	if tile then
 		local a = ensureArrow()
 		a.Adornee = tile
-		a.Enabled = true
+		-- 畑の すぐそば（「植える」などのボタンが出る近さ）まで来たら ▼は消す。
+		-- ▼が ボタンの文字に重なって 読めなくなるため（ボタンが そのまま目印になる）
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		local near = root ~= nil and (root.Position - tile.Position).Magnitude < 7.5
+		a.Enabled = not near
 	elseif arrow then
 		arrow.Enabled = false
 	end
@@ -269,7 +274,16 @@ local function refreshTutorial()
 		UI.setBanner("💰 " .. t("tutorial.sell"))
 		UI.highlight(buttons.sell)
 	elseif hasSeed() and emptyTile then
-		UI.setBanner("🌱 " .. t("tutorial.plant"))
+		-- 1つ植えたあとは「のこり あと何こ」を出す（同じ言葉のままだと「もうやったのに？」と まよう）
+		if growingTile then
+			local seeds = 0
+			for _, n in state.seeds or {} do
+				seeds += n
+			end
+			UI.setBanner("🌱 " .. t("tutorial.plantMore", seeds))
+		else
+			UI.setBanner("🌱 " .. t("tutorial.plant"))
+		end
 		pointAt(emptyTile)
 	elseif dryTile and state.water and state.water.amount > 0 then
 		-- 待っている間に、じょうろを使ってみる（道具は自分でえらぶ）

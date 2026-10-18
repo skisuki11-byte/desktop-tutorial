@@ -57,7 +57,7 @@ end)
 Remotes.MarkSeen.OnServerEvent:Connect(function(player, key)
 	local d = Data.get(player)
 	local version = type(key) == "string" and Config.NewThings[key]
-	if d and version and RateLimit.ok(player, "seen", 0.2) then
+	if d and version and RateLimit.ok(player, "seen_" .. key, 0.2) then -- 項目ごと（いっしょに送られても 落とさない）
 		d.seen = d.seen or {}
 		if d.seen[key] ~= version then
 			d.seen[key] = version

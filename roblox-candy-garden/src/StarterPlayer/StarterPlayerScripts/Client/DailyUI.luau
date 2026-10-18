@@ -20,6 +20,8 @@ local CARD_GAP = 10
 local panel, grid, streakLabel, claimButton, giftButton, badge
 local lastState = nil
 local autoOpened = false
+local tutorialSeen: boolean? = nil -- さいしょに届いた状態で 案内が終わっていたか
+local tutorialDoneAt: number? = nil -- この場で 案内が終わった時刻
 local wobble: Tween? = nil
 local openPanel: (() -> ())? = nil
 
@@ -247,8 +249,14 @@ function DailyUI.update(state)
 	if panel.Visible then
 		refresh()
 	end
-	-- 受け取れる状態でログインしたら、自動で開く（最初のチュートリアル中は開かない）
-	if not autoOpened and state.daily.canClaim and state.tutorialDone and openPanel then
+	-- 受け取れる状態でログインしたら、自動で開く（最初のチュートリアル中は開かない）。
+	-- この場で 案内を終えたばかりのときは 1分まつ（ルルの「やったね！」や おくりものと 重ねない。画面が次々に出ると 何が起きたか分からなくなる）
+	if tutorialSeen == false and state.tutorialDone and not tutorialDoneAt then
+		tutorialDoneAt = os.clock()
+	end
+	tutorialSeen = state.tutorialDone == true
+	local calm = tutorialDoneAt == nil or os.clock() - tutorialDoneAt > 60
+	if not autoOpened and state.daily.canClaim and state.tutorialDone and calm and openPanel then
 		autoOpened = true
 		openPanel()
 	end

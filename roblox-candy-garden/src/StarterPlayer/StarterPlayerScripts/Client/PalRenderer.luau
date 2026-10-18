@@ -10,7 +10,8 @@ local PetAnimator = require(ReplicatedStorage.Shared.PetAnimator)
 
 local PalRenderer = {}
 
-local SLOTS = { Vector3.new(-3.4, 0, 4), Vector3.new(3.4, 0, 4), Vector3.new(0, 0, 7.5) }
+-- ペットは キャラの ななめうしろの 左右に ならぶ（まうしろだと カメラとキャラの あいだに入って 前が見えなくなる）
+local SLOTS = { Vector3.new(-3.6, 0, 2.5), Vector3.new(3.6, 0, 2.5), Vector3.new(-7, 0, 4) }
 local FOLLOW_SPEED = 9
 
 local folder

@@ -53,6 +53,7 @@ local lastCoins = nil
 local toastToken = 0
 local menuButton, menuBadge
 local newBadges = {} -- [key] = 「NEW」の札（Config.NewThings）
+local lastTutorialDone: boolean? = nil -- 案内が この場で終わったかを 見るため
 -- 画面の下（畑と足元）は何も置かずに広く見せる。種えらびは上のまん中（空のあたり）。
 -- よく使う3つ（ショップ・収穫・売る）は、パソコンでは左の列、スマホでは右手の親指の近く（ジャンプボタンの上）。
 -- スマホの左下は移動スティック専用に空けておく。
@@ -1361,6 +1362,7 @@ local function buildBanner()
 		TextSize = 24,
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top, -- 高さを そろえたときも、文は上から
 		ZIndex = 7,
 	}, column)
 	Style.make("UISizeConstraint", { Name = "MaxWidth" }, bannerLabel)
@@ -1461,6 +1463,11 @@ function UI.toastText(text: string, seconds: number?)
 	if banner and banner.Visible then
 		local y = banner.AbsolutePosition.Y - gui.AbsolutePosition.Y + banner.AbsoluteSize.Y + 8
 		toastLabel.Position = UDim2.new(0.5, 0, 0, y)
+	elseif UI.currentPanel ~= nil then
+		-- 画面（おしゃれ・ショップなど）を開いているときは、いちばん下に出す
+		-- （上に出すと タブや ボタンに重なって、続けて押せない）
+		local y = gui.AbsoluteSize.Y - math.max(toastLabel.AbsoluteSize.Y, 40) - 12
+		toastLabel.Position = UDim2.new(0.5, 0, 0, y)
 	else
 		toastLabel.Position = UDim2.new(0.5, 0, 0, toastY)
 	end
@@ -1516,6 +1523,15 @@ function UI.setBanner(text: string?, buttons: { { any } }?)
 		bannerKey = key
 		bannerLabel.Text = text
 		local atBottom = buttons == nil or #buttons == 0
+		-- ボタンがあるとき（ルルの おはなし）は、文の高さを 3行ぶんに そろえる。
+		-- 文の長さで高さが変わると「つぎへ」の場所が ずれて、同じ所を トントン押す子が 押しまちがえる
+		local limits = bannerLabel:FindFirstChild("MaxWidth")
+		if limits then
+			-- 横はばも いっぱいに そろえる（文の長さで はばが変わると、ボタンが 左右にも ずれる）
+			-- ただし 広すぎると 左右のボタンまで かくれるので 600まで
+			local fullWidth = math.min(if limits.MaxSize.X < math.huge then limits.MaxSize.X else 0, 600)
+			limits.MinSize = if atBottom then Vector2.zero else Vector2.new(fullWidth, 92)
+		end
 		if atBottom ~= bannerAtBottom then
 			bannerAtBottom = atBottom
 			placeBanner()
@@ -1627,6 +1643,16 @@ function UI.update(state)
 	-- はじめてのたまごが買えるようになったら、ペットに「!」（1回目だけの案内。出しすぎない）
 	local egg = Config.Eggs[1]
 	palsBadge.Visible = #(state.pets or {}) == 0 and coins >= egg.price
+	-- はじめて遊ぶ子には 全部が あたらしいので「NEW」は出さない（印が多いと どこを見ればいいか まよう）。
+	-- この場で 案内を終えた子は、メニューの NEW を「見た」にしておく。NEW は 前から遊んでいる子のため
+	if lastTutorialDone == false and state.tutorialDone then
+		for key in newBadges do
+			Remotes.MarkSeen:FireServer(key)
+			state.seen = state.seen or {}
+			state.seen[key] = Config.NewThings[key]
+		end
+	end
+	lastTutorialDone = state.tutorialDone == true
 	-- 「NEW」は、はじめての案内が終わってから（案内の じゃまをしない）
 	for key, badge in newBadges do
 		badge.Visible = state.tutorialDone == true and ((state.seen or {})[key] or 0) < (Config.NewThings[key] or 0)
