@@ -39,6 +39,7 @@ local NAMES = {
 	"TradeState",
 	"ExpandPlot",
 	"BuyDecor",
+	"BuyReform",
 	"PlaceDecor",
 	"RemoveDecor",
 }

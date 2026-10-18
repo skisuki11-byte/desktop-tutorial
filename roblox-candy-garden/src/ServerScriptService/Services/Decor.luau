@@ -9,6 +9,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Data = require(script.Parent.Data)
 local World = require(script.Parent.World)
 local RateLimit = require(script.Parent.RateLimit)
+local Reform = require(script.Parent.Reform)
 
 local DecorVisuals = require(ReplicatedStorage.Shared.DecorVisuals)
 local Decor = {}
@@ -174,7 +175,7 @@ BUILD.castle = function(m)
 end
 
 -- ---- にぎやかさのランク ----
-local RANK_ICONS = { "🌱", "🌸", "🌟", "👑" }
+local RANK_ICONS = Config.DecorRank.icons
 local function rankOf(d): number
 	local points = 0
 	for _, id in d.decor.slots do
@@ -183,6 +184,7 @@ local function rankOf(d): number
 			points += item.points
 		end
 	end
+	points += Reform.points(d) -- 柵・名札・ゆか・ひみつきち
 	for _, bonus in Config.DecorRank.tileBonus do
 		if d.plotTiles >= bonus.tiles then
 			points += bonus.points
@@ -238,10 +240,12 @@ function Decor.render(player: Player)
 			model.Parent = folder
 		end
 	end
+	Reform.render(player)
 	refreshLabel(player, d)
 end
 
 function Decor.clear(player: Player)
+	Reform.clear(player)
 	local plot = World.plotOf(player)
 	local folder = plot and plot.model:FindFirstChild("Decor")
 	if folder then
@@ -335,13 +339,20 @@ function Decor.init()
 	Remotes.BuyDecor.OnServerEvent:Connect(buy)
 	Remotes.PlaceDecor.OnServerEvent:Connect(place)
 	Remotes.RemoveDecor.OnServerEvent:Connect(remove)
+	Reform.init()
+	Reform.onChanged = function(player)
+		local d = Data.get(player)
+		if d then
+			refreshLabel(player, d)
+		end
+	end
 	Data.addStateExtender(function(player)
 		local d = Data.get(player)
 		if not d then
 			return {}
 		end
 		local rank, points = rankOf(d)
-		return { decor = { owned = d.decor.owned, slots = d.decor.slots, rank = rank, points = points } }
+		return { decor = { owned = d.decor.owned, slots = d.decor.slots, rank = rank, points = points, reform = d.reform } }
 	end)
 end
 

@@ -40,9 +40,30 @@ Config.DecorById = {}
 for _, item in Config.Decor do
 	Config.DecorById[item.id] = item
 end
--- にぎやかさのランク（🌱→🌸→🌟→👑）。飾りの点数＋畑の広さのボーナス
+-- おにわリフォーム（畑を広げきったあとの、大きなコインの使い道）。みんなに見える。
+-- 参考: あつまれ どうぶつの森（家を何段階も大きくする長い目標）/ Adopt Me!（家を豪華にして友だちに見せる）。
+-- ガチャではなく「必ず手に入る」目標にする（子ども向け。運に お金を使わせない）。
+-- levels[n].price = その段にするコイン（1段目は最初から）。start = 最初の段（ひみつきちは 0＝まだない）
+-- points: 1段あがるごとの にぎやかさの点数
+-- 値段は「慣れた人が1分に2,400〜7,000コイン」を基準に、数十分〜何日もかかる目標まで
+Config.Reform = {
+	{ id = "fence", icon = "🎀", start = 1, points = 3, levels = { { price = 0 }, { price = 20000 }, { price = 80000 }, { price = 250000 } } },
+	{ id = "sign", icon = "🏷️", start = 1, points = 2, levels = { { price = 0 }, { price = 15000 }, { price = 60000 }, { price = 200000 } } },
+	{ id = "floor", icon = "🍪", start = 1, points = 3, levels = { { price = 0 }, { price = 30000 }, { price = 100000 }, { price = 300000 } } },
+	-- じぶんだけの ひみつきち（庭のうしろ。名前が入る）
+	{ id = "base", icon = "🏠", start = 0, points = 4, levels = { { price = 50000 }, { price = 150000 }, { price = 400000 }, { price = 1000000 }, { price = 2500000 } } },
+}
+Config.ReformById = {}
+for _, item in Config.Reform do
+	Config.ReformById[item.id] = item
+end
+-- 高い買い物は2回押して決める（小さい子の押しまちがい防止）
+Config.ReformConfirmAt = 50000
+
+-- にぎやかさのランク（🌱→🌸→🌟→👑→💎→🌈）。飾り・リフォームの点数＋畑の広さのボーナス
 Config.DecorRank = {
-	thresholds = { 0, 5, 15, 35 },
+	icons = { "🌱", "🌸", "🌟", "👑", "💎", "🌈" },
+	thresholds = { 0, 5, 15, 35, 60, 90 },
 	tileBonus = { { tiles = 9, points = 2 }, { tiles = 12, points = 5 } },
 }
 

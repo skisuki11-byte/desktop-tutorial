@@ -72,6 +72,8 @@ local function newData()
 		plotTiles = 6, -- 使える畑の枚数（Config.PlotUpgrades で広がる）
 		-- 庭の飾り: owned=持っている [id]=true / slots=置いてある場所（6か所、空きは ""）
 		decor = { owned = {}, slots = { "", "", "", "", "", "" } },
+		-- おにわリフォーム: いまの段（Config.Reform）。ひみつきちは 0＝まだない
+		reform = { fence = 1, sign = 1, floor = 1, base = 0 },
 		dex = {}, -- ペット図鑑: 見つけたペット [petId] = true
 		dexClaimed = 0, -- 受け取った図鑑のごほうびの数（Config.Dex.rewards の何番目まで）
 		-- なかよしレベル: [tostring(userId)] = { name, pts, lv, day, together, helped }（together・helped は その日にたまった数）
