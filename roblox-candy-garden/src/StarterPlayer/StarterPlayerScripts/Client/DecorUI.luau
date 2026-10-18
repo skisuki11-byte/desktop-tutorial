@@ -26,6 +26,12 @@ local lastState = nil
 
 local refreshReform
 
+-- 文字は ふだんの大きさ（max）まで。せまいときだけ 小さくなる
+local function fitText(label: TextLabel, max: number): TextLabel
+	Style.make("UITextSizeConstraint", { MaxTextSize = max, MinTextSize = 11 }, label)
+	return label
+end
+
 local function reformLevel(decor, item): number
 	return (decor.reform and decor.reform[item.id]) or item.start
 end
@@ -60,38 +66,41 @@ refreshReform = function(decor)
 end
 
 local function buildReformRow(item, order: number)
+	-- スマホの せまい画面でも読めるように: 上に 名前と ●●○○、まん中に「いま」「つぎ」を 横いっぱいに、
+	-- 右下に ボタン（文字と ボタンが 横に取り合わない）
 	local row = Style.make("Frame", {
 		Name = "Reform_" .. item.id,
 		LayoutOrder = order,
-		Size = UDim2.new(1, -10, 0, 96),
+		Size = UDim2.new(1, -10, 0, 150),
 		BackgroundColor3 = Color3.fromRGB(255, 252, 240),
 		ZIndex = 11,
 	}, scroll)
 	Style.round(row, 18)
 	Style.stroke(row, Color3.fromRGB(245, 215, 160), 3)
 	Style.label({
-		Position = UDim2.fromOffset(8, 0),
-		Size = UDim2.fromOffset(56, 96),
+		Position = UDim2.fromOffset(8, 4),
+		Size = UDim2.fromOffset(56, 56),
 		Text = item.icon,
 		TextSize = 38,
 		TextWrapped = false,
 		ZIndex = 12,
 	}, row)
 	Style.label({
-		Position = UDim2.fromOffset(68, 6),
-		Size = UDim2.new(0.62, -80, 0, 26),
+		Position = UDim2.fromOffset(68, 8),
+		Size = UDim2.new(1, -160, 0, 26),
 		Text = t("reform." .. item.id),
 		TextSize = 20,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextWrapped = false,
 		ZIndex = 12,
 	}, row)
-	-- 段の ●●○○（どこまで進んだか ひと目で）
+	-- 段の ●●○○（どこまで進んだか ひと目で）。右上
 	local dots = {}
 	for i = 1, #item.levels do
 		local dot = Style.make("Frame", {
-			Position = UDim2.new(0.62, -12 - (#item.levels - i + 1) * 15, 0, 13),
-			Size = UDim2.fromOffset(11, 11),
+			AnchorPoint = Vector2.new(1, 0),
+			Position = UDim2.new(1, -14 - (#item.levels - i) * 16, 0, 16),
+			Size = UDim2.fromOffset(12, 12),
 			BackgroundColor3 = C.Dim,
 			ZIndex = 12,
 		}, row)
@@ -99,32 +108,32 @@ local function buildReformRow(item, order: number)
 		dots[i] = dot
 	end
 	local now = Style.label({
-		Position = UDim2.fromOffset(68, 34),
-		Size = UDim2.new(0.62, -80, 0, 24),
+		Position = UDim2.fromOffset(68, 38),
+		Size = UDim2.new(1, -80, 0, 22),
 		Text = "",
-		TextSize = 14,
+		TextSize = 15,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 12,
 	}, row)
 	local nextText = Style.label({
-		Position = UDim2.fromOffset(68, 60),
-		Size = UDim2.new(0.62, -80, 0, 30),
+		Position = UDim2.fromOffset(68, 62),
+		Size = UDim2.new(1, -80, 0, 34),
 		Text = "",
 		TextSize = 13,
 		TextColor3 = C.TextMuted,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
 		ZIndex = 12,
 	}, row)
 	local button = Style.button({
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -10, 0.5, 0),
-		Size = UDim2.new(0.36, 0, 0, 60),
+		AnchorPoint = Vector2.new(1, 1),
+		Position = UDim2.new(1, -10, 1, -10),
+		Size = UDim2.fromOffset(160, 46),
 		Text = "",
 		TextSize = 19,
 		TextWrapped = false,
 		ZIndex = 12,
 	}, row)
-	Style.make("UISizeConstraint", { MaxSize = Vector2.new(160, 60) }, button)
 	button.Activated:Connect(function()
 		local decor = lastState and lastState.decor
 		if not decor then
@@ -206,25 +215,25 @@ local function buildFurnitureRow(item, order: number)
 	Style.round(row, 18)
 	Style.stroke(row, C.Dim, 3)
 	Style.setIcon(Style.label({
-		Position = UDim2.fromOffset(8, 0),
-		Size = UDim2.fromOffset(64, 80),
+		Position = UDim2.fromOffset(6, 8),
+		Size = UDim2.fromOffset(58, 64),
 		Text = item.icon,
 		TextSize = 40,
 		TextWrapped = false,
 		ZIndex = 12,
 	}, row), "furn_" .. item.id, item.icon)
-	Style.label({
-		Position = UDim2.fromOffset(76, 12),
-		Size = UDim2.new(0.64, -96, 0, 30),
+	fitText(Style.label({
+		Position = UDim2.fromOffset(68, 12),
+		Size = UDim2.new(0.66, -86, 0, 30), -- ボタン（はば 34%・140まで）の となりまで
 		Text = t("furn." .. item.id),
-		TextSize = 19,
+		TextScaled = true, -- せまい画面では 小さくして 1行に収める
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextWrapped = false,
 		ZIndex = 12,
-	}, row)
+	}, row), 19)
 	local status = Style.label({
-		Position = UDim2.fromOffset(76, 44),
-		Size = UDim2.new(0.64, -96, 0, 24),
+		Position = UDim2.fromOffset(68, 44),
+		Size = UDim2.new(0.66, -86, 0, 24),
 		Text = "",
 		TextSize = 14,
 		TextColor3 = C.TextMuted,
@@ -402,15 +411,15 @@ function DecorUI.build(gui: ScreenGui, onClose: () -> ())
 			TextWrapped = false,
 			ZIndex = 12,
 		}, row), "decor_" .. item.id, item.icon)
-		Style.label({
+		fitText(Style.label({
 			Position = UDim2.fromOffset(72, 10),
-			Size = UDim2.new(0.66, -96, 0, 30),
+			Size = UDim2.new(0.66, -86, 0, 30),
 			Text = t("decor." .. item.id),
-			TextSize = 20,
+			TextScaled = true,
 			TextXAlignment = Enum.TextXAlignment.Left,
 			TextWrapped = false,
 			ZIndex = 12,
-		}, row)
+		}, row), 20)
 		local status = Style.label({
 			Position = UDim2.fromOffset(72, 44),
 			Size = UDim2.new(0.66, -96, 0, 24),
