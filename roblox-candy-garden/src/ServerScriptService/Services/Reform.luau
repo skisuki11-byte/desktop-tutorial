@@ -90,27 +90,27 @@ local function door(parent: Instance, pos: Vector3, color: Color3)
 	ball(parent, 0.25, pos + Vector3.new(0.55, 1.4, -0.2), C(255, 220, 120))
 end
 
--- 入口の上の名札「〇〇の ひみつきち」（自分だけの物だと ひと目で分かる）
-local function nameplate(parent: Instance, pos: Vector3, owner: string, width: number)
-	local board = box(parent, Vector3.new(width, 1.1, 0.25), pos, C(255, 248, 252))
-	local gui = Instance.new("SurfaceGui")
-	gui.Face = Enum.NormalId.Front
-	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-	gui.PixelsPerStud = 40
-	gui.LightInfluence = 0
-	gui.Parent = board
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.fromScale(1, 1)
-	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.FredokaOne
-	label.TextScaled = true
-	label.TextColor3 = C(200, 70, 130)
-	label.Text = owner
-	label.Parent = gui
-	local pad = Instance.new("UIPadding")
-	pad.PaddingTop = UDim.new(0.1, 0)
-	pad.PaddingBottom = UDim.new(0.1, 0)
-	pad.Parent = label
+-- 入口の上の かざり（リボン）。名前は 畑の名札にあるので、ここには出さない（名前を1か所にする）
+local function ribbon(parent: Instance, pos: Vector3)
+	local pink = C(255, 120, 175)
+	local function loop(x: number, tilt: number)
+		part(parent, {
+			Shape = Enum.PartType.Ball,
+			Size = Vector3.new(1.3, 0.9, 0.45),
+			CFrame = CFrame.new(pos + Vector3.new(x, 0.05, 0)) * CFrame.Angles(0, 0, tilt),
+			Color = pink,
+		})
+	end
+	loop(-0.75, math.rad(15))
+	loop(0.75, math.rad(-15))
+	for _, side in { -1, 1 } do -- たれている 2本
+		part(parent, {
+			Size = Vector3.new(0.35, 1, 0.2),
+			CFrame = CFrame.new(pos + Vector3.new(side * 0.35, -0.6, 0)) * CFrame.Angles(0, 0, math.rad(side * 20)),
+			Color = pink,
+		})
+	end
+	ball(parent, 0.6, pos, C(255, 200, 225)) -- まん中の むすびめ
 end
 
 -- ---- ひみつきちの形（足元の中心が原点。前（-Z）が庭のほう） ----
@@ -437,16 +437,15 @@ end
 -- ひみつきちの とびらの位置（前のかべ。段ごと）
 local DOOR_Z = { -3.2, -3.6, -3.7, -4.2, -4.3 }
 
-local function buildBase(plot, level: number, owner: string, ownerUserId: number, d, extra: Instance)
+local function buildBase(plot, level: number, ownerUserId: number, d, extra: Instance)
 	local build = BASE[math.min(level, #BASE)]
 	if not build then
 		return
 	end
 	local m = Instance.new("Model")
 	m.Name = "SecretBase"
-	local signY, signWidth, signZ = build(m)
-	-- 名札「〇〇の ひみつきち」
-	nameplate(m, Vector3.new(0, signY, signZ), owner, signWidth)
+	local signY, _, signZ = build(m)
+	ribbon(m, Vector3.new(0, signY, signZ - 0.1))
 	m.WorldPivot = CFrame.new()
 	local base = plot.model.PrimaryPart.CFrame * CFrame.new(0, -0.5, 0) * CFrame.new(BASE_SPOT)
 	-- 前（-Z）を庭の中へ向ける
@@ -498,7 +497,7 @@ function Reform.render(player: Player)
 	styleFloor(plot, Reform.level(d, "floor"))
 	local baseLevel = Reform.level(d, "base")
 	if baseLevel > 0 then
-		buildBase(plot, baseLevel, "🏠 " .. player.DisplayName, player.UserId, d, extra)
+		buildBase(plot, baseLevel, player.UserId, d, extra)
 	end
 	extra.Parent = plot.model
 end
