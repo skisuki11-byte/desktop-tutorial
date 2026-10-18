@@ -127,9 +127,10 @@ local function buyEgg(player: Player, eggId: any)
 	end
 
 	Pals.markDex(player, petId, false) -- 孵化の演出で見せるので、お知らせは出さない
+	-- 先に たまごの演出を始めてもらい、そのあとで 画面の数字などを送る（演出が待たされないように）
+	Remotes.EggResult:FireClient(player, petId, eggId)
 	Pals.refreshAttribute(player)
 	Data.push(player)
-	Remotes.EggResult:FireClient(player, petId, eggId)
 	Quests.progress(player, "egg", 1)
 	Data.saveSoon(player) -- 抽選結果は、すぐ(数秒以内に)保存する
 end

@@ -62,7 +62,17 @@ end
 function CatalogViewport.attach(label: GuiObject,key: string?,dim: boolean?,options): boolean
 	if not supported(key) then CatalogViewport.clear(label);return false end
 	local entry=entries[label]
-	if entry and entry.key==key then entry.dim=dim==true;silhouette(entry.viewport,dim==true);entry.options=options or entry.options;return true end
+	if entry and entry.key==key then
+		-- 同じ物を もう一度つけるときは、作り直さない（シルエットが変わったときだけ 光を変える）
+		if entry.dim~=(dim==true) then
+			entry.dim=dim==true;silhouette(entry.viewport,entry.dim)
+			-- シルエットから 色つきに変わったのに 色がまだ届いていなければ、作り直して 色を待つ
+			if not entry.dim and not entry.ready and entry.model then
+				Animator.release(entry.model);local world=entry.viewport:FindFirstChildOfClass("WorldModel");if world then world:Destroy() end;entry.model=nil;entry.viewport.Visible=false
+			end
+		end
+		entry.options=options or entry.options;return true
+	end
 	CatalogViewport.clear(label)
 	local view=Instance.new("ViewportFrame")
 	view.Name="Catalog3D";view.Size=UDim2.fromScale(1,1);view.BackgroundTransparency=1;view.ZIndex=label.ZIndex;view.Active=false
@@ -90,22 +100,43 @@ local function unload(entry)
 		Animator.release(entry.model)
 		local world = entry.viewport:FindFirstChildOfClass("WorldModel")
 		if world then world:Destroy() end
-		local loading = entry.viewport:FindFirstChild("Loading3D")
-		if loading then loading:Destroy() end
 		entry.model = nil
 	end
 end
-local function build(entry)
+-- 3Dの色（テクスチャ）が届くまでは 小窓をかくして、2Dの絵を出しておく。
+-- 届く前に見せると、色のない まっくろな形が一瞬 見えてしまうため
+local READY_TIMEOUT = 4
+local function reveal(entry,label,colored)
+	if entry.viewport.Parent==nil then return end
+	entry.ready=colored;entry.shownOnce=true;entry.viewport.Visible=true
+	local image=label:FindFirstChild("IconImage");if image then image.Visible=false end
+end
+local function build(entry,label)
 	local model=Models.build(entry.key)
 	if not model then return end
 	local world=Instance.new("WorldModel");world.Parent=entry.viewport;model.Parent=world
 	for _,o in model:GetDescendants() do if o:IsA("ParticleEmitter") or o:IsA("BillboardGui") then o:Destroy() end end
 	entry.model=model;fit(entry);Animator.prepare(model);silhouette(entry.viewport,entry.dim)
-	local loading=Instance.new("TextLabel");loading.Name="Loading3D";loading.BackgroundTransparency=1;loading.Size=UDim2.fromScale(1,1);loading.Text="3D…";loading.TextSize=12;loading.TextColor3=Color3.fromRGB(120,110,140);loading.ZIndex=entry.viewport.ZIndex+1;loading.Parent=entry.viewport
+	if entry.ready or entry.dim then reveal(entry,label,entry.ready==true);return end -- シルエットは色がいらないので すぐ出す
+	entry.viewport.Visible=false
+	local done=false
 	task.spawn(function()
-		local ok=pcall(function() ContentProvider:PreloadAsync({model}) end)
-		if entry.viewport.Parent then entry.viewport:SetAttribute("AssetsReady",ok);loading:Destroy() end
+		pcall(function() ContentProvider:PreloadAsync({model}) end)
+		if not done then done=true;reveal(entry,label,true) end
 	end)
+	task.delay(READY_TIMEOUT,function() if not done then done=true;reveal(entry,label,true) end end)
+end
+-- まだ画面に出ていない3Dの色を、先に読みこんでおく（たまごが割れる前など）
+function CatalogViewport.preload(keys: {string})
+	task.spawn(function()
+		local models={}
+		for _,key in keys do local model=supported(key) and Models.build(key);if model then table.insert(models,model) end end
+		pcall(function() ContentProvider:PreloadAsync(models) end)
+		for _,model in models do model:Destroy() end
+	end)
+end
+function CatalogViewport.isReady(label): boolean
+	local entry=entries[label];return entry~=nil and entry.shownOnce==true and entry.viewport.Visible
 end
 RunService.RenderStepped:Connect(function()
 	local now=os.clock();if now-lastTick<1/24 then return end;lastTick=now
@@ -125,7 +156,7 @@ RunService.RenderStepped:Connect(function()
 			if not entry.model then
 				if built < BUILD_PER_TICK then
 					built += 1
-					build(entry)
+					build(entry,label)
 				end
 			elseif entry.options.animate then
 				if entry.options.spin then entry.model:PivotTo(entry.base*CFrame.Angles(0,now*.25,0)) end

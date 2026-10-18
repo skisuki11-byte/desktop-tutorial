@@ -161,7 +161,7 @@ local function execute(session: Session)
 	for _, player in { a, b } do
 		Pals.refreshAttribute(player)
 		Data.push(player)
-		Data.save(player) -- 交換は、すぐに保存する
+		task.spawn(Data.save, player, true) -- 交換は、すぐに保存する（2人ぶん いっしょに）
 	end
 end
 

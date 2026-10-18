@@ -22,6 +22,18 @@ Style.onTap = function()
 end
 UI.init()
 Tutorial.init()
+-- ペットとたまごの3Dの色を、遊びはじめて少ししたら 先に読みこんでおく
+-- （たまごが割れたとき・ずかんを開いたときに、色のない まっくろな形が出ないように）
+task.delay(6, function()
+	local keys = {}
+	for _, pet in Config.Pets do
+		table.insert(keys, "pet_" .. pet.id)
+	end
+	for _, egg in Config.Eggs do
+		table.insert(keys, "egg_" .. egg.id)
+	end
+	require(script.CatalogViewport).preload(keys)
+end)
 PalRenderer.init()
 require(script.ToolRenderer).init()
 WeatherClient.init(UI)

@@ -62,7 +62,8 @@ local function renderTile(tile: BasePart, cropCfg, progress: number, variant: st
 	if v and v.scale then
 		scale *= v.scale
 	end
-	-- 大きさが変わったときだけ ScaleTo（毎秒の通信を減らす）
+	-- 大きさは 5%きざみにして、変わったときだけ ScaleTo（毎秒 全部の部品を送り直すと、みんなの通信が重くなる）
+	scale = math.floor(scale * 20 + 0.5) / 20
 	if created or math.abs(visual:GetScale() - scale) > 0.01 then
 		visual:ScaleTo(scale)
 	end

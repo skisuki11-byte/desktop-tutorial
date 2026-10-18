@@ -6,6 +6,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local I18n = require(ReplicatedStorage.Shared.I18n)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Style = require(script.Parent.Style)
+local CatalogViewport = require(script.Parent.CatalogViewport)
 
 local PalsUI = {}
 
@@ -505,6 +506,8 @@ function PalsUI.playHatch(petId: string, eggId: string?)
 	if not cfg then
 		return
 	end
+	-- たまごが揺れているあいだに、生まれるペットの色を読みこんでおく
+	CatalogViewport.preload({ "pet_" .. cfg.id })
 	for _, child in hatchOverlay:GetChildren() do
 		child:Destroy()
 	end

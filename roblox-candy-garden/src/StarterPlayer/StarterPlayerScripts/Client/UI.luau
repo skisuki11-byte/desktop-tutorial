@@ -408,14 +408,9 @@ local SEED_PHONE = 54 -- スマホの種カード（縮めない。指で押せ�
 local latestState = nil -- 配置が変わったときに、種カードを作り直すため
 local seedCount = 0
 
+local seedBarShape = nil -- いま並んでいる種カードの形（どの種があるか・どれを選んでいるか・画面の大きさ）
+
 local function refreshSeedBar(state)
-	for _, child in seedBar:GetChildren() do
-		if child:IsA("TextButton") then
-			child:Destroy()
-		end
-	end
-	seedCount = 0
-	local selectedButton = nil
 	-- 列の先頭に、道具（じょうろ・ひりょう）。選んだときだけ、畑に「水やり」「ひりょう」が出る
 	local cans = Config.Water.cans
 	local water = state.water
@@ -424,6 +419,39 @@ local function refreshSeedBar(state)
 		{ id = "fertilizer", icon = "🌟", count = "×" .. (state.fertilizer or 0) },
 		{ id = "drop", icon = "🔮", count = "×" .. (state.drops or 0) },
 	}
+	-- 並びが同じなら 作り直さず、数だけ変える（作り直すと 3Dの絵を毎回 作り直すことになり 重い）
+	local shape = { tostring(compact), tostring(state.tool), tostring(state.selected) }
+	for _, cropId in Config.CropOrder do
+		if (state.seeds[cropId] or 0) > 0 then
+			table.insert(shape, cropId)
+		end
+	end
+	local shapeKey = table.concat(shape, ",")
+	if shapeKey == seedBarShape then
+		for _, tool in tools do
+			local button = seedBar:FindFirstChild("Tool_" .. tool.id)
+			local count = button and button:FindFirstChild("Count")
+			if count then
+				count.Text = tool.count
+			end
+		end
+		for _, cropId in Config.CropOrder do
+			local button = seedBar:FindFirstChild(cropId)
+			local count = button and button:FindFirstChild("Count")
+			if count then
+				count.Text = "×" .. (state.seeds[cropId] or 0)
+			end
+		end
+		return
+	end
+	seedBarShape = shapeKey
+	for _, child in seedBar:GetChildren() do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+	seedCount = 0
+	local selectedButton = nil
 	for order, tool in tools do
 		seedCount += 1
 		local holding = state.tool == tool.id
@@ -448,6 +476,7 @@ local function refreshSeedBar(state)
 			TextWrapped = false,
 		}, button), "tool_" .. tool.id, tool.icon)
 		Style.label({
+			Name = "Count",
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.new(0.5, 0, 1, -2),
 			Size = UDim2.fromScale(1, 0.38),
@@ -486,6 +515,7 @@ local function refreshSeedBar(state)
 				TextWrapped = false,
 			}, button), "crop_" .. cropId, crop.icon)
 			Style.label({
+				Name = "Count",
 				AnchorPoint = Vector2.new(0.5, 1),
 				Position = UDim2.new(0.5, 0, 1, -2),
 				Size = UDim2.fromScale(1, 0.38),
@@ -750,6 +780,7 @@ local function applyLayout(mode: string)
 	Style.setScale(banner, if compact then 0.8 else 1)
 	Style.setScale(toastLabel, if compact then 0.8 else 1)
 	if latestState then
+		seedBarShape = nil -- 画面の形が変わったので、種カードを作り直す
 		refreshSeedBar(latestState)
 	end
 	UI.showPanel(UI.currentPanel)

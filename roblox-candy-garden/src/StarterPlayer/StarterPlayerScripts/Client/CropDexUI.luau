@@ -36,7 +36,7 @@ local function total(): number
 end
 
 local function refresh()
-	if not panel or not lastState then
+	if not panel or not lastState or not panel.Visible then
 		return
 	end
 	local dex = lastState.cropDex or {}

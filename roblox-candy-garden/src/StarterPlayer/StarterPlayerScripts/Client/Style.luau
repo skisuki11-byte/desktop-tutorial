@@ -399,12 +399,16 @@ end
 -- label = アイコン用の TextLabel（大きさ・位置はそのまま。絵はその枠いっぱいに、形をくずさず入れる）。
 -- dim = まだ会っていない物を、シルエット（黒いかげ）で出すとき
 function Style.setIcon(label: TextLabel, key: string?, fallback: string?, dim: boolean?)
+	local id = if key then Icons[key] else nil
 	if CatalogViewport.attach(label,key,dim) then
 		label.Text=""
-		local oldImage=label:FindFirstChild("IconImage");if oldImage then oldImage.Visible=false end
-		return
+		local oldImage=label:FindFirstChild("IconImage")
+		-- 3Dの色が届くまでは、2Dの絵を出しておく（届いたら 3Dの側で かくす）
+		if CatalogViewport.isReady(label) or not id then
+			if oldImage then oldImage.Visible=false end
+			return
+		end
 	end
-	local id = if key then Icons[key] else nil
 	local image = label:FindFirstChild("IconImage") :: ImageLabel?
 	if id then
 		label.Text = ""

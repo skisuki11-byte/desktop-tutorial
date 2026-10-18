@@ -111,6 +111,8 @@ function CatalogUI.setVisible(on) if panel then panel.Visible=on;if on then refr
 function CatalogUI.isVisible() return panel and panel.Visible or false end
 function CatalogUI.update(value)
  state=value or {}
+ -- 閉じているあいだは何もしない（開いたときに refresh で まとめて合わせる）
+ if not (panel and panel.Visible) then return end
  if selected then detailStatus.Text=status(selected);View.attach(detailView,selected.key,mystery(selected),{animate=true,spin=true}) end
  if scroll then for _,entry in Data.entries do local card=scroll:FindFirstChild("Entry_"..entry.key);if card then local preview=card:FindFirstChild("Preview");if preview then View.attach(preview,entry.key,mystery(entry)) end;local statusLabel=card:FindFirstChild("CollectionStatus");if statusLabel then statusLabel.Text=if entry.rarity then string.rep("★",entry.rarity).." · "..status(entry) else status(entry) end;local border=card:FindFirstChildOfClass("UIStroke");if border and entry.rarity then border.Transparency=if mystery(entry) then .65 else 0 end end end end
  -- 会えたペットは、名前も見せる

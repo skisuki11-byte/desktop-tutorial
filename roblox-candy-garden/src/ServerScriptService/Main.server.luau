@@ -143,7 +143,17 @@ for _, player in Players:GetPlayers() do
 end
 
 game:BindToClose(function()
+	-- サーバーが閉じるときは、全員ぶんを いっしょに保存する（1人ずつだと 時間切れになることがある）
+	local left = 0
 	for _, player in Players:GetPlayers() do
-		Data.save(player)
+		left += 1
+		task.spawn(function()
+			Data.save(player, true)
+			left -= 1
+		end)
+	end
+	local deadline = os.clock() + 25
+	while left > 0 and os.clock() < deadline do
+		task.wait(0.2)
 	end
 end)

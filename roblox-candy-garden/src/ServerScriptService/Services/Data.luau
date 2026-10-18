@@ -142,28 +142,41 @@ function Data.get(player: Player)
 	return profile and profile.data
 end
 
-function Data.save(player: Player)
+-- 同じ人のデータは、Robloxのきまりで 6秒に1回までしか書けない。
+-- それより早く頼まれたら、少しあとに まとめて1回だけ書く（書きこみが詰まって 遅くなるのを防ぐ）
+local MIN_SAVE_GAP = 7
+local savePending: { [Player]: boolean } = {}
+
+function Data.save(player: Player, force: boolean?)
 	local profile = profiles[player]
 	if not profile or not profile.canSave or not store then
 		return
 	end
+	if not force and (profile.saving or os.clock() - (profile.lastSaved or 0) < MIN_SAVE_GAP) then
+		Data.saveSoon(player)
+		return
+	end
+	profile.saving = true
+	profile.lastSaved = os.clock()
 	profile.data.lastSeen = os.time()
 	local ok, err = pcall(function()
 		store:SetAsync(key(player), profile.data)
 	end)
+	profile.saving = false
 	if not ok then
 		warn("[Data] save failed: " .. tostring(err))
 	end
 end
 
--- 連続した操作（買い物など）は、数秒おきにまとめて保存する。DataStoreの回数制限を守るため。
-local savePending: { [Player]: boolean } = {}
+-- 連続した操作（買い物など）は、少しあとに まとめて保存する。DataStoreの回数制限を守るため。
 function Data.saveSoon(player: Player)
 	if savePending[player] then
 		return
 	end
 	savePending[player] = true
-	task.delay(4, function()
+	local profile = profiles[player]
+	local wait = math.max(4, MIN_SAVE_GAP - (os.clock() - (profile and profile.lastSaved or 0)))
+	task.delay(wait, function()
 		savePending[player] = nil
 		if profiles[player] then
 			Data.save(player)
@@ -172,7 +185,7 @@ function Data.saveSoon(player: Player)
 end
 
 function Data.release(player: Player)
-	Data.save(player)
+	Data.save(player, true)
 	profiles[player] = nil
 end
 
@@ -249,8 +262,25 @@ function Data.addStateExtender(fn: (Player) -> { [string]: any })
 	table.insert(stateExtenders, fn)
 end
 
+-- 同じ瞬間に何回 push されても、送るのは1回だけにする（全部の状態を毎回送ると、通信も画面の作り直しも重い）
+local pushPending: { [Player]: boolean } = {}
+local sendState
+
 function Data.push(player: Player)
 	player:SetAttribute("HeldGardenTool", Data.tool(player) or "")
+	if pushPending[player] then
+		return
+	end
+	pushPending[player] = true
+	task.defer(function()
+		pushPending[player] = nil
+		if player.Parent then
+			sendState(player)
+		end
+	end)
+end
+
+sendState = function(player: Player)
 	local profile = profiles[player]
 	if not profile then
 		return
@@ -301,7 +331,11 @@ function Data.startAutoSave()
 		while true do
 			task.wait(Config.AutoSaveSeconds)
 			for _, player in Players:GetPlayers() do
-				Data.save(player)
+				-- 少し前に保存したばかりの人は とばす（むだな書きこみを減らす）
+				local profile = profiles[player]
+				if profile and os.clock() - (profile.lastSaved or 0) >= Config.AutoSaveSeconds / 2 then
+					task.spawn(Data.save, player)
+				end
 			end
 		end
 	end)
