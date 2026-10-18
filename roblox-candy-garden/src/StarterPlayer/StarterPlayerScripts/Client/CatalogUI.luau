@@ -9,7 +9,7 @@ local category="all"
 local state={}
 local selected=nil
 local compactCards=false
-local labels={all={"ぜんぶ","All"},pet={"ペット","Pets"},egg={"たまご","Eggs"},crop={"さくもつ","Crops"},variant={"すがた","Variants"},tool={"どうぐ","Tools"},cos={"おしゃれ","Style"},decor={"かざり","Decor"},fairy={"ルル","Lulu"},weather={"おてんき","Weather"},place={"ばしょ","Places"},ui={"ごほうび","Rewards"}}
+local labels={all={"ぜんぶ","All"},pet={"ペット","Pets"},egg={"たまご","Eggs"},crop={"さくもつ","Crops"},variant={"すがた","Variants"},tool={"どうぐ","Tools"},cos={"おしゃれ","Style"},decor={"かざり","Decor"},furn={"かぐ","Furniture"},fairy={"ルル","Lulu"},weather={"おてんき","Weather"},place={"ばしょ","Places"},ui={"ごほうび","Rewards"}}
 local function ja() return I18n.language()=="ja" end
 local function tr(a,b) return if ja() then a else b end
 local function owned(entry)
@@ -19,10 +19,11 @@ local function owned(entry)
 	if entry.category=="crop" then local d=state.cropDex and state.cropDex[id];return d and next(d)~=nil end
 	if entry.category=="cos" then return state.cosmetics and state.cosmetics.owned and state.cosmetics.owned[id]==true end
 	if entry.category=="decor" then return state.decor and state.decor.owned and state.decor.owned[id]==true end
+	if entry.category=="furn" then return state.room and state.room.owned and state.room.owned[id]==true end
 	return nil
 end
 local function mystery(entry)
-	return (entry.category=="variant" or entry.category=="pet" or entry.category=="crop" or entry.category=="cos" or entry.category=="decor") and owned(entry)~=true
+	return (entry.category=="variant" or entry.category=="pet" or entry.category=="crop" or entry.category=="cos" or entry.category=="decor" or entry.category=="furn") and owned(entry)~=true
 end
 -- まだ会っていないペットは、名前も「？？？」（シルエットと同じく、出るまでの楽しみ）
 local function displayName(entry)
@@ -73,7 +74,7 @@ function CatalogUI.build(gui,onClose)
 	grid=Style.make("UIGridLayout",{CellSize=UDim2.new(.3333,-13,0,194),CellPadding=UDim2.fromOffset(12,12),SortOrder=Enum.SortOrder.LayoutOrder},scroll)
 	local tabs=Style.make("ScrollingFrame",{Name="Categories",Position=UDim2.fromOffset(14,80),Size=UDim2.new(1,-28,0,42),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.X,ScrollingDirection=Enum.ScrollingDirection.X,ScrollBarThickness=3,BackgroundTransparency=1,BorderSizePixel=0,ZIndex=12},panel)
 	Style.make("UIListLayout",{FillDirection=Enum.FillDirection.Horizontal,Padding=UDim.new(0,8),SortOrder=Enum.SortOrder.LayoutOrder},tabs)
-	for order,key in {"all","pet","egg","crop","cos","decor","tool","variant","fairy","weather","place","ui"} do
+	for order,key in {"all","pet","egg","crop","cos","decor","furn","tool","variant","fairy","weather","place","ui"} do
 		local b=Style.button({Name="Category_"..key,LayoutOrder=order,Size=UDim2.fromOffset(84,35),Text=labels[key][if ja() then 1 else 2],TextSize=13,ZIndex=12},tabs)
 		b.Activated:Connect(function() category=key;detail.Visible=false;scroll.Visible=true;scroll.CanvasPosition=Vector2.zero;refresh() end)
 	end
