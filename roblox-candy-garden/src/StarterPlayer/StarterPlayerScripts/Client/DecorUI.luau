@@ -18,6 +18,8 @@ local RANK_ICONS = Config.DecorRank.icons
 
 local panel, scroll, rankLabel, nextRankLabel
 local reformRows = {} -- [id] = { now, next, dots, button }
+local furnRows = {} -- [id] = { button, status }
+local roomHint
 local confirming = {} -- [id] = 2回目を待っている時刻（高い買い物）
 local rows = {} -- [id] = { button, status }
 local lastState = nil
@@ -137,6 +139,7 @@ local function buildReformRow(item, order: number)
 			local token = os.clock()
 			confirming[item.id] = token
 			refreshReform(decor)
+	refreshRoom()
 			task.delay(3, function()
 				if confirming[item.id] == token then
 					confirming[item.id] = nil
@@ -153,6 +156,113 @@ local function buildReformRow(item, order: number)
 	reformRows[item.id] = { now = now, next = nextText, dots = dots, button = button }
 end
 
+-- ---- ひみつきちの へや（家具） ----
+local function refreshRoom()
+	local room = lastState and lastState.room
+	if not room then
+		return
+	end
+	local placed, count = {}, 0
+	for _, id in room.slots or {} do
+		if id ~= "" then
+			placed[id] = true
+			count += 1
+		end
+	end
+	local capacity = room.capacity or 0
+	roomHint.Text = if capacity > 0
+		then t("ui.roomCount", count, capacity) .. "  ・ " .. t("ui.roomHint")
+		else t("ui.roomNeedBase")
+	for id, row in furnRows do
+		local item = Config.FurnitureById[id]
+		if placed[id] then
+			row.button.Text = t("ui.decorTakeOff")
+			row.button.BackgroundColor3 = C.Surface
+			row.button.TextColor3 = C.Text
+			row.status.Text = "✅ " .. t("ui.decorPlaced")
+		elseif room.owned and room.owned[id] then
+			row.button.Text = t("ui.decorPut")
+			row.button.BackgroundColor3 = C.Mint
+			row.button.TextColor3 = C.Text
+			row.status.Text = ""
+		else
+			local enough = (lastState.coins or 0) >= item.price
+			row.button.Text = "🟡 " .. Style.formatNumber(item.price)
+			row.button.BackgroundColor3 = if enough then C.Accent else C.Dim
+			row.button.TextColor3 = if enough then Color3.fromRGB(255, 255, 255) else C.TextMuted
+			row.status.Text = ""
+		end
+	end
+end
+
+local function buildFurnitureRow(item, order: number)
+	local row = Style.make("Frame", {
+		Name = "Furn_" .. item.id,
+		LayoutOrder = order,
+		Size = UDim2.new(1, -10, 0, 80),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		ZIndex = 11,
+	}, scroll)
+	Style.round(row, 18)
+	Style.stroke(row, C.Dim, 3)
+	Style.setIcon(Style.label({
+		Position = UDim2.fromOffset(8, 0),
+		Size = UDim2.fromOffset(64, 80),
+		Text = item.icon,
+		TextSize = 40,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, row), "furn_" .. item.id, item.icon)
+	Style.label({
+		Position = UDim2.fromOffset(76, 12),
+		Size = UDim2.new(0.64, -96, 0, 30),
+		Text = t("furn." .. item.id),
+		TextSize = 19,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, row)
+	local status = Style.label({
+		Position = UDim2.fromOffset(76, 44),
+		Size = UDim2.new(0.64, -96, 0, 24),
+		Text = "",
+		TextSize = 14,
+		TextColor3 = C.TextMuted,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, row)
+	local button = Style.button({
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -10, 0.5, 0),
+		Size = UDim2.new(0.34, 0, 0, 58),
+		Text = "",
+		TextSize = 20,
+		TextWrapped = false,
+		ZIndex = 12,
+	}, row)
+	Style.make("UISizeConstraint", { MaxSize = Vector2.new(140, 58) }, button)
+	button.Activated:Connect(function()
+		local room = lastState and lastState.room
+		if not room then
+			return
+		end
+		local placed = false
+		for _, id in room.slots or {} do
+			if id == item.id then
+				placed = true
+			end
+		end
+		if placed then
+			Remotes.RemoveFurniture:FireServer(item.id)
+		elseif room.owned and room.owned[item.id] then
+			Remotes.PlaceFurniture:FireServer(item.id)
+		else
+			Remotes.BuyFurniture:FireServer(item.id)
+		end
+	end)
+	furnRows[item.id] = { button = button, status = status }
+end
+
 local function refresh()
 	if not panel or not lastState or not lastState.decor then
 		return
@@ -164,6 +274,7 @@ local function refresh()
 		then t("ui.decorNextRank", RANK_ICONS[decor.rank + 1], nextNeed - (decor.points or 0))
 		else t("ui.decorTopRank")
 	refreshReform(decor)
+	refreshRoom()
 	local placed = {}
 	for _, id in decor.slots or {} do
 		if id ~= "" then
@@ -232,9 +343,32 @@ function DecorUI.build(gui: ScreenGui, onClose: () -> ())
 	for order, item in Config.Reform do
 		buildReformRow(item, 3 + order)
 	end
+	-- ひみつきちの へや（家具）
+	Style.label({
+		LayoutOrder = 100,
+		Size = UDim2.new(1, -10, 0, 30),
+		Text = t("ui.roomTitle"),
+		TextSize = 20,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, scroll)
+	roomHint = Style.label({
+		LayoutOrder = 101,
+		Size = UDim2.new(1, -10, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Text = "",
+		TextSize = 14,
+		TextColor3 = C.TextMuted,
+		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, scroll)
+	for order, item in Config.Furniture do
+		buildFurnitureRow(item, 110 + order)
+	end
 	-- かざり
 	Style.label({
-		LayoutOrder = 8,
+		LayoutOrder = 200,
 		Size = UDim2.new(1, -10, 0, 30),
 		Text = t("ui.decorItemsTitle"),
 		TextSize = 20,
@@ -242,7 +376,7 @@ function DecorUI.build(gui: ScreenGui, onClose: () -> ())
 		ZIndex = 12,
 	}, scroll)
 	Style.label({
-		LayoutOrder = 9,
+		LayoutOrder = 201,
 		Size = UDim2.new(1, -10, 0, 22),
 		Text = t("ui.decorHint"),
 		TextSize = 14,
@@ -253,7 +387,7 @@ function DecorUI.build(gui: ScreenGui, onClose: () -> ())
 	for order, item in Config.Decor do
 		local row = Style.make("Frame", {
 			Name = item.id,
-			LayoutOrder = 10 + order,
+			LayoutOrder = 210 + order,
 			Size = UDim2.new(1, -10, 0, 80),
 			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 			ZIndex = 11,

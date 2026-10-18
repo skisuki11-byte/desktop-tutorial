@@ -60,6 +60,33 @@ Config.ReformById = {}
 for _, item in Config.Reform do
 	Config.ReformById[item.id] = item
 end
+-- ひみつきちの へや: 入口から中に入れる。家具を「決まった置き場所」に置く（自由に置くより、小さい子が迷わない）。
+-- 参考: Adopt Me!（家の中を飾って友だちを呼ぶ）/ あつまれ どうぶつの森（家具を集めて部屋を作る）。
+-- 置き場所の数は ひみつきちの段で増える（テント4 → パレス12）
+Config.RoomSlots = { 4, 6, 8, 10, 12 }
+-- 家具。安い物（すぐ買える）から、長く目標にする物まで（全部で約25万）
+Config.Furniture = {
+	{ id = "flowerpot", icon = "🌷", price = 1000 },
+	{ id = "candyrug", icon = "🍬", price = 1500 },
+	{ id = "caketable", icon = "🍰", price = 2000 },
+	{ id = "lollichair", icon = "🍭", price = 2500 },
+	{ id = "gummybed", icon = "🛏️", price = 3000 },
+	{ id = "starlamp", icon = "⭐", price = 4000 },
+	{ id = "cottonsofa", icon = "☁️", price = 5000 },
+	{ id = "donutshelf", icon = "🍩", price = 6000 },
+	{ id = "teddypile", icon = "🧸", price = 8000 },
+	{ id = "cupcaketv", icon = "📺", price = 12000 },
+	{ id = "chocofridge", icon = "🍫", price = 15000 },
+	{ id = "jellypiano", icon = "🎹", price = 25000 },
+	{ id = "bubblebath", icon = "🛁", price = 30000 },
+	{ id = "rainbowslide", icon = "🌈", price = 50000 },
+	{ id = "moonbed", icon = "🌙", price = 80000 },
+}
+Config.FurnitureById = {}
+for _, item in Config.Furniture do
+	Config.FurnitureById[item.id] = item
+end
+
 -- 高い買い物は2回押して決める（小さい子の押しまちがい防止）
 Config.ReformConfirmAt = 50000
 

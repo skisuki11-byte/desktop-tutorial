@@ -5,6 +5,7 @@ local Crops=require(Shared.CropVisuals)
 local Cosmetics=require(Shared.CosmeticVisuals)
 local Decor=require(Shared.DecorVisuals)
 local Misc=require(Shared.MiscVisuals)
+local Furniture=require(Shared.FurnitureVisuals)
 local CatalogModels={}
 
 function CatalogModels.build(key: string): Model?
@@ -17,6 +18,7 @@ function CatalogModels.build(key: string): Model?
 	elseif group=="variant" then model=Crops.build("gummyberry");if id~="normal" then Crops.setVariant(model,id) end
 	elseif group=="cos" then model=Cosmetics.build(id) or Misc.build(key)
 	elseif group=="decor" then model=Decor.build(id)
+	elseif group=="furn" then model=Furniture.build(id)
 	else model=Misc.build(key) end
 	if model then
 		model.Name=key

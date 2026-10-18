@@ -12,6 +12,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Data = require(script.Parent.Data)
 local World = require(script.Parent.World)
 local RateLimit = require(script.Parent.RateLimit)
+local Room = require(script.Parent.Room)
 
 local Reform = {}
 Reform.onChanged = nil :: ((Player) -> ())? -- 段が上がったとき（名札のランクを直す。Decor がつなぐ）
@@ -433,7 +434,10 @@ local function styleSign(plot, level: number, extra: Instance)
 	end
 end
 
-local function buildBase(plot, level: number, owner: string, extra: Instance)
+-- ひみつきちの とびらの位置（前のかべ。段ごと）
+local DOOR_Z = { -3.2, -3.6, -3.7, -4.2, -4.3 }
+
+local function buildBase(plot, level: number, owner: string, d, extra: Instance)
 	local build = BASE[math.min(level, #BASE)]
 	if not build then
 		return
@@ -447,8 +451,15 @@ local function buildBase(plot, level: number, owner: string, extra: Instance)
 	local base = plot.model.PrimaryPart.CFrame * CFrame.new(0, -0.5, 0) * CFrame.new(BASE_SPOT)
 	-- 前（-Z）を庭の中へ向ける
 	local center = plot.model.PrimaryPart.Position
-	m:PivotTo(CFrame.lookAt(base.Position, Vector3.new(center.X, base.Position.Y, center.Z)))
+	local pivot = CFrame.lookAt(base.Position, Vector3.new(center.X, base.Position.Y, center.Z))
+	m:PivotTo(pivot)
 	m.Parent = extra
+	-- 中に入れる（とびらの前で「はいる」）
+	local doorZ = DOOR_Z[math.min(level, #DOOR_Z)]
+	local entrance = part(m, { Name = "Entrance", Size = Vector3.new(3, 3, 0.5), CFrame = pivot * CFrame.new(0, 1.5, doorZ - 0.4), Transparency = 1 })
+	local outside = pivot * CFrame.new(0, 3, doorZ - 4) -- 出たら、とびらの前で 庭のほうを向く
+	local room = Room.build(plot, level, d, extra, outside)
+	Room.addEntrance(entrance, room)
 end
 
 -- ---- 公開する関数 ----
@@ -473,6 +484,10 @@ function Reform.render(player: Player)
 		return
 	end
 	local old = plot.model:FindFirstChild("Reform")
+	-- ひみつきちが なくなるときは、中にいる人を先に外へ
+	if old and Reform.level(d, "base") <= 0 then
+		Room.evacuate(plot)
+	end
 	if old then
 		old:Destroy()
 	end
@@ -483,7 +498,7 @@ function Reform.render(player: Player)
 	styleFloor(plot, Reform.level(d, "floor"))
 	local baseLevel = Reform.level(d, "base")
 	if baseLevel > 0 then
-		buildBase(plot, baseLevel, "🏠 " .. player.DisplayName, extra)
+		buildBase(plot, baseLevel, "🏠 " .. player.DisplayName, d, extra)
 	end
 	extra.Parent = plot.model
 end
@@ -494,6 +509,7 @@ function Reform.clear(player: Player)
 	if not plot then
 		return
 	end
+	Room.evacuate(plot) -- へやにいる人を 落とさないように、先に外へ
 	local old = plot.model:FindFirstChild("Reform")
 	if old then
 		old:Destroy()
@@ -545,6 +561,7 @@ end
 
 function Reform.init()
 	Remotes.BuyReform.OnServerEvent:Connect(buy)
+	Room.init()
 	-- Studioでの確認用（本番では動かない）: workspace の属性 DebugReform に "fence=4,sign=4,floor=4,base=5" のように入れると、その段にする
 	if RunService:IsStudio() then
 		workspace:GetAttributeChangedSignal("DebugReform"):Connect(function()

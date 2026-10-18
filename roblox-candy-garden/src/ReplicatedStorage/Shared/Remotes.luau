@@ -40,6 +40,9 @@ local NAMES = {
 	"ExpandPlot",
 	"BuyDecor",
 	"BuyReform",
+	"BuyFurniture",
+	"PlaceFurniture",
+	"RemoveFurniture",
 	"PlaceDecor",
 	"RemoveDecor",
 }

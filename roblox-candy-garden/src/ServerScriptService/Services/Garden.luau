@@ -619,8 +619,8 @@ local function petHelp(player: Player)
 	end
 	local near = false
 	for _, tile in plot.tiles do
-		local offset = tile.Position - root.Position
-		if Vector3.new(offset.X, 0, offset.Z).Magnitude <= PET_HELP_REACH then
+		-- 高さも見る（ひみつきちの へやは 庭の真上の空にあるので、へやにいるときは 手伝わない）
+		if (tile.Position - root.Position).Magnitude <= PET_HELP_REACH then
 			near = true
 			break
 		end

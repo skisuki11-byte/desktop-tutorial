@@ -74,6 +74,8 @@ local function newData()
 		decor = { owned = {}, slots = { "", "", "", "", "", "" } },
 		-- おにわリフォーム: いまの段（Config.Reform）。ひみつきちは 0＝まだない
 		reform = { fence = 1, sign = 1, floor = 1, base = 0 },
+		-- ひみつきちの へや: owned=持っている家具 [id]=true / slots=置き場所ごとの家具（空きは ""）
+		room = { owned = {}, slots = {} },
 		dex = {}, -- ペット図鑑: 見つけたペット [petId] = true
 		dexClaimed = 0, -- 受け取った図鑑のごほうびの数（Config.Dex.rewards の何番目まで）
 		-- なかよしレベル: [tostring(userId)] = { name, pts, lv, day, together, helped }（together・helped は その日にたまった数）
@@ -305,6 +307,7 @@ sendState = function(player: Player)
 		friends = extra.friends,
 		promise = extra.promise,
 		decor = extra.decor,
+		room = extra.room,
 		seedShop = extra.seedShop,
 		pets = d.pets,
 		equipped = d.equipped,

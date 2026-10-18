@@ -54,6 +54,11 @@ end
 
 -- ボタンの左の絵。（絵文字, イラストの名前）を返す。イラストは軽い 2D の絵（Shared.Icons）を使う
 local function iconFor(prompt: ProximityPrompt): (string, string?)
+	-- ひみつきちの出入りなど、プロンプトが自分の絵を持っているとき
+	local own = prompt:GetAttribute("Icon")
+	if type(own) == "string" then
+		return own, nil
+	end
 	if isShop(prompt) then
 		local shop = prompt.Parent and prompt.Parent.Parent
 		local name = shop and shop.Name
@@ -301,6 +306,11 @@ function PromptUI.init(ui)
 				return
 			end
 			prompt.ActionText = t("prompt.water")
+		end
+		-- 文字を その人の言葉にする（ひみつきちの「はいる」「でる」など）
+		local key = prompt:GetAttribute("I18n")
+		if type(key) == "string" then
+			prompt.ActionText = t(key)
 		end
 		if prompt.Style == Enum.ProximityPromptStyle.Custom then
 			show(prompt)
