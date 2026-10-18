@@ -11,21 +11,26 @@
 
 ## 説明文（案）
 
+最初の2行で「何をするゲームか」が分かるようにする（Grow a Garden・Adopt Me! と同じ）。新しい遊びは上の方に。
+（2026-10-18 更新: 3Dペット・なかよしレベル・やくそくの種・ずかん を追加）
+
 **日本語**
-> 🍬 お菓子の庭で、みんなでいっしょに育てよう！
-> 種を植えて → 育てて → 収穫して → 売って、庭を大きくしよう。
-> ・🐾 かわいいペットが、いっしょについてくる
+> 🍬 お菓子の庭で、ペットといっしょに育てよう！
+> 種を植えて → 水をあげて → 収穫して → 売って、庭をかわいく大きくしよう。
+> ・🐾 たまごから生まれる 8しゅるいのペット（ゆめいろフェニックスは とってもレア）
+> ・🤝 友だちと遊ぶと「なかよしレベル」が上がる。2人で水をあげる「やくそくの花」も
+> ・📖 ペットずかん・さくもつずかん。天気で「きんいろ」「にじいろ」の作物が出るかも
 > ・🌳 サーバーのみんなで「みんなの木」を育てると、全員にごほうび
-> ・🌙 寝る前に植えると、あしたの朝に実るムーンキャンディ
 > ・🎁 毎日のボーナス、きょうのおねがい、日替わりショップ
 > うばいあいは無し。だれかの庭をあらすことはできないよ。
 
 **English**
-> 🍬 Grow a candy garden together!
-> Plant → grow → harvest → sell, and make your garden bigger.
-> • 🐾 Cute pals follow you around
+> 🍬 Grow a candy garden with your cute pets!
+> Plant → water → harvest → sell, and make your garden bigger and cuter.
+> • 🐾 8 pets hatch from eggs (the Dream Phoenix is super rare)
+> • 🤝 Play with friends to raise your Friendship Level — and grow a Promise Flower together
+> • 📖 Pet Book & Crop Book. Weather can turn crops Golden or Rainbow
 > • 🌳 Grow the Community Tree with everyone on the server — everybody gets a reward
-> • 🌙 Plant Moon Candy before bed, harvest it tomorrow
 > • 🎁 Daily bonus, daily wishes, and a daily shop
 > No stealing — nobody can mess with your garden.
 

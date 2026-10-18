@@ -78,21 +78,54 @@ end
 function CatalogViewport.setSpin(label,on)
 	local entry=entries[label];if entry then entry.options.spin=on end
 end
+-- 軽くするための きまり（古いスマホでも 重くならないように）
+--   ・1回に作る3Dは 3つまで（たくさん並ぶ画面を開いても、少しずつ出る）
+--   ・しばらく見えていない3Dは 片づける（また見えたら 作り直す）
+--   ・見えているかの確認は 1秒に6回。動かすもの（animate）だけ 1秒に24回
+local BUILD_PER_TICK = 3
+local UNLOAD_AFTER = 15
+local lastScan = 0
+local function unload(entry)
+	if entry.model then
+		Animator.release(entry.model)
+		local world = entry.viewport:FindFirstChildOfClass("WorldModel")
+		if world then world:Destroy() end
+		local loading = entry.viewport:FindFirstChild("Loading3D")
+		if loading then loading:Destroy() end
+		entry.model = nil
+	end
+end
+local function build(entry)
+	local model=Models.build(entry.key)
+	if not model then return end
+	local world=Instance.new("WorldModel");world.Parent=entry.viewport;model.Parent=world
+	for _,o in model:GetDescendants() do if o:IsA("ParticleEmitter") or o:IsA("BillboardGui") then o:Destroy() end end
+	entry.model=model;fit(entry);Animator.prepare(model);silhouette(entry.viewport,entry.dim)
+	local loading=Instance.new("TextLabel");loading.Name="Loading3D";loading.BackgroundTransparency=1;loading.Size=UDim2.fromScale(1,1);loading.Text="3D…";loading.TextSize=12;loading.TextColor3=Color3.fromRGB(120,110,140);loading.ZIndex=entry.viewport.ZIndex+1;loading.Parent=entry.viewport
+	task.spawn(function()
+		local ok=pcall(function() ContentProvider:PreloadAsync({model}) end)
+		if entry.viewport.Parent then entry.viewport:SetAttribute("AssetsReady",ok);loading:Destroy() end
+	end)
+end
 RunService.RenderStepped:Connect(function()
 	local now=os.clock();if now-lastTick<1/24 then return end;lastTick=now
+	local scan = now - lastScan >= 1/6
+	if scan then lastScan = now end
+	local built = 0
 	for label,entry in entries do
-		if label.Parent and visible(label) then
+		if scan then
+			entry.shown = label.Parent ~= nil and visible(label)
+			if entry.shown then
+				entry.lastSeen = now
+			elseif entry.model and now - (entry.lastSeen or now) > UNLOAD_AFTER then
+				unload(entry)
+			end
+		end
+		if entry.shown then
 			if not entry.model then
-				local model=Models.build(entry.key)
-				if model then
-					local world=Instance.new("WorldModel");world.Parent=entry.viewport;model.Parent=world
-					for _,o in model:GetDescendants() do if o:IsA("ParticleEmitter") or o:IsA("BillboardGui") then o:Destroy() end end
-					entry.model=model;fit(entry);Animator.prepare(model);silhouette(entry.viewport,entry.dim)
- local loading=Instance.new("TextLabel");loading.Name="Loading3D";loading.BackgroundTransparency=1;loading.Size=UDim2.fromScale(1,1);loading.Text="3D…";loading.TextSize=12;loading.TextColor3=Color3.fromRGB(120,110,140);loading.ZIndex=entry.viewport.ZIndex+1;loading.Parent=entry.viewport
- task.spawn(function()
-  local ok=pcall(function() ContentProvider:PreloadAsync({model}) end)
-  if entry.viewport.Parent then entry.viewport:SetAttribute("AssetsReady",ok);loading:Destroy() end
- end)
+				if built < BUILD_PER_TICK then
+					built += 1
+					build(entry)
 				end
 			elseif entry.options.animate then
 				if entry.options.spin then entry.model:PivotTo(entry.base*CFrame.Angles(0,now*.25,0)) end
