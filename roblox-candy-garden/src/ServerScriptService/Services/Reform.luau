@@ -437,7 +437,7 @@ end
 -- ひみつきちの とびらの位置（前のかべ。段ごと）
 local DOOR_Z = { -3.2, -3.6, -3.7, -4.2, -4.3 }
 
-local function buildBase(plot, level: number, owner: string, d, extra: Instance)
+local function buildBase(plot, level: number, owner: string, ownerUserId: number, d, extra: Instance)
 	local build = BASE[math.min(level, #BASE)]
 	if not build then
 		return
@@ -459,7 +459,7 @@ local function buildBase(plot, level: number, owner: string, d, extra: Instance)
 	local entrance = part(m, { Name = "Entrance", Size = Vector3.new(3, 3, 0.5), CFrame = pivot * CFrame.new(0, 1.5, doorZ - 0.4), Transparency = 1 })
 	local outside = pivot * CFrame.new(0, 3, doorZ - 4) -- 出たら、とびらの前で 庭のほうを向く
 	local room = Room.build(plot, level, d, extra, outside)
-	Room.addEntrance(entrance, room)
+	Room.addEntrance(entrance, room, ownerUserId)
 end
 
 -- ---- 公開する関数 ----
@@ -498,7 +498,7 @@ function Reform.render(player: Player)
 	styleFloor(plot, Reform.level(d, "floor"))
 	local baseLevel = Reform.level(d, "base")
 	if baseLevel > 0 then
-		buildBase(plot, baseLevel, "🏠 " .. player.DisplayName, d, extra)
+		buildBase(plot, baseLevel, "🏠 " .. player.DisplayName, player.UserId, d, extra)
 	end
 	extra.Parent = plot.model
 end

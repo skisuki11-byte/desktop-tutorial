@@ -307,6 +307,12 @@ function PromptUI.init(ui)
 			end
 			prompt.ActionText = t("prompt.water")
 		end
+		-- ひみつきちの「はいる」は 持ち主にだけ出す（ほかの人の へやには入れない）
+		if prompt.Name == "RoomPrompt" and prompt:GetAttribute("OwnerUserId") ~= nil
+			and prompt:GetAttribute("OwnerUserId") ~= Players.LocalPlayer.UserId then
+			prompt.Enabled = false
+			return
+		end
 		-- 文字を その人の言葉にする（ひみつきちの「はいる」「でる」など）
 		local key = prompt:GetAttribute("I18n")
 		if type(key) == "string" then

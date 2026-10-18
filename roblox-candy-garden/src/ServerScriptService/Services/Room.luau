@@ -1,4 +1,5 @@
--- ひみつきちの へや。入口で「はいる」を押すと、庭の上空にある その人のへやにワープする（友だちも入れる）。
+-- ひみつきちの へや。入口で「はいる」を押すと、庭の上空にある その人のへやにワープする。
+-- 入れるのは 持ち主だけ（友だちを呼んだり、ほかの人の へやに入ったりは できない。自分だけの へや）。
 -- 家具（Config.Furniture）は「決まった置き場所」に置く。置き場所の数は ひみつきちの段で増える（Config.RoomSlots）。
 -- へやは「がんばったごほうびを飾る場所」。畑の遊びが中心で、へやは見せ合う楽しみ。
 -- 参考: Adopt Me!（家の中を飾って友だちを呼ぶ）/ あつまれ どうぶつの森（家具を集めて部屋を作る）
@@ -212,9 +213,14 @@ function Room.build(plot, level: number, d, parent: Instance, outside: CFrame)
 end
 
 -- ひみつきちの入口に「はいる」をつける（Reform から呼ぶ）
-function Room.addEntrance(entrance: BasePart, room: Model)
-	prompt(entrance, "prompt.enter", "🏠", "はいる").Triggered:Connect(function(player)
-		enter(player, room)
+function Room.addEntrance(entrance: BasePart, room: Model, ownerUserId: number)
+	local p = prompt(entrance, "prompt.enter", "🏠", "はいる")
+	-- 持ち主にだけ ボタンを出す（ほかの人の画面では出さない。サーバーでも 持ち主か確かめる）
+	p:SetAttribute("OwnerUserId", ownerUserId)
+	p.Triggered:Connect(function(player)
+		if player.UserId == ownerUserId then
+			enter(player, room)
+		end
 	end)
 end
 
