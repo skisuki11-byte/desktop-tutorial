@@ -92,7 +92,15 @@ local function buyProduct(player: Player, key: any)
 end
 
 -- 買ったものを わたす。わたせたら PurchaseGranted、まだ わたせないなら NotProcessedYet（Roblox が あとで もう一度 呼ぶ）
+-- Studioでの確認用: 受け取った購入を 出力に書く（本番では書かない）
+local function logReceipt(info, what: string)
+	if game:GetService("RunService"):IsStudio() then
+		print(("[Receipt] %s purchase=%s product=%s"):format(what, tostring(info.PurchaseId), tostring(info.ProductId)))
+	end
+end
+
 local function processReceipt(info)
+	logReceipt(info, "とどいた")
 	local player = game:GetService("Players"):GetPlayerByUserId(info.PlayerId)
 	local d = player and Data.get(player)
 	if not d then
@@ -100,6 +108,7 @@ local function processReceipt(info)
 	end
 	d.receipts = d.receipts or {}
 	if table.find(d.receipts, info.PurchaseId) then
+		logReceipt(info, "もう わたしてある（2回目は わたさない）")
 		return Enum.ProductPurchaseDecision.PurchaseGranted -- もう わたしてある
 	end
 	local handler
@@ -116,6 +125,7 @@ local function processReceipt(info)
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 	table.insert(d.receipts, info.PurchaseId)
+	logReceipt(info, "わたした")
 	while #d.receipts > 50 do
 		table.remove(d.receipts, 1) -- 古いものから わすれる（Roblox が 同じものを 何度も 送るのは しばらくの間だけ）
 	end
