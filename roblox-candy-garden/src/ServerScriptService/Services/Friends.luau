@@ -255,7 +255,10 @@ function Friends.renderPot(player: Player)
 		prompt:SetAttribute("OwnerUserId", player.UserId)
 		prompt.Parent = hit
 		prompt.Triggered:Connect(function(who)
-			Friends.water(who)
+			-- 水をあげられるのは この鉢の持ち主だけ（画面では 持ち主にしか出さないが、サーバーでも 確かめる）
+			if who == player then
+				Friends.water(who)
+			end
 		end)
 	end
 	model.Parent = plot.model

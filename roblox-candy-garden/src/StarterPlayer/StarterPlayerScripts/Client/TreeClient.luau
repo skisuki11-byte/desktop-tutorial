@@ -129,6 +129,8 @@ end
 
 local thanksLeft: number? = nil -- ほしぞらの木の おれいまで あと何回（State から）
 
+local lastRatio: number? = nil -- 表示ずみの 進みぐあい（同じなら アニメーションを 作りなおさない）
+
 local function refresh()
 	local level = workspace:GetAttribute("TreeLevel") or 1
 	local progress = workspace:GetAttribute("TreeProgress") or 0
@@ -141,13 +143,20 @@ local function refresh()
 	-- ほしぞらの木の おれい（コイン）が まだの人には、右に「あと何回 しゅうかく」を出す（つぎの目標が 見えるように）
 	chipCount.Text = if thanksLeft then t("ui.starThanksLeft", thanksLeft) else countText
 	chipCount.TextColor3 = if thanksLeft then C.AccentDark else C.TextMuted
-	TweenService:Create(chipFill, TweenInfo.new(0.35), { Size = UDim2.fromScale(ratio, 1) }):Play()
+	local changed = ratio ~= lastRatio
+	lastRatio = ratio
+	if changed then
+		TweenService:Create(chipFill, TweenInfo.new(0.35), { Size = UDim2.fromScale(ratio, 1) }):Play()
+	end
 
 	local board = ensureSign()
 	if board then
 		board.Level.Text = "Lv." .. level
 		board.Count.Text = countText
-		TweenService:Create(board.Track.Fill, TweenInfo.new(0.35), { Size = UDim2.fromScale(ratio, 1) }):Play()
+		-- 看板が 作りなおされたときも 合わせる
+		if changed or board.Track.Fill.Size.X.Scale ~= ratio then
+			TweenService:Create(board.Track.Fill, TweenInfo.new(0.35), { Size = UDim2.fromScale(ratio, 1) }):Play()
+		end
 	end
 
 	if lastProgress and (progress ~= lastProgress or level ~= lastLevel) then

@@ -173,7 +173,7 @@ game:BindToClose(function()
 	for _, player in Players:GetPlayers() do
 		left += 1
 		task.spawn(function()
-			Data.save(player, true)
+			Data.save(player, true, true) -- サーバーが 閉じるので 鍵も はずす
 			left -= 1
 		end)
 	end

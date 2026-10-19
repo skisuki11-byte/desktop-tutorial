@@ -123,23 +123,56 @@ local function key(player: Player)
 	return "u_" .. player.UserId
 end
 
+-- セッションの鍵（_lock）: いま この人のデータを どのサーバーが使っているか。
+-- サーバーを ぬけて すぐ 別のサーバーに入ると、前のサーバーが 保存しおわる前に 古いデータを 読んでしまい、
+-- ペットの交換と 組み合わせると「ふえる（増殖）」や「まき戻り」が おきる。鍵で 1人1サーバーに かぎる。
+-- 鍵は 保存のたびに 時刻を 新しくする（自動保存は 60秒ごと）。LOCK_TTL より古い鍵は、こわれた サーバーの 残りとして 無視する
+local LOCK_TTL = 180
+local LOCK_WAIT_TRIES = 10 -- ほかのサーバーが 使用中なら 3秒ずつ 待つ（最大 約30秒）。それでも だめなら 鍵を もらう
+
+local function lockedByOther(record): boolean
+	local lock = type(record) == "table" and record._lock
+	return type(lock) == "table" and lock.job ~= game.JobId and type(lock.at) == "number" and os.time() - lock.at < LOCK_TTL
+end
+
 -- 読み込み。失敗時は上書き事故を避けるため保存を無効にして遊ばせる。
 function Data.load(player: Player)
 	local data
 	local canSave = false
 	if store then
-		for attempt = 1, 3 do
+		local tries = 0
+		for attempt = 1, 3 + LOCK_WAIT_TRIES do
+			local locked = false
+			local steal = tries >= LOCK_WAIT_TRIES
 			local ok, result = pcall(function()
-				return store:GetAsync(key(player))
+				return store:UpdateAsync(key(player), function(old)
+					if lockedByOther(old) and not steal then
+						locked = true
+						return nil -- 書かない（ほかのサーバーが まだ 使っている）
+					end
+					local record = type(old) == "table" and old or {}
+					record._lock = { job = game.JobId, at = os.time() }
+					return record
+				end)
 			end)
-			if ok then
+			if ok and not locked then
 				data = result
 				canSave = true
 				break
+			elseif ok and locked then
+				tries += 1
+				task.wait(3)
+			else
+				warn(("[Data] load failed (%d): %s"):format(attempt, tostring(result)))
+				task.wait(1)
 			end
-			warn(("[Data] load failed (%d/3): %s"):format(attempt, tostring(result)))
-			task.wait(1)
+			if player.Parent ~= Players then
+				return -- 待っているあいだに ぬけた
+			end
 		end
+	end
+	if type(data) == "table" then
+		data._lock = nil -- 鍵は 保存のときだけ つける
 	end
 	if canSave and RunService:IsStudio() then
 		print("[Data] Studio用の保存場所を使っています: " .. Data.storeName())
@@ -174,7 +207,8 @@ end
 local MIN_SAVE_GAP = 7
 local savePending: { [Player]: boolean } = {}
 
-function Data.save(player: Player, force: boolean?)
+-- release: この人が ぬけるとき（鍵を はずす）
+function Data.save(player: Player, force: boolean?, release: boolean?)
 	local profile = profiles[player]
 	if not profile or not profile.canSave or not store then
 		return
@@ -186,12 +220,23 @@ function Data.save(player: Player, force: boolean?)
 	profile.saving = true
 	profile.lastSaved = os.clock()
 	profile.data.lastSeen = os.time()
+	local stolen = false
 	local ok, err = pcall(function()
-		store:SetAsync(key(player), profile.data)
+		store:UpdateAsync(key(player), function(old)
+			if lockedByOther(old) then
+				stolen = true
+				return nil -- ほかのサーバーが 鍵を 持っている（こちらの 古いデータで 上書きしない）
+			end
+			local record = table.clone(profile.data)
+			record._lock = if release then nil else { job = game.JobId, at = os.time() }
+			return record
+		end)
 	end)
 	profile.saving = false
 	if not ok then
 		warn("[Data] save failed: " .. tostring(err))
+	elseif stolen then
+		warn("[Data] ほかのサーバーが この人の データを 使っているので 保存しませんでした: " .. player.Name)
 	end
 end
 
@@ -212,7 +257,7 @@ function Data.saveSoon(player: Player)
 end
 
 function Data.release(player: Player)
-	Data.save(player, true)
+	Data.save(player, true, true)
 	profiles[player] = nil
 end
 
