@@ -1,5 +1,11 @@
 -- クライアント起動。サーバーから届く状態(State)をUIとチュートリアルに渡す。
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+-- スマホ・タブレットでは、いつも横画面にする（左右どちら向きでも OK）。
+-- 縦にすると 畑が せまく見え、ボタンが 画面の上下に ちらばって 押しにくい
+local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+playerGui.ScreenOrientation = Enum.ScreenOrientation.LandscapeSensor
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
