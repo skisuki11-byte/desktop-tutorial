@@ -330,6 +330,7 @@ sendState = function(player: Player)
 		promise = extra.promise,
 		decor = extra.decor,
 		room = extra.room,
+		starThanksLeft = extra.starThanksLeft, -- ほしぞらの木の おれいまで あと何回
 		seen = d.seen,
 		seedShop = extra.seedShop,
 		pets = d.pets,

@@ -397,15 +397,9 @@ local function giveStarGift(player: Player)
 	Pals.grant(player, Config.StarGift.pet)
 	Data.push(player)
 	Data.saveSoon(player)
-	Remotes.StarGift:FireClient(player, Config.StarGift.level, coins)
-	if coins == 0 and not d.starCoins then
-		-- つぎの目標を 先に 知らせる（お祝いの画面を 閉じたころに）
-		task.delay(6, function()
-			if player.Parent then
-				Remotes.Toast:FireClient(player, "toast.starThanksHint", math.max(0, Config.StarGift.thanksHarvests - (d.harvests or 0)))
-			end
-		end)
-	end
+	-- コインが まだなら「あと何回」も いっしょに送る（お祝いの画面を 閉じたときに つぎの目標として 知らせる）
+	local left = if d.starCoins then 0 else math.max(0, Config.StarGift.thanksHarvests - (d.harvests or 0))
+	Remotes.StarGift:FireClient(player, Config.StarGift.level, coins, nil, left)
 end
 
 local function publishFestival()

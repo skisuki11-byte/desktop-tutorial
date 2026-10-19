@@ -30,7 +30,7 @@ end
 
 -- 画面いっぱいのお祝い
 -- kind: nil=ほしぞらのおくりもの / "thanks"=しゅうかくの回数が とどいたときの 木からの おれい（コインだけ）
-local function showCelebration(level: number, coins: number, kind: string?)
+local function showCelebration(level: number, coins: number, kind: string?, left: number?)
 	local gui = ui.gui()
 	local overlay = Style.make("Frame", {
 		Name = "StarGift",
@@ -184,6 +184,12 @@ local function showCelebration(level: number, coins: number, kind: string?)
 	ok.Activated:Connect(function()
 		falling = false
 		overlay:Destroy()
+		-- コインが まだの子には、閉じたときに つぎの目標を 知らせる（「あと何回 しゅうかくで 木から おれい」）
+		if left and left > 0 then
+			task.delay(0.6, function()
+				ui.toastText(t("toast.starThanksHint", left), 6)
+			end)
+		end
 	end)
 
 	Style.pop(card, 0.6)
@@ -261,7 +267,7 @@ end
 function StarGiftUI.init(uiModule)
 	ui = uiModule
 	buildFestival()
-	Remotes.StarGift.OnClientEvent:Connect(function(level, coins, kind)
+	Remotes.StarGift.OnClientEvent:Connect(function(level, coins, kind, left)
 		if type(level) == "number" then
 			-- ルルが話している あいだ（「つぎへ」が出ている あいだ）は まつ。
 			-- お別れの あいさつの とちゅうで 割りこむと、子どもが 押した「つぎへ」が お祝いの画面に 吸われてしまう
@@ -272,7 +278,7 @@ function StarGiftUI.init(uiModule)
 				waited += task.wait(0.5)
 			end
 			ui.showPanel(nil)
-			showCelebration(level, if type(coins) == "number" then coins else 0, if kind == "thanks" then "thanks" else nil)
+			showCelebration(level, if type(coins) == "number" then coins else 0, if kind == "thanks" then "thanks" else nil, if type(left) == "number" then left else nil)
 		end
 	end)
 	task.spawn(function()

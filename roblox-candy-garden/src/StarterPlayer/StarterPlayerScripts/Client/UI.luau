@@ -1472,7 +1472,13 @@ function UI.toastText(text: string, seconds: number?)
 	toastLabel.Visible = true
 	-- 妖精の吹き出しが出ているときは、その下に出す（重ならないように）
 	if banner and banner.Visible then
-		local y = banner.AbsolutePosition.Y - gui.AbsolutePosition.Y + banner.AbsoluteSize.Y + 8
+		local top = banner.AbsolutePosition.Y - gui.AbsolutePosition.Y
+		local height = math.max(toastLabel.AbsoluteSize.Y, 40)
+		local y = top + banner.AbsoluteSize.Y + 8
+		-- 吹き出しが 画面の下にあるとき（スマホ）は、下に出すと 画面の外に はみ出すので 上に出す
+		if y + height > gui.AbsoluteSize.Y - 8 then
+			y = top - height - 8
+		end
 		toastLabel.Position = UDim2.new(0.5, 0, 0, y)
 	elseif UI.currentPanel ~= nil then
 		-- 画面（おしゃれ・ショップなど）を開いているときは、いちばん下に出す
