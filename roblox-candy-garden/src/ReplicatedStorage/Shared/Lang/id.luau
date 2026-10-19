@@ -1,5 +1,9 @@
 -- インドネシア語（子ども向けに「kamu」）
 return {
+	["rush.chip"] = "🍭 Candy Rush! Jual +%d%%  sisa %s",
+	["rush.next"] = "🍭 Candy Rush berikutnya %s",
+	["rush.soon"] = "🍭 Candy Rush 5 menit lagi! Mulai di semua server bersamaan",
+	["rush.start"] = "🍭 Candy Rush dimulai! Selama 15 menit: jual +%d%%, lebih sering berkilau, dan bibit langka tersedia!",
 	["cat.button"] = "Buku 3D",
 	["cat.title"] = "Buku Koleksi 3D",
 	["cat.search"] = "Cari nama",

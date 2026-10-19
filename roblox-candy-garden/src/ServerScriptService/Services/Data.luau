@@ -68,6 +68,7 @@ local function newData()
 		starGift = false, -- ほしぞらのおくりものを受け取ったか
 		starCoins = false, -- ほしぞらの木の おれい（コイン）を受け取ったか
 		harvests = 0, -- 自分で しゅうかくした回数（ほしぞらの木の おれいの 目安）
+		funnel = {}, -- はじめての人の 遊んだ段（解析に 1回ずつ 送るため。Funnel.luau）
 		receipts = {}, -- わたした デベロッパー製品の レシート（同じものを 2回 わたさない）
 		water = { amount = 3, level = 1 }, -- じょうろの水（残り回数）と大きさ（Config.Water.cans）
 		fertilizer = 0, -- キャンディひりょうの数

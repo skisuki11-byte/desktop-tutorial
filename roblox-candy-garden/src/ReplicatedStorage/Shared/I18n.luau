@@ -5,6 +5,10 @@ local LocalizationService = game:GetService("LocalizationService")
 
 local STRINGS = {
 	ja = {
+		["rush.chip"] = "🍭 キャンディラッシュ！ 売値+%d%%  あと %s",
+		["rush.next"] = "🍭 つぎの キャンディラッシュ %s",
+		["rush.soon"] = "🍭 あと5分で キャンディラッシュ！ ぜんぶの サーバーで いっしょに はじまるよ",
+		["rush.start"] = "🍭 キャンディラッシュ はじまり！ 15分間 売値+%d%%・きらきらが 出やすい・めずらしい種が 入荷！",
 		["cat.button"] = "3Dずかん",
 		["cat.title"] = "ぜんぶの 3Dずかん",
 		["cat.search"] = "なまえで さがす",
@@ -472,6 +476,10 @@ local STRINGS = {
 		["toast.dailyGot"] = "ボーナスをもらったよ！",
 	},
 	en = {
+		["rush.chip"] = "🍭 Candy Rush! Sells +%d%%  %s left",
+		["rush.next"] = "🍭 Next Candy Rush %s",
+		["rush.soon"] = "🍭 Candy Rush in 5 minutes! It starts on every server at the same time",
+		["rush.start"] = "🍭 Candy Rush has begun! For 15 minutes: sells +%d%%, more sparkles, and rare seeds in stock!",
 		["cat.button"] = "3D Guide",
 		["cat.title"] = "3D Collection Guide",
 		["cat.search"] = "Search by name",

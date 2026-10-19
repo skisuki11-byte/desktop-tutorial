@@ -13,6 +13,7 @@ local Data = require(script.Parent.Data)
 local World = require(script.Parent.World)
 local RateLimit = require(script.Parent.RateLimit)
 local Room = require(script.Parent.Room)
+local Funnel = require(script.Parent.Funnel)
 
 local Reform = {}
 Reform.onChanged = nil :: ((Player) -> ())? -- 段が上がったとき（名札のランクを直す。Decor がつなぐ）
@@ -572,6 +573,9 @@ local function buy(player: Player, id: any)
 		Reform.onChanged(player)
 	end
 	Remotes.Toast:FireClient(player, "toast.reformDone", "@reform." .. id .. "." .. nextIndex)
+	if id == "base" then
+		Funnel.step(player, "BuiltBase")
+	end
 	Data.push(player)
 	Data.save(player) -- 大きな買い物は、すぐ保存する
 end

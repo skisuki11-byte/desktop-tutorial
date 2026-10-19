@@ -214,6 +214,33 @@ Config.SeedShop = {
 	rare = { starcake = true, mooncandy = true }, -- 入荷したら、みんなにお知らせする
 }
 
+-- キャンディラッシュ（全サーバーで 同じ時刻に はじまる おまつり）。世界時（UTC）の 0時から everySeconds ごとに durationSeconds のあいだ。
+-- 3時間ごとなので、日本 9・12・15・18・21時、ヨーロッパ（夏）20時、アメリカ東部（夏）17・20時、ブラジル 18・21時 など、
+-- どの国でも 夕方〜夜に 1〜2回 くる
+Config.Rush = {
+	everySeconds = 3 * 3600,
+	durationSeconds = 15 * 60,
+	warnSeconds = 5 * 60, -- はじまる 何秒前に お知らせするか
+	sellBonus = 0.5, -- 売るときの コインが +50%
+	sparkleBonus = 0.2, -- きらきらの 確率に 足す
+}
+
+-- t のとき ラッシュ中なら（おわる時刻, つぎの開始）、ちがうなら（nil, つぎの開始）
+-- Studio では workspace の属性 DebugRushOffset（秒）を 足して、すぐに ためせる
+function Config.rush(t: number): (number?, number)
+	local shift = 0
+	if game:GetService("RunService"):IsStudio() then
+		shift = workspace:GetAttribute("DebugRushOffset") or 0
+	end
+	local every = Config.Rush.everySeconds
+	local startedAt = math.floor((t + shift) / every) * every - shift -- 本当の時刻での 開始
+	local endsAt = startedAt + Config.Rush.durationSeconds
+	if t < endsAt then
+		return endsAt, startedAt + every
+	end
+	return nil, startedAt + every
+end
+
 -- いまの入荷の回（時刻から計算。サーバーとクライアントで同じ値になる）
 function Config.seedRound(serverTime: number): number
 	return math.floor(serverTime / Config.SeedShop.restockSeconds)
@@ -230,6 +257,12 @@ function Config.seedStock(round: number): { [string]: number }
 		local count = rng:NextInteger(rule and rule.min or 0, rule and rule.max or 0)
 		if rule and roll < rule.chance then
 			stock[cropId] = count
+		end
+	end
+	-- キャンディラッシュの間は、めずらしい種が かならず 入る
+	if Config.rush(round * Config.SeedShop.restockSeconds) then
+		for cropId in Config.SeedShop.rare do
+			stock[cropId] = math.max(stock[cropId] or 0, 2)
 		end
 	end
 	return stock

@@ -1,7 +1,9 @@
 -- しょんぼり雲（サーバーの Gloom）の お知らせ。画面の下のまん中に 小さな札を出す。
 --   ・雲が来ている間: 「☁️ しょんぼり雲 のこり N あと 2:30 ▶ たすけにいく」（押すと ひろばの木へ ワープ）
 --   ・はれたあと: 「☀️ おひさまタイム ✨+10% あと 4:59」
+--   ・どちらでもないとき: キャンディラッシュ（全サーバーで 決まった時刻の おまつり）の 「🍭 あと 12:34」か「つぎは 21:00」
 -- はじめての人の案内中は出さない（案内に集中できるように）
+local LocalizationService = game:GetService("LocalizationService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -19,6 +21,14 @@ local tutorialDone = false
 local function clock(seconds: number): string
 	seconds = math.max(0, math.floor(seconds))
 	return ("%d:%02d"):format(seconds // 60, seconds % 60)
+end
+
+-- その人の国の 時計の 時刻（例: 21:00 / 9:00 PM）
+local function localTime(serverTime: number): string
+	local ok, text = pcall(function()
+		return DateTime.fromUnixTimestamp(math.floor(serverTime + 0.5)):FormatLocalTime("LT", LocalizationService.RobloxLocaleId)
+	end)
+	return if ok then text else ""
 end
 
 local function refresh()
@@ -39,7 +49,18 @@ local function refresh()
 		chip.Active = false
 		chip.Visible = free
 	else
-		chip.Visible = false
+		local rushEnds, rushNext = Config.rush(now)
+		chip.Active = false
+		chip.Visible = free
+		if rushEnds then
+			chip.Text = t("rush.chip", math.floor(Config.Rush.sellBonus * 100 + 0.5), clock(rushEnds - now))
+			chip.BackgroundColor3 = Color3.fromRGB(235, 90, 160) -- 白い文字が読める こい ピンク
+			chip.TextColor3 = Color3.fromRGB(255, 255, 255)
+		else
+			chip.Text = t("rush.next", localTime(rushNext))
+			chip.BackgroundColor3 = Color3.fromRGB(255, 240, 248)
+			chip.TextColor3 = Color3.fromRGB(150, 70, 120)
+		end
 	end
 end
 

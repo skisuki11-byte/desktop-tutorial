@@ -1,5 +1,9 @@
 -- ドイツ語（子ども向けに「du」）
 return {
+	["rush.chip"] = "🍭 Bonbon-Rausch! Verkauf +%d%%  noch %s",
+	["rush.next"] = "🍭 Nächster Bonbon-Rausch %s",
+	["rush.soon"] = "🍭 Bonbon-Rausch in 5 Minuten! Er startet auf allen Servern gleichzeitig",
+	["rush.start"] = "🍭 Der Bonbon-Rausch beginnt! 15 Minuten lang: Verkauf +%d%%, mehr Glitzer und seltene Samen im Laden!",
 	["cat.button"] = "3D-Buch",
 	["cat.title"] = "3D-Sammelbuch",
 	["cat.search"] = "Nach Namen suchen",

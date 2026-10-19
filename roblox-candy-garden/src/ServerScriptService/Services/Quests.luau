@@ -9,6 +9,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Data = require(script.Parent.Data)
 local Season = require(script.Parent.Season)
 local RateLimit = require(script.Parent.RateLimit)
+local Funnel = require(script.Parent.Funnel)
 
 local Quests = {}
 
@@ -30,6 +31,11 @@ end
 -- 何かをしたときに呼ぶ。kind が合うおねがいの進み具合を足す
 -- amount: 足す量 / cropId: harvestCrop のときの作物
 function Quests.progress(player: Player, kind: string, amount: number, cropId: string?)
+	-- はじめての人が どこまで遊んだかの記録も ここで（植えた・しゅうかくした・たまごを かえした）
+	local funnelStep = ({ plant = "Planted", harvest = "Harvested", egg = "HatchedEgg" })[kind]
+	if funnelStep then
+		Funnel.step(player, funnelStep)
+	end
 	local d = Data.get(player)
 	if not d or amount <= 0 then
 		return

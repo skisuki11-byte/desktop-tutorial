@@ -11,6 +11,7 @@ local RateLimit = require(script.Parent.RateLimit)
 local Monetization = require(script.Parent.Monetization)
 local Quests = require(script.Parent.Quests)
 local Tree = require(script.Parent.Tree)
+local Funnel = require(script.Parent.Funnel)
 
 local Shop = {}
 
@@ -70,6 +71,7 @@ local function buySeed(player: Player, cropId: any, qty: any)
 	local shop = seedShopOf(d)
 	shop.bought[cropId] = (shop.bought[cropId] or 0) + qty
 	Remotes.Toast:FireClient(player, "toast.bought")
+	Funnel.step(player, "BoughtSeed")
 	Data.push(player)
 end
 
@@ -98,7 +100,9 @@ local function sellAll(player: Player)
 		Remotes.Toast:FireClient(player, "toast.nothingToSell")
 		return
 	end
-	total = math.floor(total * (1 + Data.petBonus(d)))
+	-- キャンディラッシュの間は さらに ふえる
+	local rushBonus = if Config.rush(now()) then Config.Rush.sellBonus else 0
+	total = math.floor(total * (1 + Data.petBonus(d)) * (1 + rushBonus))
 	d.basket = {}
 	d.basketSparkle = {}
 	d.basketV = {}
@@ -114,6 +118,7 @@ local function sellAll(player: Player)
 		end)
 	end
 	Remotes.Toast:FireClient(player, "toast.sold", total)
+	Funnel.step(player, "Sold")
 	Data.push(player)
 	Quests.progress(player, "sell", total)
 	Data.saveSoon(player) -- 売却は、数秒以内に保存する

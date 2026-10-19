@@ -1,5 +1,9 @@
 -- ポルトガル語（ブラジルの ことば。子ども向けに「você」）
 return {
+	["rush.chip"] = "🍭 Corrida dos doces! Venda +%d%%  faltam %s",
+	["rush.next"] = "🍭 Próxima Corrida dos doces %s",
+	["rush.soon"] = "🍭 Corrida dos doces em 5 minutos! Começa em todos os servidores ao mesmo tempo",
+	["rush.start"] = "🍭 Começou a Corrida dos doces! Por 15 minutos: venda +%d%%, mais brilhantes e sementes raras na loja!",
 	["cat.button"] = "Guia 3D",
 	["cat.title"] = "Guia 3D da coleção",
 	["cat.search"] = "Buscar pelo nome",

@@ -1,5 +1,9 @@
 -- フランス語（子ども向けに「tu」）
 return {
+	["rush.chip"] = "🍭 Ruée sucrée ! Vente +%d%%  encore %s",
+	["rush.next"] = "🍭 Prochaine Ruée sucrée %s",
+	["rush.soon"] = "🍭 Ruée sucrée dans 5 minutes ! Elle commence sur tous les serveurs en même temps",
+	["rush.start"] = "🍭 La Ruée sucrée commence ! Pendant 15 minutes : vente +%d%%, plus de brillants et des graines rares en boutique !",
 	["cat.button"] = "Guide 3D",
 	["cat.title"] = "Guide 3D de la collection",
 	["cat.search"] = "Chercher un nom",

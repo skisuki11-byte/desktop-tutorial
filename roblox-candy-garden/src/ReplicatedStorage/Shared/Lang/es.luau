@@ -1,5 +1,9 @@
 -- スペイン語（中南米・スペイン どちらでも 読める ことば。子ども向けに「tú」）
 return {
+	["rush.chip"] = "🍭 ¡Fiebre de dulces! Venta +%d%%  quedan %s",
+	["rush.next"] = "🍭 Próxima Fiebre de dulces %s",
+	["rush.soon"] = "🍭 ¡Fiebre de dulces en 5 minutos! Empieza en todos los servidores a la vez",
+	["rush.start"] = "🍭 ¡Empezó la Fiebre de dulces! Durante 15 minutos: venta +%d%%, más brillantes y semillas raras en la tienda",
 	["cat.button"] = "Guía 3D",
 	["cat.title"] = "Guía 3D de colección",
 	["cat.search"] = "Buscar por nombre",

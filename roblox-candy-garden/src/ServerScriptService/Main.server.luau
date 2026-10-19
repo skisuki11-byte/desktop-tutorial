@@ -23,6 +23,8 @@ local Trade = require(Services.Trade)
 local Decor = require(Services.Decor)
 local Friends = require(Services.Friends)
 local Gloom = require(Services.Gloom)
+local Rush = require(Services.Rush)
+local Funnel = require(Services.Funnel)
 local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
 
@@ -51,6 +53,7 @@ Friends.init()
 Gloom.init()
 Garden.onExpanded = Decor.render
 Weather.start()
+Rush.start()
 
 Remotes.Teleport.OnServerEvent:Connect(function(player, dest)
 	if (dest == "home" or dest == "tree") and RateLimit.ok(player, "teleport", 1.5) then
@@ -119,6 +122,7 @@ local function onPlayerAdded(player: Player)
 		return
 	end
 	Monetization.load(player)
+	Funnel.step(player, "Joined")
 	Season.sync(player) -- シーズンの切り替えと、取りこぼしの受け取り
 	Garden.attach(player)
 	Decor.render(player) -- 庭の飾りと、名札のランク
