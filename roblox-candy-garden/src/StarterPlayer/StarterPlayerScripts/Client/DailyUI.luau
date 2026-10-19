@@ -159,8 +159,24 @@ local function refresh()
 	end
 end
 
+-- ほかの画面（ショップなど）や お祝いが 出ているか。出ているあいだは 自動で開かない
+-- （種を買っている とちゅうに 画面が入れかわると、何が起きたか 分からなくなる）
+local rootGui: ScreenGui? = nil
+local function somethingOpen(): boolean
+	if not rootGui then
+		return false
+	end
+	for _, child in rootGui:GetChildren() do
+		if child:IsA("GuiObject") and child.Visible and (string.sub(child.Name, -5) == "Panel" or child.Name == "StarGift") then
+			return true
+		end
+	end
+	return false
+end
+
 function DailyUI.build(gui: ScreenGui, onClose: () -> (), onOpen: () -> (), side: Frame)
 	openPanel = onOpen
+	rootGui = gui
 
 	-- 右の列（移動スティックとジャンプボタンを避ける）
 	giftButton = Style.navButton({
@@ -256,7 +272,7 @@ function DailyUI.update(state)
 	end
 	tutorialSeen = state.tutorialDone == true
 	local calm = tutorialDoneAt == nil or os.clock() - tutorialDoneAt > 60
-	if not autoOpened and state.daily.canClaim and state.tutorialDone and calm and openPanel then
+	if not autoOpened and state.daily.canClaim and state.tutorialDone and calm and openPanel and not somethingOpen() then
 		autoOpened = true
 		openPanel()
 	end

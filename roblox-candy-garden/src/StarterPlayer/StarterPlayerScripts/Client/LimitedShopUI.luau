@@ -118,7 +118,7 @@ end
 function LimitedShopUI.build(scroll: ScrollingFrame)
 	section = Style.make("Frame", {
 		Name = "Limited",
-		LayoutOrder = -10,
+		LayoutOrder = 150, -- 種と「はたけを ひろげる」の下
 		Size = UDim2.new(1, -10, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundColor3 = Color3.fromRGB(255, 244, 214),

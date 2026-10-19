@@ -74,6 +74,19 @@ local function showCelebration(level: number)
 		ZIndex = 52,
 	}, overlay)
 	Style.make("UISizeConstraint", { MaxSize = Vector2.new(520, math.huge) }, card)
+	-- 低い画面（スマホの横向き）でも「やったー！」が はみ出さないよう、画面の高さに 収まるまで ちぢめる
+	local fit = Instance.new("UIScale")
+	fit.Parent = card
+	local function refit()
+		local natural = card.AbsoluteSize.Y / math.max(fit.Scale, 0.01)
+		local room = overlay.AbsoluteSize.Y - 24
+		if natural > 0 then
+			fit.Scale = math.clamp(room / natural, 0.5, 1)
+		end
+	end
+	card:GetPropertyChangedSignal("AbsoluteSize"):Connect(refit)
+	overlay:GetPropertyChangedSignal("AbsoluteSize"):Connect(refit)
+	task.defer(refit)
 	Style.make("UIListLayout", {
 		Padding = UDim.new(0, 10),
 		HorizontalAlignment = Enum.HorizontalAlignment.Center,
@@ -245,6 +258,14 @@ function StarGiftUI.init(uiModule)
 	buildFestival()
 	Remotes.StarGift.OnClientEvent:Connect(function(level)
 		if type(level) == "number" then
+			-- ルルが話している あいだ（「つぎへ」が出ている あいだ）は まつ。
+			-- お別れの あいさつの とちゅうで 割りこむと、子どもが 押した「つぎへ」が お祝いの画面に 吸われてしまう
+			local banner = ui.gui():FindFirstChild("TutorialBanner", true)
+			local buttons = banner and banner:FindFirstChild("Buttons", true)
+			local waited = 0
+			while banner and buttons and banner.Visible and buttons.Visible and waited < 90 do
+				waited += task.wait(0.5)
+			end
 			ui.showPanel(nil)
 			showCelebration(level)
 		end

@@ -833,7 +833,8 @@ local function fitBottom()
 		-- 3つのボタン: スマホは画面に合わせて小さく（ジャンプボタンの上に収める）、パソコンはコインの下に収まる大きさ
 		if compact then
 			local room = (screenY - JUMP_RESERVE - (if portrait then 200 else leftTop + 52) - 40) / 214
-			Style.setScale(actionStack, math.clamp(math.min(phoneScale(), room), 0.55, 0.85))
+			-- いちばん よく押す3つなので、指で押せる 44pt（66 × 0.67）より小さくしない
+			Style.setScale(actionStack, math.clamp(math.min(phoneScale(), room), 44 / 66, 0.85))
 		else
 			Style.setScale(actionStack, math.clamp((screenY - leftTop - 108 - 12) / 214, 0.6, 1))
 		end
@@ -879,7 +880,7 @@ local function buildShop()
 	end, C.Mint)
 	Style.make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, scroll)
 
-	-- いちばん上に「きょうの とくべつ」（日替わり）、その下に いつもの種屋
+	-- いちばん上に いつもの種屋、その下に「はたけを ひろげる」と「きょうの とくべつ」（日替わり）
 	LimitedShopUI.build(scroll)
 	Style.label({
 		Name = "SeedTitle",
@@ -1142,10 +1143,11 @@ local function buildShop()
 	end)
 	scroll = shopScroll -- ここから下は、また種屋の画面
 
-	-- はたけを ひろげる（大きな目標。いちばん上に出す）
+	-- はたけを ひろげる（大きな目標）。種の下に出す（ショップに来る いちばんの理由は 種を買うこと。
+	-- スマホの横向きでは 1画面に2行しか入らないので、上に置くと 種が見えなくなる）
 	local expand = Style.make("Frame", {
 		Name = "ExpandRow",
-		LayoutOrder = -20,
+		LayoutOrder = 140,
 		Size = UDim2.new(1, -10, 0, 88),
 		BackgroundColor3 = Color3.fromRGB(232, 250, 238),
 		ZIndex = 11,
@@ -1515,8 +1517,13 @@ placeBanner = function()
 	end
 end
 
-function UI.setBanner(text: string?, buttons: { { any } }?)
+-- noSpeaker: ルルが帰ったあとの ひとこと（「木のようせい ルル」の名前を出さない）
+function UI.setBanner(text: string?, buttons: { { any } }?, noSpeaker: boolean?)
 	if text then
+		local speaker = bannerLabel.Parent and bannerLabel.Parent:FindFirstChild("Speaker")
+		if speaker then
+			speaker.Visible = not noSpeaker
+		end
 		-- 同じセリフ・同じボタンなら作り直さない（0.4秒ごとに呼ばれるため）
 		local key = text .. "|" .. tostring(buttons ~= nil and #buttons or 0)
 		local changed = key ~= bannerKey

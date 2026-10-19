@@ -225,7 +225,24 @@ local function refreshTutorial()
 		UI.highlight(nil)
 		pointAt(nil)
 		if not talk() then
-			UI.setBanner(nil)
+			-- 手づまりのときだけ、つぎに やることを出す（種がない・畑も かごも からっぽ）。
+			-- 案内が終わった直後は 種が0こなので、ここで「ショップで種を買おう」が出ないと、何をすればいいか分からなくなる
+			local stuck = not hasSeed()
+			if stuck then
+				for _, tile in myTiles() do
+					if tile:GetAttribute("Crop") ~= nil then
+						stuck = false
+						break
+					end
+				end
+			end
+			local _, basketCount = Config.basketValue(state)
+			if stuck and basketCount == 0 then
+				UI.setBanner("🛒 " .. t("tutorial.buy"), nil, true)
+				UI.highlight(UI.buttons().shop)
+			else
+				UI.setBanner(nil)
+			end
 		end
 		return
 	end

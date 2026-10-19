@@ -46,9 +46,13 @@ function Fairy.attach(gui: ScreenGui, card: GuiObject)
 		end
 		local t = os.clock() - t0
 		-- 吹き出しの右上の角に、少し重ねる（ルルの体の左下が、吹き出しに かかるくらい）
+		-- 吹き出しといっしょに 大きさを変える（スマホでは吹き出しが小さくなるので、ルルだけ大きいと セリフにかぶる）
+		local uiScale = card:FindFirstChildOfClass("UIScale")
+		local px = SIZE * (if uiScale then (uiScale:GetAttribute("Base") or uiScale.Scale) else 1)
+		f.Size = UDim2.fromOffset(px, px)
 		local pos = card.AbsolutePosition - gui.AbsolutePosition
 		local size = card.AbsoluteSize
-		f.Position = UDim2.fromOffset(pos.X + size.X - SIZE * 0.2, pos.Y + SIZE * 0.1 + math.sin(t * 2.2) * 5)
+		f.Position = UDim2.fromOffset(pos.X + size.X - px * 0.2, pos.Y + px * 0.1 + math.sin(t * 2.2) * 5)
 		-- からだを少し ゆらす（話しているように）
 		f.Rotation = math.sin(t * 1.6) * 6
 	end)

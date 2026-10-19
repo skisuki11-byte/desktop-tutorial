@@ -10,6 +10,7 @@ local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -194,6 +195,11 @@ local function show(prompt: ProximityPrompt)
 			elseif isFertilize(prompt) then Color3.fromRGB(255, 225, 140)
 			else C.Mint
 		label.Text = prompt.ActionText
+		-- 「しゅうかく」など 長い言葉でも 1行に 大きく出るよう、ボタンの はばを 文字に合わせる（2行に折れると読みにくい）
+		local textWidth = TextService:GetTextSize(label.Text, 22, label.Font, Vector2.new(1000, 100)).X
+		local width = math.max(WIDTH, HEIGHT + textWidth + 22)
+		button.Size = UDim2.fromOffset(width, HEIGHT)
+		gui.Size = UDim2.fromOffset(width + 12, HEIGHT + 16)
 		local emoji, key = iconFor(prompt)
 		local image = key and Icons[key]
 		iconImage.Image = image or ""
