@@ -67,7 +67,6 @@ local waterMeter, waterLabel -- じょうろの残り（3つのボタンの上�
 local canDetail, canButton -- ショップの「じょうろ」の行
 local fertDetail -- ショップの「ひりょう」の行
 local expandDetail, expandButton -- ショップの「はたけを ひろげる」の行
-local treeChipUntil = 0 -- みんなの木の表示を、この時刻まで出す（進んだときだけ少し見せる）
 
 local COMPACT_MAX_HEIGHT = 600 -- これより低いタッチ画面をスマホとみなす
 local DOCK_WIDTH = 480 -- ドックの基準の幅。画面が狭いときは縮める
@@ -1828,10 +1827,13 @@ function UI.init()
 	-- スマホを回したとき（画面の向きが変わったとき）にも配置を合わせ直す
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitBottom)
 
-	-- みんなの木が進んだら、左の表示を少しのあいだ出す
+	-- みんなの木が進んだら、レベルの表示を 少し はずませる（進んだことに 気づけるように）
 	for _, name in { "TreeProgress", "TreeLevel" } do
 		workspace:GetAttributeChangedSignal(name):Connect(function()
-			treeChipUntil = os.clock() + 6
+			local treeChip = gui:FindFirstChild("TreeChip")
+			if treeChip and treeChip.Visible then
+				Style.pop(treeChip, 1.08)
+			end
 		end)
 	end
 	task.spawn(function()
@@ -1845,13 +1847,10 @@ function UI.init()
 				end
 			end
 			menuBadge.Visible = any and not side.Visible
-			-- みんなの木の表示は、木の近く（広場）にいるときと、進んだ直後だけ
+			-- みんなの木の レベルは いつも 出す（みんなで 育てている ことが いつでも 見えるように）。
 			local treeChip = gui:FindFirstChild("TreeChip")
 			if treeChip then
-				local character = player.Character
-				local root = character and character:FindFirstChild("HumanoidRootPart")
-				local nearTree = root ~= nil and (root.Position * Vector3.new(1, 0, 1)).Magnitude < 45
-				treeChip.Visible = nearTree or os.clock() < treeChipUntil
+				treeChip.Visible = true
 			end
 			task.wait(0.5)
 		end
