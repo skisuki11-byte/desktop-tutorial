@@ -1,6 +1,7 @@
 -- ひみつきちの 出入り（自分の画面のしかけ）。
 --   ・家の とびらの前に来ると、画面が ふわっと暗くなって へやに切りかわる（へやの中の とびらの前で 外へ）
 --   ・へやは 庭の上空にある別の場所。外から見上げても 見えないように、中にいるとき以外は 自分の画面で かくす
+--   ・ほかの子が 自分のへやに入っているときは、その子（名前の札も）を 自分の画面で かくす（空に うかんで見えないように）
 -- 入れるのは 自分の家だけ（サーバーでも 持ち主か・とびらの前か を確かめる）
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -41,6 +42,42 @@ local function setHidden(room: Model, hide: boolean)
 	hidden[room] = hide
 	for _, d in room:GetDescendants() do
 		apply(d, hide)
+	end
+end
+
+-- ほかの子の キャラ（へやの中にいる あいだ かくす）
+local charHidden: { [Model]: boolean } = {}
+
+local function hideCharacter(character: Model, hide: boolean)
+	if charHidden[character] == hide then
+		return
+	end
+	charHidden[character] = hide
+	for _, d in character:GetDescendants() do
+		if d:IsA("BasePart") or d:IsA("Decal") then
+			d.LocalTransparencyModifier = if hide then 1 else 0
+		elseif d:IsA("BillboardGui") then
+			d.Enabled = not hide
+		end
+	end
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid.DisplayDistanceType = if hide then Enum.HumanoidDisplayDistanceType.None else Enum.HumanoidDisplayDistanceType.Viewer
+	end
+end
+
+local function updateOthers(me: Player)
+	for _, other in Players:GetPlayers() do
+		local character = other.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		if other ~= me and character and root and root:IsA("BasePart") then
+			hideCharacter(character, root.Position.Y > INSIDE_HEIGHT)
+		end
+	end
+	for character in charHidden do
+		if not character.Parent then
+			charHidden[character] = nil
+		end
 	end
 end
 
@@ -114,6 +151,7 @@ function RoomHider.init()
 					end
 				end
 			end
+			updateOthers(player)
 			-- なくなった へや（段が上がって 作り直した など）は わすれる
 			for room, conn in watched do
 				if not room.Parent then

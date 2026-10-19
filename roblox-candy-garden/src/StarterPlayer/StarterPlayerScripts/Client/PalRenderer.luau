@@ -15,7 +15,7 @@ local SLOTS = { Vector3.new(-3.6, 0, 2.5), Vector3.new(3.6, 0, 2.5) } -- 連れ�
 local FOLLOW_SPEED = 9
 
 local folder
-local entries: { [Player]: { key: string, pals: { { model: Model, pos: Vector3?, size: number } } } } = {}
+local entries: { [Player]: { key: string, pals: { { model: Model, pos: Vector3?, size: number } }, away: boolean? } } = {}
 
 local function part(parent: Instance, name: string, shape: Enum.PartType, size: Vector3, cf: CFrame, color: Color3)
 	local p = Instance.new("Part")
@@ -292,6 +292,18 @@ function PalRenderer.init()
 			local character = player.Character
 			local root = character and character:FindFirstChild("HumanoidRootPart")
 			if root and root:IsA("BasePart") then
+				-- ほかの子が ひみつきち（上空のへや）にいるあいだは、その子のペットも かくす
+				local away = player ~= Players.LocalPlayer and root.Position.Y > 250
+				if entry.away ~= away then
+					entry.away = away
+					for _, pal in entry.pals do
+						for _, d in pal.model:GetDescendants() do
+							if d:IsA("BasePart") or d:IsA("Decal") then
+								d.LocalTransparencyModifier = if away then 1 else 0
+							end
+						end
+					end
+				end
 				local moving = root.AssemblyLinearVelocity.Magnitude > 2
 				local alpha = 1 - math.exp(-FOLLOW_SPEED * dt)
 				for i, pal in entry.pals do
