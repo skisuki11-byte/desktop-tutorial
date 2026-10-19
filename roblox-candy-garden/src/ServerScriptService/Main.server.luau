@@ -106,7 +106,12 @@ local function onPlayerAdded(player: Player)
 
 	local plotIndex = World.claim(player)
 	if not plotIndex then
+		-- 満員（庭は Config.MaxPlots 人分）。庭が ないまま 遊ばせない（入り直すと 空いているサーバーに 入れる）。
+		-- ふつうは 最大人数（Max Players）を 庭の数と そろえておくので 起きないが、念のため。
+		-- （同じ場所への テレポートは、また この満員のサーバーに 戻されることがあるので 使わない）
 		warn("[Main] 空いている庭がありません: " .. player.Name)
+		player:Kick("いまは まんいんです。もういちど 入ってね / This server is full. Please join again.")
+		return
 	end
 	Monetization.load(player)
 	Season.sync(player) -- シーズンの切り替えと、取りこぼしの受け取り
