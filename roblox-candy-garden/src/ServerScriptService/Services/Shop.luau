@@ -106,10 +106,10 @@ local function sellAll(player: Player)
 	local firstSale = not d.tutorialDone
 	d.tutorialDone = true
 	if firstSale then
-		-- 案内が終わったので、ほしぞらの木の おくりもの（あれば）。ルルの「やったね！」のあいさつを聞き終わるころに出す
+		-- 案内が終わったので、ほしぞらの木の おくりもの（あれば。はじめての子なので コインは なし）。ルルの「やったね！」のあいさつを聞き終わるころに出す
 		task.delay(20, function()
 			if player.Parent then
-				Tree.onPlayerReady(player)
+				Tree.onPlayerReady(player, true) -- はじめての子: コインは なし（おしゃれと ペットだけ）
 			end
 		end)
 	end

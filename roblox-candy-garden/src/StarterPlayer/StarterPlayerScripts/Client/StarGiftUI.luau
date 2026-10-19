@@ -29,7 +29,7 @@ local function formatLeft(seconds: number): string
 end
 
 -- 画面いっぱいのお祝い
-local function showCelebration(level: number)
+local function showCelebration(level: number, coins: number)
 	local gui = ui.gui()
 	local overlay = Style.make("Frame", {
 		Name = "StarGift",
@@ -113,7 +113,7 @@ local function showCelebration(level: number)
 	Style.label({
 		LayoutOrder = 3,
 		Size = UDim2.new(1, 0, 0, 56),
-		Text = t("star.body", level),
+		Text = t(if coins > 0 then "star.body" else "star.bodyNew", level), -- はじめての子には「あたらしい なかまへ」
 		TextSize = 20,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
 		ZIndex = 53,
@@ -139,7 +139,9 @@ local function showCelebration(level: number)
 		local item = Config.CosmeticById[id]
 		table.insert(items, { icon = item.icon, key = "cos_" .. id, name = t("cos." .. id) })
 	end
-	table.insert(items, { icon = "🟡", key = "ui_coins", name = Style.formatNumber(Config.StarGift.coins) })
+	if coins > 0 then
+		table.insert(items, { icon = "🟡", key = "ui_coins", name = Style.formatNumber(coins) })
+	end
 	for i, gift in items do
 		local box = Style.make("Frame", {
 			LayoutOrder = i,
@@ -256,7 +258,7 @@ end
 function StarGiftUI.init(uiModule)
 	ui = uiModule
 	buildFestival()
-	Remotes.StarGift.OnClientEvent:Connect(function(level)
+	Remotes.StarGift.OnClientEvent:Connect(function(level, coins)
 		if type(level) == "number" then
 			-- ルルが話している あいだ（「つぎへ」が出ている あいだ）は まつ。
 			-- お別れの あいさつの とちゅうで 割りこむと、子どもが 押した「つぎへ」が お祝いの画面に 吸われてしまう
@@ -267,7 +269,7 @@ function StarGiftUI.init(uiModule)
 				waited += task.wait(0.5)
 			end
 			ui.showPanel(nil)
-			showCelebration(level)
+			showCelebration(level, if type(coins) == "number" then coins else 0)
 		end
 	end)
 	task.spawn(function()

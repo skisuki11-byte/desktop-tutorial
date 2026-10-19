@@ -367,8 +367,11 @@ end
 
 -- ---- ほしぞらのおくりもの（Config.StarGift） ----
 -- みんなの木がレベル20になったら、全員に1回だけ: 限定のおしゃれ・まもりがみのペット・コイン。
--- あとから来た人にも、来たときに渡す（見逃しを作らない）
-local function giveStarGift(player: Player)
+-- あとから来た人にも、来たときに渡す（見逃しを作らない）。
+-- ただし コインは、木を育てた人（案内を終えて 遊んでいた人）にだけ。はじめての子が 案内のあとすぐ 1万コインを もらうと、
+-- 最初の目標（種・畑を広げる）が 一気に かなって 遊ぶ理由が なくなり、「みんなで育てた ごほうび」の 意味も うすれる。
+-- はじめての子には、おしゃれと ペットだけ（いっしょに 守っていく 仲間の しるし）
+local function giveStarGift(player: Player, newcomer: boolean?)
 	local d = Data.get(player)
 	if not d or d.starGift or level < Config.StarGift.level then
 		return
@@ -378,14 +381,15 @@ local function giveStarGift(player: Player)
 		return
 	end
 	d.starGift = true
-	d.coins += Config.StarGift.coins
+	local coins = if newcomer then 0 else Config.StarGift.coins
+	d.coins += coins
 	for _, id in Config.StarGift.cosmetics do
 		Cosmetics.grant(player, id)
 	end
 	Pals.grant(player, Config.StarGift.pet)
 	Data.push(player)
 	Data.saveSoon(player)
-	Remotes.StarGift:FireClient(player, Config.StarGift.level)
+	Remotes.StarGift:FireClient(player, Config.StarGift.level, coins)
 end
 
 local function publishFestival()
@@ -594,10 +598,10 @@ function Tree.addPoints(points: number)
 end
 
 -- 参加した人の準備ができたら呼ぶ。すでにほしぞらの木なら、おくりものを渡す
-function Tree.onPlayerReady(player: Player)
+function Tree.onPlayerReady(player: Player, newcomer: boolean?)
 	task.delay(3, function() -- 画面が出そろってから
 		if player.Parent == Players then
-			giveStarGift(player)
+			giveStarGift(player, newcomer)
 		end
 	end)
 end

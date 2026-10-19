@@ -429,11 +429,20 @@ local function refreshSeedBar(state)
 	local water = state.water
 	local tools = {
 		{ id = "water", icon = "💧", count = if water then water.amount .. "/" .. (cans[water.level] or cans[1]) else "" },
-		{ id = "fertilizer", icon = "🌟", count = "×" .. (state.fertilizer or 0) },
-		{ id = "drop", icon = "🔮", count = "×" .. (state.drops or 0) },
 	}
+	-- ひりょう・ふしぎのしずくは、持っているときだけ 並べる（「×0」の使えないボタンが あると、
+	-- はじめての子は 押しても何も起きないボタンに まよう。種と同じく、なくなったら 消える）
+	if (state.fertilizer or 0) > 0 or state.tool == "fertilizer" then
+		table.insert(tools, { id = "fertilizer", icon = "🌟", count = "×" .. (state.fertilizer or 0) })
+	end
+	if (state.drops or 0) > 0 or state.tool == "drop" then
+		table.insert(tools, { id = "drop", icon = "🔮", count = "×" .. (state.drops or 0) })
+	end
 	-- 並びが同じなら 作り直さず、数だけ変える（作り直すと 3Dの絵を毎回 作り直すことになり 重い）
 	local shape = { tostring(compact), tostring(state.tool), tostring(state.selected) }
+	for _, tool in tools do
+		table.insert(shape, tool.id)
+	end
 	for _, cropId in Config.CropOrder do
 		if (state.seeds[cropId] or 0) > 0 then
 			table.insert(shape, cropId)
