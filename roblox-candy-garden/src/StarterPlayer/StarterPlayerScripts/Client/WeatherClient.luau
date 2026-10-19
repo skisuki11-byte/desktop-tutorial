@@ -122,7 +122,7 @@ local function refreshChip()
 		chipIcon.Image = image or ""
 		chipIcon.Visible = image ~= nil
 		-- スマホ（左はしの 小さな札）では 天気の名前を はぶく（絵で 分かる。はじまりの お知らせで 名前は 出ている）
-		local short = chip.Parent ~= nil and chip.Parent.Name == "InfoStack"
+		local short = ui.isCompact ~= nil and ui.isCompact()
 		chipLabel.Text = (if image then "" else weather.icon .. " ")
 			.. (if short then "" else t("weather." .. weather.id) .. "  ")
 			.. t("ui.weatherNow", math.floor(weather.sparkleChance * 100 + 0.5), math.max(0, math.ceil(left)))

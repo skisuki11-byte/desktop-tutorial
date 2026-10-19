@@ -62,7 +62,7 @@ local layoutMode = "pc"
 local compact = false -- スマホのとき true
 local portrait = false -- スマホの縦持ち
 local actionStack, topSeeds
-local infoStack: Frame -- スマホ: お天気・ラッシュなどの 札を 左はしに 小さく たてに ならべる
+local infoStack: Frame -- みんなの木・お天気・ラッシュなどの 札を 左上に たてに まとめる（あちこち 見なくて すむように）
 local waterMeter, waterLabel -- じょうろの残り（3つのボタンの上）
 local canDetail, canButton -- ショップの「じょうろ」の行
 local fertDetail -- ショップの「ひりょう」の行
@@ -628,7 +628,6 @@ local function buildCompactFrames()
 		Size = UDim2.fromOffset(0, 0),
 		AutomaticSize = Enum.AutomaticSize.XY,
 		BackgroundTransparency = 1,
-		Visible = false,
 	}, gui)
 	Style.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Vertical,
@@ -637,31 +636,22 @@ local function buildCompactFrames()
 	}, infoStack)
 end
 
--- お知らせの札（お天気・ほしぞらまつり・しょんぼり雲／キャンディラッシュ）の 置き場所。
--- スマホ: 左はしの InfoStack に 小さく たてに（畑と キャラの まわりを あける）。パソコン: もとの場所
-local INFO_CHIPS = { "WeatherChip", "FestivalChip", "GloomChip" }
+-- 「いまの ようす」の 札（みんなの木の レベル・お天気・ほしぞらまつり・しょんぼり雲／キャンディラッシュ）は、
+-- スマホでも パソコンでも 左上の InfoStack に たてに まとめる。
+-- 見る場所が 1か所なら、目を あちこち 動かさずに すむ（ゲームの HUD で よく言われる「情報は まとめて置く」）
+local INFO_CHIPS = { "TreeChip", "WeatherChip", "FestivalChip", "GloomChip" }
 local function placeInfoChips()
 	if not infoStack then
 		return
 	end
-	infoStack.Visible = compact
 	for order, name in INFO_CHIPS do
-		local chip = gui:FindFirstChild(name) or infoStack:FindFirstChild(name)
+		local chip = gui:FindFirstChild(name)
 		if chip and chip:IsA("GuiObject") then
-			if chip:GetAttribute("PcPosition") == nil then
-				chip:SetAttribute("PcPosition", chip.Position)
-				chip:SetAttribute("PcAnchor", chip.AnchorPoint)
-			end
-			if compact then
-				chip.AnchorPoint = Vector2.zero
-				chip.LayoutOrder = order
-				chip.Parent = infoStack
-				Style.setScale(chip, 1)
-			elseif chip.Parent == infoStack then
-				chip.Parent = gui
-				chip.Position = chip:GetAttribute("PcPosition")
-				chip.AnchorPoint = chip:GetAttribute("PcAnchor")
-			end
+			chip.AnchorPoint = Vector2.zero
+			chip.Position = UDim2.new()
+			chip.LayoutOrder = order
+			chip.Parent = infoStack
+			Style.setScale(chip, 1)
 		end
 	end
 end
@@ -715,8 +705,7 @@ local function applyLayout(mode: string)
 	end
 	travelLayout.Padding = UDim.new(0, if compact then 6 else 10)
 
-	local weatherChip = gui:FindFirstChild("WeatherChip") or (infoStack and infoStack:FindFirstChild("WeatherChip")) -- スマホでは InfoStack の中
-	local treeChip = gui:FindFirstChild("TreeChip")
+	local treeChip = gui:FindFirstChild("TreeChip") or (infoStack and infoStack:FindFirstChild("TreeChip"))
 	local bars = {}
 	for _, bar in menuButton:GetChildren() do
 		if bar.Name == "Bar" then
@@ -746,8 +735,7 @@ local function applyLayout(mode: string)
 		Style.setScale(travel, PHONE_ROW / 54)
 		local travelWidth = (54 * 2 + 6) * PHONE_ROW / 54
 		if treeChip then
-			treeChip.Size = UDim2.fromOffset(150, 58) -- スマホでは細く（種えらびの場所を広げる）
-			Style.setScale(treeChip, PHONE_ROW / 58) -- レベル表示も同じ高さ
+			treeChip.Size = UDim2.fromOffset(150, 58) -- スマホでは細く
 		end
 		-- 種えらびの列は、横はばを いっぱいに使う（道具と種が スライドしなくても見えるように）。
 		-- みんなの木のレベルは、広場にいるときだけ出る表示なので、種の列の横には置かない
@@ -757,25 +745,17 @@ local function applyLayout(mode: string)
 			--         2段目 [種えらび（はしからはしまで）]
 			--         3段目 [お天気] … [みんなの木のレベル]
 			local row3 = row2 + SEED_PHONE + 18
-			if treeChip then
-				treeChip.AnchorPoint = Vector2.new(1, 0)
-				treeChip.Position = UDim2.new(1, -12, 0, row3)
-			end
 			topSeeds.AnchorPoint = Vector2.new(0, 0)
 			topSeeds.Position = UDim2.fromOffset(12, row2)
 			seedBar.AnchorPoint = Vector2.new(0, 0)
 			seedBar.Position = UDim2.new()
 			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-			infoStack.Position = UDim2.fromOffset(12, row3 + PHONE_ROW + 8)
+			infoStack.Position = UDim2.fromOffset(12, row3) -- 種えらびの 下の 左
 		else
 			-- 横持ち: 1段目 [コイン][メニュー][種えらび（庭のボタンの手前まで）][庭][木]
 			--         2段目 [みんなの木のレベル]（広場にいるときだけ）
 			--         3段目 [お天気]（お天気のときだけ）
 			-- 左はしの縦にまとめる。右側の縦は、ショップ・収穫・売るのために空けておく
-			if treeChip then
-				treeChip.AnchorPoint = Vector2.new(0, 0)
-				treeChip.Position = UDim2.fromOffset(12, row2)
-			end
 			-- 列は、メニューの右と 庭のボタンの左の あいだの まん中に置く
 			local leftEdge = 12 + coinWidth + 6 + PHONE_ROW + 8
 			local rightEdge = 12 + travelWidth + 8
@@ -784,8 +764,8 @@ local function applyLayout(mode: string)
 			seedBar.AnchorPoint = Vector2.new(0.5, 0)
 			seedBar.Position = UDim2.fromScale(0.5, 0)
 			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-			-- 左はしの たて（みんなの木の レベルの 下）
-			infoStack.Position = UDim2.fromOffset(12, row2 + PHONE_ROW + 8)
+			-- 左はしの たて（コインの 下）
+			infoStack.Position = UDim2.fromOffset(12, row2)
 		end
 		actionStack.AnchorPoint = Vector2.new(1, 1)
 		actionStack.Position = UDim2.new(1, -14, 1, -JUMP_RESERVE)
@@ -807,18 +787,11 @@ local function applyLayout(mode: string)
 		travel.AnchorPoint = Vector2.new(0.5, 0)
 		travel.Position = UDim2.new(0.5, 0, 0, 8)
 		Style.setScale(travel, 1)
-		placeInfoChips() -- もとの場所に もどしてから
-		if weatherChip then
-			weatherChip.AnchorPoint = Vector2.new(0, 0)
-			weatherChip.Position = UDim2.fromOffset(94, leftTop + 76)
-			Style.setScale(weatherChip, 1)
-		end
+		-- いまの ようすの 札は、コインの 下・じょうろの 右に たてに
+		infoStack.Position = UDim2.fromOffset(94, leftTop + 76)
+		Style.setScale(infoStack, 0.85)
 		if treeChip then
-			-- みんなの木のレベルは、上の移動ボタンの右（右上より）
-			treeChip.AnchorPoint = Vector2.new(0, 0)
 			treeChip.Size = UDim2.fromOffset(230, 58)
-			treeChip.Position = UDim2.new(0.5, 170, 0, 2)
-			Style.setScale(treeChip, 0.85)
 		end
 		topSeeds.AnchorPoint = Vector2.new(0.5, 0)
 		topSeeds.Position = UDim2.new(0.5, 0, 0, 58)
@@ -1830,7 +1803,7 @@ function UI.init()
 	-- みんなの木が進んだら、レベルの表示を 少し はずませる（進んだことに 気づけるように）
 	for _, name in { "TreeProgress", "TreeLevel" } do
 		workspace:GetAttributeChangedSignal(name):Connect(function()
-			local treeChip = gui:FindFirstChild("TreeChip")
+			local treeChip = infoStack and infoStack:FindFirstChild("TreeChip")
 			if treeChip and treeChip.Visible then
 				Style.pop(treeChip, 1.08)
 			end
@@ -1848,13 +1821,18 @@ function UI.init()
 			end
 			menuBadge.Visible = any and not side.Visible
 			-- みんなの木の レベルは いつも 出す（みんなで 育てている ことが いつでも 見えるように）。
-			local treeChip = gui:FindFirstChild("TreeChip")
+			local treeChip = infoStack and infoStack:FindFirstChild("TreeChip")
 			if treeChip then
 				treeChip.Visible = true
 			end
 			task.wait(0.5)
 		end
 	end)
+end
+
+-- スマホの 配置か
+function UI.isCompact(): boolean
+	return compact
 end
 
 -- お天気・みんなの木の表示ができたあとに呼ぶ（スマホの配置にそろえる）
