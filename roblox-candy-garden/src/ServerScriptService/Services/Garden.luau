@@ -15,6 +15,7 @@ local Season = require(script.Parent.Season)
 local Quests = require(script.Parent.Quests)
 local CropModels = require(script.Parent.CropModels)
 local Friends = require(script.Parent.Friends)
+local Monetization = require(script.Parent.Monetization)
 
 local Garden = {}
 
@@ -664,6 +665,32 @@ local function petHelp(player: Player)
 	end
 end
 
+-- じょうろに入る水の数（じょうろの大きさ ＋ おおきな じょうろ パス）
+local function canCap(player: Player, d): number
+	local base = Config.Water.cans[d.water.level] or Config.Water.cans[1]
+	if Monetization.owns(player, "bigcan") then
+		base += Config.Passes.bigcan.extraWater
+	end
+	return base
+end
+
+-- みんなの木に おうえん（デベロッパー製品）: そのサーバーの 全員の、いま育っている作物を ratio ぶん 早める
+function Garden.boostAll(ratio: number)
+	for _, player in Players:GetPlayers() do
+		local d = Data.get(player)
+		if d then
+			for key, slot in d.plots do
+				local cropCfg = Config.CropById[slot.crop]
+				if cropCfg and not isReady(slot) then
+					speedUp(slot, cropCfg, ratio)
+					syncTile(player, tonumber(key))
+				end
+			end
+			Data.push(player)
+		end
+	end
+end
+
 -- 池のポンプで、じょうろに水をくむ（タダ。いっぱいまで）
 function Garden.refill(player: Player)
 	if not RateLimit.ok(player, "refill", 0.5) then
@@ -673,7 +700,7 @@ function Garden.refill(player: Player)
 	if not d then
 		return
 	end
-	local cap = Config.Water.cans[d.water.level] or Config.Water.cans[1]
+	local cap = canCap(player, d)
 	if d.water.amount >= cap then
 		Remotes.Toast:FireClient(player, "toast.waterFull")
 		return
@@ -708,8 +735,8 @@ function Garden.upgradeCan(player: Player)
 	end
 	d.coins -= price
 	d.water.level = nextLevel
-	d.water.amount = Config.Water.cans[nextLevel]
-	Remotes.Toast:FireClient(player, "toast.canUpgraded", Config.Water.cans[nextLevel])
+	d.water.amount = canCap(player, d)
+	Remotes.Toast:FireClient(player, "toast.canUpgraded", canCap(player, d))
 	Data.push(player)
 	Data.saveSoon(player)
 end

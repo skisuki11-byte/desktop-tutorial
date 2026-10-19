@@ -232,6 +232,57 @@ end
 
 local FurnitureVisuals = {}
 
+-- ここから スペシャル家具（パス）。ほかより 少し 大きく、金色や 光る部分で「とくべつ」と 分かるように
+BUILD.kingsofa = function(m)
+	local red, gold = C(200, 40, 90), C(245, 190, 60)
+	box(m, Vector3.new(4.6, 1, 2.2), Vector3.new(0, 1, 0.2), red, Enum.Material.Fabric) -- すわる所
+	box(m, Vector3.new(4.6, 2.6, 0.6), Vector3.new(0, 2.3, 1.1), red, Enum.Material.Fabric) -- せもたれ
+	for _, x in { -2.5, 2.5 } do
+		box(m, Vector3.new(0.6, 1.6, 2.4), Vector3.new(x, 1.3, 0.2), red, Enum.Material.Fabric) -- ひじかけ
+		ball(m, 0.6, Vector3.new(x, 2.3, -0.8), gold, Enum.Material.Metal)
+	end
+	box(m, Vector3.new(4.8, 0.25, 0.7), Vector3.new(0, 3.7, 1.1), gold, Enum.Material.Metal) -- 金のふち
+	-- せもたれの上の かんむり
+	box(m, Vector3.new(1.4, 0.5, 0.3), Vector3.new(0, 4.1, 1.1), gold, Enum.Material.Metal)
+	for _, x in { -0.5, 0, 0.5 } do
+		ball(m, 0.4, Vector3.new(x, 4.5, 1.1), gold, Enum.Material.Metal)
+	end
+	ball(m, 0.35, Vector3.new(0, 4.1, 0.9), C(120, 220, 255), Enum.Material.Glass)
+	legs(m, 4.2, 1.8, 0.5, gold)
+end
+
+BUILD.starfountain = function(m)
+	pillar(m, 0.6, 4.4, Vector3.zero, C(235, 225, 255), Enum.Material.Marble) -- 池のふち
+	pillar(m, 0.1, 3.8, Vector3.new(0, 0.6, 0), C(150, 210, 255), Enum.Material.Glass) -- 水
+	pillar(m, 2.2, 0.6, Vector3.new(0, 0.6, 0), C(235, 225, 255), Enum.Material.Marble) -- はしら
+	pillar(m, 0.3, 2, Vector3.new(0, 2.8, 0), C(235, 225, 255), Enum.Material.Marble) -- 上のおさら
+	pillar(m, 0.1, 1.7, Vector3.new(0, 3.1, 0), C(150, 210, 255), Enum.Material.Glass)
+	ball(m, 0.9, Vector3.new(0, 3.9, 0), C(255, 220, 90), Enum.Material.Neon) -- 光る星の玉
+	for i = 1, 5 do
+		local a = i * math.pi * 2 / 5
+		ball(m, 0.3, Vector3.new(math.cos(a) * 1.6, 0.9, math.sin(a) * 1.6), C(255, 240, 150), Enum.Material.Neon)
+	end
+end
+
+BUILD.dreamshelf = function(m)
+	local wood = C(190, 160, 255)
+	box(m, Vector3.new(3.6, 4.6, 1.2), Vector3.new(0, 2.3, 0.4), wood) -- 本だなの 箱
+	for i, y in { 1.1, 2.3, 3.5 } do
+		box(m, Vector3.new(3.2, 0.15, 1), Vector3.new(0, y - 0.55, 0.3), C(240, 230, 255)) -- たな板
+		-- 本（色ちがい）
+		local colors = { C(255, 140, 180), C(130, 200, 255), C(255, 215, 110), C(150, 230, 170), C(255, 170, 120) }
+		for k = 1, 5 do
+			local h = 0.7 + ((k + i) % 3) * 0.1
+			box(m, Vector3.new(0.45, h, 0.8), Vector3.new(-1.2 + (k - 1) * 0.6, y - 0.47 + h / 2, 0.2), colors[(k + i) % #colors + 1])
+		end
+	end
+	-- 上の 雲と 月
+	ball(m, 1, Vector3.new(-0.8, 5, 0.4), C(255, 255, 255))
+	ball(m, 1.2, Vector3.new(0, 5.1, 0.4), C(255, 255, 255))
+	ball(m, 0.9, Vector3.new(0.9, 5, 0.4), C(255, 255, 255))
+	ball(m, 0.6, Vector3.new(0.4, 5.8, 0.2), C(255, 230, 120), Enum.Material.Neon)
+end
+
 function FurnitureVisuals.build(id: string): Model?
 	local f = BUILD[id]
 	if not f then

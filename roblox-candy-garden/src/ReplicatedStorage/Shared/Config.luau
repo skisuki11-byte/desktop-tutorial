@@ -81,6 +81,10 @@ Config.Furniture = {
 	{ id = "bubblebath", icon = "🛁", price = 30000 },
 	{ id = "rainbowslide", icon = "🌈", price = 50000 },
 	{ id = "moonbed", icon = "🌙", price = 80000 },
+	-- ひみつきち スペシャル家具（ゲームパス「furniture」を持っている人だけ。コインでは買えない）
+	{ id = "kingsofa", icon = "👑", price = 0, pass = "furniture" },
+	{ id = "starfountain", icon = "⛲", price = 0, pass = "furniture" },
+	{ id = "dreamshelf", icon = "📚", price = 0, pass = "furniture" },
 }
 Config.FurnitureById = {}
 for _, item in Config.Furniture do
@@ -458,10 +462,19 @@ end
 
 -- ロバックスの商品（ゲームパス）。id を 0 のままにすると、画面に出ない・買えない。
 -- 作ったゲームパスのIDをここに入れる（README参照）。ランダム要素は入れない（中身が決まった商品だけ）。
+-- 方針（MONETIZATION.md）: ロバックスで コイン・種・たまご・ペットは 渡さない（たまごは ランダムなので「有料ガチャ」になる。
+-- ペットは 交換できるので「有料アイテムの交換」になる）。売るのは 見た目・家具・便利さ だけ。
 Config.Passes = {
-	coins2x = { id = 0, icon = "💰", multiplier = 2 }, -- 売値2倍（便利さ）
 	gold = { id = 0, icon = "🌟" }, -- ゴールドのつばさ（限定の見た目）
+	furniture = { id = 0, icon = "🏠" }, -- ひみつきち スペシャル家具（このパスだけの 家具3つ。Config.Furniture の pass = "furniture"）
+	bigcan = { id = 0, icon = "💧", extraWater = 3 }, -- おおきな じょうろ（水が いつも +3回。売値・コインは 増えない）
 	season = { id = 0, icon = "🎫" }, -- シーズンパスのスペシャルの道（中身は決まっている）
+}
+
+-- デベロッパー製品（何回でも買える）。id を 0 のままにすると、画面に出ない・買えない
+Config.Products = {
+	-- みんなの木に おうえん: そのサーバーの 全員の、いま育っている作物が ぐんと育つ（自分だけ強くならない。ランダムなし）
+	treeCheer = { id = 0, icon = "🌳", speedUp = 0.25 },
 }
 
 -- 期間限定ショップ（日替わり）。毎日 UTC 0時（日本時間 朝9時）に、pool から slots 個を選んで並べる。
@@ -574,26 +587,27 @@ Config.Season = {
 		daily = 30, -- デイリーボーナスを受け取った
 		tree = 20, -- みんなの木がレベルアップした（その場にいた全員）
 	},
+	-- スペシャルの道（ロバックス）には コイン・種を 入れない（お金で コインを買う形に しないため）。ひりょう・家具・おしゃれ
 	tiers = {
-		{ free = { coins = 100 }, premium = { coins = 300 } },
-		{ free = { seeds = { gummyberry = 5 } }, premium = { seeds = { peropero = 3 } } },
-		{ free = { coins = 150 }, premium = { coins = 400 } },
+		{ free = { coins = 100 }, premium = { fertilizer = 2 } },
+		{ free = { seeds = { gummyberry = 5 } }, premium = { furniture = "flowerpot" } },
+		{ free = { coins = 150 }, premium = { fertilizer = 3 } },
 		{ free = { seeds = { peropero = 2 } }, premium = { cosmetic = "startrail" } },
-		{ free = { coins = 200 }, premium = { coins = 500 } },
-		{ free = { seeds = { peropero = 3 } }, premium = { seeds = { wataame = 2 } } },
-		{ free = { coins = 250 }, premium = { coins = 600 } },
-		{ free = { seeds = { wataame = 1 } }, premium = { seeds = { nijimelon = 1 } } },
-		{ free = { coins = 300 }, premium = { coins = 700 } },
-		{ free = { cosmetic = "berryhat" }, premium = { coins = 1000 } },
-		{ free = { coins = 350 }, premium = { coins = 800 } },
-		{ free = { seeds = { wataame = 2 } }, premium = { seeds = { nijimelon = 2 } } },
-		{ free = { coins = 400 }, premium = { coins = 900 } },
-		{ free = { seeds = { nijimelon = 1 } }, premium = { seeds = { starcake = 1 } } },
-		{ free = { coins = 500 }, premium = { coins = 1000 } },
-		{ free = { seeds = { wataame = 3 } }, premium = { seeds = { nijimelon = 2 } } },
-		{ free = { coins = 600 }, premium = { coins = 1200 } },
-		{ free = { seeds = { nijimelon = 2 } }, premium = { seeds = { starcake = 1 } } },
-		{ free = { coins = 800 }, premium = { coins = 1500 } },
+		{ free = { coins = 200 }, premium = { furniture = "candyrug" } },
+		{ free = { seeds = { peropero = 3 } }, premium = { fertilizer = 3 } },
+		{ free = { coins = 250 }, premium = { furniture = "lollichair" } },
+		{ free = { seeds = { wataame = 1 } }, premium = { fertilizer = 4 } },
+		{ free = { coins = 300 }, premium = { furniture = "starlamp" } },
+		{ free = { cosmetic = "berryhat" }, premium = { furniture = "cottonsofa" } },
+		{ free = { coins = 350 }, premium = { fertilizer = 4 } },
+		{ free = { seeds = { wataame = 2 } }, premium = { furniture = "donutshelf" } },
+		{ free = { coins = 400 }, premium = { fertilizer = 5 } },
+		{ free = { seeds = { nijimelon = 1 } }, premium = { furniture = "teddypile" } },
+		{ free = { coins = 500 }, premium = { fertilizer = 5 } },
+		{ free = { seeds = { wataame = 3 } }, premium = { furniture = "cupcaketv" } },
+		{ free = { coins = 600 }, premium = { fertilizer = 6 } },
+		{ free = { seeds = { nijimelon = 2 } }, premium = { furniture = "chocofridge" } },
+		{ free = { coins = 800 }, premium = { furniture = "jellypiano" } },
 		{ free = { cosmetic = "lollipopback" }, premium = { cosmetic = "gemcrown" } },
 	},
 }

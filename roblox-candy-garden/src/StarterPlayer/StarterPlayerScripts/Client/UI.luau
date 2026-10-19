@@ -79,7 +79,7 @@ local PHONE_ROW = 44 -- スマホの上の段の高さ（指で押せる大き�
 
 local function basketValue(state): number
 	local total = Config.basketValue(state)
-	return math.floor(total * (state.sellBonus or 1) * (state.coinMultiplier or 1))
+	return math.floor(total * (state.sellBonus or 1))
 end
 
 -- ---- 左上のコイン ----
@@ -428,7 +428,7 @@ local function refreshSeedBar(state)
 	local cans = Config.Water.cans
 	local water = state.water
 	local tools = {
-		{ id = "water", icon = "💧", count = if water then water.amount .. "/" .. (cans[water.level] or cans[1]) else "" },
+		{ id = "water", icon = "💧", count = if water then water.amount .. "/" .. ((cans[water.level] or cans[1]) + (state.waterBonus or 0)) else "" },
 	}
 	-- ひりょう・ふしぎのしずくは、持っているときだけ 並べる（「×0」の使えないボタンが あると、
 	-- はじめての子は 押しても何も起きないボタンに まよう。種と同じく、なくなったら 消える）
@@ -1268,11 +1268,11 @@ local function refreshWater(state)
 		return
 	end
 	local cans = Config.Water.cans
-	local cap = cans[water.level] or cans[1]
+	local cap = (cans[water.level] or cans[1]) + (state.waterBonus or 0)
 	waterLabel.Text = "💧 " .. water.amount .. "/" .. cap
 	-- からっぽのときは、色で知らせる（池でくもう）
 	waterMeter.BackgroundColor3 = if water.amount <= 0 then Color3.fromRGB(255, 205, 210) else Color3.fromRGB(215, 236, 255)
-	local nextCap = cans[water.level + 1]
+	local nextCap = cans[water.level + 1] and (cans[water.level + 1] + (state.waterBonus or 0))
 	if nextCap then
 		canDetail.Text = t("ui.canNext", cap, nextCap) .. "\n" .. t("ui.canHint")
 		canButton.Text = "🟡 " .. Style.formatNumber(Config.Water.canPrices[water.level + 1])

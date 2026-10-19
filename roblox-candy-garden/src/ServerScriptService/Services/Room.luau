@@ -273,8 +273,8 @@ end
 
 local function buy(player: Player, id: any)
 	local item = type(id) == "string" and Config.FurnitureById[id]
-	if not item or not RateLimit.ok(player, "furniture", 0.3) then
-		return
+	if not item or item.pass or not RateLimit.ok(player, "furniture", 0.3) then
+		return -- パスの家具は コインでは買えない（パスを持っていれば 自動で もらえる）
 	end
 	local d = Data.get(player)
 	if not d then
@@ -341,6 +341,24 @@ end
 function Room.init()
 	Remotes.RoomDoor.OnServerEvent:Connect(onDoor)
 	Remotes.BuyFurniture.OnServerEvent:Connect(buy)
+	-- スペシャル家具パス: 持っている人に、パスの家具を わたす（参加したとき・買ったとき）
+	require(script.Parent.Monetization).onOwned(function(player, key)
+		local d = Data.get(player)
+		if not d then
+			return
+		end
+		slotsOf(d)
+		local changed = false
+		for _, item in Config.Furniture do
+			if item.pass == key and not d.room.owned[item.id] then
+				d.room.owned[item.id] = true
+				changed = true
+			end
+		end
+		if changed then
+			Data.push(player)
+		end
+	end)
 	Remotes.PlaceFurniture.OnServerEvent:Connect(place)
 	Remotes.RemoveFurniture.OnServerEvent:Connect(remove)
 	Data.addStateExtender(function(player)

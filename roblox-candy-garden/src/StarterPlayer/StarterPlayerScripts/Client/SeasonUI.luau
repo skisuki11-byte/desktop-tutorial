@@ -46,6 +46,15 @@ local function rewardText(reward): string
 			table.insert(parts, item.icon .. " " .. t("cos." .. item.id))
 		end
 	end
+	if reward.fertilizer then
+		table.insert(parts, "🌟×" .. reward.fertilizer)
+	end
+	if reward.furniture then
+		local item = Config.FurnitureById[reward.furniture]
+		if item then
+			table.insert(parts, item.icon .. " " .. t("furn." .. item.id))
+		end
+	end
 	return table.concat(parts, "  ")
 end
 

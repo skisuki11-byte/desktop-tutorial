@@ -194,6 +194,12 @@ local function refreshRoom()
 			row.button.BackgroundColor3 = C.Mint
 			row.button.TextColor3 = C.Text
 			row.status.Text = ""
+		elseif item.pass then
+			-- パスの家具: コインでは買えない。押すと パスの 買う画面（Roblox の確認つき）
+			row.button.Text = "⭐ " .. t("ui.furnPass")
+			row.button.BackgroundColor3 = C.Yellow
+			row.button.TextColor3 = C.Text
+			row.status.Text = t("ui.askParents")
 		else
 			local enough = (lastState.coins or 0) >= item.price
 			row.button.Text = "🟡 " .. Style.formatNumber(item.price)
@@ -265,6 +271,8 @@ local function buildFurnitureRow(item, order: number)
 			Remotes.RemoveFurniture:FireServer(item.id)
 		elseif room.owned and room.owned[item.id] then
 			Remotes.PlaceFurniture:FireServer(item.id)
+		elseif item.pass then
+			Remotes.BuyPass:FireServer(item.pass)
 		else
 			Remotes.BuyFurniture:FireServer(item.id)
 		end
@@ -373,6 +381,10 @@ function DecorUI.build(gui: ScreenGui, onClose: () -> ())
 		ZIndex = 12,
 	}, scroll)
 	for order, item in Config.Furniture do
+		-- パスの家具は、パスが 用意できるまで（id が 0 のあいだ）出さない
+		if item.pass and Config.Passes[item.pass].id <= 0 then
+			continue
+		end
 		buildFurnitureRow(item, 110 + order)
 	end
 	-- かざり

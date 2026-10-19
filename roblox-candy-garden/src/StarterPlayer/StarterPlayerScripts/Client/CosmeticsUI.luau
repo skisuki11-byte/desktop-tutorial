@@ -25,6 +25,11 @@ local function passesAvailable(): boolean
 			return true
 		end
 	end
+	for _, product in Config.Products do
+		if product.id > 0 then
+			return true
+		end
+	end
 	return false
 end
 
@@ -164,25 +169,71 @@ local function refreshSpecial()
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 12,
 	}, specialFrame)
+	-- 子ども向け: ロバックスを使う物だと はっきり書く（買うときは Roblox の確認画面も出る）
+	Style.label({
+		LayoutOrder = 0,
+		Size = UDim2.new(1, -8, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Text = "👪 " .. t("ui.askParents"),
+		TextSize = 16,
+		TextColor3 = C.AccentDark,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, specialFrame)
+	-- 1行: 名前（大きく）＋ 中身（小さく）。買う前に 何が もらえるか 全部 見えるように
+	local function specialRow(name: string, order: number, title: string, desc: string, color: Color3, onTap: () -> ())
+		local row = Style.button({
+			Name = name,
+			LayoutOrder = order,
+			Size = UDim2.new(1, -8, 0, 78),
+			BackgroundColor3 = color,
+			TextColor3 = C.Text,
+			Text = "",
+			ZIndex = 12,
+		}, specialFrame)
+		Style.label({
+			Position = UDim2.fromOffset(14, 6),
+			Size = UDim2.new(1, -28, 0, 36),
+			Text = title,
+			TextSize = 22,
+			TextWrapped = false,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 13,
+		}, row)
+		Style.label({
+			Position = UDim2.fromOffset(14, 42),
+			Size = UDim2.new(1, -28, 0, 28),
+			Text = desc,
+			TextSize = 15,
+			TextColor3 = C.TextMuted,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 13,
+		}, row)
+		row.Activated:Connect(onTap)
+	end
 	for key, pass in Config.Passes do
 		if pass.id > 0 then
 			order += 1
 			local have = lastState.passes and lastState.passes[key] == true
-			local row = Style.button({
-				Name = key,
-				LayoutOrder = order,
-				Size = UDim2.new(1, -8, 0, 64),
-				BackgroundColor3 = have and C.Mint or C.Yellow,
-				TextColor3 = C.Text,
-				Text = pass.icon .. " " .. t("pass." .. key) .. (have and ("  ⭐ " .. t("ui.passOwned")) or ""),
-				TextSize = 22,
-				TextWrapped = false,
-				ZIndex = 12,
-			}, specialFrame)
-			row.Activated:Connect(function()
-				if not have then
-					Remotes.BuyPass:FireServer(key)
+			specialRow(
+				key,
+				order,
+				pass.icon .. " " .. t("pass." .. key) .. (have and ("  ⭐ " .. t("ui.passOwned")) or ""),
+				t("passDesc." .. key),
+				have and C.Mint or C.Yellow,
+				function()
+					if not have then
+						Remotes.BuyPass:FireServer(key)
+					end
 				end
+			)
+		end
+	end
+	for key, product in Config.Products do
+		if product.id > 0 then
+			order += 1
+			specialRow(key, order, product.icon .. " " .. t("product." .. key), t("productDesc." .. key), C.Yellow, function()
+				Remotes.BuyProduct:FireServer(key)
 			end)
 		end
 	end

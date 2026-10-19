@@ -50,6 +50,14 @@ local function give(player: Player, d, reward)
 	if reward.cosmetic and Config.CosmeticById[reward.cosmetic] then
 		Cosmetics.grant(player, reward.cosmetic)
 	end
+	if reward.fertilizer then
+		d.fertilizer = math.min(Config.Fertilizer.max, (d.fertilizer or 0) + reward.fertilizer)
+	end
+	if reward.furniture and Config.FurnitureById[reward.furniture] then
+		d.room = d.room or { owned = {}, slots = {} }
+		d.room.owned = d.room.owned or {}
+		d.room.owned[reward.furniture] = true -- 置くのは ひみつきちの画面で
+	end
 end
 
 -- 届いている段のうち、まだ受け取っていないごほうびを全部渡す。渡した段の番号の一覧を返す

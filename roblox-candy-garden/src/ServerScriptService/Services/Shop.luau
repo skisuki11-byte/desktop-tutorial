@@ -98,7 +98,7 @@ local function sellAll(player: Player)
 		Remotes.Toast:FireClient(player, "toast.nothingToSell")
 		return
 	end
-	total = math.floor(total * (1 + Data.petBonus(d)) * Monetization.coinMultiplier(player))
+	total = math.floor(total * (1 + Data.petBonus(d)))
 	d.basket = {}
 	d.basketSparkle = {}
 	d.basketV = {}
