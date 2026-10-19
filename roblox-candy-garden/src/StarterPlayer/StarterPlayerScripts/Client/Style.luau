@@ -294,16 +294,21 @@ function Style.navButton(props: { [string]: any }, parent: Instance?): TextButto
 		TextSize = iconSize or 36,
 		TextWrapped = false,
 	}, button)
-	Style.label({
+	local captionLabel = Style.label({
 		Name = "Caption",
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.fromScale(0.5, 0.97),
-		Size = UDim2.new(1, -6, 0.34, 0),
+		Size = UDim2.new(1, -4, 0.34, 0),
 		Text = caption,
 		TextSize = captionSize or 15,
 		TextWrapped = false,
 		TextColor3 = captionColor or Style.Color.Text,
 	}, button)
+	-- 小さいボタン（スマホ）や 長い ことば（「しゅうかく」・ドイツ語 など）でも はしが 切れないよう、もっと 小さくまで ちぢめてよい
+	local fit = captionLabel:FindFirstChild("FitText")
+	if fit then
+		fit.MinTextSize = 6
+	end
 	return button
 end
 

@@ -32,6 +32,14 @@ local function localTime(serverTime: number): string
 end
 
 local function refresh()
+	-- 文字のふち（白い文字のときだけ。うすい色の札で こい文字に ふちが あると にじんで見える）
+	local function edge()
+		local stroke = chip:FindFirstChild("TextStroke")
+		if stroke then
+			stroke.Enabled = chip.TextColor3 == Color3.fromRGB(255, 255, 255)
+		end
+	end
+	task.defer(edge)
 	local now = workspace:GetServerTimeNow()
 	local endsAt = workspace:GetAttribute("GloomEndsAt") or 0
 	local sunny = workspace:GetAttribute("SunnyUntil") or 0

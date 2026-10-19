@@ -62,6 +62,7 @@ local layoutMode = "pc"
 local compact = false -- スマホのとき true
 local portrait = false -- スマホの縦持ち
 local actionStack, topSeeds
+local infoStack: Frame -- スマホ: お天気・ラッシュなどの 札を 左はしに 小さく たてに ならべる
 local waterMeter, waterLabel -- じょうろの残り（3つのボタンの上）
 local canDetail, canButton -- ショップの「じょうろ」の行
 local fertDetail -- ショップの「ひりょう」の行
@@ -622,6 +623,48 @@ local function buildCompactFrames()
 		BackgroundTransparency = 1,
 	}, gui)
 	Style.setScale(topSeeds, 0.72)
+
+	infoStack = Style.make("Frame", {
+		Name = "InfoStack",
+		Size = UDim2.fromOffset(0, 0),
+		AutomaticSize = Enum.AutomaticSize.XY,
+		BackgroundTransparency = 1,
+		Visible = false,
+	}, gui)
+	Style.make("UIListLayout", {
+		FillDirection = Enum.FillDirection.Vertical,
+		Padding = UDim.new(0, 6),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, infoStack)
+end
+
+-- お知らせの札（お天気・ほしぞらまつり・しょんぼり雲／キャンディラッシュ）の 置き場所。
+-- スマホ: 左はしの InfoStack に 小さく たてに（畑と キャラの まわりを あける）。パソコン: もとの場所
+local INFO_CHIPS = { "WeatherChip", "FestivalChip", "GloomChip" }
+local function placeInfoChips()
+	if not infoStack then
+		return
+	end
+	infoStack.Visible = compact
+	for order, name in INFO_CHIPS do
+		local chip = gui:FindFirstChild(name) or infoStack:FindFirstChild(name)
+		if chip and chip:IsA("GuiObject") then
+			if chip:GetAttribute("PcPosition") == nil then
+				chip:SetAttribute("PcPosition", chip.Position)
+				chip:SetAttribute("PcAnchor", chip.AnchorPoint)
+			end
+			if compact then
+				chip.AnchorPoint = Vector2.zero
+				chip.LayoutOrder = order
+				chip.Parent = infoStack
+				Style.setScale(chip, 1)
+			elseif chip.Parent == infoStack then
+				chip.Parent = gui
+				chip.Position = chip:GetAttribute("PcPosition")
+				chip.AnchorPoint = chip:GetAttribute("PcAnchor")
+			end
+		end
+	end
 end
 
 -- スマホでの大きさの倍率。画面の短い辺に合わせる（390pt ならおよそ0.75。指で押せる44pt以上は保つ）
@@ -673,7 +716,7 @@ local function applyLayout(mode: string)
 	end
 	travelLayout.Padding = UDim.new(0, if compact then 6 else 10)
 
-	local weatherChip = gui:FindFirstChild("WeatherChip")
+	local weatherChip = gui:FindFirstChild("WeatherChip") or (infoStack and infoStack:FindFirstChild("WeatherChip")) -- スマホでは InfoStack の中
 	local treeChip = gui:FindFirstChild("TreeChip")
 	local bars = {}
 	for _, bar in menuButton:GetChildren() do
@@ -724,11 +767,7 @@ local function applyLayout(mode: string)
 			seedBar.AnchorPoint = Vector2.new(0, 0)
 			seedBar.Position = UDim2.new()
 			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-			if weatherChip then
-				weatherChip.AnchorPoint = Vector2.new(0, 0)
-				weatherChip.Position = UDim2.fromOffset(12, row3 + PHONE_ROW + 8)
-				Style.setScale(weatherChip, 36 / 40)
-			end
+			infoStack.Position = UDim2.fromOffset(12, row3 + PHONE_ROW + 8)
 		else
 			-- 横持ち: 1段目 [コイン][メニュー][種えらび（庭のボタンの手前まで）][庭][木]
 			--         2段目 [みんなの木のレベル]（広場にいるときだけ）
@@ -746,14 +785,12 @@ local function applyLayout(mode: string)
 			seedBar.AnchorPoint = Vector2.new(0.5, 0)
 			seedBar.Position = UDim2.fromScale(0.5, 0)
 			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-			if weatherChip then
-				weatherChip.AnchorPoint = Vector2.new(0, 0)
-				weatherChip.Position = UDim2.fromOffset(12, row2 + PHONE_ROW + 8)
-				Style.setScale(weatherChip, 36 / 40)
-			end
+			-- 左はしの たて（みんなの木の レベルの 下）
+			infoStack.Position = UDim2.fromOffset(12, row2 + PHONE_ROW + 8)
 		end
 		actionStack.AnchorPoint = Vector2.new(1, 1)
 		actionStack.Position = UDim2.new(1, -14, 1, -JUMP_RESERVE)
+		Style.setScale(infoStack, 0.72)
 	else
 		Style.setScale(coinPill, 1)
 		coinPill.Position = UDim2.fromOffset(16, leftTop)
@@ -771,6 +808,7 @@ local function applyLayout(mode: string)
 		travel.AnchorPoint = Vector2.new(0.5, 0)
 		travel.Position = UDim2.new(0.5, 0, 0, 8)
 		Style.setScale(travel, 1)
+		placeInfoChips() -- もとの場所に もどしてから
 		if weatherChip then
 			weatherChip.AnchorPoint = Vector2.new(0, 0)
 			weatherChip.Position = UDim2.fromOffset(94, leftTop + 76)
@@ -791,6 +829,7 @@ local function applyLayout(mode: string)
 		actionStack.AnchorPoint = Vector2.new(0, 0)
 		actionStack.Position = UDim2.fromOffset(16, leftTop + 108) -- 上に じょうろの残り（💧）を出す すき間
 	end
+	placeInfoChips()
 	-- 案内とお知らせは、種えらびの下に
 	local bannerY = if compact
 		then (if portrait then leftTop + PHONE_ROW + SEED_PHONE + 36 + PHONE_ROW + 8 else leftTop + SEED_PHONE + 20)
@@ -1772,6 +1811,12 @@ function UI.init()
 	NewTips.init(UI.toastText)
 	buildBanner()
 	buildCompactFrames()
+	-- お知らせの札は ほかの ファイルが あとから 作るので、できたら 置き場所を きめる
+	gui.ChildAdded:Connect(function(child)
+		if table.find(INFO_CHIPS, child.Name) then
+			task.defer(placeInfoChips)
+		end
+	end)
 	buildWaterMeter()
 
 	fitBottom()
