@@ -1,8 +1,31 @@
--- 日本語/英語。LocalizationService.RobloxLocaleId の先頭が "ja" なら日本語。
+-- ことば。LocalizationService.RobloxLocaleId（Roblox の 言語設定）で えらぶ。
+-- 日本語・英語は このファイル。ほかの言語は Shared/Lang/<code>.luau（ないことばは 英語で出す）。
+-- 言語の えらびかた: 遊ぶ人が多い国・1人あたりの売上が高い国のことば（スペイン語・ポルトガル語・フランス語・ドイツ語・韓国語・中国語〔繁体〕・インドネシア語・タイ語）
 local LocalizationService = game:GetService("LocalizationService")
 
 local STRINGS = {
 	ja = {
+		["cat.button"] = "3Dずかん",
+		["cat.title"] = "ぜんぶの 3Dずかん",
+		["cat.search"] = "なまえで さがす",
+		["cat.back"] = "← もどる",
+		["cat.found"] = "みつけた！",
+		["cat.secret"] = "まだ ひみつ",
+		["cat.tap"] = "タップで くわしく",
+		["cat.none"] = "みつからなかったよ。なまえを かえてね。",
+		["cat.tab.all"] = "ぜんぶ",
+		["cat.tab.pet"] = "ペット",
+		["cat.tab.egg"] = "たまご",
+		["cat.tab.crop"] = "さくもつ",
+		["cat.tab.variant"] = "すがた",
+		["cat.tab.tool"] = "どうぐ",
+		["cat.tab.cos"] = "おしゃれ",
+		["cat.tab.decor"] = "かざり",
+		["cat.tab.furn"] = "かぐ",
+		["cat.tab.fairy"] = "ルル",
+		["cat.tab.weather"] = "おてんき",
+		["cat.tab.place"] = "ばしょ",
+		["cat.tab.ui"] = "ごほうび",
 		["crop.gummyberry"] = "グミベリー",
 		["crop.peropero"] = "ペロペロフラワー",
 		["crop.wataame"] = "わたあめブッシュ",
@@ -449,6 +472,27 @@ local STRINGS = {
 		["toast.dailyGot"] = "ボーナスをもらったよ！",
 	},
 	en = {
+		["cat.button"] = "3D Guide",
+		["cat.title"] = "3D Collection Guide",
+		["cat.search"] = "Search by name",
+		["cat.back"] = "← Back",
+		["cat.found"] = "Discovered!",
+		["cat.secret"] = "Not found yet",
+		["cat.tap"] = "Tap for details",
+		["cat.none"] = "Nothing found. Try another name.",
+		["cat.tab.all"] = "All",
+		["cat.tab.pet"] = "Pets",
+		["cat.tab.egg"] = "Eggs",
+		["cat.tab.crop"] = "Crops",
+		["cat.tab.variant"] = "Variants",
+		["cat.tab.tool"] = "Tools",
+		["cat.tab.cos"] = "Style",
+		["cat.tab.decor"] = "Decor",
+		["cat.tab.furn"] = "Furniture",
+		["cat.tab.fairy"] = "Lulu",
+		["cat.tab.weather"] = "Weather",
+		["cat.tab.place"] = "Places",
+		["cat.tab.ui"] = "Rewards",
 		["crop.gummyberry"] = "Gummy Berry",
 		["crop.peropero"] = "Lollipop Flower",
 		["crop.wataame"] = "Cotton Candy Bush",
@@ -898,14 +942,51 @@ local STRINGS = {
 
 local I18n = {}
 
+-- ロケールの 先頭（"pt-br" → "pt"）から ことばを えらぶ。中国語は 繁体（台湾・香港）だけ
+local SUPPORTED = { ja = true, en = true, es = true, pt = true, fr = true, de = true, ko = true, id = true, th = true }
+local cached: string? = nil
+
 function I18n.language(): string
-	local ok, id = pcall(function()
+	if cached then
+		return cached
+	end
+	local id = ""
+	local ok, value = pcall(function()
 		return LocalizationService.RobloxLocaleId
 	end)
-	if ok and type(id) == "string" and string.sub(id, 1, 2) == "ja" then
-		return "ja"
+	if ok and type(value) == "string" then
+		id = string.lower(value)
 	end
-	return "en"
+	-- Studio で 言語を ためすとき: workspace の 属性 DebugLang（"de" など）
+	local RunService = game:GetService("RunService")
+	if RunService:IsStudio() and type(workspace:GetAttribute("DebugLang")) == "string" then
+		id = string.lower(workspace:GetAttribute("DebugLang"))
+	end
+	local head = string.sub(id, 1, 2)
+	local lang = "en"
+	if head == "zh" then
+		if string.find(id, "tw") or string.find(id, "hk") or string.find(id, "hant") or string.find(id, "mo") then
+			lang = "zh"
+		end
+	elseif SUPPORTED[head] then
+		lang = head
+	end
+	if lang ~= "ja" and lang ~= "en" and not STRINGS[lang] then
+		local folder = script.Parent:FindFirstChild("Lang")
+		local module = folder and folder:FindFirstChild(lang)
+		local loaded, tbl = false, nil
+		if module then
+			loaded, tbl = pcall(require, module)
+		end
+		STRINGS[lang] = if loaded and type(tbl) == "table" then tbl else {}
+	end
+	cached = lang
+	return lang
+end
+
+-- いまの ことばに その文があるか（なければ 英語などに まかせる）
+function I18n.has(key: string): boolean
+	return STRINGS[I18n.language()][key] ~= nil
 end
 
 -- 秒を「8時間」「3分」「20秒」のように読みやすくする

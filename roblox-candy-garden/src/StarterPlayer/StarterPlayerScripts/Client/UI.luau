@@ -345,7 +345,7 @@ local function buildMenu()
 			CaptionSize = 13,
 		}, side)
 	end
-	local catalogButton=item("Catalog",9,"📚",if I18n.language()=="ja" then "3Dずかん" else "3D Guide",Color3.fromRGB(170,225,200))
+	local catalogButton=item("Catalog",9,"📚",I18n.t("cat.button"),Color3.fromRGB(170,225,200))
 	catalogButton.Activated:Connect(function() UI.showPanel(if CatalogUI.isVisible() then nil else "catalog") end)
 	local friendsButton = item("Friends", 10, "🤝", t("ui.friends"), Color3.fromRGB(255, 190, 210))
 	friendsButton.Activated:Connect(function()
@@ -1488,24 +1488,34 @@ function UI.toastText(text: string, seconds: number?)
 	local token = toastToken
 	toastLabel.Text = text
 	toastLabel.Visible = true
-	-- 妖精の吹き出しが出ているときは、その下に出す（重ならないように）
-	if banner and banner.Visible then
-		local top = banner.AbsolutePosition.Y - gui.AbsolutePosition.Y
-		local height = math.max(toastLabel.AbsoluteSize.Y, 40)
-		local y = top + banner.AbsoluteSize.Y + 8
-		-- 吹き出しが 画面の下にあるとき（スマホ）は、下に出すと 画面の外に はみ出すので 上に出す
-		if y + height > gui.AbsoluteSize.Y - 8 then
-			y = top - height - 8
+	local function place()
+		-- 妖精の吹き出しが出ているときは、その下に出す（重ならないように）
+		if banner and banner.Visible then
+			local top = banner.AbsolutePosition.Y - gui.AbsolutePosition.Y
+			local height = math.max(toastLabel.AbsoluteSize.Y, 40)
+			local y = top + banner.AbsoluteSize.Y + 8
+			-- 吹き出しが 画面の下にあるとき（スマホ）は、下に出すと 画面の外に はみ出すので 上に出す
+			if y + height > gui.AbsoluteSize.Y - 8 then
+				y = top - height - 8
+			end
+			toastLabel.Position = UDim2.new(0.5, 0, 0, y)
+		elseif UI.currentPanel ~= nil then
+			-- 画面（おしゃれ・ショップなど）を開いているときは、いちばん下に出す
+			-- （上に出すと タブや ボタンに重なって、続けて押せない）
+			local y = gui.AbsoluteSize.Y - math.max(toastLabel.AbsoluteSize.Y, 40) - 12
+			toastLabel.Position = UDim2.new(0.5, 0, 0, y)
+		else
+			toastLabel.Position = UDim2.new(0.5, 0, 0, toastY)
 		end
-		toastLabel.Position = UDim2.new(0.5, 0, 0, y)
-	elseif UI.currentPanel ~= nil then
-		-- 画面（おしゃれ・ショップなど）を開いているときは、いちばん下に出す
-		-- （上に出すと タブや ボタンに重なって、続けて押せない）
-		local y = gui.AbsoluteSize.Y - math.max(toastLabel.AbsoluteSize.Y, 40) - 12
-		toastLabel.Position = UDim2.new(0.5, 0, 0, y)
-	else
-		toastLabel.Position = UDim2.new(0.5, 0, 0, toastY)
 	end
+	place()
+	-- 長い文（ほかの ことば など）は 折り返して 高くなる。大きさが きまった 次の画面で 置きなおす（下に はみ出さないように）
+	task.spawn(function()
+		game:GetService("RunService").RenderStepped:Wait()
+		if token == toastToken then
+			place()
+		end
+	end)
 	toastLabel.BackgroundTransparency = 0
 	toastLabel.TextTransparency = 0
 	Style.pop(toastLabel, 1.15)
