@@ -368,10 +368,14 @@ end
 -- ---- ほしぞらのおくりもの（Config.StarGift） ----
 -- みんなの木がレベル20になったら、全員に1回だけ: 限定のおしゃれ・まもりがみのペット・コイン。
 -- あとから来た人にも、来たときに渡す（見逃しを作らない）。
--- ただし コインは、木を育てた人（案内を終えて 遊んでいた人）にだけ。はじめての子が 案内のあとすぐ 1万コインを もらうと、
--- 最初の目標（種・畑を広げる）が 一気に かなって 遊ぶ理由が なくなり、「みんなで育てた ごほうび」の 意味も うすれる。
--- はじめての子には、おしゃれと ペットだけ（いっしょに 守っていく 仲間の しるし）
-local function giveStarGift(player: Player, newcomer: boolean?)
+-- コインは「木を てつだった おれい」: 自分で しゅうかくした回数が Config.StarGift.thanksHarvests に とどいた人にだけ。
+-- まだの人（はじめての子など）には、おしゃれと ペットを先に わたし、コインは とどいたときに 木から とどける。
+-- （来た時期ではなく「どれだけ てつだったか」で決める。はじめての子には「あと何回」が つぎの目標になる）
+local function thanksReady(d): boolean
+	return not d.starCoins and (d.harvests or 0) >= Config.StarGift.thanksHarvests
+end
+
+local function giveStarGift(player: Player)
 	local d = Data.get(player)
 	if not d or d.starGift or level < Config.StarGift.level then
 		return
@@ -381,8 +385,12 @@ local function giveStarGift(player: Player, newcomer: boolean?)
 		return
 	end
 	d.starGift = true
-	local coins = if newcomer then 0 else Config.StarGift.coins
-	d.coins += coins
+	local coins = 0
+	if thanksReady(d) then
+		coins = Config.StarGift.coins
+		d.starCoins = true
+		d.coins += coins
+	end
 	for _, id in Config.StarGift.cosmetics do
 		Cosmetics.grant(player, id)
 	end
@@ -390,6 +398,14 @@ local function giveStarGift(player: Player, newcomer: boolean?)
 	Data.push(player)
 	Data.saveSoon(player)
 	Remotes.StarGift:FireClient(player, Config.StarGift.level, coins)
+	if coins == 0 and not d.starCoins then
+		-- つぎの目標を 先に 知らせる（お祝いの画面を 閉じたころに）
+		task.delay(6, function()
+			if player.Parent then
+				Remotes.Toast:FireClient(player, "toast.starThanksHint", math.max(0, Config.StarGift.thanksHarvests - (d.harvests or 0)))
+			end
+		end)
+	end
 end
 
 local function publishFestival()
@@ -598,10 +614,53 @@ function Tree.addPoints(points: number)
 end
 
 -- 参加した人の準備ができたら呼ぶ。すでにほしぞらの木なら、おくりものを渡す
-function Tree.onPlayerReady(player: Player, newcomer: boolean?)
+function Tree.onPlayerReady(player: Player)
 	task.delay(3, function() -- 画面が出そろってから
 		if player.Parent == Players then
-			giveStarGift(player, newcomer)
+			giveStarGift(player)
+		end
+	end)
+end
+
+-- しゅうかくしたら 呼ぶ（Garden）。おくりものを もらっていて、しゅうかくの回数が とどいたら、木から おれいの コイン
+function Tree.onHarvest(player: Player)
+	local d = Data.get(player)
+	if not d or not d.starGift or d.starCoins or level < Config.StarGift.level then
+		return
+	end
+	local left = Config.StarGift.thanksHarvests - (d.harvests or 0)
+	if left <= 0 then
+		d.starCoins = true
+		d.coins += Config.StarGift.coins
+		Data.saveSoon(player)
+		Remotes.StarGift:FireClient(player, Config.StarGift.level, Config.StarGift.coins, "thanks")
+	elseif left == 50 or left == 10 then
+		Remotes.Toast:FireClient(player, "toast.starThanksLeft", left)
+	end
+end
+
+-- 画面の「おれいまで あと何回」（おくりものを もらっていて、コインが まだの人だけ）
+Data.addStateExtender(function(player: Player)
+	local d = Data.get(player)
+	if not d or not d.starGift or d.starCoins or level < Config.StarGift.level then
+		return {}
+	end
+	return { starThanksLeft = math.max(0, Config.StarGift.thanksHarvests - (d.harvests or 0)) }
+end)
+
+-- Studioでの確認用（本番では動かない）: workspace の属性 DebugHarvests に 数を入れると、全員の しゅうかく回数を その数にする
+if game:GetService("RunService"):IsStudio() then
+	workspace:GetAttributeChangedSignal("DebugHarvests"):Connect(function()
+		local n = workspace:GetAttribute("DebugHarvests")
+		if type(n) ~= "number" then
+			return
+		end
+		for _, player in Players:GetPlayers() do
+			local d = Data.get(player)
+			if d then
+				d.harvests = n
+				Data.push(player)
+			end
 		end
 	end)
 end

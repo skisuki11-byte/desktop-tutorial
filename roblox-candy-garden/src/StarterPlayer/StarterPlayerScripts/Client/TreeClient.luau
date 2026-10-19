@@ -127,6 +127,8 @@ local function ensureSign(): Frame?
 	return frame
 end
 
+local thanksLeft: number? = nil -- ほしぞらの木の おれいまで あと何回（State から）
+
 local function refresh()
 	local level = workspace:GetAttribute("TreeLevel") or 1
 	local progress = workspace:GetAttribute("TreeProgress") or 0
@@ -136,7 +138,9 @@ local function refresh()
 	local ratio = math.clamp(progress / goal, 0, 1)
 
 	chipLevel.Text = levelText
-	chipCount.Text = countText
+	-- ほしぞらの木の おれい（コイン）が まだの人には、右に「あと何回 しゅうかく」を出す（つぎの目標が 見えるように）
+	chipCount.Text = if thanksLeft then t("ui.starThanksLeft", thanksLeft) else countText
+	chipCount.TextColor3 = if thanksLeft then C.AccentDark else C.TextMuted
 	TweenService:Create(chipFill, TweenInfo.new(0.35), { Size = UDim2.fromScale(ratio, 1) }):Play()
 
 	local board = ensureSign()
@@ -150,6 +154,15 @@ local function refresh()
 		Style.pop(chip, 1.08)
 	end
 	lastProgress, lastLevel = progress, level
+end
+
+function TreeClient.update(state)
+	local left = state.starThanksLeft
+	local value = if type(left) == "number" and left > 0 then left else nil
+	if value ~= thanksLeft then
+		thanksLeft = value
+		refresh()
+	end
 end
 
 function TreeClient.init(uiModule)

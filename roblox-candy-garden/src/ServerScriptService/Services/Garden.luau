@@ -281,6 +281,8 @@ local function harvest(player: Player, tileIndex: number): boolean
 	d.plots[tostring(tileIndex)] = nil
 	syncTile(player, tileIndex)
 	Tree.add(cropId) -- みんなの木の成長ポイントになる
+	d.harvests = (d.harvests or 0) + 1
+	Tree.onHarvest(player) -- ほしぞらの木の おれい（しゅうかくの回数が とどいたら）
 	Season.addXp(player, Config.Season.xp.harvest[cropId] or 1) -- キャンディパスのXP
 	-- きょうのおねがい
 	Quests.progress(player, "harvest", 1)

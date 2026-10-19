@@ -380,6 +380,9 @@ Config.Gloom = {
 Config.StarGift = {
 	level = 20,
 	coins = 10000,
+	-- コインは「木を てつだった おれい」: 自分で しゅうかくした回数が これに とどいたら わたす
+	-- （はじめての子が 案内のあと すぐ 1万コインを もらうと、最初の目標が 一気に かなってしまうため）
+	thanksHarvests = 100,
 	cosmetics = { "starcrown", "starwings" },
 	pet = "starguardian", -- ほしぞらの まもりがみ
 	festivalSeconds = 24 * 3600, -- ほしぞらまつり（全サーバーで星が降り、きらきらが出やすい）

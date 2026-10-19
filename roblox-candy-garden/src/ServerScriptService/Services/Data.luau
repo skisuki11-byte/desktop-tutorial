@@ -66,6 +66,8 @@ local function newData()
 		lastSeen = 0, -- 最後に保存した時刻（おかえりメッセージ用）
 		music = true, -- BGMを流すか（次に来たときも同じ設定にする）
 		starGift = false, -- ほしぞらのおくりものを受け取ったか
+		starCoins = false, -- ほしぞらの木の おれい（コイン）を受け取ったか
+		harvests = 0, -- 自分で しゅうかくした回数（ほしぞらの木の おれいの 目安）
 		water = { amount = 3, level = 1 }, -- じょうろの水（残り回数）と大きさ（Config.Water.cans）
 		fertilizer = 0, -- キャンディひりょうの数
 		drops = 0, -- ふしぎのしずくの数
@@ -88,6 +90,10 @@ local function newData()
 end
 
 local function reconcile(data)
+	-- 前の データ: ほしぞらのおくりものを もう受け取った人は、コインも いっしょに もらっている
+	if data.starCoins == nil and data.starGift == true then
+		data.starCoins = true
+	end
 	local base = newData()
 	for key, value in base do
 		if data[key] == nil then

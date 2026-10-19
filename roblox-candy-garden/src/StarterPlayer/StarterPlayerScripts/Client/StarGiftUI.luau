@@ -29,7 +29,8 @@ local function formatLeft(seconds: number): string
 end
 
 -- 画面いっぱいのお祝い
-local function showCelebration(level: number, coins: number)
+-- kind: nil=ほしぞらのおくりもの / "thanks"=しゅうかくの回数が とどいたときの 木からの おれい（コインだけ）
+local function showCelebration(level: number, coins: number, kind: string?)
 	local gui = ui.gui()
 	local overlay = Style.make("Frame", {
 		Name = "StarGift",
@@ -104,7 +105,7 @@ local function showCelebration(level: number, coins: number)
 	Style.label({
 		LayoutOrder = 2,
 		Size = UDim2.new(1, 0, 0, 50),
-		Text = t("star.title"),
+		Text = t(if kind == "thanks" then "star.thanksTitle" else "star.title"),
 		TextSize = 38,
 		TextColor3 = Color3.fromRGB(255, 240, 170),
 		TextWrapped = false,
@@ -113,7 +114,7 @@ local function showCelebration(level: number, coins: number)
 	Style.label({
 		LayoutOrder = 3,
 		Size = UDim2.new(1, 0, 0, 56),
-		Text = t(if coins > 0 then "star.body" else "star.bodyNew", level), -- はじめての子には「あたらしい なかまへ」
+		Text = if kind == "thanks" then t("star.thanksBody", Config.StarGift.thanksHarvests) else t("star.body", level),
 		TextSize = 20,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
 		ZIndex = 53,
@@ -133,11 +134,13 @@ local function showCelebration(level: number, coins: number)
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, gifts)
 	local items = {}
-	local pet = Config.PetById[Config.StarGift.pet]
-	table.insert(items, { icon = pet.icon, key = "pet_" .. pet.id, name = t("pet." .. pet.id) })
-	for _, id in Config.StarGift.cosmetics do
-		local item = Config.CosmeticById[id]
-		table.insert(items, { icon = item.icon, key = "cos_" .. id, name = t("cos." .. id) })
+	if kind ~= "thanks" then
+		local pet = Config.PetById[Config.StarGift.pet]
+		table.insert(items, { icon = pet.icon, key = "pet_" .. pet.id, name = t("pet." .. pet.id) })
+		for _, id in Config.StarGift.cosmetics do
+			local item = Config.CosmeticById[id]
+			table.insert(items, { icon = item.icon, key = "cos_" .. id, name = t("cos." .. id) })
+		end
 	end
 	if coins > 0 then
 		table.insert(items, { icon = "🟡", key = "ui_coins", name = Style.formatNumber(coins) })
@@ -258,7 +261,7 @@ end
 function StarGiftUI.init(uiModule)
 	ui = uiModule
 	buildFestival()
-	Remotes.StarGift.OnClientEvent:Connect(function(level, coins)
+	Remotes.StarGift.OnClientEvent:Connect(function(level, coins, kind)
 		if type(level) == "number" then
 			-- ルルが話している あいだ（「つぎへ」が出ている あいだ）は まつ。
 			-- お別れの あいさつの とちゅうで 割りこむと、子どもが 押した「つぎへ」が お祝いの画面に 吸われてしまう
@@ -269,7 +272,7 @@ function StarGiftUI.init(uiModule)
 				waited += task.wait(0.5)
 			end
 			ui.showPanel(nil)
-			showCelebration(level, if type(coins) == "number" then coins else 0)
+			showCelebration(level, if type(coins) == "number" then coins else 0, if kind == "thanks" then "thanks" else nil)
 		end
 	end)
 	task.spawn(function()
