@@ -1205,6 +1205,27 @@ local function buildShop()
 	end)
 end
 
+-- ボタンの文字を、ボタンの はばに 1行で 入る大きさにする（自動で縮める しくみは、縮むかわりに 途中で 折りかえすことがあるため）
+local function fitButtonText(button: TextButton, text: string, maxSize: number)
+	button.Text = text
+	local width = button.AbsoluteSize.X - 14
+	if width <= 0 then
+		Style.setTextSize(button, maxSize)
+		return
+	end
+	local size = maxSize
+	while size > 10 and game:GetService("TextService"):GetTextSize(text, size, button.Font, Vector2.new(2000, 200)).X > width do
+		size -= 1
+	end
+	Style.setTextSize(button, size)
+	local limit = button:FindFirstChild("FitText")
+	if limit then
+		limit.MinTextSize = math.min(limit.MinTextSize, size)
+	end
+	button.TextScaled = false
+	button.TextSize = size
+end
+
 -- 種屋の行: のこりの数 / うりきれ / こんかいは なし
 local function refreshSeedShop(state)
 	local shop = state.seedShop
@@ -1218,22 +1239,19 @@ local function refreshSeedShop(state)
 		if left == nil then
 			-- この回は入荷していない（行を うすくして、ボタンは押せない）
 			entry.info.Text = base
-			entry.buy.Text = t("ui.notInStock")
-			entry.buy.TextSize = 16
+			fitButtonText(entry.buy, t("ui.notInStock"), 16)
 			entry.buy.BackgroundColor3 = C.Dim
 			entry.buy.Active = false
 			entry.row.BackgroundColor3 = Color3.fromRGB(240, 236, 244)
 		elseif left <= 0 then
 			entry.info.Text = base .. "  ・ " .. t("ui.soldOut")
-			entry.buy.Text = t("ui.soldOut")
-			entry.buy.TextSize = 18
+			fitButtonText(entry.buy, t("ui.soldOut"), 18)
 			entry.buy.BackgroundColor3 = C.Dim
 			entry.buy.Active = false
 			entry.row.BackgroundColor3 = Color3.fromRGB(240, 236, 244)
 		else
 			entry.info.Text = base .. "  ・ " .. t("ui.seedLeft", left)
-			entry.buy.Text = "🟡 " .. Style.formatNumber(crop.seedPrice)
-			entry.buy.TextSize = 22
+			fitButtonText(entry.buy, "🟡 " .. Style.formatNumber(crop.seedPrice), 22)
 			entry.buy.BackgroundColor3 = C.Accent
 			entry.buy.Active = true
 			entry.row.BackgroundColor3 = Color3.fromRGB(255, 255, 255)

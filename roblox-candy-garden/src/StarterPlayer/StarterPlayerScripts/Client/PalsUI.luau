@@ -35,6 +35,7 @@ local function buildEggCard(parent: Instance, egg, order: number)
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 		ZIndex = 11,
 	}, parent)
+	card:SetAttribute("HalfRow", true) -- スマホの横持ちでは、たまご2つを 左右に ならべる
 	Style.round(card, 18)
 	Style.stroke(card, if egg.id == "staregg" then Color3.fromRGB(255, 200, 80) else C.Accent, 3)
 	Style.make("UIPadding", {
@@ -400,7 +401,8 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 		if width < 10 then
 			return
 		end
-		local columns = if width >= 640 then 4 else 3
+		-- 1まい 120 以上を目安に、入るだけ ならべる（3〜6まい）。スマホの横持ちでも 右が空かないように
+		local columns = math.clamp(math.floor((width + 14) / (120 + 14)), 3, 6)
 		local cellWidth = math.floor((width - (columns - 1) * 14) / columns)
 		gridLayout.CellSize = UDim2.fromOffset(cellWidth, math.max(150, math.floor(cellWidth * 1.3)))
 	end
@@ -444,7 +446,7 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 		if width < 10 then
 			return
 		end
-		local columns = if width >= 640 then 4 else 3
+		local columns = math.clamp(math.floor((width + 10) / (130 + 10)), 3, 6)
 		local cellWidth = math.floor((width - (columns - 1) * 10) / columns)
 		dexLayout.CellSize = UDim2.fromOffset(cellWidth, math.floor(cellWidth * 1.22))
 	end

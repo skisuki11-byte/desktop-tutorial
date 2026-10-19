@@ -405,6 +405,92 @@ function Style.modal(gui: Instance, name: string, title: string, onClose: () -> 
 		PaddingTop = UDim.new(0, 8),
 		PaddingBottom = UDim.new(0, 12),
 	}, scroll)
+
+	-- スマホの横持ち（横に長く、高さが低い画面）では:
+	--   ・カードを画面いっぱいに広げる（はば最大 880）。タイトルの帯を細くして、中身を見える所を広くする
+	--   ・行（種・道具・家具 など）を 2列に ならべる（1画面に見える数を ふやす。スクロールを へらす）
+	-- 自分で配置を決めている画面（ずかん など）は panel の属性 OwnLayout で のぞく
+	local limit = panel:FindFirstChildOfClass("UISizeConstraint")
+	local titleLabel = header:FindFirstChildOfClass("TextLabel")
+	local shifted = false
+	local function isRow(c: Instance): boolean
+		if c:GetAttribute("HalfRow") == true then
+			return true -- 高さが 中身で決まるカード（たまご など）は、作るときに この印をつける
+		end
+		if not c:IsA("Frame") or c.AutomaticSize ~= Enum.AutomaticSize.None then
+			return false
+		end
+		local size = c.Size
+		return size.X.Scale == 1 and size.Y.Scale == 0 and size.Y.Offset >= 76 and size.Y.Offset <= 160
+			and not c:FindFirstChildOfClass("UIGridLayout") and not c:FindFirstChildOfClass("UIListLayout")
+	end
+	local function setRow(c: Instance, half: boolean)
+		if not c:IsA("GuiObject") then
+			return
+		end
+		if half then
+			if c:GetAttribute("FullOffsetX") == nil and isRow(c) then
+				c:SetAttribute("FullOffsetX", c.Size.X.Offset)
+				c.Size = UDim2.new(0.5, -8, 0, c.Size.Y.Offset)
+			end
+		elseif c:GetAttribute("FullOffsetX") ~= nil then
+			c.Size = UDim2.new(1, c:GetAttribute("FullOffsetX"), 0, c.Size.Y.Offset)
+			c:SetAttribute("FullOffsetX", nil)
+		end
+	end
+	local twoColumns = false
+	local function relayout()
+		if panel:GetAttribute("OwnLayout") then
+			return
+		end
+		local screen = gui:IsA("GuiBase2d") and gui.AbsoluteSize or Vector2.new(1000, 800)
+		local short = screen.Y < 480 and screen.X > screen.Y
+		if short ~= shifted then
+			shifted = short
+			local shift = if short then 28 else -28
+			header.Size = UDim2.new(1, 0, 0, if short then 46 else 66)
+			if titleLabel then
+				Style.setTextSize(titleLabel, if short then 24 else 32)
+			end
+			close.Size = UDim2.fromOffset(if short then 46 else 60, if short then 46 else 60)
+			close.Position = if short then UDim2.new(1, -18, 0, 23) else UDim2.new(1, -16, 0, 14)
+			scroll.Position = scroll.Position - UDim2.fromOffset(0, shift)
+			scroll.Size = scroll.Size + UDim2.fromOffset(0, shift)
+			-- タイトルの下に 固定している 文字や ボタン（「あした また来るよ」など）も、同じだけ 上へ
+			for _, c in panel:GetChildren() do
+				if c:IsA("GuiObject") and c ~= header and c ~= close and c ~= scroll
+					and c.Position.Y.Scale == 0 and c.Position.Y.Offset >= 60 then
+					c.Position = c.Position - UDim2.fromOffset(0, shift)
+				end
+			end
+		end
+		panel.Position = if short then UDim2.fromScale(0.5, 0.5) else UDim2.fromScale(0.5, 0.52)
+		panel.Size = if short then UDim2.new(1, -36, 1, -14) else UDim2.fromScale(0.92, 0.84)
+		if limit then
+			limit.MaxSize = if short then Vector2.new(880, 600) else Vector2.new(560, 600)
+		end
+		-- 2列にするのは、行が ならぶ画面で、はばが じゅうぶんあるときだけ
+		local list = scroll:FindFirstChildOfClass("UIListLayout")
+		local want = short and list ~= nil and scroll.AbsoluteSize.X >= 600
+		if want ~= twoColumns and list then
+			twoColumns = want
+			list.FillDirection = if want then Enum.FillDirection.Horizontal else Enum.FillDirection.Vertical
+			list.Wraps = want
+			for _, c in scroll:GetChildren() do
+				setRow(c, want)
+			end
+		end
+	end
+	scroll.ChildAdded:Connect(function(c)
+		if twoColumns then
+			task.defer(setRow, c, true) -- あとから作られる行（家具・種の入荷 など）も 2列に
+		end
+	end)
+	if gui:IsA("GuiBase2d") then
+		gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(relayout)
+	end
+	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(relayout)
+	task.defer(relayout)
 	return panel, scroll
 end
 

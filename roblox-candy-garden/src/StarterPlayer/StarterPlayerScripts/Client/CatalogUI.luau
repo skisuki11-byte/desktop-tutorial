@@ -68,6 +68,7 @@ local function refresh()
 end
 function CatalogUI.build(gui,onClose)
 	panel,scroll=Style.modal(gui,"CatalogPanel",tr("ぜんぶの 3Dずかん","3D Collection Guide"),onClose,Style.Color.Mint)
+	panel:SetAttribute("OwnLayout",true) -- 配置は このファイルの layout() で決める（Style.modal の 横持ち用の配置は つかわない）
 	panel:FindFirstChildOfClass("UISizeConstraint").MaxSize=Vector2.new(960,760)
 	for _,label in panel.Header:GetChildren() do if label:IsA("TextLabel") then label.TextScaled=true;Style.make("UITextSizeConstraint",{MaxTextSize=28,MinTextSize=14},label) end end
 	scroll.Position=UDim2.fromOffset(14,178);scroll.Size=UDim2.new(1,-28,1,-192)

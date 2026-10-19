@@ -71,8 +71,10 @@ local function refresh()
 
 	-- 2段の決まった配置: 1段目=1〜4日目 / 2段目=5〜6日目 + 7日目（2マス分の特別なカード）
 	-- 幅は割合で決めるので、画面が狭くても端が切れない
+	-- 横に広い画面（スマホの横持ち）では 7日ぶんを 1段に ならべる（2段目が「もらう！」ボタンの下に かくれないように）
+	local wide = grid.AbsoluteSize.X >= 600
 	local rows = {}
-	for r = 1, 2 do
+	for r = 1, if wide then 1 else 2 do
 		local row = Style.make("Frame", {
 			Name = "Row" .. r,
 			LayoutOrder = r,
@@ -99,7 +101,10 @@ local function refresh()
 		end
 		local big = i == count -- 最後の日（7日目）は大きく
 		-- 4列ぶんの幅: 1マス = (全体 - すきま3つ) / 4
-		local width = big and UDim2.new(0.5, -CARD_GAP / 2, 1, 0) or UDim2.new(0.25, -CARD_GAP * 3 / 4, 1, 0)
+		local width = if wide
+			then (if big then UDim2.new(2 / 8, -CARD_GAP * 6 / 7, 1, 0) else UDim2.new(1 / 8, -CARD_GAP * 6 / 7, 1, 0))
+			elseif big then UDim2.new(0.5, -CARD_GAP / 2, 1, 0)
+			else UDim2.new(0.25, -CARD_GAP * 3 / 4, 1, 0)
 		local card = Style.make("Frame", {
 			Name = "Day" .. i,
 			LayoutOrder = i,
@@ -108,7 +113,7 @@ local function refresh()
 			BackgroundColor3 = (today or tomorrow) and Color3.fromRGB(255, 247, 222)
 				or (done and C.Mint or (big and Color3.fromRGB(255, 236, 246) or Color3.fromRGB(255, 255, 255))),
 			ZIndex = 12,
-		}, i <= 4 and rows[1] or rows[2])
+		}, if wide or i <= 4 then rows[1] else rows[2])
 		Style.round(card, 18)
 		local strokeColor = today and C.Accent or (tomorrow and Color3.fromRGB(240, 170, 60) or (big and C.AccentDark or C.Outline))
 		Style.stroke(card, strokeColor, (today or tomorrow) and 6 or 4)
