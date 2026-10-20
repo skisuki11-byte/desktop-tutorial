@@ -49,6 +49,8 @@ local placeBanner
 
 local bannerLabel, banner, bannerButtons
 local toastY = 120 -- お知らせのふだんの高さ（画面の大きさで変わる）
+local TOAST_PHONE_SCALE = 0.7 -- スマホの お知らせの 大きさ（小さめにして 畑を かくさない）
+local syncTouchControls -- 移動スティックを かくす／もどす（下で きめる）
 local lastCoins = nil
 local toastToken = 0
 local menuButton, menuBadge
@@ -277,7 +279,23 @@ end
 local function setMenuOpen(open: boolean)
 	side.Visible = open
 	menuButton.BackgroundColor3 = open and C.Accent or C.Lilac
+	-- 開いている間は 移動スティックを かくす（スマホで 左下の ボタンと スティックが 重なって 押せないため）
+	if syncTouchControls then
+		syncTouchControls(open or UI.currentPanel ~= nil)
+	end
 	if open then
+		-- 画面の 下に はみ出さない 大きさに（スマホの 横持ちは 高さが 足りない）
+		local grid = side:FindFirstChildOfClass("UIGridLayout")
+		local count = 0
+		for _, child in side:GetChildren() do
+			if child:IsA("GuiButton") and child.Visible then
+				count += 1
+			end
+		end
+		local rows = math.ceil(count / math.max(1, grid.FillDirectionMaxCells))
+		local need = rows * grid.CellSize.Y.Offset + (rows - 1) * grid.CellPadding.Y.Offset + 24 + 10
+		local top = side.Position.Y.Offset
+		Style.setScale(side, math.clamp((gui.AbsoluteSize.Y - top - 10) / need, 0.5, 1))
 		Style.pop(side, 0.9)
 	end
 end
@@ -455,8 +473,17 @@ local function refreshSeedBar(state)
 	local cans = Config.Water.cans
 	local water = state.water
 	local tools = {
-		{ id = "water", icon = "💧", count = if water then water.amount .. "/" .. ((cans[water.level] or cans[1]) + (state.waterBonus or 0)) else "" },
+		{ id = "water", icon = "💧", count = if water then water.amount .. "/" .. ((cans[water.level] or cans[1]) + (state.waterBonus or 0)) else "", empty = water ~= nil and water.amount <= 0 },
 	}
+	-- からっぽの じょうろは うすい赤（池で くもう）。持っているときは 黄色
+	local function toolColor(tool): Color3
+		if state.tool == tool.id then
+			return C.Yellow
+		elseif tool.empty then
+			return Color3.fromRGB(255, 205, 210)
+		end
+		return Color3.fromRGB(215, 236, 255)
+	end
 	-- ひりょう・ふしぎのしずくは、持っているときだけ 並べる（「×0」の使えないボタンが あると、
 	-- はじめての子は 押しても何も起きないボタンに まよう。種と同じく、なくなったら 消える）
 	if (state.fertilizer or 0) > 0 or state.tool == "fertilizer" then
@@ -482,6 +509,7 @@ local function refreshSeedBar(state)
 			local count = button and button:FindFirstChild("Count")
 			if count then
 				count.Text = tool.count
+				button.BackgroundColor3 = toolColor(tool)
 			end
 		end
 		for _, cropId in Config.CropOrder do
@@ -511,7 +539,7 @@ local function refreshSeedBar(state)
 				then UDim2.fromOffset(SEED_PHONE, SEED_PHONE)
 				else UDim2.fromOffset(holding and 84 or 72, holding and 76 or 66),
 			-- 道具は水色の札で、種と見分けやすく
-			BackgroundColor3 = if holding then C.Yellow else Color3.fromRGB(215, 236, 255),
+			BackgroundColor3 = toolColor(tool),
 		}, seedBar)
 		if holding then
 			button:FindFirstChildOfClass("UIStroke").Color = C.Accent
@@ -616,7 +644,8 @@ local function buildWaterMeter()
 	local function follow()
 		local at = actionStack.AbsolutePosition - gui.AbsolutePosition
 		waterMeter.Position = UDim2.fromOffset(at.X + actionStack.AbsoluteSize.X / 2, at.Y - 6)
-		waterMeter.Visible = actionStack.Visible
+		-- 種えらびの 列の じょうろに 同じ数が 出ているので、二重には 出さない（画面を すっきり）
+		waterMeter.Visible = false
 	end
 	actionStack:GetPropertyChangedSignal("AbsolutePosition"):Connect(follow)
 	actionStack:GetPropertyChangedSignal("AbsoluteSize"):Connect(follow)
@@ -627,13 +656,14 @@ end
 local function buildCompactFrames()
 	actionStack = Style.make("Frame", {
 		Name = "ActionStack",
-		Size = UDim2.fromOffset(66, 0),
+		Size = UDim2.fromOffset(76, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		BackgroundTransparency = 1,
 		Visible = false,
 	}, gui)
 	Style.make("UIGridLayout", {
-		CellSize = UDim2.fromOffset(66, 66),
+		-- 横は 少し 広く（「しゅうかく」の 5文字が 読める 大きさで 1行に 入るように）
+		CellSize = UDim2.fromOffset(76, 66),
 		CellPadding = UDim2.fromOffset(8, 8),
 		FillDirectionMaxCells = 1,
 		SortOrder = Enum.SortOrder.LayoutOrder,
@@ -723,12 +753,24 @@ local function applyLayout(mode: string)
 	compact = mode == "phone"
 	local size = gui.AbsoluteSize
 	portrait = compact and (size.Y > size.X or gui:GetAttribute("ForcePortrait") == true) -- ForcePortrait: Studioで試すとき用
-	for i, button in { shopButton, harvestButton, sellButton } do
+	local actionButtons = { shopButton, harvestButton, sellButton }
+	for i, button in actionButtons do
 		button.LayoutOrder = i
 		button.Parent = actionStack
 		Style.setTextSize(button.Icon, 30)
-		Style.setTextSize(button.Caption, 13)
+		Style.setTextSize(button.Caption, 14)
 	end
+	-- 3つの 名前は 同じ 大きさに そろえる（「しゅうかく」だけ 小さいと ばらばらに 見える）
+	task.spawn(function()
+		game:GetService("RunService").RenderStepped:Wait()
+		local smallest = math.huge
+		for _, button in actionButtons do
+			smallest = math.min(smallest, button.Caption.TextSize)
+		end
+		for _, button in actionButtons do
+			button.Caption:SetAttribute("CaptionMax", smallest)
+		end
+	end)
 	seedBar.Parent = topSeeds
 	seedBar.AnchorPoint = Vector2.new(0.5, 0)
 	seedBar.Position = UDim2.fromScale(0.5, 0)
@@ -859,10 +901,14 @@ local function applyLayout(mode: string)
 		else 130
 	bannerTopY = bannerY
 	placeBanner()
-	toastY = bannerY + 60
+	-- お知らせは、スマホでは 画面の 上の はし（2段目）に 小さく。
+	-- まん中に 出すと、畑の「水やり」「しゅうかく」の ボタンに かぶって 押しにくい
+	toastY = if compact
+		then (if portrait then bannerY else leftTop + PHONE_ROW + 8)
+		else bannerY + 60
 	toastLabel.Position = UDim2.new(0.5, 0, 0, toastY)
 	Style.setScale(banner, if compact then 0.8 else 1)
-	Style.setScale(toastLabel, if compact then 0.8 else 1)
+	Style.setScale(toastLabel, if compact then TOAST_PHONE_SCALE else 1)
 	if latestState then
 		seedBarShape = nil -- 画面の形が変わったので、種カードを作り直す
 		refreshSeedBar(latestState)
@@ -916,7 +962,15 @@ local function fitBottom()
 	-- お知らせと案内は、画面幅の9割まで（それ以上は折り返す）
 	local width = size.X
 	if toastLabel then
-		toastLabel.MaxWidth.MaxSize = Vector2.new(math.max(200, width * 0.9), math.huge)
+		local toastWidth = width * 0.9
+		if compact and not portrait and infoStack then
+			-- 横持ちの スマホは、左の みんなの木の カードと 右の ボタンに かからない はばまで
+			local infoRight = infoStack.AbsolutePosition.X + infoStack.AbsoluteSize.X - gui.AbsolutePosition.X
+			toastWidth = math.max(240, width - 2 * (infoRight + 10))
+		end
+		-- UISizeConstraint は UIScale を かける前の 大きさなので、倍率で わって もどす
+		local toastScale = if compact then TOAST_PHONE_SCALE else 1
+		toastLabel.MaxWidth.MaxSize = Vector2.new(math.max(200, toastWidth / toastScale), math.huge)
 	end
 	if bannerLabel then
 		bannerLabel.MaxWidth.MaxSize = Vector2.new(math.max(160, width * 0.9 - 60), math.huge)
@@ -1484,7 +1538,7 @@ end
 
 -- どのパネルを開くか。同時に開くのは1つだけ（nil で全部閉じる）
 local playerListBeforeModal=nil
-local function syncTouchControls(open: boolean)
+syncTouchControls = function(open: boolean)
  local starterGui=game:GetService("StarterGui")
  if open then
   if playerListBeforeModal==nil then local ok,on=pcall(function() return starterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList) end);if ok then playerListBeforeModal=on end end
@@ -1552,8 +1606,9 @@ function UI.toastText(text: string, seconds: number?)
 	toastLabel.Text = text
 	toastLabel.Visible = true
 	local function place()
-		-- 妖精の吹き出しが出ているときは、その下に出す（重ならないように）
-		if banner and banner.Visible then
+		-- 妖精の吹き出しが 上に 出ているときは、その下に出す（重ならないように）。
+		-- 吹き出しが 下に あるときは いつもの 上の 場所（吹き出しの 上に 出すと 画面の まん中に なる）
+		if banner and banner.Visible and not bannerAtBottom then
 			local top = banner.AbsolutePosition.Y - gui.AbsolutePosition.Y
 			local height = math.max(toastLabel.AbsoluteSize.Y, 40)
 			local y = top + banner.AbsoluteSize.Y + 8
@@ -1568,7 +1623,12 @@ function UI.toastText(text: string, seconds: number?)
 			local y = gui.AbsoluteSize.Y - math.max(toastLabel.AbsoluteSize.Y, 40) - 12
 			toastLabel.Position = UDim2.new(0.5, 0, 0, y)
 		else
-			toastLabel.Position = UDim2.new(0.5, 0, 0, toastY)
+			local y = toastY
+			-- スマホの 横持ちは、上の 種えらびの 列の すぐ下（列に かぶらない）
+			if compact and not portrait and topSeeds and topSeeds.Visible then
+				y = math.max(y, topSeeds.AbsolutePosition.Y - gui.AbsolutePosition.Y + topSeeds.AbsoluteSize.Y + 6)
+			end
+			toastLabel.Position = UDim2.new(0.5, 0, 0, y)
 		end
 	end
 	place()
@@ -1801,7 +1861,7 @@ end
 
 function UI.init()
  local player = Players.LocalPlayer
- player.PlayerGui.ChildAdded:Connect(function(child) if child.Name=="TouchGui" then syncTouchControls(UI.currentPanel~=nil) end end)
+ player.PlayerGui.ChildAdded:Connect(function(child) if child.Name=="TouchGui" then syncTouchControls(UI.currentPanel~=nil or side.Visible) end end)
 	gui = Style.make("ScreenGui", {
 		Name = "CandyUI",
 		ResetOnSpawn = false,

@@ -168,6 +168,11 @@ end
 
 -- あとから文字の大きさを変えるとき用（fitText をかけた文字は TextSize では変わらないため）
 function Style.setTextSize(obj: TextLabel | TextButton, size: number)
+	-- ボタンの名前（navButton）は、はばに 入る 大きさを 自分で 計算しているので、上の 大きさだけ かえる
+	if obj:GetAttribute("CaptionMax") ~= nil then
+		obj:SetAttribute("CaptionMax", size)
+		return
+	end
 	obj.TextSize = size
 	local limit = obj:FindFirstChild("FitText")
 	if limit then
@@ -313,7 +318,8 @@ function Style.navButton(props: { [string]: any }, parent: Instance?): TextButto
 	end
 	captionLabel.TextScaled = false
 	captionLabel.TextWrapped = false
-	local maxSize = captionSize or 15
+	-- いちばん大きい 字の大きさ。あとから かえるときは Style.setTextSize（属性 CaptionMax を かえる）
+	captionLabel:SetAttribute("CaptionMax", captionSize or 15)
 	local function fitCaption()
 		local box = captionLabel.AbsoluteSize
 		-- UIScale の倍率（ボタンの もとの はば と、画面での はば の比）
@@ -321,13 +327,22 @@ function Style.navButton(props: { [string]: any }, parent: Instance?): TextButto
 		if box.X <= 0 or box.Y <= 0 or scale <= 0 then
 			return
 		end
+		local maxSize = captionLabel:GetAttribute("CaptionMax") or 15
 		local width = TextService:GetTextSize(captionLabel.Text, 100, captionLabel.Font, Vector2.new(10000, 1000)).X / 100
-		-- 字の大きさは UIScale を かける前の 単位（box を scale で わって もどす）
-		local size = math.min(maxSize, (box.X / scale) / math.max(width, 0.01), (box.Y / scale) * 0.95)
-		captionLabel.TextSize = math.max(6, math.floor(size))
+		-- 字の大きさは UIScale を かける前の 単位（box を scale で わって もどす）。
+		-- 日本語は 別の字体で 出て 計算より 少し 広いので、1割 よゆうを とる
+		local size = math.min(maxSize, (box.X / scale) * 0.9 / math.max(width, 0.01), (box.Y / scale) * 0.95)
+		local s = math.max(6, math.floor(size))
+		captionLabel.TextSize = s
+		-- それでも はみ出すとき（字体の ちがい）は、入るまで 1ずつ 小さく
+		while s > 6 and not captionLabel.TextFits do
+			s -= 1
+			captionLabel.TextSize = s
+		end
 	end
 	captionLabel:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitCaption)
 	captionLabel:GetPropertyChangedSignal("Text"):Connect(fitCaption)
+	captionLabel:GetAttributeChangedSignal("CaptionMax"):Connect(fitCaption)
 	task.defer(fitCaption)
 	return button
 end
