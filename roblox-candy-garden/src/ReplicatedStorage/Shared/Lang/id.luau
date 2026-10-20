@@ -1,5 +1,14 @@
 -- インドネシア語（子ども向けに「kamu」）
 return {
+	["card.chanceLeft"] = "✨%d%%  sisa %s",
+	["card.bonusLeft"] = "✨+%d%%  sisa %s",
+	["festival.title"] = "Festival Bintang",
+	["gloom.title"] = "Awan murung",
+	["gloom.value"] = "Sisa %d  %s  ▶ Bantu",
+	["sunny.title"] = "Waktu cerah",
+	["rush.title"] = "Candy Rush",
+	["rush.active"] = "Jual +%d%%  sisa %s",
+	["rush.nextAt"] = "Berikutnya %s",
 	["rush.chip"] = "🍭 Candy Rush! Jual +%d%%  sisa %s",
 	["rush.next"] = "🍭 Candy Rush berikutnya %s",
 	["rush.soon"] = "🍭 Candy Rush 5 menit lagi! Mulai di semua server bersamaan",

@@ -631,7 +631,7 @@ local function buildCompactFrames()
 	}, gui)
 	Style.make("UIListLayout", {
 		FillDirection = Enum.FillDirection.Vertical,
-		Padding = UDim.new(0, 6),
+		Padding = UDim.new(0, Style.Card.Gap),
 		SortOrder = Enum.SortOrder.LayoutOrder,
 	}, infoStack)
 end
@@ -639,7 +639,7 @@ end
 -- 「いまの ようす」の 札（みんなの木の レベル・お天気・ほしぞらまつり・しょんぼり雲／キャンディラッシュ）は、
 -- スマホでも パソコンでも 左上の InfoStack に たてに まとめる。
 -- 見る場所が 1か所なら、目を あちこち 動かさずに すむ（ゲームの HUD で よく言われる「情報は まとめて置く」）
-local INFO_CHIPS = { "TreeChip", "WeatherChip", "FestivalChip", "GloomChip" }
+local INFO_CHIPS = { "TreeChip", "RushChip", "WeatherChip", "FestivalChip", "GloomChip" } -- いつも出る ものを 上に
 local function placeInfoChips()
 	if not infoStack then
 		return
@@ -734,9 +734,6 @@ local function applyLayout(mode: string)
 		travel.Position = UDim2.new(1, -12, 0, leftTop)
 		Style.setScale(travel, PHONE_ROW / 54)
 		local travelWidth = (54 * 2 + 6) * PHONE_ROW / 54
-		if treeChip then
-			treeChip.Size = UDim2.fromOffset(150, 58) -- スマホでは細く
-		end
 		-- 種えらびの列は、横はばを いっぱいに使う（道具と種が スライドしなくても見えるように）。
 		-- みんなの木のレベルは、広場にいるときだけ出る表示なので、種の列の横には置かない
 		local row2 = leftTop + PHONE_ROW + 8
@@ -769,7 +766,6 @@ local function applyLayout(mode: string)
 		end
 		actionStack.AnchorPoint = Vector2.new(1, 1)
 		actionStack.Position = UDim2.new(1, -14, 1, -JUMP_RESERVE)
-		Style.setScale(infoStack, 0.72)
 	else
 		Style.setScale(coinPill, 1)
 		coinPill.Position = UDim2.fromOffset(16, leftTop)
@@ -789,10 +785,6 @@ local function applyLayout(mode: string)
 		Style.setScale(travel, 1)
 		-- いまの ようすの 札は、コインの 下・じょうろの 右に たてに
 		infoStack.Position = UDim2.fromOffset(94, leftTop + 76)
-		Style.setScale(infoStack, 0.85)
-		if treeChip then
-			treeChip.Size = UDim2.fromOffset(230, 58)
-		end
 		topSeeds.AnchorPoint = Vector2.new(0.5, 0)
 		topSeeds.Position = UDim2.new(0.5, 0, 0, 58)
 		seedBar.AnchorPoint = Vector2.new(0.5, 0)
@@ -849,6 +841,16 @@ local function fitBottom()
 		end
 	end
 	local screenY = size.Y
+	-- 左上の カードの列: カードが ぜんぶ（5まい）出ても 画面に 入る 大きさに。
+	-- スマホは 左下の 移動スティックに かからないよう、画面の 上 6割まで
+	if infoStack then
+		local cards = #INFO_CHIPS
+		local full = cards * Style.Card.Height + (cards - 1) * Style.Card.Gap
+		local top = infoStack.Position.Y.Offset -- 上からの 位置（applyLayout で きめた値）
+		local bottomLimit = if compact then screenY * 0.62 else screenY - 12
+		local fit = (bottomLimit - top) / full
+		Style.setScale(infoStack, math.clamp(fit, 0.55, if compact then 0.72 else 0.85))
+	end
 	if actionStack then
 		-- 3つのボタン: スマホは画面に合わせて小さく（ジャンプボタンの上に収める）、パソコンはコインの下に収まる大きさ
 		if compact then

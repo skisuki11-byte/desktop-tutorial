@@ -1,5 +1,14 @@
 -- 中国語（繁体字。台湾・香港の ことば）
 return {
+	["card.chanceLeft"] = "✨%d%%  還有 %s",
+	["card.bonusLeft"] = "✨+%d%%  還有 %s",
+	["festival.title"] = "星光祭",
+	["gloom.title"] = "沮喪雲",
+	["gloom.value"] = "還差 %d  %s  ▶ 去幫忙",
+	["sunny.title"] = "晴天時間",
+	["rush.title"] = "糖果狂歡",
+	["rush.active"] = "售價 +%d%%  還有 %s",
+	["rush.nextAt"] = "下次 %s",
 	["rush.chip"] = "🍭 糖果狂歡！售價 +%d%%  還有 %s",
 	["rush.next"] = "🍭 下次糖果狂歡 %s",
 	["rush.soon"] = "🍭 糖果狂歡 5 分鐘後開始！所有伺服器同時開始喔",

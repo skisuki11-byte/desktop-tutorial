@@ -18,14 +18,18 @@ local C = Style.Color
 local t = I18n.t
 
 local ui
-local festivalChip, festivalLabel
+local festivalChip, festivalParts
 local starAnchor: Part
 local starEmitter: ParticleEmitter
 local announced = false
 
 local function formatLeft(seconds: number): string
 	seconds = math.max(0, math.floor(seconds))
-	return ("%d:%02d"):format(seconds // 3600, (seconds % 3600) // 60)
+	-- ほかの カードと そろえる（1時間より 少ないときは 分:秒、それ以上は 時:分:秒）
+	if seconds < 3600 then
+		return ("%d:%02d"):format(seconds // 60, seconds % 60)
+	end
+	return ("%d:%02d:%02d"):format(seconds // 3600, (seconds % 3600) // 60, seconds % 60)
 end
 
 -- 画面いっぱいのお祝い
@@ -199,26 +203,9 @@ end
 
 local function buildFestival()
 	local gui = ui.gui()
-	festivalChip = Style.make("Frame", {
-		Name = "FestivalChip",
-		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -12), -- 下のまん中（ボタンの無い場所）
-		Size = UDim2.fromOffset(0, 36),
-		AutomaticSize = Enum.AutomaticSize.X,
-		BackgroundColor3 = Color3.fromRGB(60, 50, 140),
-		Visible = false,
-	}, gui)
-	Style.round(festivalChip, 18)
-	Style.stroke(festivalChip, Color3.fromRGB(255, 220, 120), 3)
-	Style.make("UIPadding", { PaddingLeft = UDim.new(0, 14), PaddingRight = UDim.new(0, 14) }, festivalChip)
-	festivalLabel = Style.label({
-		Size = UDim2.fromOffset(0, 36),
-		AutomaticSize = Enum.AutomaticSize.X,
-		TextSize = 16,
-		TextColor3 = Color3.fromRGB(255, 245, 200),
-		TextWrapped = false,
-		Text = "",
-	}, festivalChip)
+	festivalChip, festivalParts = Style.infoCard({ Name = "FestivalChip", Accent = Color3.fromRGB(110, 90, 200) }, gui)
+	festivalParts.Emoji.Text = "🌟"
+	festivalParts.Title.Text = t("festival.title")
 
 	-- 降る星（カメラの上から）
 	starAnchor = Instance.new("Part")
@@ -256,7 +243,7 @@ local function refreshFestival()
 	festivalChip.Visible = active and ui.currentPanel == nil
 	starEmitter.Enabled = active
 	if active then
-		festivalLabel.Text = t("star.festival", math.floor(Config.StarGift.sparkleBonus * 100 + 0.5), formatLeft(left))
+		festivalParts.Value.Text = t("card.bonusLeft", math.floor(Config.StarGift.sparkleBonus * 100 + 0.5), formatLeft(left))
 		if not announced then
 			announced = true
 			ui.toastText(t("star.announce"), 5)

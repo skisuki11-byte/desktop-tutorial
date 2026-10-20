@@ -33,33 +33,14 @@ local function bar(parent: Instance, position: UDim2, size: UDim2)
 end
 
 local function buildChip(gui: ScreenGui)
-	chip = Style.make("Frame", {
-		Name = "TreeChip",
-		Position = UDim2.fromOffset(16, 128),
-		Size = UDim2.fromOffset(230, 58),
-		BackgroundColor3 = C.Surface,
-	}, gui)
-	Style.round(chip, 20)
-	Style.stroke(chip, C.Mint, 3)
-	chipLevel = Style.label({
-		Position = UDim2.fromOffset(12, 4),
-		Size = UDim2.new(0.5, -16, 0, 28), -- 右の数字と重ならないよう、すき間を空ける
-		Text = "",
-		TextSize = 18,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextWrapped = false,
-	}, chip)
-	chipCount = Style.label({
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -12, 0, 4),
-		Size = UDim2.new(0.5, -16, 0, 28),
-		Text = "",
-		TextSize = 16,
-		TextColor3 = C.TextMuted,
-		TextXAlignment = Enum.TextXAlignment.Right,
-		TextWrapped = false,
-	}, chip)
-	chipFill = bar(chip, UDim2.fromOffset(12, 36), UDim2.new(1, -24, 0, 12))
+	local parts
+	chip, parts = Style.infoCard({ Name = "TreeChip", Accent = C.Mint, Bar = true }, gui)
+	chip.Visible = true
+	parts.Emoji.Text = "🌳"
+	chipLevel = parts.Title
+	chipCount = parts.Right
+	chipFill = parts.Fill
+	parts.Title.TextColor3 = C.Text -- 木の カードは 見出しが 主役（Lv.）なので こい色
 end
 
 -- 木の上の看板。木が作り直されて消えたら、付け直す。
@@ -135,7 +116,7 @@ local function refresh()
 	local level = workspace:GetAttribute("TreeLevel") or 1
 	local progress = workspace:GetAttribute("TreeProgress") or 0
 	local goal = math.max(1, workspace:GetAttribute("TreeGoal") or 1)
-	local levelText = "🌳 Lv." .. level
+	local levelText = t("ui.tree") .. "  Lv." .. level
 	local countText = ("%d / %d"):format(progress, goal)
 	local ratio = math.clamp(progress / goal, 0, 1)
 

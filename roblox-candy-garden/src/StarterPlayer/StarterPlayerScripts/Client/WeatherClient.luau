@@ -13,51 +13,16 @@ local WeatherClient = {}
 local C = Style.Color
 local t = I18n.t
 
-local chip, chipLabel, chipIcon
+local chip
 local anchor: Part?
 local emitter: ParticleEmitter?
 local currentId: string? = nil
 local ui
 
-local function formatClock(seconds: number): string
-	seconds = math.max(0, math.ceil(seconds))
-	return ("%d:%02d"):format(seconds // 60, seconds % 60)
-end
+local cardParts
 
 local function buildChip(gui: ScreenGui)
-	chip = Style.make("Frame", {
-		Name = "WeatherChip",
-		Position = UDim2.fromOffset(16, 80),
-		Size = UDim2.fromOffset(0, 40),
-		AutomaticSize = Enum.AutomaticSize.X,
-		BackgroundColor3 = C.Surface,
-	}, gui)
-	Style.round(chip, 20)
-	Style.stroke(chip, C.Dim, 3)
-	Style.make("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 16) }, chip)
-	Style.make("UIListLayout", {
-		FillDirection = Enum.FillDirection.Horizontal,
-		VerticalAlignment = Enum.VerticalAlignment.Center,
-		Padding = UDim.new(0, 6),
-		SortOrder = Enum.SortOrder.LayoutOrder,
-	}, chip)
-	-- お天気の絵（カタログと同じイラスト）。絵がないときは、文字の前の絵文字で出す
-	chipIcon = Style.make("ImageLabel", {
-		Name = "WeatherIcon",
-		LayoutOrder = 1,
-		Size = UDim2.fromOffset(34, 34),
-		BackgroundTransparency = 1,
-		ScaleType = Enum.ScaleType.Fit,
-		Visible = false,
-	}, chip)
-	chipLabel = Style.label({
-		LayoutOrder = 2,
-		Size = UDim2.fromOffset(0, 40),
-		AutomaticSize = Enum.AutomaticSize.X,
-		TextSize = 18,
-		TextWrapped = false,
-		Text = "",
-	}, chip)
+	chip, cardParts = Style.infoCard({ Name = "WeatherChip", Accent = C.Lilac }, gui)
 end
 
 local function buildFx()
@@ -114,26 +79,17 @@ local function refreshChip()
 	local id = workspace:GetAttribute("Weather")
 	local weather = id and Config.WeatherById[id]
 	local serverNow = workspace:GetServerTimeNow()
-	-- お天気の表示は、お天気の間だけ出す（ふだんの画面をすっきりさせる）
+	-- お天気の カードは、お天気の間だけ出す（ふだんの画面をすっきりさせる）
 	chip.Visible = weather ~= nil
 	if weather then
 		local left = (workspace:GetAttribute("WeatherEndsAt") or serverNow) - serverNow
 		local image = Icons["weather_" .. weather.id]
-		chipIcon.Image = image or ""
-		chipIcon.Visible = image ~= nil
-		-- スマホ（左はしの 小さな札）では 天気の名前を はぶく（絵で 分かる。はじまりの お知らせで 名前は 出ている）
-		local short = ui.isCompact ~= nil and ui.isCompact()
-		chipLabel.Text = (if image then "" else weather.icon .. " ")
-			.. (if short then "" else t("weather." .. weather.id) .. "  ")
-			.. t("ui.weatherNow", math.floor(weather.sparkleChance * 100 + 0.5), math.max(0, math.ceil(left)))
-		chip.BackgroundColor3 = Color3.fromRGB(255, 233, 244)
-		chipLabel.TextColor3 = C.Text
-	else
-		local untilNext = (workspace:GetAttribute("NextWeatherAt") or serverNow) - serverNow
-		chipIcon.Visible = false
-		chipLabel.Text = "☀️ " .. t("ui.weatherNext", formatClock(untilNext))
-		chip.BackgroundColor3 = C.Surface
-		chipLabel.TextColor3 = C.TextMuted
+		cardParts.Image.Image = image or ""
+		cardParts.Image.Visible = image ~= nil
+		cardParts.Emoji.Text = if image then "" else weather.icon
+		cardParts.Title.Text = t("weather." .. weather.id)
+		local secs = math.max(0, math.ceil(left))
+		cardParts.Value.Text = t("card.chanceLeft", math.floor(weather.sparkleChance * 100 + 0.5), ("%d:%02d"):format(secs // 60, secs % 60))
 	end
 end
 

@@ -1,5 +1,14 @@
 -- ポルトガル語（ブラジルの ことば。子ども向けに「você」）
 return {
+	["card.chanceLeft"] = "✨%d%%  faltam %s",
+	["card.bonusLeft"] = "✨+%d%%  faltam %s",
+	["festival.title"] = "Festival estrelado",
+	["gloom.title"] = "Nuvem triste",
+	["gloom.value"] = "Faltam %d  %s  ▶ Ajudar",
+	["sunny.title"] = "Tempo de sol",
+	["rush.title"] = "Corrida dos doces",
+	["rush.active"] = "Venda +%d%%  faltam %s",
+	["rush.nextAt"] = "Próxima: %s",
 	["rush.chip"] = "🍭 Corrida dos doces! Venda +%d%%  faltam %s",
 	["rush.next"] = "🍭 Próxima Corrida dos doces %s",
 	["rush.soon"] = "🍭 Corrida dos doces em 5 minutos! Começa em todos os servidores ao mesmo tempo",

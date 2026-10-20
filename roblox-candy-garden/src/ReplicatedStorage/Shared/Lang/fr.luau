@@ -1,5 +1,14 @@
 -- フランス語（子ども向けに「tu」）
 return {
+	["card.chanceLeft"] = "✨%d%%  encore %s",
+	["card.bonusLeft"] = "✨+%d%%  encore %s",
+	["festival.title"] = "Fête des étoiles",
+	["gloom.title"] = "Nuage triste",
+	["gloom.value"] = "Encore %d  %s  ▶ Aider",
+	["sunny.title"] = "Temps ensoleillé",
+	["rush.title"] = "Ruée sucrée",
+	["rush.active"] = "Vente +%d%%  encore %s",
+	["rush.nextAt"] = "Prochaine : %s",
 	["rush.chip"] = "🍭 Ruée sucrée ! Vente +%d%%  encore %s",
 	["rush.next"] = "🍭 Prochaine Ruée sucrée %s",
 	["rush.soon"] = "🍭 Ruée sucrée dans 5 minutes ! Elle commence sur tous les serveurs en même temps",

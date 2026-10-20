@@ -1,5 +1,14 @@
 -- ドイツ語（子ども向けに「du」）
 return {
+	["card.chanceLeft"] = "✨%d%%  noch %s",
+	["card.bonusLeft"] = "✨+%d%%  noch %s",
+	["festival.title"] = "Sternenfest",
+	["gloom.title"] = "Traurige Wolke",
+	["gloom.value"] = "Noch %d  %s  ▶ Helfen",
+	["sunny.title"] = "Sonnenzeit",
+	["rush.title"] = "Bonbon-Rausch",
+	["rush.active"] = "Verkauf +%d%%  noch %s",
+	["rush.nextAt"] = "Nächster: %s",
 	["rush.chip"] = "🍭 Bonbon-Rausch! Verkauf +%d%%  noch %s",
 	["rush.next"] = "🍭 Nächster Bonbon-Rausch %s",
 	["rush.soon"] = "🍭 Bonbon-Rausch in 5 Minuten! Er startet auf allen Servern gleichzeitig",

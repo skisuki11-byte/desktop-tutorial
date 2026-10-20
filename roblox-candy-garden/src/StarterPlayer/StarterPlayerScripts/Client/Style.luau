@@ -312,6 +312,124 @@ function Style.navButton(props: { [string]: any }, parent: Instance?): TextButto
 	return button
 end
 
+-- 左上の「いまの ようす」カード（みんなの木・お天気・ラッシュ など）。どのカードも 同じ形にそろえる:
+--   [絵]  小さい見出し（うすい色）        右はしの小さい数字
+--         大きい中身（こい色・太字） または 進みぐあいの バー
+-- 大きさ・角・すき間は 8 の倍数（8ptグリッド）。色を ぬるのは 気づいてほしい カードだけ（Style.cardTone）
+Style.Card = { Width = 248, Height = 56, Radius = 14, Gap = 8 }
+
+function Style.infoCard(props: { Name: string, Accent: Color3, Bar: boolean?, Button: boolean? }, parent: Instance?)
+	local card = Style.make(if props.Button then "TextButton" else "Frame", {
+		Name = props.Name,
+		Size = UDim2.fromOffset(Style.Card.Width, Style.Card.Height),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		Visible = false,
+	}, parent)
+	if props.Button then
+		card.Text = ""
+		card.AutoButtonColor = false
+	end
+	Style.round(card, Style.Card.Radius)
+	local stroke = Style.stroke(card, props.Accent, 2)
+	stroke.Name = "Edge"
+	-- 左の 色の帯（どの種類の カードか 色で わかる。色だけに たよらず 絵と 文字も つける）
+	local stripe = Style.make("Frame", {
+		Name = "Stripe",
+		Position = UDim2.fromOffset(0, 0),
+		Size = UDim2.new(0, 6, 1, 0),
+		BackgroundColor3 = props.Accent,
+		BorderSizePixel = 0,
+	}, card)
+	Style.round(stripe, 3)
+	local icon = Style.make("Frame", {
+		Name = "IconBox",
+		Position = UDim2.fromOffset(14, 8),
+		Size = UDim2.fromOffset(40, 40),
+		BackgroundTransparency = 1,
+	}, card)
+	local emoji = Style.label({ Name = "Emoji", Size = UDim2.fromScale(1, 1), TextSize = 28, Text = "", TextWrapped = false }, icon)
+	local image = Style.make("ImageLabel", {
+		Name = "Image",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		ScaleType = Enum.ScaleType.Fit,
+		Visible = false,
+	}, icon)
+	local title = Style.label({
+		Name = "Title",
+		Position = UDim2.fromOffset(62, 8),
+		Size = UDim2.new(1, -70, 0, 16),
+		TextSize = 14,
+		TextColor3 = Style.Color.TextMuted,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = false,
+		Text = "",
+	}, card)
+	local right = Style.label({
+		Name = "Right",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -10, 0, 8),
+		Size = UDim2.new(0.45, 0, 0, 16),
+		TextSize = 13,
+		TextColor3 = Style.Color.TextMuted,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		TextWrapped = false,
+		Text = "",
+	}, card)
+	local value = Style.label({
+		Name = "Value",
+		Position = UDim2.fromOffset(62, 26),
+		Size = UDim2.new(1, -72, 0, 22),
+		TextSize = 19,
+		TextColor3 = Style.Color.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = false,
+		Text = "",
+	}, card)
+	local fill
+	if props.Bar then
+		value.Visible = false
+		local track = Style.make("Frame", {
+			Name = "Track",
+			Position = UDim2.fromOffset(62, 32),
+			Size = UDim2.new(1, -74, 0, 12),
+			BackgroundColor3 = Style.Color.Dim,
+			BorderSizePixel = 0,
+		}, card)
+		Style.round(track, 6)
+		fill = Style.make("Frame", {
+			Name = "Fill",
+			Size = UDim2.fromScale(0, 1),
+			BackgroundColor3 = props.Accent,
+			BorderSizePixel = 0,
+		}, track)
+		Style.round(fill, 6)
+	end
+	return card, { Emoji = emoji, Image = image, Title = title, Right = right, Value = value, Fill = fill, Accent = props.Accent }
+end
+
+-- カードの色: "normal"（白地）/ "alert"（色でぬる。白い文字）。気づいてほしいとき（ラッシュ中・しょんぼり雲）だけ alert
+function Style.cardTone(card: GuiObject, parts, tone: string)
+	local alert = tone == "alert"
+	card.BackgroundColor3 = if alert then parts.Accent else Color3.fromRGB(255, 255, 255)
+	local white = Color3.fromRGB(255, 255, 255)
+	parts.Title.TextColor3 = if alert then white else Style.Color.TextMuted
+	parts.Value.TextColor3 = if alert then white else Style.Color.Text
+	parts.Right.TextColor3 = if alert then white else Style.Color.TextMuted
+	for _, label in { parts.Title, parts.Value, parts.Right } do
+		local stroke = label:FindFirstChild("TextStroke")
+		if stroke then
+			stroke.Enabled = alert
+		elseif alert then
+			Style.textStroke(label, Style.Color.Outline, 1.5)
+		end
+	end
+	local stripe = card:FindFirstChild("Stripe")
+	if stripe then
+		stripe.Visible = not alert
+	end
+end
+
 -- ショップ・ペット・おしゃれ等で共通の、大きなパネル。画面の大きさに合わせて広がり、上限で止まる。
 -- 上に色帯（リボン）のタイトル。閉じるボタンは、どのパネルでも同じ「右上の角」に置く（一貫性）。
 -- color: 色帯の色（下のドックのボタンと同じ色にして、どのボタンから開いたか分かるようにする）

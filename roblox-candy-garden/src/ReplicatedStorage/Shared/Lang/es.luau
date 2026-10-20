@@ -1,5 +1,14 @@
 -- スペイン語（中南米・スペイン どちらでも 読める ことば。子ども向けに「tú」）
 return {
+	["card.chanceLeft"] = "✨%d%%  quedan %s",
+	["card.bonusLeft"] = "✨+%d%%  quedan %s",
+	["festival.title"] = "Festival estrellado",
+	["gloom.title"] = "Nube triste",
+	["gloom.value"] = "Faltan %d  %s  ▶ Ayudar",
+	["sunny.title"] = "Tiempo soleado",
+	["rush.title"] = "Fiebre de dulces",
+	["rush.active"] = "Venta +%d%%  quedan %s",
+	["rush.nextAt"] = "Próxima: %s",
 	["rush.chip"] = "🍭 ¡Fiebre de dulces! Venta +%d%%  quedan %s",
 	["rush.next"] = "🍭 Próxima Fiebre de dulces %s",
 	["rush.soon"] = "🍭 ¡Fiebre de dulces en 5 minutos! Empieza en todos los servidores a la vez",

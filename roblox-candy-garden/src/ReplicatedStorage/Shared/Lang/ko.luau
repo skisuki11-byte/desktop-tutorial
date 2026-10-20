@@ -1,5 +1,14 @@
 -- 韓国語（子ども向けに やさしい「해요」体）
 return {
+	["card.chanceLeft"] = "✨%d%%  %s 남음",
+	["card.bonusLeft"] = "✨+%d%%  %s 남음",
+	["festival.title"] = "별빛 축제",
+	["gloom.title"] = "시무룩 구름",
+	["gloom.value"] = "%d 남음  %s  ▶ 돕기",
+	["sunny.title"] = "맑음 타임",
+	["rush.title"] = "캔디 러시",
+	["rush.active"] = "판매 +%d%%  %s 남음",
+	["rush.nextAt"] = "다음: %s",
 	["rush.chip"] = "🍭 캔디 러시! 판매 +%d%%  %s 남음",
 	["rush.next"] = "🍭 다음 캔디 러시 %s",
 	["rush.soon"] = "🍭 5분 뒤 캔디 러시! 모든 서버에서 동시에 시작해요",
