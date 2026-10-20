@@ -6,6 +6,7 @@
 --   ・アクセントはピンク1色。文字は濃い紫で、背景とのコントラストを確保
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local TextService = game:GetService("TextService")
 
 local Icons = require(ReplicatedStorage.Shared.Icons)
 
@@ -304,11 +305,30 @@ function Style.navButton(props: { [string]: any }, parent: Instance?): TextButto
 		TextWrapped = false,
 		TextColor3 = captionColor or Style.Color.Text,
 	}, button)
-	-- 小さいボタン（スマホ）や 長い ことば（「しゅうかく」・ドイツ語 など）でも はしが 切れないよう、もっと 小さくまで ちぢめてよい
+	-- 名前は かならず 1行（「しゅうかく」が「しゅうか／く」に ならないように）。
+	-- TextScaled は 入りきらないと 改行して しまうので 使わず、はばに 入る 大きさを 自分で 計算する
 	local fit = captionLabel:FindFirstChild("FitText")
 	if fit then
-		fit.MinTextSize = 6
+		fit:Destroy()
 	end
+	captionLabel.TextScaled = false
+	captionLabel.TextWrapped = false
+	local maxSize = captionSize or 15
+	local function fitCaption()
+		local box = captionLabel.AbsoluteSize
+		-- UIScale の倍率（ボタンの もとの はば と、画面での はば の比）
+		local scale = if button.Size.X.Offset > 0 then button.AbsoluteSize.X / button.Size.X.Offset else 1
+		if box.X <= 0 or box.Y <= 0 or scale <= 0 then
+			return
+		end
+		local width = TextService:GetTextSize(captionLabel.Text, 100, captionLabel.Font, Vector2.new(10000, 1000)).X / 100
+		-- 字の大きさは UIScale を かける前の 単位（box を scale で わって もどす）
+		local size = math.min(maxSize, (box.X / scale) / math.max(width, 0.01), (box.Y / scale) * 0.95)
+		captionLabel.TextSize = math.max(6, math.floor(size))
+	end
+	captionLabel:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitCaption)
+	captionLabel:GetPropertyChangedSignal("Text"):Connect(fitCaption)
+	task.defer(fitCaption)
 	return button
 end
 

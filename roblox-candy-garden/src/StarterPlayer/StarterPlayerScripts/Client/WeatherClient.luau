@@ -1,29 +1,19 @@
 -- お天気の表示。サーバーが workspace の属性に入れた状態を読んで、
--- 開始のお知らせ・残り時間のチップ・降る粒子を出す。
+-- 開始のお知らせと 降る粒子を出す（左上の カードは 出さない。画面を すっきりさせる）。
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
-local Icons = require(ReplicatedStorage.Shared.Icons)
 local I18n = require(ReplicatedStorage.Shared.I18n)
-local Style = require(script.Parent.Style)
 
 local WeatherClient = {}
 
-local C = Style.Color
 local t = I18n.t
 
-local chip
 local anchor: Part?
 local emitter: ParticleEmitter?
 local currentId: string? = nil
 local ui
-
-local cardParts
-
-local function buildChip(gui: ScreenGui)
-	chip, cardParts = Style.infoCard({ Name = "WeatherChip", Accent = C.Lilac }, gui)
-end
 
 local function buildFx()
 	anchor = Instance.new("Part")
@@ -75,33 +65,13 @@ local function onWeatherChanged(id: string?)
 	end
 end
 
-local function refreshChip()
-	local id = workspace:GetAttribute("Weather")
-	local weather = id and Config.WeatherById[id]
-	local serverNow = workspace:GetServerTimeNow()
-	-- お天気の カードは、お天気の間だけ出す（ふだんの画面をすっきりさせる）
-	chip.Visible = weather ~= nil
-	if weather then
-		local left = (workspace:GetAttribute("WeatherEndsAt") or serverNow) - serverNow
-		local image = Icons["weather_" .. weather.id]
-		cardParts.Image.Image = image or ""
-		cardParts.Image.Visible = image ~= nil
-		cardParts.Emoji.Text = if image then "" else weather.icon
-		cardParts.Title.Text = t("weather." .. weather.id)
-		local secs = math.max(0, math.ceil(left))
-		cardParts.Value.Text = t("card.chanceLeft", math.floor(weather.sparkleChance * 100 + 0.5), ("%d:%02d"):format(secs // 60, secs % 60))
-	end
-end
-
 function WeatherClient.init(uiModule)
 	ui = uiModule
-	buildChip(ui.gui())
 	buildFx()
 
 	task.spawn(function()
 		while true do
 			onWeatherChanged(workspace:GetAttribute("Weather"))
-			refreshChip()
 			task.wait(0.5)
 		end
 	end)

@@ -1,6 +1,6 @@
 -- ほしぞらのおくりもの（みんなの木 レベル20）のお祝い画面と、ほしぞらまつりの表示。
 --   ・お祝い画面: 画面いっぱいの夜空に、降る星と「ほしぞらの木が さいた！」、もらった物の一覧、ファンファーレ
---   ・ほしぞらまつり: まつりの間は、全サーバーで星が降り、左上に残り時間を出す（Config.StarGift.festivalSeconds）
+--   ・ほしぞらまつり: まつりの間は、全サーバーで星が降る（Config.StarGift.festivalSeconds）。はじまりは お知らせで 知らせる
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -18,19 +18,9 @@ local C = Style.Color
 local t = I18n.t
 
 local ui
-local festivalChip, festivalParts
 local starAnchor: Part
 local starEmitter: ParticleEmitter
 local announced = false
-
-local function formatLeft(seconds: number): string
-	seconds = math.max(0, math.floor(seconds))
-	-- ほかの カードと そろえる（1時間より 少ないときは 分:秒、それ以上は 時:分:秒）
-	if seconds < 3600 then
-		return ("%d:%02d"):format(seconds // 60, seconds % 60)
-	end
-	return ("%d:%02d:%02d"):format(seconds // 3600, (seconds % 3600) // 60, seconds % 60)
-end
 
 -- 画面いっぱいのお祝い
 -- kind: nil=ほしぞらのおくりもの / "thanks"=しゅうかくの回数が とどいたときの 木からの おれい（コインだけ）
@@ -202,11 +192,6 @@ local function showCelebration(level: number, coins: number, kind: string?, left
 end
 
 local function buildFestival()
-	local gui = ui.gui()
-	festivalChip, festivalParts = Style.infoCard({ Name = "FestivalChip", Accent = Color3.fromRGB(110, 90, 200) }, gui)
-	festivalParts.Emoji.Text = "🌟"
-	festivalParts.Title.Text = t("festival.title")
-
 	-- 降る星（カメラの上から）
 	starAnchor = Instance.new("Part")
 	starAnchor.Name = "StarFestivalAnchor"
@@ -240,10 +225,8 @@ end
 local function refreshFestival()
 	local left = (workspace:GetAttribute("StarFestivalEndsAt") or 0) - workspace:GetServerTimeNow()
 	local active = left > 0
-	festivalChip.Visible = active and ui.currentPanel == nil
 	starEmitter.Enabled = active
 	if active then
-		festivalParts.Value.Text = t("card.bonusLeft", math.floor(Config.StarGift.sparkleBonus * 100 + 0.5), formatLeft(left))
 		if not announced then
 			announced = true
 			ui.toastText(t("star.announce"), 5)

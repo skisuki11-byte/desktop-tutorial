@@ -221,6 +221,7 @@ Config.Rush = {
 	everySeconds = 4 * 3600,
 	durationSeconds = 15 * 60,
 	warnSeconds = 5 * 60, -- はじまる 何秒前に お知らせするか
+	earlyWarnSeconds = 30 * 60, -- もっと 前の お知らせ（30分前。「◯時に また来よう」と 思えるように）
 	sellBonus = 0.5, -- 売るときの コインが +50%
 	sparkleBonus = 0.2, -- きらきらの 確率に 足す
 }

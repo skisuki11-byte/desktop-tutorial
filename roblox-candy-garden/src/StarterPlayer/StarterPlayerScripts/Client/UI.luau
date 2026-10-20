@@ -663,10 +663,10 @@ local function buildCompactFrames()
 	}, infoStack)
 end
 
--- 「いまの ようす」の 札（みんなの木の レベル・お天気・ほしぞらまつり・しょんぼり雲／キャンディラッシュ）は、
+-- 「いまの ようす」の 札（みんなの木の レベル）は、
 -- スマホでも パソコンでも 左上の InfoStack に たてに まとめる。
 -- 見る場所が 1か所なら、目を あちこち 動かさずに すむ（ゲームの HUD で よく言われる「情報は まとめて置く」）
-local INFO_CHIPS = { "TreeChip", "RushChip", "WeatherChip", "FestivalChip", "GloomChip" } -- いつも出る ものを 上に
+local INFO_CHIPS = { "TreeChip" } -- お天気・ラッシュ などは カードに せず、はじまるときの お知らせだけ（画面を すっきり）
 -- 左上の カードの列の 大きさ: いま 出ている カードが 画面に 入る いちばん大きい 大きさに（読みやすさ 優先）。
 -- スマホは 左下の 移動スティックに かからないよう、画面の 上 6割まで
 local lastInfoScale = nil

@@ -4,7 +4,7 @@
 --   ・売るとき コインが Config.Rush.sellBonus ぶん ふえる
 --   ・きらきら が 出やすい（Weather.sparkleChance で 足す）
 --   ・めずらしい種（スターケーキ・ムーンキャンディ）が かならず 入荷する（Config.seedStock）
--- はじまる 5分前と、はじまった ときに 全員に お知らせ
+-- はじまる 30分前・5分前と、はじまった ときに 全員に お知らせ（左上の カードは 出さない）
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -26,7 +26,7 @@ end
 
 function Rush.start()
 	task.spawn(function()
-		local lastWarned, lastStarted = nil, nil
+		local lastWarned, lastEarly, lastStarted = nil, nil, nil
 		while true do
 			local t = now()
 			local endsAt, nextAt = Config.rush(t)
@@ -44,9 +44,18 @@ function Rush.start()
 				end
 			elseif nextAt - t <= Config.Rush.warnSeconds and lastWarned ~= nextAt then
 				lastWarned = nextAt
+				lastEarly = nextAt -- 5分前を すぎてから 立ち上がった サーバーでは 30分前の お知らせは 出さない
 				for _, player in Players:GetPlayers() do
 					if Data.get(player) then
 						Remotes.Toast:FireClient(player, "rush.soon")
+					end
+				end
+			elseif nextAt - t <= Config.Rush.earlyWarnSeconds and nextAt - t > Config.Rush.earlyWarnSeconds - 60 and lastEarly ~= nextAt then
+				-- ちょうど 30分前の 1分の あいだだけ（サーバーが とちゅうで 立ち上がっても「あと30分」と まちがえない）
+				lastEarly = nextAt
+				for _, player in Players:GetPlayers() do
+					if Data.get(player) then
+						Remotes.Toast:FireClient(player, "rush.early")
 					end
 				end
 			end
