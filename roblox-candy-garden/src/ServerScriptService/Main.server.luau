@@ -109,6 +109,9 @@ end
 local function onPlayerAdded(player: Player)
 	Data.load(player)
 	if player.Parent ~= Players then
+		-- 読みこみの 待ち時間に ぬけた人。PlayerRemoving は もう 終わっているので、ここで 鍵を はずして 片づける
+		-- （そのままだと 鍵が 残って、すぐ 入りなおすと 最大30秒 待たされる）
+		Data.release(player)
 		return
 	end
 
@@ -122,6 +125,9 @@ local function onPlayerAdded(player: Player)
 		return
 	end
 	Monetization.load(player)
+	if player.Parent ~= Players then
+		return -- パスの 確認を 待つあいだに ぬけた（片づけは PlayerRemoving で 済んでいる）
+	end
 	Funnel.step(player, "Joined")
 	Season.sync(player) -- シーズンの切り替えと、取りこぼしの受け取り
 	Garden.attach(player)
@@ -185,4 +191,6 @@ game:BindToClose(function()
 	while left > 0 and os.clock() < deadline do
 		task.wait(0.2)
 	end
+	-- 先に ぬけた人の 保存（PlayerRemoving）が まだ 書きこみ中なら、それも 待つ（待たないと データが 消える）
+	Data.waitForSaves(deadline)
 end)

@@ -1049,7 +1049,7 @@ function World.teleport(player: Player, dest: string)
 			target = plot.spawn.CFrame * CFrame.new(0, 3.5, 0)
 		end
 	elseif dest == "tree" then
-		-- 広場の入口に降りる。左右に たねや と ふんすい、正面に みんなの木 が見える
+		-- 広場の入口に降りる。ふんすい と 正面の みんなの木 が見える
 		target = CFrame.lookAt(Vector3.new(0, 4, 42), Vector3.new(0, 4, 0))
 	end
 	if target then

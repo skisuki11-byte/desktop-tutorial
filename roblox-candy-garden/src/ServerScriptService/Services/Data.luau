@@ -207,6 +207,7 @@ end
 -- それより早く頼まれたら、少しあとに まとめて1回だけ書く（書きこみが詰まって 遅くなるのを防ぐ）
 local MIN_SAVE_GAP = 7
 local savePending: { [Player]: boolean } = {}
+local inFlight = 0 -- いま 書きこみ中の 保存の数（サーバーが 閉じるときに 待つ）
 
 -- release: この人が ぬけるとき（鍵を はずす）
 function Data.save(player: Player, force: boolean?, release: boolean?)
@@ -219,6 +220,7 @@ function Data.save(player: Player, force: boolean?, release: boolean?)
 		return
 	end
 	profile.saving = true
+	inFlight += 1
 	profile.lastSaved = os.clock()
 	profile.data.lastSeen = os.time()
 	local stolen = false
@@ -234,6 +236,7 @@ function Data.save(player: Player, force: boolean?, release: boolean?)
 		end)
 	end)
 	profile.saving = false
+	inFlight -= 1
 	if not ok then
 		warn("[Data] save failed: " .. tostring(err))
 	elseif stolen then
@@ -258,8 +261,22 @@ function Data.saveSoon(player: Player)
 end
 
 function Data.release(player: Player)
+	-- 前の 保存が まだ 書きこみ中なら 終わるのを 待つ。
+	-- 先に 鍵を はずしても、あとから 前の 保存が 鍵を つけなおして しまい、次に 入るとき 30秒 待たされるため
+	local profile = profiles[player]
+	local deadline = os.clock() + 10
+	while profile and profile.saving and os.clock() < deadline do
+		task.wait(0.1)
+	end
 	Data.save(player, true, true)
 	profiles[player] = nil
+end
+
+-- サーバーが 閉じるとき: ぬけた人の 保存（PlayerRemoving）も ふくめて、書きこみが 終わるまで 待つ
+function Data.waitForSaves(deadline: number)
+	while inFlight > 0 and os.clock() < deadline do
+		task.wait(0.1)
+	end
 end
 
 -- 選択中の種。在庫が切れていたら自動で別の種に切り替える。
