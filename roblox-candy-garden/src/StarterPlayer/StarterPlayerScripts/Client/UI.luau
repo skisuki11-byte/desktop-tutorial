@@ -1730,7 +1730,9 @@ function UI.toastText(text: string, seconds: number?)
 	toastLabel.BackgroundTransparency = 0
 	toastLabel.TextTransparency = 0
 	Style.pop(toastLabel, 1.15)
-	task.delay(seconds or 1.8, function()
+	-- 出ている時間は 文の 長さで きめる（子どもが 読みおわる 長さ。短い文 3秒〜長い文 7秒）
+	local length = utf8.len(text) or #text
+	task.delay(seconds or math.clamp(2 + length * 0.12, 3, 7), function()
 		if token ~= toastToken then
 			return
 		end
