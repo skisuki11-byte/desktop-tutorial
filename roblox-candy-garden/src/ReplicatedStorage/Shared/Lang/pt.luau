@@ -1,5 +1,7 @@
 -- ポルトガル語（ブラジルの ことば。子ども向けに「você」）
 return {
+	["fairy.later"] = "Depois",
+	["tip.go"] = "Ver!",
 	["card.chanceLeft"] = "✨%d%%  faltam %s",
 	["card.bonusLeft"] = "✨+%d%%  faltam %s",
 	["festival.title"] = "Festival estrelado",
@@ -203,8 +205,8 @@ return {
 	["reform.base.4"] = "Casa de dois andares",
 	["reform.base.5"] = "Palácio dos doces",
 	["toast.reformDone"] = "🏡 Agora é: %s!",
-	["newtip.tipBase"] = "🧚 Você juntou moedas! Abra “🏡 Decorar” no menu para construir sua base secreta",
-	["newtip.tipRoom"] = "🧚 Vá até a porta da sua base secreta, atrás do jardim, para entrar! Coloque móveis em “🏡 Decorar”",
+	["newtip.tipBase"] = "🧚 Você juntou moedas! Já pode construir sua própria base secreta. Use o novo botão 🏠 lá em cima quando quiser",
+	["newtip.tipRoom"] = "🧚 Sua base secreta está pronta! Toque no botão 🏠 lá em cima para entrar. Decore com móveis!",
 	["newtip.tipOutfit"] = "🧚 Agora tem fantasias e vestidos em “👗 Estilo”. Dá uma olhada!",
 	["ui.roomTitle"] = "🛋️ Quarto da base secreta",
 	["ui.roomHint"] = "Os móveis vão nos lugares do seu quarto. Só você entra pela porta da sua base",

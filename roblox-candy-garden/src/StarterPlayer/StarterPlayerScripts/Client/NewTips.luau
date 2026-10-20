@@ -12,6 +12,8 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local NewTips = {}
 
 local toast: ((string, number?) -> ())? = nil
+-- ボタンつきで ルルに 話してもらう（ひみつきちの 案内）。init.client で Tutorial と UI を つなぐ
+local talker: ((key: string) -> boolean)? = nil
 local lastShown = os.clock() - 40 -- 入ってすぐは出さない（あいさつ・まいにちボーナスと重ならないよう 20秒あける）
 local sent: { [string]: boolean } = {} -- サーバーの返事を待つあいだ、同じものを出さない
 
@@ -67,7 +69,10 @@ local function check()
 	end
 	lastShown = os.clock()
 	sent[key] = true
-	toast(I18n.t("newtip." .. key), 7)
+	-- ひみつきちの 案内は、ルルが ボタンつきで（「🏠 みてみる」を 押すと その場所へ）。ほかは ひとこと
+	if not (talker and talker(key)) then
+		toast(I18n.t("newtip." .. key), 7)
+	end
 	Remotes.MarkSeen:FireServer(key)
 end
 
@@ -80,6 +85,10 @@ function NewTips.init(toastFn: (string, number?) -> ())
 			check()
 		end
 	end)
+end
+
+function NewTips.setTalker(fn: (key: string) -> boolean)
+	talker = fn
 end
 
 function NewTips.update(state)

@@ -1,5 +1,7 @@
 -- フランス語（子ども向けに「tu」）
 return {
+	["fairy.later"] = "Plus tard",
+	["tip.go"] = "Voir !",
 	["card.chanceLeft"] = "✨%d%%  encore %s",
 	["card.bonusLeft"] = "✨+%d%%  encore %s",
 	["festival.title"] = "Fête des étoiles",
@@ -203,8 +205,8 @@ return {
 	["reform.base.4"] = "Maison à étage",
 	["reform.base.5"] = "Palais des bonbons",
 	["toast.reformDone"] = "🏡 C'est maintenant : %s !",
-	["newtip.tipBase"] = "🧚 Tu as des pièces ! Ouvre « 🏡 Décorer » dans le menu pour construire ta base secrète",
-	["newtip.tipRoom"] = "🧚 Va à la porte de ta base secrète, derrière ton jardin, pour entrer ! Ajoute des meubles dans « 🏡 Décorer »",
+	["newtip.tipBase"] = "🧚 Tu as des pièces ! Tu peux construire ta propre base secrète. Utilise le nouveau bouton 🏠 en haut quand tu veux",
+	["newtip.tipRoom"] = "🧚 Ta base secrète est prête ! Touche le bouton 🏠 en haut pour entrer. Décore-la avec des meubles !",
 	["newtip.tipOutfit"] = "🧚 Il y a des costumes et des robes dans « 👗 Style ». Va voir !",
 	["ui.roomTitle"] = "🛋️ Chambre de la base secrète",
 	["ui.roomHint"] = "Les meubles vont aux places de ta chambre. Toi seul peux entrer par la porte de ta base",

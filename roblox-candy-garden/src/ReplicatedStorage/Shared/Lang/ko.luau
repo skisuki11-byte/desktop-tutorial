@@ -1,5 +1,7 @@
 -- 韓国語（子ども向けに やさしい「해요」体）
 return {
+	["fairy.later"] = "나중에",
+	["tip.go"] = "보러 가기!",
 	["card.chanceLeft"] = "✨%d%%  %s 남음",
 	["card.bonusLeft"] = "✨+%d%%  %s 남음",
 	["festival.title"] = "별빛 축제",
@@ -203,8 +205,8 @@ return {
 	["reform.base.4"] = "2층 집",
 	["reform.base.5"] = "꿈의 사탕 궁전",
 	["toast.reformDone"] = "🏡 %s(으)로 바뀌었어요!",
-	["newtip.tipBase"] = "🧚 코인이 모였어요! 메뉴의 「🏡 꾸미기」에서 나만의 비밀 기지를 지어요",
-	["newtip.tipRoom"] = "🧚 정원 뒤쪽 비밀 기지 문으로 가면 들어갈 수 있어요! 가구는 「🏡 꾸미기」에서 놓아요",
+	["newtip.tipBase"] = "🧚 코인이 모였어요! 나만의 비밀 기지를 지을 수 있어요. 위에 생긴 🏠 버튼으로 언제든 갈 수 있어요",
+	["newtip.tipRoom"] = "🧚 비밀 기지가 생겼어요! 위의 🏠 버튼을 누르면 안으로 들어가요. 가구로 꾸며 봐요!",
 	["newtip.tipOutfit"] = "🧚 「👗 꾸미기」에 옷과 드레스가 생겼어요. 구경해 봐요!",
 	["ui.roomTitle"] = "🛋️ 비밀 기지 방",
 	["ui.roomHint"] = "가구는 방 안 자리에 놓아요. 기지 문으로는 나만 들어갈 수 있어요",

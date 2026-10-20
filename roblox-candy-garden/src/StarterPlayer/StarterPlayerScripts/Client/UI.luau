@@ -415,6 +415,33 @@ local function buildTravel()
 	end
 	place("GoHome", 1, "🏡 " .. t("ui.home"), Color3.fromRGB(255, 226, 150), "home")
 	place("GoTree", 2, "🌳 " .. t("ui.toTree"), C.Mint, "tree")
+	-- ひみつきち: たてられるだけ コインが たまったら 出てくる（それまでは 出さない＝まよわせない）。
+	-- まだ ないときは「かざる」の ひみつきちの 段を ひらく、あるときは 自分の へやへ ワープ
+	local base = Style.button({
+		Name = "GoBase",
+		LayoutOrder = 3,
+		Size = UDim2.fromOffset(150, 46),
+		BackgroundColor3 = Color3.fromRGB(255, 190, 215),
+		TextColor3 = C.Text,
+		Text = "🏠 " .. t("reform.base"),
+		TextSize = 18,
+		TextWrapped = false,
+		Visible = false,
+	}, travel)
+	base.Activated:Connect(function()
+		UI.goBase()
+	end)
+end
+
+local latestBaseLevel = 0
+-- 🏠 ひみつきち へ（上の ボタン・ルルの 案内から）
+function UI.goBase()
+	if latestBaseLevel >= 1 then
+		Remotes.RoomDoor:FireServer("warp")
+	else
+		UI.showPanel("decor")
+		DecorUI.focusBase()
+	end
 end
 
 local SEED_PHONE = 54 -- スマホの種カード（縮めない。指で押せる44以上）
@@ -759,7 +786,13 @@ local function applyLayout(mode: string)
 		travel.AnchorPoint = Vector2.new(1, 0)
 		travel.Position = UDim2.new(1, -12, 0, leftTop)
 		Style.setScale(travel, PHONE_ROW / 54)
-		local travelWidth = (54 * 2 + 6) * PHONE_ROW / 54
+		local travelCount = 0
+		for _, b in travel:GetChildren() do
+			if b:IsA("TextButton") and b.Visible then
+				travelCount += 1
+			end
+		end
+		local travelWidth = (54 * travelCount + 6 * (travelCount - 1)) * PHONE_ROW / 54
 		-- 種えらびの列は、横はばを いっぱいに使う（道具と種が スライドしなくても見えるように）。
 		-- みんなの木のレベルは、広場にいるときだけ出る表示なので、種の列の横には置かない
 		local row2 = leftTop + PHONE_ROW + 8
@@ -1690,6 +1723,16 @@ end
 
 function UI.update(state)
 	local coins = state.coins
+	-- 🏠 ひみつきち ボタン: テントを 買えるだけ たまったら（または もう あれば）出す。出たら 配置を 合わせなおす
+	latestBaseLevel = (state.decor and state.decor.reform and state.decor.reform.base) or 0
+	local goBase = travel and travel:FindFirstChild("GoBase")
+	if goBase then
+		local show = latestBaseLevel >= 1 or coins >= Config.ReformById.base.levels[1].price
+		if goBase.Visible ~= show then
+			goBase.Visible = show
+			applyLayout(layoutMode)
+		end
+	end
 	local function coinText(n: number): string
 		return "🟡 " .. Style.formatNumber(n)
 	end

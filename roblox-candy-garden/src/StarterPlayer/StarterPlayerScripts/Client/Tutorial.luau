@@ -165,9 +165,41 @@ local line = 1
 local introDone = false
 local wasDone: boolean? = nil -- この回のはじめに、案内が終わっていたか
 
+-- 案内が おわったあとの ルルの ひとこと（ボタンつき）。例: ひみつきちを たてられるように なったとき「🏠 みてみる」
+local tip: { text: string, label: string, action: () -> () }? = nil
+
+function Tutorial.tip(text: string, label: string, action: () -> ())
+	tip = { text = text, label = label, action = action }
+end
+
+local function talkTip(): boolean
+	if not tip then
+		return false
+	end
+	local current = tip
+	UI.setBanner(current.text, {
+		{
+			current.label,
+			function()
+				tip = nil
+				UI.setBanner(nil)
+				current.action()
+			end,
+		},
+		{
+			t("fairy.later"),
+			function()
+				tip = nil
+				UI.setBanner(nil)
+			end,
+		},
+	})
+	return true
+end
+
 local function talk(): boolean
 	if not script_ then
-		return false
+		return talkTip()
 	end
 	local isLast = line >= #script_
 	local buttons = {

@@ -1,5 +1,7 @@
 -- ドイツ語（子ども向けに「du」）
 return {
+	["fairy.later"] = "Später",
+	["tip.go"] = "Zeigen!",
 	["card.chanceLeft"] = "✨%d%%  noch %s",
 	["card.bonusLeft"] = "✨+%d%%  noch %s",
 	["festival.title"] = "Sternenfest",
@@ -203,8 +205,8 @@ return {
 	["reform.base.4"] = "Zweistöckiges Haus",
 	["reform.base.5"] = "Traum-Bonbonpalast",
 	["toast.reformDone"] = "🏡 Jetzt ist es: %s!",
-	["newtip.tipBase"] = "🧚 Du hast Münzen gespart! Öffne „🏡 Dekorieren“ im Menü und bau dein Geheimversteck",
-	["newtip.tipRoom"] = "🧚 Geh hinter deinem Garten zur Tür deines Geheimverstecks, um hineinzugehen! Möbel gibt es unter „🏡 Dekorieren“",
+	["newtip.tipBase"] = "🧚 Du hast Münzen gespart! Du kannst dein eigenes Geheimversteck bauen. Nutze jederzeit den neuen 🏠-Knopf oben",
+	["newtip.tipRoom"] = "🧚 Dein Geheimversteck ist fertig! Tippe oben auf 🏠, um hineinzugehen. Richte es mit Möbeln ein!",
 	["newtip.tipOutfit"] = "🧚 Kostüme und Kleider gibt es jetzt unter „👗 Style“. Schau mal!",
 	["ui.roomTitle"] = "🛋️ Zimmer im Geheimversteck",
 	["ui.roomHint"] = "Möbel kommen auf die Plätze in deinem Zimmer. Nur du kommst durch die Tür deines Verstecks",

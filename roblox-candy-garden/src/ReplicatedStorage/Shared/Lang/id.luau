@@ -1,5 +1,7 @@
 -- インドネシア語（子ども向けに「kamu」）
 return {
+	["fairy.later"] = "Nanti",
+	["tip.go"] = "Lihat!",
 	["card.chanceLeft"] = "✨%d%%  sisa %s",
 	["card.bonusLeft"] = "✨+%d%%  sisa %s",
 	["festival.title"] = "Festival Bintang",
@@ -203,8 +205,8 @@ return {
 	["reform.base.4"] = "Rumah dua lantai",
 	["reform.base.5"] = "Istana permen impian",
 	["toast.reformDone"] = "🏡 Sekarang jadi %s!",
-	["newtip.tipBase"] = "🧚 Koinmu sudah banyak! Buka “🏡 Hias” di menu untuk membangun markas rahasiamu",
-	["newtip.tipRoom"] = "🧚 Jalan ke pintu markas rahasia di belakang kebun untuk masuk! Pasang perabot dari “🏡 Hias”",
+	["newtip.tipBase"] = "🧚 Koinmu sudah banyak! Kamu bisa membangun markas rahasiamu sendiri. Pakai tombol 🏠 baru di atas kapan saja",
+	["newtip.tipRoom"] = "🧚 Markas rahasiamu sudah jadi! Ketuk tombol 🏠 di atas untuk masuk. Coba hias dengan perabot!",
 	["newtip.tipOutfit"] = "🧚 Kostum dan gaun sekarang ada di “👗 Gaya”. Ayo lihat!",
 	["ui.roomTitle"] = "🛋️ Kamar markas rahasia",
 	["ui.roomHint"] = "Perabot diletakkan di tempat dalam kamarmu. Hanya kamu yang bisa masuk lewat pintu markasmu",

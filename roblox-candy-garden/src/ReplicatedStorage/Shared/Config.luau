@@ -94,7 +94,7 @@ end
 -- あたらしい遊びの おしらせ（見たら消える）。数字を上げると、もう一度「NEW」が出る
 --   decor・style: メニューのボタンに「NEW」。tip〜: ちょうどいいときに 1回だけ出す ひとこと
 -- 新しいことを いっぺんに見せず、使えるようになったときに少しずつ知らせる（Duolingo などと同じ考え方）
-Config.NewThings = { decor = 1, style = 1, tipBase = 1, tipRoom = 1, tipOutfit = 1 }
+Config.NewThings = { decor = 1, style = 1, tipBase = 2, tipRoom = 2, tipOutfit = 1 } -- tipBase・tipRoom は 2: ボタンつきの 案内に かえたので、もう一度 出す
 
 -- 高い買い物は2回押して決める（小さい子の押しまちがい防止）
 Config.ReformConfirmAt = 50000

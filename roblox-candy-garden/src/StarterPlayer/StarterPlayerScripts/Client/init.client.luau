@@ -31,6 +31,15 @@ Style.onTap = function()
 end
 UI.init()
 Tutorial.init()
+-- ルルの ひみつきち案内（ボタンを 押すと 🏠 へ）
+require(script.NewTips).setTalker(function(key)
+	if key == "tipBase" or key == "tipRoom" then
+		local I18n = require(game:GetService("ReplicatedStorage").Shared.I18n)
+		Tutorial.tip(I18n.t("newtip." .. key), "🏠 " .. I18n.t("tip.go"), UI.goBase)
+		return true
+	end
+	return false
+end)
 -- ペットとたまごの3Dの色を、遊びはじめて少ししたら 先に読みこんでおく
 -- （たまごが割れたとき・ずかんを開いたときに、色のない まっくろな形が出ないように）
 task.delay(6, function()

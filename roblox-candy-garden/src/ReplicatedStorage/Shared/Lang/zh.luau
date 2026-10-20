@@ -1,5 +1,7 @@
 -- 中国語（繁体字。台湾・香港の ことば）
 return {
+	["fairy.later"] = "等一下",
+	["tip.go"] = "去看看！",
 	["card.chanceLeft"] = "✨%d%%  還有 %s",
 	["card.bonusLeft"] = "✨+%d%%  還有 %s",
 	["festival.title"] = "星光祭",
@@ -203,8 +205,8 @@ return {
 	["reform.base.4"] = "兩層樓的家",
 	["reform.base.5"] = "夢幻糖果宮殿",
 	["toast.reformDone"] = "🏡 變成%s了！",
-	["newtip.tipBase"] = "🧚 金幣存夠了！打開選單的「🏡 裝飾」蓋你自己的秘密基地吧",
-	["newtip.tipRoom"] = "🧚 走到花園後面秘密基地的門就能進去！家具在「🏡 裝飾」放",
+	["newtip.tipBase"] = "🧚 金幣存夠了！可以蓋自己的秘密基地了。上面新出現的 🏠 按鈕隨時都能去",
+	["newtip.tipRoom"] = "🧚 秘密基地蓋好了！按上面的 🏠 按鈕就能進去。用家具裝飾看看吧！",
 	["newtip.tipOutfit"] = "🧚 「👗 裝扮」有衣服和洋裝了。去看看吧！",
 	["ui.roomTitle"] = "🛋️ 秘密基地的房間",
 	["ui.roomHint"] = "家具放在房間裡的位置。只有你能從基地的門進去",

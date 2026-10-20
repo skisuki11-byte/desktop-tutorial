@@ -485,6 +485,30 @@ function DecorUI.setVisible(visible: boolean)
 	end
 end
 
+-- ひみつきちの 段を 見せる（上の 🏠 ボタン・ルルの 案内から 開いたとき）: その段まで スクロールして、ぴょんと はねて 光らせる
+function DecorUI.focusBase()
+	task.defer(function()
+		local row = scroll and scroll:FindFirstChild("Reform_base")
+		if not row then
+			return
+		end
+		task.wait() -- ならびが きまるのを まつ
+		local y = row.AbsolutePosition.Y - scroll.AbsolutePosition.Y + scroll.CanvasPosition.Y - 8
+		scroll.CanvasPosition = Vector2.new(0, math.max(0, y))
+		Style.pop(row, 1.06)
+		local stroke = row:FindFirstChildOfClass("UIStroke")
+		if stroke then
+			local color, thickness = stroke.Color, stroke.Thickness
+			stroke.Color = C.Accent
+			stroke.Thickness = 5
+			task.delay(2.5, function()
+				stroke.Color = color
+				stroke.Thickness = thickness
+			end)
+		end
+	end)
+end
+
 function DecorUI.isVisible(): boolean
 	return panel ~= nil and panel.Visible
 end

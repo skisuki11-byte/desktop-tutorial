@@ -1,5 +1,7 @@
 -- スペイン語（中南米・スペイン どちらでも 読める ことば。子ども向けに「tú」）
 return {
+	["fairy.later"] = "Luego",
+	["tip.go"] = "¡Ver!",
 	["card.chanceLeft"] = "✨%d%%  quedan %s",
 	["card.bonusLeft"] = "✨+%d%%  quedan %s",
 	["festival.title"] = "Festival estrellado",
@@ -203,8 +205,8 @@ return {
 	["reform.base.4"] = "Casa de dos pisos",
 	["reform.base.5"] = "Palacio de dulces",
 	["toast.reformDone"] = "🏡 ¡Ahora es: %s!",
-	["newtip.tipBase"] = "🧚 ¡Ahorraste monedas! Abre “🏡 Decorar” en el menú para construir tu base secreta",
-	["newtip.tipRoom"] = "🧚 ¡Ve a la puerta de tu base secreta, detrás del jardín, para entrar! Pon muebles desde “🏡 Decorar”",
+	["newtip.tipBase"] = "🧚 ¡Ahorraste monedas! Puedes construir tu propia base secreta. Usa el nuevo botón 🏠 de arriba cuando quieras",
+	["newtip.tipRoom"] = "🧚 ¡Tu base secreta está lista! Toca el botón 🏠 de arriba para entrar. ¡Decórala con muebles!",
 	["newtip.tipOutfit"] = "🧚 Ahora hay disfraces y vestidos en “👗 Estilo”. ¡Échales un vistazo!",
 	["ui.roomTitle"] = "🛋️ Cuarto de la base secreta",
 	["ui.roomHint"] = "Los muebles van en los lugares de tu cuarto. Solo tú puedes entrar por la puerta de tu base",

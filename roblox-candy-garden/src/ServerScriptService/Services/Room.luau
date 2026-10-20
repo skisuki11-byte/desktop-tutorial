@@ -188,7 +188,9 @@ local function onDoor(player: Player, action: any)
 		return
 	end
 	local entrance = house:FindFirstChild("Entrance") :: BasePart?
-	if action == "enter" and entrance and (root.Position - entrance.Position).Magnitude < DOOR_REACH then
+	-- "warp": 上の 🏠 ボタン（どこからでも 自分の へやへ）。入れるのは 自分の へや だけ（partsOf）なので ほかの人には 関係しない
+	local near = entrance ~= nil and (root.Position - entrance.Position).Magnitude < DOOR_REACH
+	if entrance and ((action == "enter" and near) or action == "warp") then
 		local depth = room:GetAttribute("Depth") or 16
 		root.AssemblyLinearVelocity = Vector3.zero
 		-- とびらから少し中に入った所で、へやを向く（うしろのカメラが かべに つかえないよう すき間をあける）
