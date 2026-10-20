@@ -1720,8 +1720,13 @@ function UI.toastText(text: string, seconds: number?)
 			toastLabel.Position = UDim2.new(0.5, 0, 0, y)
 		else
 			-- スマホの 横持ちは、いちばん上の 帯の 空いている所（じょうろの 真上）。畑や ボタンに かからない
-			local x, bandTop, bandHeight = toastBand()
+			local x, bandTop, bandHeight, bandWidth = toastBand()
 			if x then
+				-- はばは 出す その時に 帯に あわせる（前に 測った はばの ままだと、帯より 長い 1行で 右が 切れる）
+				local maxWidth = Vector2.new(math.max(200, bandWidth / TOAST_PHONE_SCALE), math.huge)
+				if toastLabel.MaxWidth.MaxSize ~= maxWidth then
+					toastLabel.MaxWidth.MaxSize = maxWidth
+				end
 				local height = math.max(toastLabel.AbsoluteSize.Y, 20)
 				toastLabel.Position = UDim2.new(0, x, 0, bandTop + math.max(2, (bandHeight - height) / 2))
 				return
