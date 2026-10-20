@@ -53,6 +53,7 @@ local bannerLabel, banner, bannerButtons
 local toastY = 120 -- お知らせのふだんの高さ（画面の大きさで変わる）
 local TOAST_PHONE_SCALE = 0.7 -- スマホの お知らせの 大きさ（小さめにして 畑を かくさない）
 local syncTouchControls -- 移動スティックを かくす／もどす（下で きめる）
+local harvestUnlocked = false -- 畑を ひろげたら「まとめて しゅうかく」を 出す
 local lastCoins = nil
 local toastToken = 0
 local menuButton, menuBadge
@@ -556,26 +557,20 @@ local function refreshSeedBar(state)
 	seedCount = 0
 	local selectedButton = nil
 	for order, tool in tools do
-		-- スマホの じょうろは 右の 列（ショップと 売るの あいだ）。毎回 使うので 右手の 親指の 近くに
-		local inStack = compact and tool.id == "water" and actionStack ~= nil
-		if not inStack then
-			seedCount += 1
-		end
+		seedCount += 1
 		local holding = state.tool == tool.id
 		local button = Style.button({
 			Name = "Tool_" .. tool.id,
-			LayoutOrder = if inStack then 2 else order - 10,
+			LayoutOrder = order - 10,
 			Size = if compact
 				then UDim2.fromOffset(SEED_PHONE, SEED_PHONE)
 				else UDim2.fromOffset(holding and 84 or 72, holding and 76 or 66),
 			-- 道具は水色の札で、種と見分けやすく
 			BackgroundColor3 = toolColor(tool),
-		}, if inStack then actionStack else seedBar)
+		}, seedBar)
 		if holding then
 			button:FindFirstChildOfClass("UIStroke").Color = C.Accent
-			if not inStack then
-				selectedButton = button
-			end
+			selectedButton = button
 		end
 		Style.setIcon(Style.label({
 			Position = UDim2.fromScale(0, 0.04),
@@ -833,12 +828,13 @@ local function applyLayout(mode: string)
 	compact = mode == "phone"
 	local size = gui.AbsoluteSize
 	portrait = compact and (size.Y > size.X or gui:GetAttribute("ForcePortrait") == true) -- ForcePortrait: Studioで試すとき用
-	-- 右の 列: ショップ・（スマホは じょうろ）・売る。
-	-- 「まとめて しゅうかく」は 出さない（畑の ↑ボタンで 1つずつ とれる。ボタンが へって 押しまちがいが へる）
-	harvestButton.Visible = false
-	local actionButtons = { shopButton, sellButton }
+	-- 右の 列: ショップ・まとめて しゅうかく・売る。
+	-- 「まとめて しゅうかく」は 畑を ひろげてから 出す（畑が 少ない うちは 畑の ↑ボタンで 足りる。
+	-- 広げて 畑が ふえたら、1つずつは たいへんなので ごほうびとして 出す）
+	harvestButton.Visible = harvestUnlocked
+	local actionButtons = { shopButton, harvestButton, sellButton }
 	for i, button in actionButtons do
-		button.LayoutOrder = i * 2 - 1 -- 1 と 3（2 は じょうろ）
+		button.LayoutOrder = i
 		button.Parent = actionStack
 		Style.setTextSize(button.Icon, 30)
 		Style.setTextSize(button.Caption, 14)
@@ -1900,6 +1896,18 @@ function UI.update(state)
 		if goBase.Visible ~= show then
 			goBase.Visible = show
 			applyLayout(layoutMode)
+		end
+	end
+	-- 🧺 まとめて しゅうかく: 畑を ひろげたら 出す。遊んでいる 最中に 出たときは お知らせで 教える
+	local unlocked = (state.plotTiles or Config.PlotTiles) > Config.PlotTiles
+	if unlocked ~= harvestUnlocked then
+		local justNow = latestState ~= nil and unlocked
+		harvestUnlocked = unlocked
+		applyLayout(layoutMode)
+		if justNow then
+			task.delay(5, function() -- 「畑が ひろがった」の お知らせを 読んでから
+				UI.toast("toast.harvestAllUnlocked")
+			end)
 		end
 	end
 	local function coinText(n: number): string

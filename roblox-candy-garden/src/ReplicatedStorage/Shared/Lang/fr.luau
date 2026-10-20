@@ -4,6 +4,7 @@ return {
 	["tip.go"] = "Voir !",
 	["rush.soon"] = "🍭 Ruée sucrée dans 5 minutes ! Elle commence sur tous les serveurs en même temps",
 	["rush.early"] = "🍭 La Ruée sucrée commence dans 30 minutes ! Pendant 15 minutes, on vend plus cher et des graines rares arrivent",
+	["toast.harvestAllUnlocked"] = "🧺 Tout récolter est débloqué ! Touche 🧺 à droite pour cueillir toutes les plantes prêtes",
 	["goal.seed"] = "acheter des graines de %s",
 	["goal.expand"] = "agrandir ton jardin",
 	["goal.can"] = "améliorer ton arrosoir",

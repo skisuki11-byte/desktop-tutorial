@@ -4,6 +4,7 @@ return {
 	["tip.go"] = "¡Ver!",
 	["rush.soon"] = "🍭 ¡Fiebre de dulces en 5 minutos! Empieza en todos los servidores a la vez",
 	["rush.early"] = "🍭 ¡La Fiebre de dulces empieza en 30 minutos! Durante 15 minutos se vende más caro y llegan semillas raras",
+	["toast.harvestAllUnlocked"] = "🧺 ¡Ya puedes cosechar todo! Toca 🧺 a la derecha para recoger todos los cultivos listos",
 	["goal.seed"] = "comprar semillas de %s",
 	["goal.expand"] = "agrandar tu jardín",
 	["goal.can"] = "mejorar tu regadera",

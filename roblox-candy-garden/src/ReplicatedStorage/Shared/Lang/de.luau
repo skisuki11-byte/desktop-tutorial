@@ -4,6 +4,7 @@ return {
 	["tip.go"] = "Zeigen!",
 	["rush.soon"] = "🍭 Bonbon-Rausch in 5 Minuten! Er startet auf allen Servern gleichzeitig",
 	["rush.early"] = "🍭 Der Bonbon-Rausch beginnt in 30 Minuten! 15 Minuten lang bringt Verkaufen mehr und seltene Samen kommen",
+	["toast.harvestAllUnlocked"] = "🧺 Alles ernten ist frei! Tippe rechts auf 🧺, um alle reifen Pflanzen auf einmal zu ernten",
 	["goal.seed"] = "%s-Samen zu kaufen",
 	["goal.expand"] = "deinen Garten zu vergrößern",
 	["goal.can"] = "deine Gießkanne zu verbessern",

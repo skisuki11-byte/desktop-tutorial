@@ -752,13 +752,15 @@ local function signpost(parent: Instance, at: Vector3, targets: { { any } })
 end
 
 -- お店の前の、名前の立て看板（2本の足と板）
-local function shopSign(parent: Instance, cf: CFrame, key: string)
-	for _, x in { -2.6, 2.6 } do
+-- width: 板の はば（長い 名前は 広く。せまいと 文字が 折りかえして 1文字だけ 次の 行に なる）
+local function shopSign(parent: Instance, cf: CFrame, key: string, width: number?)
+	local w = width or 6.6
+	for _, x in { -(w / 2 - 0.7), w / 2 - 0.7 } do
 		pillar(parent, 4, 0.4, cf * CFrame.new(x, 2, 0), C(170, 120, 90), Enum.Material.Wood, true)
 	end
 	local board = deco({
 		Name = "NameBoard",
-		Size = Vector3.new(6.6, 2, 0.3),
+		Size = Vector3.new(w, 2, 0.3),
 		CFrame = cf * CFrame.new(0, 4, 0),
 		Color = C(255, 236, 200),
 		Material = Enum.Material.Wood,
@@ -864,7 +866,7 @@ local function buildLounge()
 	-- 名前の 立て看板（ひろばの 入口がわ）
 	local toTree = (Vector3.new(0, 0, 0) - center) * Vector3.new(1, 0, 1)
 	local signAt = center + toTree.Unit * 12.5 + Vector3.new(-4, 0, 0)
-	shopSign(model, CFrame.lookAt(signAt, signAt - toTree), "place.lounge")
+	shopSign(model, CFrame.lookAt(signAt, signAt - toTree), "place.lounge", 11)
 end
 
 -- ---- たまごの森（左）: わたあめの木にかこまれた広場に、大きな たまごの家 ----

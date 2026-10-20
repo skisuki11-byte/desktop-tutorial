@@ -4,6 +4,7 @@ return {
 	["tip.go"] = "去看看！",
 	["rush.soon"] = "🍭 糖果狂歡 5 分鐘後開始！所有伺服器同時開始喔",
 	["rush.early"] = "🍭 糖果狂歡 30 分鐘後開始！15 分鐘內售價提高，還會有稀有種子進貨",
+	["toast.harvestAllUnlocked"] = "🧺 可以一次收成了！按右邊的 🧺，就能收下所有長好的作物",
 	["goal.seed"] = "買%s的種子",
 	["goal.expand"] = "擴大菜園",
 	["goal.can"] = "升級澆水壺",

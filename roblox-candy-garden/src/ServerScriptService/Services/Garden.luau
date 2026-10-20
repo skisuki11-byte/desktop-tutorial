@@ -760,6 +760,11 @@ function Garden.harvestAll(player: Player)
 	if not RateLimit.ok(player, "harvestAll", 0.3) then
 		return
 	end
+	-- まとめて しゅうかくは、畑を ひろげてから（ボタンも そのときに 出る）
+	local d = Data.get(player)
+	if not d or (d.plotTiles or Config.PlotTiles) <= Config.PlotTiles then
+		return
+	end
 	local plot = World.plotOf(player)
 	if not plot then
 		return

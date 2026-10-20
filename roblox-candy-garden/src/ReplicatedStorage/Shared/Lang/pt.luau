@@ -4,6 +4,7 @@ return {
 	["tip.go"] = "Ver!",
 	["rush.soon"] = "🍭 Corrida dos doces em 5 minutos! Começa em todos os servidores ao mesmo tempo",
 	["rush.early"] = "🍭 A Corrida dos doces começa em 30 minutos! Por 15 minutos, as vendas rendem mais e chegam sementes raras",
+	["toast.harvestAllUnlocked"] = "🧺 Colher tudo liberado! Toque em 🧺 à direita para colher todas as plantas prontas",
 	["goal.seed"] = "comprar sementes de %s",
 	["goal.expand"] = "aumentar seu jardim",
 	["goal.can"] = "melhorar seu regador",

@@ -4,6 +4,7 @@ return {
 	["tip.go"] = "Lihat!",
 	["rush.soon"] = "🍭 Candy Rush 5 menit lagi! Mulai di semua server bersamaan",
 	["rush.early"] = "🍭 Candy Rush mulai 30 menit lagi! Selama 15 menit, harga jual naik dan bibit langka datang",
+	["toast.harvestAllUnlocked"] = "🧺 Panen Semua terbuka! Ketuk 🧺 di kanan untuk memanen semua tanaman yang siap",
 	["goal.seed"] = "membeli bibit %s",
 	["goal.expand"] = "memperluas kebunmu",
 	["goal.can"] = "meningkatkan penyiram",
