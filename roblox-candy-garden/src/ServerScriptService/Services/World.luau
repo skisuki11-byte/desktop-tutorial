@@ -53,7 +53,6 @@ local POND = { angle = math.rad(22.5), radius = 108, size = 15 } -- 池（庭と
 -- どの庭からも同じくらいの近さで、みんなが同じ場所に集まる
 local PLAZA_RADIUS = 32
 local FOUNTAIN_ANGLE = math.rad(67.5)
-local SEEDSHOP_ANGLE = math.rad(112.5)
 local function plazaSpot(angle: number): Vector3
 	return Vector3.new(math.cos(angle) * PLAZA_RADIUS, 0, math.sin(angle) * PLAZA_RADIUS)
 end
@@ -324,7 +323,7 @@ local function isFree(pos: Vector3, taken: { Vector3 }, spacing: number): boolea
 		return false
 	end
 	-- ふんすいと たねや のまわり
-	if (flat - plazaSpot(FOUNTAIN_ANGLE)).Magnitude < 12 or (flat - plazaSpot(SEEDSHOP_ANGLE)).Magnitude < 13 then
+	if (flat - plazaSpot(FOUNTAIN_ANGLE)).Magnitude < 12 then
 		return false
 	end
 	if (flat - EGG_FOREST).Magnitude < 30 or (flat - TOOL_SHOP).Magnitude < 22 then
@@ -696,103 +695,6 @@ local function buildFountain()
 	pumpPrompt = addPrompt(model, base * CFrame.new(0, 3, 0), 11)
 end
 
--- たねや の屋台。しましまの屋根、カウンターに種の箱、上に「つぎの入荷まで」の看板
-local function buildSeedShop()
-	local spot = plazaSpot(SEEDSHOP_ANGLE)
-	local model = make("Model", { Name = "SeedShop" }, workspace)
-	local base = facingTree(spot, 0) -- -Z が木のほう（お客さんがわ）
-	block({
-		Name = "Floor",
-		Size = Vector3.new(14, 0.4, 9),
-		CFrame = base * CFrame.new(0, 0.2, 0),
-		Color = COOKIE,
-		Material = Enum.Material.Sandstone,
-	}, model)
-	-- カウンター（お客さんがわ）
-	block({
-		Name = "Counter",
-		Size = Vector3.new(12, 3, 2.2),
-		CFrame = base * CFrame.new(0, 1.9, -2.6),
-		Color = C(255, 236, 244),
-		Material = Enum.Material.Wood,
-	}, model)
-	block({
-		Name = "CounterTop",
-		Size = Vector3.new(12.6, 0.4, 2.8),
-		CFrame = base * CFrame.new(0, 3.6, -2.6),
-		Color = C(255, 150, 190),
-	}, model)
-	-- 柱
-	for _, x in { -6.3, 6.3 } do
-		for _, z in { -3.6, 3.6 } do
-			pillar(model, 8, 0.6, base * CFrame.new(x, 4.2, z), C(255, 250, 244), nil, true)
-		end
-	end
-	-- しましまの屋根（ピンクと白を交互に）
-	for i = 0, 6 do
-		deco({
-			Size = Vector3.new(2.1, 0.35, 10.5),
-			CFrame = base * CFrame.new(-6.3 + i * 2.1, 8.6, 0) * CFrame.Angles(math.rad(-10), 0, 0),
-			Color = if i % 2 == 0 then C(255, 120, 170) else C(255, 252, 250),
-		}, model)
-	end
-	-- 屋根のふちの丸い飾り
-	for i = 0, 6 do
-		ball(model, 0.9, (base * CFrame.new(-6.3 + i * 2.1, 7.6, -5.3)).Position, if i % 2 == 0 then C(255, 120, 170) else C(255, 220, 120))
-	end
-	-- カウンターの上の種の箱（作物の色の実を入れておく）
-	for i, crop in Config.Crops do
-		local x = -5 + (i - 1) * 2
-		deco({
-			Size = Vector3.new(1.6, 0.7, 1.6),
-			CFrame = base * CFrame.new(x, 4.15, -2.6),
-			Color = C(214, 168, 120),
-			Material = Enum.Material.Wood,
-		}, model)
-		for k = 1, 3 do
-			ball(model, 0.55, (base * CFrame.new(x - 0.35 + (k - 1) * 0.35, 4.6, -2.6 + (k % 2) * 0.3)).Position, crop.color, Enum.Material.Glass)
-		end
-	end
-	-- 看板（文字はクライアントが、その人の言語で入れる。のこり時間もクライアントが数える）
-	local board = deco({
-		Name = "Board",
-		Size = Vector3.new(7, 2.4, 0.4),
-		CFrame = base * CFrame.new(0, 10.4, -4.4),
-		Transparency = 1, -- 文字だけを見せる（板があると、うしろの文字が隠れる）
-	}, model)
-	local sign = make("BillboardGui", {
-		Name = "Sign",
-		Size = UDim2.fromScale(12, 4.2),
-		StudsOffsetWorldSpace = Vector3.new(0, 1.6, 0),
-		LightInfluence = 0,
-		MaxDistance = 120,
-	}, board)
-	make("TextLabel", {
-		Name = "Title",
-		BackgroundTransparency = 1,
-		Size = UDim2.fromScale(1, 0.6),
-		Font = Enum.Font.FredokaOne,
-		TextScaled = true,
-		TextColor3 = C(92, 52, 110),
-		TextStrokeColor3 = C(255, 255, 255),
-		TextStrokeTransparency = 0,
-		Text = "🌱",
-	}, sign)
-	make("TextLabel", {
-		Name = "Timer",
-		BackgroundTransparency = 1,
-		Position = UDim2.fromScale(0, 0.6),
-		Size = UDim2.fromScale(1, 0.4),
-		Font = Enum.Font.FredokaOne,
-		TextScaled = true,
-		TextColor3 = C(255, 255, 255),
-		TextStrokeColor3 = C(200, 80, 140),
-		TextStrokeTransparency = 0,
-		Text = "",
-	}, sign)
-	addPrompt(model, base * CFrame.new(0, 3, -3.2), 10)
-end
-
 -- ---- 立て看板 ----
 
 -- 文字はクライアントが、その人の言語で入れる（TextLabel の属性 I18n に、言葉のキーを入れておく）
@@ -1016,7 +918,7 @@ function World.build(onTile: (Player, BasePart) -> ())
 	end
 
 	buildFountain()
-	buildSeedShop()
+	-- 種は 右の 🛒ショップ（ボタン）で 買う。ひろばの 種屋の 建物は 置かない（同じものが 2か所に あると まよう）
 	buildEggForest()
 	buildToolShop()
 	-- ひろばの道しるべ（入口と、反対がわ）

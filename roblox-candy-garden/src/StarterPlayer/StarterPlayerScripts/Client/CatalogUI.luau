@@ -62,10 +62,10 @@ local function refresh()
 			local card=Style.button({Name="Entry_"..entry.key,LayoutOrder=i,Text="",BackgroundColor3=Color3.new(1,1,1),ZIndex=12},scroll)
 			local border=card:FindFirstChildOfClass("UIStroke")
 			if entry.rarity then border.Transparency=if mystery(entry) then .65 else 0;border.Color=Style.Rarity[entry.rarity] or Style.Color.Dim end
-			local frame=Style.make("Frame",{Name="Preview",Position=UDim2.fromOffset(5,4),Size=UDim2.new(1,-10,0,if compactCards then 70 else 126),BackgroundTransparency=1,ZIndex=13},card)
+			local frame=Style.make("Frame",{Name="Preview",Position=UDim2.fromOffset(5,4),Size=UDim2.new(1,-10,1,-58),BackgroundTransparency=1,ZIndex=13},card) -- 絵は カードの のこり ぜんぶ（カードの 高さが かわっても 合う）
 			View.attach(frame,entry.key,mystery(entry))
-			Style.label({Name="EntryName",Position=UDim2.fromOffset(5,if compactCards then 76 else 132),Size=UDim2.new(1,-10,0,if compactCards then 22 else 30),Text=displayName(entry),TextSize=14,ZIndex=13},card)
-			Style.label({Name="CollectionStatus",Position=UDim2.fromOffset(4,if compactCards then 100 else 164),Size=UDim2.new(1,-8,0,if compactCards then 18 else 24),Text=if entry.rarity then string.rep("★",entry.rarity).." · "..status(entry) else status(entry),TextSize=10,TextColor3=Style.Color.TextMuted,ZIndex=13},card)
+			Style.label({Name="EntryName",Position=UDim2.new(0,5,1,-52),Size=UDim2.new(1,-10,0,26),Text=displayName(entry),TextSize=16,ZIndex=13},card)
+			Style.label({Name="CollectionStatus",Position=UDim2.new(0,4,1,-25),Size=UDim2.new(1,-8,0,20),Text=if entry.rarity then string.rep("★",entry.rarity).." · "..status(entry) else status(entry),TextSize=10,TextColor3=Style.Color.TextMuted,ZIndex=13},card)
 			card.Activated:Connect(function() showDetail(entry) end)
 		end
 	end
@@ -96,24 +96,39 @@ function CatalogUI.build(gui,onClose)
 	local infoScroll=Style.make("ScrollingFrame",{Name="Information",Position=UDim2.new(0,10,.48,58),Size=UDim2.new(1,-20,.52,-64),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=6,ZIndex=14},detail)
 	detailInfo=Style.label({Size=UDim2.new(1,-12,0,0),AutomaticSize=Enum.AutomaticSize.Y,Text="",TextSize=14,TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,ZIndex=15},infoScroll)
 	local function layout()
+ -- 横持ちの スマホ（画面の 高さが ひくい）: 画面いっぱいに ひろげ、見出しを 細く、タブと 検索を 1段に まとめて、カードの 場所を 広くする
+ local screen=gui.AbsoluteSize
+ local short=screen.Y<480
+ if short then panel.AnchorPoint=Vector2.new(.5,.5);panel.Position=UDim2.fromScale(.5,.5);panel.Size=UDim2.new(1,-36,1,-14) end
  local condensed=panel.AbsoluteSize.Y<400
- local changed=condensed~=compactCards;compactCards=condensed
- local cols=if panel.AbsoluteSize.X<500 then 2 elseif panel.AbsoluteSize.X<740 then 3 else 4;grid.CellSize=UDim2.new(1/cols,-14,0,if condensed then 122 else 194)
- local contentY=if condensed then 133 else 178
- panel.Header.Size=UDim2.new(1,0,0,if condensed then 48 else 66)
- local close=panel:FindFirstChild("Close");if close then close.Size=UDim2.fromOffset(if condensed then 44 else 60,if condensed then 44 else 60) end
- tabs.Position=UDim2.fromOffset(14,if condensed then 58 else 80);tabs.Size=UDim2.new(1,-28,0,if condensed then 32 else 42)
- for _,b in tabs:GetChildren() do if b:IsA("TextButton") then b.Size=UDim2.fromOffset(84,if condensed then 28 else 35) end end
- search.Position=UDim2.fromOffset(20,if condensed then 97 else 133);search.Size=UDim2.new(1,-40,0,if condensed then 28 else 34)
+ compactCards=condensed
+ local headerH=if condensed then 42 else 66
+ panel.Header.Size=UDim2.new(1,0,0,headerH)
+ local close=panel:FindFirstChild("Close");if close then close.Size=UDim2.fromOffset(if condensed then 40 else 60,if condensed then 40 else 60) end
+ local rowY=headerH+8
+ local rowH=if condensed then 32 else 42
+ local searchW=if condensed then math.clamp(panel.AbsoluteSize.X*0.26,140,220) else 0
+ tabs.Position=UDim2.fromOffset(14,rowY);tabs.Size=UDim2.new(1,-28-(if condensed then searchW+8 else 0),0,rowH)
+ for _,b in tabs:GetChildren() do if b:IsA("TextButton") then b.Size=UDim2.fromOffset(84,rowH-4) end end
+ if condensed then
+  search.Position=UDim2.new(1,-14-searchW,0,rowY+2);search.Size=UDim2.fromOffset(searchW,rowH-4)
+ else
+  search.Position=UDim2.fromOffset(20,rowY+rowH+11);search.Size=UDim2.new(1,-40,0,34)
+ end
+ local contentY=if condensed then rowY+rowH+8 else rowY+rowH+11+34+11
  scroll.Position=UDim2.fromOffset(14,contentY);scroll.Size=UDim2.new(1,-28,1,-contentY-14)
  detail.Position=UDim2.fromOffset(14,contentY);detail.Size=UDim2.new(1,-28,1,-contentY-14)
- if changed then refresh() end
- local short=panel.AbsoluteSize.Y<480
- detailView.Position=UDim2.fromOffset(10,44);detailView.Size=if short then UDim2.new(.44,-12,1,-48) else UDim2.new(1,-20,.48,-20)
- detailStatus.Position=if short then UDim2.new(.45,0,0,44) else UDim2.new(0,8,.48,26);detailStatus.Size=if short then UDim2.new(.55,-10,0,28) else UDim2.new(1,-16,0,26)
- infoScroll.Position=if short then UDim2.new(.45,0,0,78) else UDim2.new(0,10,.48,58);infoScroll.Size=if short then UDim2.new(.55,-10,1,-84) else UDim2.new(1,-20,.52,-64)
+ -- カードは、1だん まるごと 見える 高さ（大きいほど 見やすい。上限 210）
+ local cols=if panel.AbsoluteSize.X<500 then 2 elseif panel.AbsoluteSize.X<900 then 3 else 4
+ local areaH=panel.AbsoluteSize.Y-contentY-14
+ local cellH=math.clamp(areaH-8,150,210)
+ grid.CellSize=UDim2.new(1/cols,-14,0,cellH)
+ local narrow=panel.AbsoluteSize.Y<480
+ detailView.Position=UDim2.fromOffset(10,44);detailView.Size=if narrow then UDim2.new(.44,-12,1,-48) else UDim2.new(1,-20,.48,-20)
+ detailStatus.Position=if narrow then UDim2.new(.45,0,0,44) else UDim2.new(0,8,.48,26);detailStatus.Size=if narrow then UDim2.new(.55,-10,0,28) else UDim2.new(1,-16,0,26)
+ infoScroll.Position=if narrow then UDim2.new(.45,0,0,78) else UDim2.new(0,10,.48,58);infoScroll.Size=if narrow then UDim2.new(.55,-10,1,-84) else UDim2.new(1,-20,.52,-64)
 end
-	panel:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout);layout();refresh()
+	panel:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout);gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout);layout();refresh()
 end
 function CatalogUI.setVisible(on) if panel then panel.Visible=on;if on then refresh() end end end
 function CatalogUI.isVisible() return panel and panel.Visible or false end

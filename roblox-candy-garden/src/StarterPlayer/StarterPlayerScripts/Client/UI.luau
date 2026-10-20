@@ -640,6 +640,32 @@ end
 -- スマホでも パソコンでも 左上の InfoStack に たてに まとめる。
 -- 見る場所が 1か所なら、目を あちこち 動かさずに すむ（ゲームの HUD で よく言われる「情報は まとめて置く」）
 local INFO_CHIPS = { "TreeChip", "RushChip", "WeatherChip", "FestivalChip", "GloomChip" } -- いつも出る ものを 上に
+-- 左上の カードの列の 大きさ: いま 出ている カードが 画面に 入る いちばん大きい 大きさに（読みやすさ 優先）。
+-- スマホは 左下の 移動スティックに かからないよう、画面の 上 6割まで
+local lastInfoScale = nil
+local function fitInfoStack()
+	if not infoStack then
+		return
+	end
+	local cards = 0
+	for _, child in infoStack:GetChildren() do
+		if child:IsA("GuiObject") and child.Visible then
+			cards += 1
+		end
+	end
+	cards = math.max(cards, 1)
+	local full = cards * Style.Card.Height + (cards - 1) * Style.Card.Gap
+	local top = infoStack.Position.Y.Offset -- 上からの 位置（applyLayout で きめた値）
+	local screenY = gui.AbsoluteSize.Y
+	local bottomLimit = if compact then screenY * 0.62 else screenY - 12
+	local scale = math.clamp((bottomLimit - top) / full, 0.55, if compact then 0.9 else 0.9)
+	scale = math.floor(scale * 20 + 0.5) / 20 -- 少しずつ 変わって ゆれないように 0.05 きざみ
+	if scale ~= lastInfoScale then
+		lastInfoScale = scale
+		Style.setScale(infoStack, scale)
+	end
+end
+
 local function placeInfoChips()
 	if not infoStack then
 		return
@@ -841,16 +867,7 @@ local function fitBottom()
 		end
 	end
 	local screenY = size.Y
-	-- 左上の カードの列: カードが ぜんぶ（5まい）出ても 画面に 入る 大きさに。
-	-- スマホは 左下の 移動スティックに かからないよう、画面の 上 6割まで
-	if infoStack then
-		local cards = #INFO_CHIPS
-		local full = cards * Style.Card.Height + (cards - 1) * Style.Card.Gap
-		local top = infoStack.Position.Y.Offset -- 上からの 位置（applyLayout で きめた値）
-		local bottomLimit = if compact then screenY * 0.62 else screenY - 12
-		local fit = (bottomLimit - top) / full
-		Style.setScale(infoStack, math.clamp(fit, 0.55, if compact then 0.72 else 0.85))
-	end
+	fitInfoStack()
 	if actionStack then
 		-- 3つのボタン: スマホは画面に合わせて小さく（ジャンプボタンの上に収める）、パソコンはコインの下に収まる大きさ
 		if compact then
@@ -1827,6 +1844,7 @@ function UI.init()
 			if treeChip then
 				treeChip.Visible = true
 			end
+			fitInfoStack() -- カードの 数が かわったら 大きさを 合わせる
 			task.wait(0.5)
 		end
 	end)

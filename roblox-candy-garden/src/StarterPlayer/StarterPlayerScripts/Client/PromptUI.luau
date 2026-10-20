@@ -162,6 +162,12 @@ local function show(prompt: ProximityPrompt)
 		TextWrapped = false,
 		ZIndex = 2,
 	}, button)
+	-- 文字の大きさは かえない（自動で ちぢめると 2行に 折れてしまう）。かわりに ボタンの はばを 文字に 合わせる
+	label.TextScaled = false
+	local fit = label:FindFirstChild("FitText")
+	if fit then
+		fit:Destroy()
+	end
 
 	-- パソコン: 押すキー「E」を右上の角に
 	if UserInputService.KeyboardEnabled and not UserInputService.TouchEnabled then
@@ -196,10 +202,13 @@ local function show(prompt: ProximityPrompt)
 			else C.Mint
 		label.Text = prompt.ActionText
 		-- 「しゅうかく」など 長い言葉でも 1行に 大きく出るよう、ボタンの はばを 文字に合わせる（2行に折れると読みにくい）
-		local textWidth = TextService:GetTextSize(label.Text, 22, label.Font, Vector2.new(1000, 100)).X
-		local width = math.max(WIDTH, HEIGHT + textWidth + 22)
-		button.Size = UDim2.fromOffset(width, HEIGHT)
-		gui.Size = UDim2.fromOffset(width + 12, HEIGHT + 16)
+		local function fitWidth(textWidth: number)
+			local width = math.max(WIDTH, HEIGHT + textWidth + 26)
+			button.Size = UDim2.fromOffset(width, HEIGHT)
+			gui.Size = UDim2.fromOffset(width + 12, HEIGHT + 16)
+		end
+		-- 日本語などは 別の字体で 出るので、計算より 広いことがある。表示された はば（TextBounds）も 見る
+		fitWidth(math.max(label.TextBounds.X, TextService:GetTextSize(label.Text, 22, label.Font, Vector2.new(1000, 100)).X))
 		local emoji, key = iconFor(prompt)
 		local image = key and Icons[key]
 		iconImage.Image = image or ""
@@ -207,6 +216,14 @@ local function show(prompt: ProximityPrompt)
 		icon.Text = if image then "" else emoji
 	end
 	refresh()
+	-- 表示された 文字の はばが きまったら（日本語などの 字体は あとで きまる）、ボタンの はばを 合わせなおす
+	label:GetPropertyChangedSignal("TextBounds"):Connect(function()
+		local width = math.max(WIDTH, HEIGHT + label.TextBounds.X + 26)
+		if math.abs(button.Size.X.Offset - width) > 1 and label.TextBounds.X > 0 then
+			button.Size = UDim2.fromOffset(width, HEIGHT)
+			gui.Size = UDim2.fromOffset(width + 12, HEIGHT + 16)
+		end
+	end)
 	Style.pop(button, 0.7)
 
 	button.Activated:Connect(function()
@@ -230,11 +247,6 @@ local function show(prompt: ProximityPrompt)
 			prompt:GetPropertyChangedSignal("ObjectText"):Connect(refresh),
 		},
 	}
-end
-
-local function formatClock(seconds: number): string
-	seconds = math.max(0, math.ceil(seconds))
-	return string.format("%d:%02d", seconds // 60, seconds % 60)
 end
 
 -- ui: お店の画面を開くため（UI.showPanel）
@@ -286,23 +298,6 @@ function PromptUI.init(ui)
 	end
 	workspace.DescendantAdded:Connect(function(d)
 		task.defer(localize, d)
-	end)
-	-- ひろばの たねや の看板に「つぎの入荷まで」
-	task.spawn(function()
-		local shop = workspace:WaitForChild("SeedShop", 30)
-		local board = shop and shop:WaitForChild("Board", 30)
-		local sign = board and board:WaitForChild("Sign", 30)
-		if not sign then
-			return
-		end
-		sign:WaitForChild("Title").Text = t("ui.shopSign")
-		local timer = sign:WaitForChild("Timer")
-		while sign.Parent do
-			local now = workspace:GetServerTimeNow()
-			local nextAt = (Config.seedRound(now) + 1) * Config.SeedShop.restockSeconds
-			timer.Text = t("ui.restockIn", formatClock(nextAt - now))
-			task.wait(1)
-		end
 	end)
 	ProximityPromptService.PromptShown:Connect(function(prompt)
 		-- やくそくの鉢: 持ち主にだけ「水やり」を出す（ほかの人の鉢には出さない）
