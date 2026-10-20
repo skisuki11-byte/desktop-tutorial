@@ -1,9 +1,10 @@
 -- 畑の「植える」「収穫」の小さなボタン。Robloxの標準の大きな吹き出しは、スマホでは畑の真ん中をふさぐので、
 -- 畑の上に浮かぶ小さなボタンに置きかえる（ProximityPrompt の Style = Custom）。
 -- デザイン:
---   ・畑で使うもの（植える・収穫・水やり・ひりょう・しずく）は、色つきの丸に「絵」だけ
+--   ・畑で使うもの（植える・収穫・水やり・ひりょう・しずく）と ふんすいの水くみは、色つきの丸に「絵」だけ
 --     （植えるときは選んでいる種、収穫のときは実った作物）。文字の帯は畑をかくすので出さない
---   ・お店・ひみつきち・水くみ などは、左に絵・右に短い文字
+--   ・収穫は↑、植えるは↓の 矢印を 右下に つけて 見分ける
+--   ・お店・ひみつきち などは、左に絵・右に短い文字
 --   ・パソコンでは、角に小さな「E」のキー（押すキーを教える）
 --   ・ゆっくり上下に浮かんで、目に入りやすくする
 -- キーボードの E でも、これまでどおり動く。
@@ -88,15 +89,48 @@ local function iconFor(prompt: ProximityPrompt): (string, string?)
 	return if isHarvest(prompt) then "🧺" else "🌱", nil
 end
 
--- 絵だけの 丸い ボタンにするか（畑で 使うもの。お店・ひみつきち・水くみ などは 文字も 出す）
+-- 絵だけの 丸い ボタンにするか（畑で 使うもの と 水くみ。お店・ひみつきち などは 文字も 出す）
 local ICON_SIZE = 60
 local function iconOnlyFor(prompt: ProximityPrompt): boolean
 	local action = prompt.ActionText
 	return action == t("prompt.plant")
 		or action == t("prompt.harvest")
-		or action == t("prompt.water")
+		or isWater(prompt) -- 水やり・ふんすいの 水くみ
 		or action == t("prompt.fertilize")
 		or isDrop(prompt)
+end
+
+-- 丸い ボタンの 右下に つける 矢印（収穫＝↑ 土から とる／植える＝↓ 土に 入れる）。
+-- 絵だけだと 収穫か 植えるか まよう ので、向きで 見分ける。字体に たよらず 線で かく
+local function makeArrow(parent: GuiObject): Frame
+	local holder = Style.make("Frame", {
+		Name = "Arrow",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(1, -8, 1, -8),
+		Size = UDim2.fromOffset(26, 26),
+		BackgroundColor3 = C.Outline,
+		Visible = false,
+		ZIndex = 4,
+	}, parent)
+	Style.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, holder)
+	Style.stroke(holder, Color3.fromRGB(255, 255, 255), 2)
+	-- 上向きの 矢印（下向きは まるごと 180度 回す）
+	local function bar(position: UDim2, size: Vector2, rotation: number)
+		local b = Style.make("Frame", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = position,
+			Size = UDim2.fromOffset(size.X, size.Y),
+			Rotation = rotation,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BorderSizePixel = 0,
+			ZIndex = 5,
+		}, holder)
+		Style.make("UICorner", { CornerRadius = UDim.new(0.5, 0) }, b)
+	end
+	bar(UDim2.new(0.5, 0, 0.5, 2), Vector2.new(4, 13), 0) -- 軸
+	bar(UDim2.new(0.5, -3, 0.5, -3), Vector2.new(4, 10), 45) -- 左の はね
+	bar(UDim2.new(0.5, 3, 0.5, -3), Vector2.new(4, 10), -45) -- 右の はね
+	return holder
 end
 
 local function hide(prompt: ProximityPrompt)
@@ -203,8 +237,13 @@ local function show(prompt: ProximityPrompt)
 		}, key)
 	end
 
+	local arrow = makeArrow(button)
+
 	local function refresh()
 		local harvest = isHarvest(prompt)
+		local plant = prompt.ActionText == t("prompt.plant")
+		arrow.Visible = harvest or plant
+		arrow.Rotation = if plant then 180 else 0
 		-- 植える=ミント / 収穫=黄色 / 水やり=水色
 		button.BackgroundColor3 = if harvest then C.Yellow
 			elseif isShop(prompt) then C.Mint
