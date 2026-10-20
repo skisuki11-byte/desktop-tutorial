@@ -11,6 +11,7 @@ local GuiService = game:GetService("GuiService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local I18n = require(ReplicatedStorage.Shared.I18n)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Icons = require(ReplicatedStorage.Shared.Icons)
 local Style = require(script.Parent.Style)
 local PalsUI = require(script.Parent.PalsUI)
 local CosmeticsUI = require(script.Parent.CosmeticsUI)
@@ -433,6 +434,19 @@ local function buildTravel()
 		end)
 	end
 	place("GoHome", 1, "🏡 " .. t("ui.home"), Color3.fromRGB(255, 226, 150), "home")
+	-- スマホの 絵だけの ボタンでは、🏡（じぶんの庭）と 🏠（ひみつきち）が にていて まよう。
+	-- じぶんの庭は「土の 畑に 実が なった 絵」に する（ずかんの 場所の 絵と 同じ）
+	Style.make("ImageLabel", {
+		Name = "Picture",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromScale(0.82, 0.82),
+		BackgroundTransparency = 1,
+		ScaleType = Enum.ScaleType.Fit,
+		Image = Icons.place_garden or "",
+		Visible = false,
+		ZIndex = 3,
+	}, travel.GoHome)
 	place("GoTree", 2, "🌳 " .. t("ui.toTree"), C.Mint, "tree")
 	-- ひみつきち: たてられるだけ コインが たまったら 出てくる（それまでは 出さない＝まよわせない）。
 	-- まだ ないときは「かざる」の ひみつきちの 段を ひらく、あるときは 自分の へやへ ワープ
@@ -857,8 +871,13 @@ local function applyLayout(mode: string)
 				button:SetAttribute("FullText", button.Text)
 			end
 			local full = button:GetAttribute("FullText")
+			local picture = button:FindFirstChild("Picture")
+			if picture then
+				picture.Visible = compact
+			end
 			if compact then
-				button.Text = string.match(full, "^(%S+)") or full -- 先頭の絵文字だけ
+				-- 先頭の絵文字だけ（絵が あるときは 絵だけ）
+				button.Text = if picture then "" else (string.match(full, "^(%S+)") or full)
 				button.Size = UDim2.fromOffset(54, 54)
 				Style.setTextSize(button, 28)
 			else
