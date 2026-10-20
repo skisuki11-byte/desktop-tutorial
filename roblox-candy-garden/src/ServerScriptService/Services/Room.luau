@@ -192,12 +192,14 @@ local function onDoor(player: Player, action: any)
 	local near = entrance ~= nil and (root.Position - entrance.Position).Magnitude < DOOR_REACH
 	if entrance and ((action == "enter" and near) or action == "warp") then
 		local depth = room:GetAttribute("Depth") or 16
+		World.standUp(player.Character) -- いこいの ひろばの いすから そのまま ワープしても、すわった まま に ならない
 		root.AssemblyLinearVelocity = Vector3.zero
 		-- とびらから少し中に入った所で、へやを向く（うしろのカメラが かべに つかえないよう すき間をあける）
 		root.CFrame = room:GetPivot() * CFrame.new(0, 3, -(depth / 2 - 7)) * CFrame.Angles(0, math.pi, 0)
 	elseif action == "exit" then
 		local exitMat = room:FindFirstChild("ExitMat") :: BasePart?
 		if exitMat and entrance and (root.Position - exitMat.Position).Magnitude < DOOR_REACH then
+			World.standUp(player.Character)
 			root.AssemblyLinearVelocity = Vector3.zero
 			-- 家の前（庭がわ）に出て、庭のほうを向く（入口の しるしから 少し はなれた所）
 			local out = entrance.CFrame * CFrame.new(0, 1, -5)

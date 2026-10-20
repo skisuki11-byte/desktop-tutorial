@@ -1112,6 +1112,27 @@ function World.plotOf(player: Player)
 	return index and plots[index] or nil
 end
 
+-- いすに すわっているなら 立たせる（ワープの 前に よぶ）。
+-- すわったまま 動かすと、いすとの つながり（SeatWeld）が のこって、すわった かっこうの まま 動いてしまう
+-- 立たせたら、つながりが 消えたのが 体（プレイヤーの 画面が 動かしている）に とどくまで 少し 待つ。
+-- すぐ 動かすと、いすの 場所に もどされて しまう
+function World.standUp(character: Model?)
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not humanoid or not humanoid.SeatPart then
+		return
+	end
+	local weld = humanoid.SeatPart:FindFirstChild("SeatWeld")
+	if weld then
+		weld:Destroy()
+	end
+	humanoid.Sit = false
+	local waited = 0
+	while humanoid.Parent and humanoid.SeatPart and waited < 1 do
+		waited += task.wait()
+	end
+	task.wait(0.2)
+end
+
 -- 移動ボタン（Grow a Garden 2 の「庭・売り場・店」へ飛ぶボタンと同じ考え方）
 -- dest: "home"=じぶんの庭 / "tree"=みんなの木。行き先はサーバーが決める
 function World.teleport(player: Player, dest: string)
@@ -1131,6 +1152,7 @@ function World.teleport(player: Player, dest: string)
 		target = CFrame.lookAt(Vector3.new(0, 4, 42), Vector3.new(0, 4, 0))
 	end
 	if target then
+		World.standUp(character)
 		character:PivotTo(target)
 	end
 end
