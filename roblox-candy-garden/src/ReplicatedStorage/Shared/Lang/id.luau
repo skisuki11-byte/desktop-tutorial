@@ -252,7 +252,7 @@ return {
 	["tutorial.harvest"] = "Sudah siap! Ketuk tombol buah di petak ▼",
 	["tutorial.sell"] = "Tekan tombol 💰 Jual yang bersinar untuk dapat koin",
 	["tutorial.buy"] = "Beli bibit di toko",
-	["tutorial.waterPick"] = "Sambil menunggu, ambil 💧 penyiram di atas!",
+	["tutorial.waterPick"] = "Sambil menunggu, ambil 💧 penyiram yang bersinar!",
 	["tutorial.waterUse"] = "Ketuk tombol 💧 di petakmu! Tumbuh lebih cepat dan tanaman spesial lebih sering muncul",
 	["fairy.name"] = "Lulu si Peri Pohon",
 	["fairy.hello1"] = "Halo! Aku Lulu, peri yang lahir dari Pohon Bersama di alun-alun!",

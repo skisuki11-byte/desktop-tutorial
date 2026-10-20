@@ -252,7 +252,7 @@ return {
 	["tutorial.harvest"] = "Está pronto! Toque no botão do fruto no canteiro ▼",
 	["tutorial.sell"] = "Aperte o botão 💰 Vender que brilha para ganhar moedas",
 	["tutorial.buy"] = "Compre sementes na loja",
-	["tutorial.waterPick"] = "Enquanto espera, pegue o 💧 regador lá em cima!",
+	["tutorial.waterPick"] = "Enquanto espera, pegue o 💧 regador que brilha!",
 	["tutorial.waterUse"] = "Toque no botão 💧 no seu canteiro! Cresce mais rápido e aparecem mais plantas especiais",
 	["fairy.name"] = "Lulu, a fada da árvore",
 	["fairy.hello1"] = "Oi! Eu sou a Lulu, uma fada que nasceu da Árvore de todos, na praça!",

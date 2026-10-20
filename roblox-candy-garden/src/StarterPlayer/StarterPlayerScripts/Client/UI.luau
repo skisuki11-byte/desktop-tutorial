@@ -504,9 +504,13 @@ local function refreshSeedBar(state)
 		end
 	end
 	local shapeKey = table.concat(shape, ",")
+	-- 道具の ボタンを さがす（スマホの じょうろは 右の 列に いる）
+	local function toolButton(id: string): Instance?
+		return seedBar:FindFirstChild("Tool_" .. id) or (actionStack and actionStack:FindFirstChild("Tool_" .. id))
+	end
 	if shapeKey == seedBarShape then
 		for _, tool in tools do
-			local button = seedBar:FindFirstChild("Tool_" .. tool.id)
+			local button = toolButton(tool.id)
 			local count = button and button:FindFirstChild("Count")
 			if count then
 				count.Text = tool.count
@@ -528,23 +532,36 @@ local function refreshSeedBar(state)
 			child:Destroy()
 		end
 	end
+	if actionStack then
+		for _, child in actionStack:GetChildren() do
+			if child:IsA("TextButton") and string.sub(child.Name, 1, 5) == "Tool_" then
+				child:Destroy()
+			end
+		end
+	end
 	seedCount = 0
 	local selectedButton = nil
 	for order, tool in tools do
-		seedCount += 1
+		-- スマホの じょうろは 右の 列（ショップと 売るの あいだ）。毎回 使うので 右手の 親指の 近くに
+		local inStack = compact and tool.id == "water" and actionStack ~= nil
+		if not inStack then
+			seedCount += 1
+		end
 		local holding = state.tool == tool.id
 		local button = Style.button({
 			Name = "Tool_" .. tool.id,
-			LayoutOrder = order - 10,
+			LayoutOrder = if inStack then 2 else order - 10,
 			Size = if compact
 				then UDim2.fromOffset(SEED_PHONE, SEED_PHONE)
 				else UDim2.fromOffset(holding and 84 or 72, holding and 76 or 66),
 			-- 道具は水色の札で、種と見分けやすく
 			BackgroundColor3 = toolColor(tool),
-		}, seedBar)
+		}, if inStack then actionStack else seedBar)
 		if holding then
 			button:FindFirstChildOfClass("UIStroke").Color = C.Accent
-			selectedButton = button
+			if not inStack then
+				selectedButton = button
+			end
 		end
 		Style.setIcon(Style.label({
 			Position = UDim2.fromScale(0, 0.04),
@@ -701,8 +718,38 @@ local INFO_CHIPS = { "TreeChip" } -- お天気・ラッシュ などは カー�
 -- 左上の カードの列の 大きさ: いま 出ている カードが 画面に 入る いちばん大きい 大きさに（読みやすさ 優先）。
 -- スマホは 左下の 移動スティックに かからないよう、画面の 上 6割まで
 local lastInfoScale = nil
+
+-- スマホの 横持ちで、いちばん上の Roblox の 帯の うち 空いている所（gui の 中の 位置）。
+-- かえすもの: 左の x・右の x・上の y（帯は gui より 上なので マイナス）・高さ。使えないとき（縦持ち・帯が せまい）は nil
+local function bandInfo(): (number?, number?, number?, number?)
+	if not compact or portrait or not gui then
+		return nil
+	end
+	local band = GuiService.TopbarInset
+	local inset = GuiService:GetGuiInset()
+	if band.Width < 260 or band.Height < 30 then
+		return nil
+	end
+	local origin = gui.AbsolutePosition
+	return band.Min.X - origin.X, band.Max.X - origin.X, band.Min.Y - inset.Y - origin.Y, band.Height
+end
+
 local function fitInfoStack()
 	if not infoStack then
+		return
+	end
+	-- スマホの 横持ち: みんなの木の カードは 右上の 帯の 中（庭・木の ボタンの 真上）。
+	-- 左の コインの 下は、種・ひりょうの カードの ために あける
+	local _, bandRight, bandTop, bandHeight = bandInfo()
+	if bandRight then
+		local scale = math.clamp((bandHeight - 6) / Style.Card.Height, 0.5, 0.9)
+		scale = math.floor(scale * 20 + 0.5) / 20
+		if scale ~= lastInfoScale then
+			lastInfoScale = scale
+			Style.setScale(infoStack, scale)
+		end
+		infoStack.AnchorPoint = Vector2.new(1, 0)
+		infoStack.Position = UDim2.fromOffset(bandRight - 12, bandTop + (bandHeight - Style.Card.Height * scale) / 2)
 		return
 	end
 	local cards = 0
@@ -750,19 +797,18 @@ end
 -- 畑・ボタン・カードの どれにも かからない。使えないとき（帯が せまい・縦持ち）は nil
 -- かえすもの: まん中の x、上からの y（gui の 中の 位置。帯は gui より 上なので マイナス）、帯の 高さ、使える はば
 local function toastBand(): (number?, number?, number?, number?)
-	if not compact or portrait or not topSeeds then
+	local left, right, top, height = bandInfo()
+	if not left then
 		return nil
 	end
-	local band = GuiService.TopbarInset
-	local inset = GuiService:GetGuiInset()
-	if band.Width < 160 or band.Height < 24 then
+	-- 右はしの みんなの木の カードの 手前まで
+	if infoStack and infoStack.AnchorPoint.X == 1 then
+		right = math.min(right, infoStack.AbsolutePosition.X - gui.AbsolutePosition.X - 8)
+	end
+	if right - left < 200 then
 		return nil
 	end
-	local origin = gui.AbsolutePosition
-	local center = topSeeds.AbsolutePosition.X + topSeeds.AbsoluteSize.X / 2
-	center = math.clamp(center, band.Min.X + 80, band.Max.X - 80)
-	local half = math.min(center - band.Min.X, band.Max.X - center) - 8
-	return center - origin.X, band.Min.Y - inset.Y, band.Height, half * 2
+	return (left + right) / 2, top, height, right - left - 16
 end
 
 -- 配置を切り替える（パソコン / スマホ）
@@ -773,14 +819,18 @@ local function applyLayout(mode: string)
 	compact = mode == "phone"
 	local size = gui.AbsoluteSize
 	portrait = compact and (size.Y > size.X or gui:GetAttribute("ForcePortrait") == true) -- ForcePortrait: Studioで試すとき用
-	local actionButtons = { shopButton, harvestButton, sellButton }
+	-- 右の 列: ショップ・（スマホは じょうろ）・売る。
+	-- 「まとめて しゅうかく」は 出さない（畑の ↑ボタンで 1つずつ とれる。ボタンが へって 押しまちがいが へる）
+	harvestButton.Visible = false
+	local actionButtons = { shopButton, sellButton }
 	for i, button in actionButtons do
-		button.LayoutOrder = i
+		button.LayoutOrder = i * 2 - 1 -- 1 と 3（2 は じょうろ）
 		button.Parent = actionStack
 		Style.setTextSize(button.Icon, 30)
 		Style.setTextSize(button.Caption, 14)
 	end
-	-- 3つの 名前は 同じ 大きさに そろえる（「しゅうかく」だけ 小さいと ばらばらに 見える）
+	infoStack.AnchorPoint = Vector2.zero
+	-- 名前は 同じ 大きさに そろえる（1つだけ 小さいと ばらばらに 見える）
 	task.spawn(function()
 		game:GetService("RunService").RenderStepped:Wait()
 		local smallest = math.huge
@@ -875,15 +925,13 @@ local function applyLayout(mode: string)
 			--         3段目 [お天気]（お天気のときだけ）
 			-- 左はしの縦にまとめる。右側の縦は、ショップ・収穫・売るのために空けておく
 			-- 列は、メニューの右と 庭のボタンの左の あいだの まん中に置く
-			local leftEdge = 12 + coinWidth + 6 + PHONE_ROW + 8
-			local rightEdge = 12 + travelWidth + 8
-			topSeeds.AnchorPoint = Vector2.new(0.5, 0)
-			-- 画面の いちばん上に つける（下の 畑を ひろく 見せる。コインの 段と まん中の 高さが そろう）
-			topSeeds.Position = UDim2.new(0.5, (leftEdge - rightEdge) / 2, 0, 0)
-			seedBar.AnchorPoint = Vector2.new(0.5, 0)
-			seedBar.Position = UDim2.fromScale(0.5, 0)
-			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-			-- 左はしの たて（コインの 下）
+			-- 種・ひりょうの カードは 左の コインの 下（左手の 親指で 押しやすい）。
+			-- みんなの木の カードは 右上の 帯の 中（fitInfoStack）。帯が 使えない 画面では 木の カードの 下（fitBottom）
+			topSeeds.AnchorPoint = Vector2.new(0, 0)
+			topSeeds.Position = UDim2.fromOffset(12, row2)
+			seedBar.AnchorPoint = Vector2.new(0, 0)
+			seedBar.Position = UDim2.new()
+			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 			infoStack.Position = UDim2.fromOffset(12, row2)
 		end
 		actionStack.AnchorPoint = Vector2.new(1, 1)
@@ -1003,11 +1051,20 @@ local function fitBottom()
 	if topSeeds then
 		if compact then
 			-- 使える幅: 縦持ちは はしからはしまで、横持ちはメニューの右から 庭のボタンの左まで
-			local room = if portrait then width - 24
-				else width - (12 + 210 * PHONE_ROW / 60 + 6 + PHONE_ROW + 8) - (12 + 114 * PHONE_ROW / 54 + 8)
+			-- 横持ちは 左の コインの 下から、画面の 半分まで（まん中の 畑と 右の ボタンを あける）
+			local room = if portrait then width - 24 else width * 0.5 - 12
 			local content = seedCount * (SEED_PHONE + 6) + 8
 			Style.setScale(topSeeds, 1)
 			seedBar.Size = UDim2.fromOffset(math.max(SEED_PHONE + 8, math.min(room, content)), SEED_PHONE + 12)
+			if not portrait then
+				-- 帯が 使えず みんなの木の カードが 左に いるときは、その 下に ずらす
+				local row2 = leftTop + PHONE_ROW + 8
+				local y = row2
+				if infoStack and infoStack.AnchorPoint.X == 0 then
+					y = infoStack.AbsolutePosition.Y - gui.AbsolutePosition.Y + infoStack.AbsoluteSize.Y + 8
+				end
+				topSeeds.Position = UDim2.fromOffset(12, y)
+			end
 		else
 			Style.setScale(topSeeds, 0.85)
 			seedBar.Size = UDim2.fromOffset(math.min(DOCK_WIDTH, width / 0.85 - 24), 84)
@@ -1952,6 +2009,8 @@ function UI.init()
 	gui:GetAttributeChangedSignal("ForceLayout"):Connect(fitBottom)
 	-- スマホを回したとき（画面の向きが変わったとき）にも配置を合わせ直す
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fitBottom)
+	-- Roblox の 上の 帯の 空き（みんなの木の カードと お知らせの 場所）が かわったら 合わせなおす
+	GuiService:GetPropertyChangedSignal("TopbarInset"):Connect(fitBottom)
 
 	-- みんなの木が進んだら、レベルの表示を 少し はずませる（進んだことに 気づけるように）
 	for _, name in { "TreeProgress", "TreeLevel" } do

@@ -252,7 +252,7 @@ return {
 	["tutorial.harvest"] = "長好了！按 ▼ 的田上的果實按鈕",
 	["tutorial.sell"] = "按發光的 💰「賣出」按鈕就能拿到金幣",
 	["tutorial.buy"] = "在商店買種子",
-	["tutorial.waterPick"] = "等待的時候，拿起上面的 💧 澆水壺！",
+	["tutorial.waterPick"] = "等待的時候，拿起發光的 💧 澆水壺！",
 	["tutorial.waterUse"] = "按田上的 💧 按鈕！長得更快，特別的作物也更容易出現",
 	["fairy.name"] = "樹精靈露露",
 	["fairy.hello1"] = "你好！我是露露，從廣場的「大家的樹」誕生的精靈！",

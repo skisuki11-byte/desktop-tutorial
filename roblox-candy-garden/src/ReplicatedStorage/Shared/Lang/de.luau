@@ -252,7 +252,7 @@ return {
 	["tutorial.harvest"] = "Es ist reif! Tippe beim ▼ Beet auf den Frucht-Knopf",
 	["tutorial.sell"] = "Drück den leuchtenden 💰 Verkaufen-Knopf, um Münzen zu bekommen",
 	["tutorial.buy"] = "Kauf Samen im Laden",
-	["tutorial.waterPick"] = "Nimm beim Warten die 💧 Gießkanne oben!",
+	["tutorial.waterPick"] = "Nimm beim Warten die leuchtende 💧 Gießkanne!",
 	["tutorial.waterUse"] = "Tippe bei deinem Beet auf den 💧-Knopf! Es wächst schneller und besondere Pflanzen kommen öfter",
 	["fairy.name"] = "Lulu, die Baumfee",
 	["fairy.hello1"] = "Hallo! Ich bin Lulu, eine Fee aus dem Baum für alle auf dem Platz!",

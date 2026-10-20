@@ -343,8 +343,8 @@ local function refreshTutorial()
 			pointAt(dryTile)
 		else
 			UI.setBanner("💧 " .. t("tutorial.waterPick"))
-			local bar = player.PlayerGui:FindFirstChild("SeedBar", true)
-			UI.highlight(bar and bar:FindFirstChild("Tool_water"))
+			local bar = player.PlayerGui -- じょうろは スマホでは 右の 列、パソコンでは 種の 列
+			UI.highlight(bar:FindFirstChild("Tool_water", true))
 		end
 	elseif growingTile then
 		UI.setBanner("⏳ " .. t("tutorial.wait", math.max(0, math.ceil(waitLeft))))

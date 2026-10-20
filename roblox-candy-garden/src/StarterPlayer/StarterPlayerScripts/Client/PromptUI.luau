@@ -48,8 +48,9 @@ end
 
 -- お店ごとの絵（プロンプトの親の親が お店の Model）
 local SHOP_ICON = { SeedShop = "🛒", EggForest = "🥚", ToolShop = "🔧" }
--- お店の絵（カタログのイラスト）
-local SHOP_IMAGE = { SeedShop = "place_seedshop", EggForest = "place_eggforest", ToolShop = "place_toolshop" }
+-- お店の絵: 売っている物を 1つ 大きく（たまご・じょうろ）。お店の 建物の 小さな 絵だと、小さい 丸の 中では 何の お店か わからない。
+-- 種屋は 右の 列の「ショップ」と 同じ 🛒
+local SHOP_IMAGE = { EggForest = "egg_candyegg", ToolShop = "tool_water" }
 
 local function isDrop(prompt: ProximityPrompt): boolean
 	return prompt.ActionText == t("prompt.drop")

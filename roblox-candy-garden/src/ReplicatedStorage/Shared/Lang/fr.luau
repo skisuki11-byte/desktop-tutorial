@@ -252,7 +252,7 @@ return {
 	["tutorial.harvest"] = "C'est prêt ! Touche le bouton du fruit sur la parcelle ▼",
 	["tutorial.sell"] = "Appuie sur le bouton 💰 Vendre qui brille pour gagner des pièces",
 	["tutorial.buy"] = "Achète des graines à la boutique",
-	["tutorial.waterPick"] = "En attendant, prends l'💧 arrosoir en haut !",
+	["tutorial.waterPick"] = "En attendant, prends l'💧 arrosoir qui brille !",
 	["tutorial.waterUse"] = "Touche le bouton 💧 sur ta parcelle ! Ça pousse plus vite et il y a plus de plantes spéciales",
 	["fairy.name"] = "Lulu, la fée de l'arbre",
 	["fairy.hello1"] = "Coucou ! Je suis Lulu, une fée née de l'Arbre de tous, sur la place !",

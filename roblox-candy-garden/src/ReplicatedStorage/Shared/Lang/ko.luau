@@ -252,7 +252,7 @@ return {
 	["tutorial.harvest"] = "다 자랐어요! ▼ 밭의 열매 버튼을 눌러요",
 	["tutorial.sell"] = "빛나는 💰「팔기」 버튼을 누르면 코인이 생겨요",
 	["tutorial.buy"] = "상점에서 씨앗을 사요",
-	["tutorial.waterPick"] = "기다리는 동안 위쪽 💧 물뿌리개를 들어요!",
+	["tutorial.waterPick"] = "기다리는 동안 반짝이는 💧 물뿌리개를 들어요!",
 	["tutorial.waterUse"] = "밭의 💧 버튼을 눌러요! 빨리 자라고 특별한 작물이 더 잘 나와요",
 	["fairy.name"] = "나무 요정 루루",
 	["fairy.hello1"] = "안녕! 나는 루루. 광장의 「모두의 나무」에서 태어난 요정이야!",

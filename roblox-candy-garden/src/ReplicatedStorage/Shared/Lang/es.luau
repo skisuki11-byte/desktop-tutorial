@@ -252,7 +252,7 @@ return {
 	["tutorial.harvest"] = "¡Está listo! Toca el botón del fruto en la parcela ▼",
 	["tutorial.sell"] = "Pulsa el botón 💰 Vender que brilla para ganar monedas",
 	["tutorial.buy"] = "Compra semillas en la tienda",
-	["tutorial.waterPick"] = "Mientras esperas, ¡toma la 💧 regadera de arriba!",
+	["tutorial.waterPick"] = "Mientras esperas, ¡toma la 💧 regadera que brilla!",
 	["tutorial.waterUse"] = "¡Toca el botón 💧 en tu parcela! Crece más rápido y salen más cultivos especiales",
 	["fairy.name"] = "Lulu, el hada del árbol",
 	["fairy.hello1"] = "¡Hola! Soy Lulu, un hada que nació del Árbol de todos, en la plaza.",
