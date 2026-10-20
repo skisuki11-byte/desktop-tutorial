@@ -59,7 +59,17 @@ local function onWeatherChanged(id: string?)
 	if weather then
 		emitter.Color = ColorSequence.new(weather.particle, weather.particle:Lerp(Color3.new(1, 1, 1), 0.6))
 		emitter.Enabled = true
-		ui.toastText(weather.icon .. " " .. t("weather.announce", t("weather." .. weather.id)), 4)
+		-- この 天気の あいだに 実ると なりやすい ふしぎな作物（にじいろ・きんいろ・ジャンボ）と、その 売値の 倍率も 出す。
+		-- 「きらきら」だけでは 何が うれしいのか 伝わらないので、売値が 何倍に なるかを 書く
+		local special, multiplier = "", 1
+		for _, variant in Config.Variants do
+			if variant.weather and variant.weather[weather.id] then
+				special = variant.icon .. t("variant." .. variant.id)
+				multiplier = variant.multiplier
+				break
+			end
+		end
+		ui.toastText(weather.icon .. " " .. t("weather.announce", t("weather." .. weather.id), special, multiplier))
 	else
 		emitter.Enabled = false
 	end
