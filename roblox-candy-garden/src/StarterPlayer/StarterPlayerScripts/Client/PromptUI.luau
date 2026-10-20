@@ -1,8 +1,9 @@
 -- 畑の「植える」「収穫」の小さなボタン。Robloxの標準の大きな吹き出しは、スマホでは畑の真ん中をふさぐので、
 -- 畑の上に浮かぶ小さなボタンに置きかえる（ProximityPrompt の Style = Custom）。
 -- デザイン:
---   ・左に白い丸の「絵」（植えるときは選んでいる種、収穫のときは実った作物）。何が起きるかが絵で分かる
---   ・右に「植える」「収穫」の大きな文字だけ（文字は短く、絵と文字の大きさをそろえる）
+--   ・畑で使うもの（植える・収穫・水やり・ひりょう・しずく）は、色つきの丸に「絵」だけ
+--     （植えるときは選んでいる種、収穫のときは実った作物）。文字の帯は畑をかくすので出さない
+--   ・お店・ひみつきち・水くみ などは、左に絵・右に短い文字
 --   ・パソコンでは、角に小さな「E」のキー（押すキーを教える）
 --   ・ゆっくり上下に浮かんで、目に入りやすくする
 -- キーボードの E でも、これまでどおり動く。
@@ -85,6 +86,17 @@ local function iconFor(prompt: ProximityPrompt): (string, string?)
 		end
 	end
 	return if isHarvest(prompt) then "🧺" else "🌱", nil
+end
+
+-- 絵だけの 丸い ボタンにするか（畑で 使うもの。お店・ひみつきち・水くみ などは 文字も 出す）
+local ICON_SIZE = 60
+local function iconOnlyFor(prompt: ProximityPrompt): boolean
+	local action = prompt.ActionText
+	return action == t("prompt.plant")
+		or action == t("prompt.harvest")
+		or action == t("prompt.water")
+		or action == t("prompt.fertilize")
+		or isDrop(prompt)
 end
 
 local function hide(prompt: ProximityPrompt)
@@ -201,6 +213,28 @@ local function show(prompt: ProximityPrompt)
 			elseif isFertilize(prompt) then Color3.fromRGB(255, 225, 140)
 			else C.Mint
 		label.Text = prompt.ActionText
+		-- 畑で 何度も 押すもの（植える・しゅうかく・水やり・ひりょう・しずく）は、丸い 絵だけの ボタン。
+		-- 文字の 帯は 畑と 作物を かくして じゃまになる。色と 絵で 何が 起きるか わかる
+		if iconOnlyFor(prompt) then
+			label.Visible = false
+			button.Size = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
+			gui.Size = UDim2.fromOffset(ICON_SIZE + 12, ICON_SIZE + 16)
+			badge.AnchorPoint = Vector2.new(0.5, 0.5)
+			badge.Position = UDim2.fromScale(0.5, 0.5)
+			badge.Size = UDim2.fromOffset(ICON_SIZE - 14, ICON_SIZE - 14)
+			icon.TextSize = 30
+			local emoji, key = iconFor(prompt)
+			local image = key and Icons[key]
+			iconImage.Image = image or ""
+			iconImage.Visible = image ~= nil
+			icon.Text = if image then "" else emoji
+			return
+		end
+		label.Visible = true
+		badge.AnchorPoint = Vector2.new(0, 0.5)
+		badge.Position = UDim2.new(0, 5, 0.5, 0)
+		badge.Size = UDim2.fromOffset(HEIGHT - 10, HEIGHT - 10)
+		icon.TextSize = 24
 		-- 「しゅうかく」など 長い言葉でも 1行に 大きく出るよう、ボタンの はばを 文字に合わせる（2行に折れると読みにくい）
 		local function fitWidth(textWidth: number)
 			local width = math.max(WIDTH, HEIGHT + textWidth + 26)
@@ -218,6 +252,9 @@ local function show(prompt: ProximityPrompt)
 	refresh()
 	-- 表示された 文字の はばが きまったら（日本語などの 字体は あとで きまる）、ボタンの はばを 合わせなおす
 	label:GetPropertyChangedSignal("TextBounds"):Connect(function()
+		if not label.Visible then
+			return
+		end
 		local width = math.max(WIDTH, HEIGHT + label.TextBounds.X + 26)
 		if math.abs(button.Size.X.Offset - width) > 1 and label.TextBounds.X > 0 then
 			button.Size = UDim2.fromOffset(width, HEIGHT)

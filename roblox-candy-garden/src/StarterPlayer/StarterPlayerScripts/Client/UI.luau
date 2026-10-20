@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local I18n = require(ReplicatedStorage.Shared.I18n)
@@ -462,7 +463,7 @@ function UI.goBase()
 	end
 end
 
-local SEED_PHONE = 54 -- スマホの種カード（縮めない。指で押せる44以上）
+local SEED_PHONE = 50 -- スマホの種カード（縮めない。指で押せる44以上。畑が見えるよう 小さめ）
 local latestState = nil -- 配置が変わったときに、種カードを作り直すため
 local seedCount = 0
 
@@ -745,6 +746,25 @@ local function phoneScale(): number
 	return math.clamp(math.min(size.X, size.Y) / 520, 0.62, 0.85)
 end
 
+-- スマホの お知らせの 場所: いちばん上の Roblox の 帯の 空いている所（じょうろ・種の 列の 真上）。
+-- 畑・ボタン・カードの どれにも かからない。使えないとき（帯が せまい・縦持ち）は nil
+-- かえすもの: まん中の x、上からの y（gui の 中の 位置。帯は gui より 上なので マイナス）、帯の 高さ、使える はば
+local function toastBand(): (number?, number?, number?, number?)
+	if not compact or portrait or not topSeeds then
+		return nil
+	end
+	local band = GuiService.TopbarInset
+	local inset = GuiService:GetGuiInset()
+	if band.Width < 160 or band.Height < 24 then
+		return nil
+	end
+	local origin = gui.AbsolutePosition
+	local center = topSeeds.AbsolutePosition.X + topSeeds.AbsoluteSize.X / 2
+	center = math.clamp(center, band.Min.X + 80, band.Max.X - 80)
+	local half = math.min(center - band.Min.X, band.Max.X - center) - 8
+	return center - origin.X, band.Min.Y - inset.Y, band.Height, half * 2
+end
+
 -- 配置を切り替える（パソコン / スマホ）
 -- スマホは、上のはしに小さく1段（左: コイン・メニュー / 右: 庭・木）、その下に種えらび。
 -- よく使う3つ（ショップ・収穫・売る）は右手の親指の近く。左下は移動スティック、まん中は畑のために空ける。
@@ -858,7 +878,8 @@ local function applyLayout(mode: string)
 			local leftEdge = 12 + coinWidth + 6 + PHONE_ROW + 8
 			local rightEdge = 12 + travelWidth + 8
 			topSeeds.AnchorPoint = Vector2.new(0.5, 0)
-			topSeeds.Position = UDim2.new(0.5, (leftEdge - rightEdge) / 2, 0, leftTop)
+			-- 画面の いちばん上に つける（下の 畑を ひろく 見せる。コインの 段と まん中の 高さが そろう）
+			topSeeds.Position = UDim2.new(0.5, (leftEdge - rightEdge) / 2, 0, 0)
 			seedBar.AnchorPoint = Vector2.new(0.5, 0)
 			seedBar.Position = UDim2.fromScale(0.5, 0)
 			seedLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -963,7 +984,10 @@ local function fitBottom()
 	local width = size.X
 	if toastLabel then
 		local toastWidth = width * 0.9
-		if compact and not portrait and infoStack then
+		local _, _, _, bandWidth = toastBand()
+		if bandWidth then
+			toastWidth = bandWidth
+		elseif compact and not portrait and infoStack then
 			-- 横持ちの スマホは、左の みんなの木の カードと 右の ボタンに かからない はばまで
 			local infoRight = infoStack.AbsolutePosition.X + infoStack.AbsoluteSize.X - gui.AbsolutePosition.X
 			toastWidth = math.max(240, width - 2 * (infoRight + 10))
@@ -1623,8 +1647,15 @@ function UI.toastText(text: string, seconds: number?)
 			local y = gui.AbsoluteSize.Y - math.max(toastLabel.AbsoluteSize.Y, 40) - 12
 			toastLabel.Position = UDim2.new(0.5, 0, 0, y)
 		else
+			-- スマホの 横持ちは、いちばん上の 帯の 空いている所（じょうろの 真上）。畑や ボタンに かからない
+			local x, bandTop, bandHeight = toastBand()
+			if x then
+				local height = math.max(toastLabel.AbsoluteSize.Y, 20)
+				toastLabel.Position = UDim2.new(0, x, 0, bandTop + math.max(2, (bandHeight - height) / 2))
+				return
+			end
 			local y = toastY
-			-- スマホの 横持ちは、上の 種えらびの 列の すぐ下（列に かぶらない）
+			-- 帯が 使えないときは、上の 種えらびの 列の すぐ下（列に かぶらない）
 			if compact and not portrait and topSeeds and topSeeds.Visible then
 				y = math.max(y, topSeeds.AbsolutePosition.Y - gui.AbsolutePosition.Y + topSeeds.AbsoluteSize.Y + 6)
 			end
