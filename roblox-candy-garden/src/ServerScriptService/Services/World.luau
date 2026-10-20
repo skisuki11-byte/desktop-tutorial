@@ -792,6 +792,81 @@ local function wallSign(parent: Instance, cf: CFrame, key: string)
 	signText(board, Enum.NormalId.Front, key)
 end
 
+-- ---- いこいの ひろば（ふんすいの 反対がわ）: すわって おしゃべりする 場所 ----
+-- 遊びの 合間に 集まれる「止まり木」を つくる（どうぶつの森の 広場の ベンチ、Adopt Me の カフェ と 同じ 考え）。
+-- まん中に キャンディの パラソルと テーブル、まわりに 6つの ベンチ（Seat。おすと すわれる）を テーブルに 向けて 輪に 並べる。
+-- 輪に すわると おたがいの 顔が 見えて、話しやすい
+local LOUNGE_ANGLE = math.rad(112.5) -- ふんすい（67.5°）と みんなの木の 入口を はさんで 左右 対称
+local function buildLounge()
+	local center = plazaSpot(LOUNGE_ANGLE)
+	local model = make("Model", { Name = "Lounge" }, workspace)
+	-- 床: クッキー色の 丸い しき石と、ピンクの ふち
+	deco({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.3, 23, 23),
+		CFrame = CFrame.new(center + Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, 0, math.pi / 2),
+		Color = C(255, 196, 220),
+		Material = Enum.Material.SmoothPlastic,
+	}, model)
+	deco({
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(0.32, 21, 21),
+		CFrame = CFrame.new(center + Vector3.new(0, 0.14, 0)) * CFrame.Angles(0, 0, math.pi / 2),
+		Color = C(255, 236, 214),
+		Material = Enum.Material.Cobblestone,
+	}, model)
+	-- まん中の テーブルと、ぺろぺろキャンディの パラソル
+	local mid = CFrame.new(center)
+	pillar(model, 2.6, 0.9, mid * CFrame.new(0, 1.3, 0), C(255, 240, 246), Enum.Material.Marble, true)
+	pillar(model, 0.4, 5.4, mid * CFrame.new(0, 2.8, 0), C(255, 250, 252), Enum.Material.Marble, true)
+	pillar(model, 0.15, 4.6, mid * CFrame.new(0, 3.05, 0), C(255, 170, 205))
+	pillar(model, 7, 0.35, mid * CFrame.new(0, 6.3, 0), C(255, 255, 255))
+	local canopy = ball(model, 12, (mid * CFrame.new(0, 9.6, 0)).Position, C(255, 150, 195), Enum.Material.SmoothPlastic)
+	make("SpecialMesh", { MeshType = Enum.MeshType.Sphere, Scale = Vector3.new(1, 0.32, 1) }, canopy)
+	-- パラソルの しま もよう（白い 輪）
+	local stripe = ball(model, 9, (mid * CFrame.new(0, 9.95, 0)).Position, C(255, 250, 252), Enum.Material.SmoothPlastic)
+	make("SpecialMesh", { MeshType = Enum.MeshType.Sphere, Scale = Vector3.new(1, 0.3, 1) }, stripe)
+	ball(model, 1.2, (mid * CFrame.new(0, 11.4, 0)).Position, C(255, 210, 120), Enum.Material.Glass)
+	-- テーブルの 上の おかし（かわいさ）
+	ball(model, 1.1, (mid * CFrame.new(-1, 3.65, 0.6)).Position, C(255, 200, 120))
+	ball(model, 0.9, (mid * CFrame.new(1.1, 3.55, -0.4)).Position, C(180, 220, 255))
+	ball(model, 0.8, (mid * CFrame.new(0.2, 3.5, 1.3)).Position, C(200, 170, 255))
+	-- まわりの ベンチ（テーブルの ほうを 向く）
+	local benchColors = { C(255, 190, 215), C(200, 180, 255), C(180, 225, 255), C(255, 214, 160), C(170, 235, 200), C(255, 236, 160) }
+	for i = 1, 6 do
+		local a = math.rad(i * 60 + 30)
+		local at = center + Vector3.new(math.cos(a) * 7.2, 0, math.sin(a) * 7.2)
+		local cf = CFrame.lookAt(at, Vector3.new(center.X, 0, center.Z))
+		local color = benchColors[i]
+		local seat = make("Seat", {
+			Name = "Bench",
+			Anchored = true,
+			Size = Vector3.new(4.4, 0.8, 1.8),
+			CFrame = cf * CFrame.new(0, 1.5, 0),
+			Color = color,
+			Material = Enum.Material.Fabric,
+			TopSurface = Enum.SurfaceType.Smooth,
+			BottomSurface = Enum.SurfaceType.Smooth,
+		}, model)
+		-- 背もたれ（テーブルの 反対がわ）
+		deco({
+			Size = Vector3.new(4.4, 2.2, 0.5),
+			CFrame = cf * CFrame.new(0, 2.8, 1.05) * CFrame.Angles(math.rad(-10), 0, 0),
+			Color = color:Lerp(C(255, 255, 255), 0.35),
+			Material = Enum.Material.Fabric,
+			CanCollide = true,
+		}, model)
+		-- あし
+		for _, x in { -1.8, 1.8 } do
+			pillar(model, 1.1, 0.4, cf * CFrame.new(x, 0.55, 0), C(170, 120, 90), Enum.Material.Wood)
+		end
+	end
+	-- 名前の 立て看板（ひろばの 入口がわ）
+	local toTree = (Vector3.new(0, 0, 0) - center) * Vector3.new(1, 0, 1)
+	local signAt = center + toTree.Unit * 12.5 + Vector3.new(-4, 0, 0)
+	shopSign(model, CFrame.lookAt(signAt, signAt - toTree), "place.lounge")
+end
+
 -- ---- たまごの森（左）: わたあめの木にかこまれた広場に、大きな たまごの家 ----
 local function buildEggForest()
 	local model = make("Model", { Name = "EggForest" }, workspace)
@@ -918,6 +993,7 @@ function World.build(onTile: (Player, BasePart) -> ())
 	end
 
 	buildFountain()
+	buildLounge() -- ふんすいの 反対がわの いこいの ひろば
 	-- 種は 右の 🛒ショップ（ボタン）で 買う。ひろばの 種屋の 建物は 置かない（同じものが 2か所に あると まよう）
 	buildEggForest()
 	buildToolShop()
