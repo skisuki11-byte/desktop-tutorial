@@ -333,7 +333,8 @@ local MemoryStoreService = game:GetService("MemoryStoreService")
 local DataStoreService = game:GetService("DataStoreService")
 local RunService = game:GetService("RunService")
 
-local STORE_NAME = "CandyTree" .. (if RunService:IsStudio() then "_Studio" else "")
+-- 公開のとき テストで 育てた 木を 使わないよう "CandyTree" から かえた（古い 記録は 消さずに 残してある。2026-10-20）
+local STORE_NAME = "CandyTreeV2" .. (if RunService:IsStudio() then "_Studio" else "")
 local TOTAL_KEY = "total"
 local MEMORY_TTL = 30 * 24 * 3600 -- 30日（MemoryStore の上限は45日）
 local SYNC_SECONDS = 10

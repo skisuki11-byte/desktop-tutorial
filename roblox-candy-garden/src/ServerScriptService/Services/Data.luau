@@ -12,7 +12,7 @@ local Data = {}
 local profiles: { [Player]: { data: any, runtime: any, canSave: boolean } } = {}
 
 -- 保存場所の名前。Studio で遊んだデータが本番に混ざらないよう、Studio では別の場所に保存する
--- （本番: CandyGardenV1 / Studio: CandyGardenV1_Studio）
+-- （本番: CandyGardenV2 / Studio: CandyGardenV2_Studio）
 function Data.storeName(): string
 	if RunService:IsStudio() then
 		return Config.DataStoreName .. "_Studio"

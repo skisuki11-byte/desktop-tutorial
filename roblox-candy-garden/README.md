@@ -173,6 +173,6 @@
 
 - 乱数・お金・在庫は全てサーバーで管理。Remoteは全て型を検証し、回数を制限する。
 - 保存はDataStore。Studioでは「Enable Studio Access to API Services」をオンにすると保存を試せる（オフでも遊べる）。
-- Studioで遊んだデータは本番と別の保存場所（`CandyGardenV1_Studio`）に入る。本番は `CandyGardenV1`。Studioのテストで本番のデータが汚れない。
+- Studioで遊んだデータは本番と別の保存場所（`CandyGardenV2_Studio`）に入る。本番は `CandyGardenV2`（公開前のテストのデータは `CandyGardenV1`・`CandyTree` に残してある）。Studioのテストで本番のデータが汚れない。
 - 同時人数は `Config.MaxPlots`（8）。Studioの Game Settings → Max Players も8にする。
 - 公開の準備（説明文・アイコン案・チェックリスト）は [PUBLISH.md](PUBLISH.md)。

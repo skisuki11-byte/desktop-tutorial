@@ -1,7 +1,7 @@
 -- ゲーム全体の数値設定。数字は仮。遊んで調整する（遊んだ感想をもとに直していく）。
 local Config = {}
 
-Config.DataStoreName = "CandyGardenV1"
+Config.DataStoreName = "CandyGardenV2" -- 公開のとき テストの データを 使わないよう V1 から かえた（V1 は 消さずに 残してある。2026-10-20）
 Config.AutoSaveSeconds = 60
 
 Config.StartCoins = 30
