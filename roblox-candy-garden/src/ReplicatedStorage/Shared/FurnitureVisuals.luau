@@ -60,10 +60,11 @@ BUILD.flowerpot = function(m)
 end
 
 BUILD.candyrug = function(m)
+	-- 重ねる 円の 上の面は 0.05 ずつ 高く（近いと 面が まざって ちらちら する）
 	pillar(m, 0.1, 4.6, Vector3.zero, C(255, 255, 255))
-	pillar(m, 0.12, 3.6, Vector3.zero, C(255, 120, 170))
-	pillar(m, 0.14, 2.4, Vector3.zero, C(255, 255, 255))
-	pillar(m, 0.16, 1.2, Vector3.zero, C(130, 210, 255))
+	pillar(m, 0.15, 3.6, Vector3.zero, C(255, 120, 170))
+	pillar(m, 0.2, 2.4, Vector3.zero, C(255, 255, 255))
+	pillar(m, 0.25, 1.2, Vector3.zero, C(130, 210, 255))
 end
 
 BUILD.caketable = function(m)
@@ -86,9 +87,9 @@ end
 BUILD.gummybed = function(m)
 	box(m, Vector3.new(3.4, 1, 4.6), Vector3.new(0, 0.5, 0), C(255, 110, 140))
 	box(m, Vector3.new(3.2, 0.6, 4.2), Vector3.new(0, 1.3, 0), C(255, 250, 252)) -- おふとん
-	box(m, Vector3.new(3.2, 0.5, 2.4), Vector3.new(0, 1.65, -0.9), C(150, 210, 255)) -- かけぶとん
+	box(m, Vector3.new(3.26, 0.5, 2.44), Vector3.new(0, 1.65, -0.92), C(150, 210, 255)) -- かけぶとん（おふとんより 少し 広く。横の面が かさならない ように）
 	ball(m, 1.2, Vector3.new(0, 1.9, 1.5), C(255, 255, 255)) -- まくら
-	box(m, Vector3.new(3.6, 2.8, 0.5), Vector3.new(0, 1.4, 2.4), C(255, 90, 120), Enum.Material.Glass) -- グミのヘッドボード
+	box(m, Vector3.new(3.6, 2.78, 0.5), Vector3.new(0, 1.41, 2.4), C(255, 90, 120), Enum.Material.Glass) -- グミのヘッドボード
 	ball(m, 0.9, Vector3.new(-1.2, 3, 2.4), C(255, 200, 80), Enum.Material.Glass)
 	ball(m, 0.9, Vector3.new(1.2, 3, 2.4), C(140, 230, 150), Enum.Material.Glass)
 end
@@ -165,7 +166,7 @@ end
 
 BUILD.jellypiano = function(m)
 	box(m, Vector3.new(4.2, 1.8, 2), Vector3.new(0, 2.6, 0.4), C(170, 120, 255), Enum.Material.Glass)
-	box(m, Vector3.new(4.2, 2.4, 0.5), Vector3.new(0, 3.9, 1.2), C(150, 100, 240), Enum.Material.Glass)
+	box(m, Vector3.new(4.1, 2.4, 0.5), Vector3.new(0, 3.9, 1.2), C(150, 100, 240), Enum.Material.Glass) -- うしろの板（本体より 少し せまく）
 	legs(m, 3.6, 1.4, 1.7, C(255, 255, 255))
 	for k = 0, 9 do -- けんばん
 		box(m, Vector3.new(0.36, 0.15, 0.8), Vector3.new(-1.65 + k * 0.37, 3.55, -0.3), C(255, 255, 255))
@@ -212,7 +213,7 @@ end
 BUILD.moonbed = function(m)
 	box(m, Vector3.new(4, 1, 4.8), Vector3.new(0, 0.5, 0), C(110, 100, 200))
 	box(m, Vector3.new(3.8, 0.7, 4.4), Vector3.new(0, 1.35, 0), C(240, 235, 255))
-	box(m, Vector3.new(3.8, 0.5, 2.6), Vector3.new(0, 1.7, -0.8), C(150, 140, 255))
+	box(m, Vector3.new(3.86, 0.5, 2.6), Vector3.new(0, 1.7, -0.8), C(150, 140, 255)) -- かけぶとん（少し 広く）
 	ball(m, 1.2, Vector3.new(0, 1.95, 1.6), C(255, 255, 255))
 	-- てんがい（4本の柱と、上の布）
 	for _, x in { -1.9, 1.9 } do
@@ -235,10 +236,11 @@ local FurnitureVisuals = {}
 -- ここから スペシャル家具（パス）。ほかより 少し 大きく、金色や 光る部分で「とくべつ」と 分かるように
 BUILD.kingsofa = function(m)
 	local red, gold = C(200, 40, 90), C(245, 190, 60)
-	box(m, Vector3.new(4.6, 1, 2.2), Vector3.new(0, 1, 0.2), red, Enum.Material.Fabric) -- すわる所
-	box(m, Vector3.new(4.6, 2.6, 0.6), Vector3.new(0, 2.3, 1.1), red, Enum.Material.Fabric) -- せもたれ
+	box(m, Vector3.new(4.5, 1, 2.2), Vector3.new(0, 1, 0.2), red, Enum.Material.Fabric) -- すわる所
+	box(m, Vector3.new(4.5, 2.6, 0.6), Vector3.new(0, 2.3, 1.1), red, Enum.Material.Fabric) -- せもたれ
 	for _, x in { -2.5, 2.5 } do
-		box(m, Vector3.new(0.6, 1.6, 2.4), Vector3.new(x, 1.3, 0.2), red, Enum.Material.Fabric) -- ひじかけ
+		-- ひじかけ（ほかの 部品と 面が そろわない ように、少し 大きめ）
+		box(m, Vector3.new(0.6, 1.64, 2.46), Vector3.new(x, 1.3, 0.2), red, Enum.Material.Fabric)
 		ball(m, 0.6, Vector3.new(x, 2.3, -0.8), gold, Enum.Material.Metal)
 	end
 	box(m, Vector3.new(4.8, 0.25, 0.7), Vector3.new(0, 3.7, 1.1), gold, Enum.Material.Metal) -- 金のふち
@@ -254,7 +256,7 @@ end
 BUILD.starfountain = function(m)
 	pillar(m, 0.6, 4.4, Vector3.zero, C(235, 225, 255), Enum.Material.Marble) -- 池のふち
 	pillar(m, 0.1, 3.8, Vector3.new(0, 0.6, 0), C(150, 210, 255), Enum.Material.Glass) -- 水
-	pillar(m, 2.2, 0.6, Vector3.new(0, 0.6, 0), C(235, 225, 255), Enum.Material.Marble) -- はしら
+	pillar(m, 2.25, 0.6, Vector3.new(0, 0.55, 0), C(235, 225, 255), Enum.Material.Marble) -- はしら
 	pillar(m, 0.3, 2, Vector3.new(0, 2.8, 0), C(235, 225, 255), Enum.Material.Marble) -- 上のおさら
 	pillar(m, 0.1, 1.7, Vector3.new(0, 3.1, 0), C(150, 210, 255), Enum.Material.Glass)
 	ball(m, 0.9, Vector3.new(0, 3.9, 0), C(255, 220, 90), Enum.Material.Neon) -- 光る星の玉
@@ -266,14 +268,20 @@ end
 
 BUILD.dreamshelf = function(m)
 	local wood = C(190, 160, 255)
-	box(m, Vector3.new(3.6, 4.6, 1.2), Vector3.new(0, 2.3, 0.4), wood) -- 本だなの 箱
+	-- 中が あいた 本だな（うしろの 板・左右・上下）。前の面が そろうと ちらちら するので、部品ごとに 少し ずらす
+	box(m, Vector3.new(3.56, 4.56, 0.2), Vector3.new(0, 2.3, 0.89), wood) -- うしろの 板
+	for _, x in { -1.7, 1.7 } do
+		box(m, Vector3.new(0.2, 4.6, 1.2), Vector3.new(x, 2.3, 0.4), wood) -- 左右の 板
+	end
+	box(m, Vector3.new(3.24, 0.2, 1.1), Vector3.new(0, 4.48, 0.4), wood) -- 天板
+	box(m, Vector3.new(3.24, 0.3, 1.1), Vector3.new(0, 0.16, 0.4), wood) -- 下の 板
 	for i, y in { 1.1, 2.3, 3.5 } do
-		box(m, Vector3.new(3.2, 0.15, 1), Vector3.new(0, y - 0.55, 0.3), C(240, 230, 255)) -- たな板
-		-- 本（色ちがい）
+		box(m, Vector3.new(3.24, 0.15, 1.06), Vector3.new(0, y - 0.55, 0.42), C(240, 230, 255)) -- たな板
+		-- 本（色ちがい。たな板より 少し おくに 立てる）
 		local colors = { C(255, 140, 180), C(130, 200, 255), C(255, 215, 110), C(150, 230, 170), C(255, 170, 120) }
 		for k = 1, 5 do
 			local h = 0.7 + ((k + i) % 3) * 0.1
-			box(m, Vector3.new(0.45, h, 0.8), Vector3.new(-1.2 + (k - 1) * 0.6, y - 0.47 + h / 2, 0.2), colors[(k + i) % #colors + 1])
+			box(m, Vector3.new(0.45, h, 0.8), Vector3.new(-1.2 + (k - 1) * 0.6, y - 0.475 + h / 2 + 0.01, 0.42), colors[(k + i) % #colors + 1])
 		end
 	end
 	-- 上の 雲と 月

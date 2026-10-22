@@ -232,7 +232,8 @@ BUILD.starwings = function(m)
 			local len = 2.9 - k * 0.4
 			local angle = math.rad(28 - k * 22) -- 上の羽根から 下の羽根へ
 			local root = base * CFrame.Angles(0, 0, side * angle)
-			ellipsoid(m, Vector3.new(len, 0.62 - k * 0.07, 0.16), root * CFrame.new(side * len / 2, 0, 0), colors[k + 1])
+			-- 羽根は 1まいずつ 前後に 少し ずらす（同じ 面で 重なると ちらちら する）
+			ellipsoid(m, Vector3.new(len, 0.62 - k * 0.07, 0.16), root * CFrame.new(side * len / 2, 0, k * 0.05), colors[k + 1])
 			ball(m, 0.2, root * CFrame.new(side * (len - 0.25), 0, -0.1), C(255, 255, 255), Enum.Material.Neon)
 		end
 		ball(m, 0.55, base, C(60, 50, 160)) -- 羽根の つけね
@@ -321,7 +322,8 @@ end
 -- ---- かお（頭の前の まん中が原点。前が -Z） ----
 local function lens(m: Model, x: number, color: Color3, frame: Color3)
 	part(m, { Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.08, 0.5, 0.5), CFrame = CFrame.new(x, 0.15, -0.1) * CFrame.Angles(0, math.pi / 2, 0), Color = frame })
-	local glass = part(m, { Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.09, 0.4, 0.4), CFrame = CFrame.new(x, 0.15, -0.11) * CFrame.Angles(0, math.pi / 2, 0), Color = color, Material = Enum.Material.Glass })
+	-- レンズは わくより はっきり 厚く（面が 近いと ちらちら する）
+	local glass = part(m, { Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.14, 0.4, 0.4), CFrame = CFrame.new(x, 0.15, -0.11) * CFrame.Angles(0, math.pi / 2, 0), Color = color, Material = Enum.Material.Glass })
 	glass.Transparency = 0.35
 end
 
@@ -369,7 +371,7 @@ BUILD.lollipophand = function(m)
 	local base = FORWARD
 	pillar(m, 1.6, 0.12, base * CFrame.new(0, 0.6, 0), WHITE)
 	part(m, { Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.15, 1.1, 1.1), CFrame = base * CFrame.new(0, 1.55, 0) * CFrame.Angles(0, math.pi / 2, 0), Color = C(255, 120, 190) })
-	part(m, { Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.17, 0.65, 0.65), CFrame = base * CFrame.new(0, 1.55, 0) * CFrame.Angles(0, math.pi / 2, 0), Color = C(255, 230, 245) })
+	part(m, { Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.23, 0.65, 0.65), CFrame = base * CFrame.new(0, 1.55, 0) * CFrame.Angles(0, math.pi / 2, 0), Color = C(255, 230, 245) })
 	ball(m, 0.25, base * CFrame.new(0, 1.55, 0), C(130, 210, 255), Enum.Material.Neon)
 end
 

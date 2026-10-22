@@ -227,7 +227,8 @@ local function buildHouse(level: number): (Model, number, number)
 	m.Name = "SecretBase"
 	local marble = if level == 5 then Enum.Material.Marble else Enum.Material.SmoothPlastic
 	-- ゆか（中）
-	part(m, { Name = "Floor", Size = Vector3.new(w + 2, 0.6, d + 2), Position = Vector3.new(0, 0.3, 0), Color = look.floor, Material = if level == 3 or level == 4 then Enum.Material.WoodPlanks else Enum.Material.SmoothPlastic, CanCollide = true })
+	-- かべの 外の 面と そろうと ちらちら するので、少しだけ 外に 出す（家の 土台）
+	part(m, { Name = "Floor", Size = Vector3.new(w + 2.3, 0.6, d + 2.3), Position = Vector3.new(0, 0.3, 0), Color = look.floor, Material = if level == 3 or level == 4 then Enum.Material.WoodPlanks else Enum.Material.SmoothPlastic, CanCollide = true })
 	-- かべ（ぶつかる）。前のかべは まん中を とびらの分 あける
 	local function wall(size: Vector3, pos: Vector3)
 		part(m, { Size = size, Position = pos, Color = look.wall, Material = marble, CanCollide = true })
