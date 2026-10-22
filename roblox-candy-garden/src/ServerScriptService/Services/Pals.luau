@@ -10,6 +10,7 @@ local Data = require(script.Parent.Data)
 local World = require(script.Parent.World)
 local RateLimit = require(script.Parent.RateLimit)
 local Quests = require(script.Parent.Quests)
+local Room = require(script.Parent.Room)
 
 local Pals = {}
 
@@ -41,6 +42,7 @@ function Pals.markDex(player: Player, petId: string, announce: boolean?)
 		Remotes.Toast:FireClient(player, "toast.dexNew", "@pet." .. petId)
 	end
 	checkDexRewards(player, d)
+	Room.refreshCollection(player)
 	Data.saveSoon(player)
 end
 
@@ -67,6 +69,7 @@ function Pals.refreshAttribute(player: Player)
 		end
 	end
 	player:SetAttribute("EquippedPals", table.concat(ids, ","))
+	Room.refreshCollection(player) -- ひみつきちの コレクションも（中身が 同じなら 何もしない）
 end
 
 local function roll(egg): string

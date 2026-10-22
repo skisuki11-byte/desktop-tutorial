@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local FurnitureVisuals = require(ReplicatedStorage.Shared.FurnitureVisuals)
+local PetVisuals = require(ReplicatedStorage.Shared.PetVisuals)
 
 local Data = require(script.Parent.Data)
 local World = require(script.Parent.World)
@@ -113,6 +114,165 @@ local function placeFurniture(room: Model, level: number, slots: { string })
 	folder.Parent = room
 end
 
+-- ---- ペットの コレクション ----
+-- 出会った ペットを、とびらの 両がわの ひなだんに かざる（まだ 会っていない 子は かげと「？」だけ。何が いるかの わくわくは のこす）。
+-- 前の段に ふつうの子、うしろの 高い段に レアな子。いま 持っている いちばん上の ランク（✨/🌈）の 光りかたで かざる。
+-- 参考: ポケモン図鑑（あいた 所が あると うめたくなる）、あつまれ どうぶつの森の はくぶつかん（集めた ものを 自分の 場所に 飾る）
+local DISPLAY_HEIGHT = 1.7 -- 飾る ペットの 高さ（★8 は 少し 大きい）
+local SILHOUETTE = C(72, 58, 98)
+
+-- いま 飾る 中身（変わったときだけ 作りなおす）
+local function collectionKey(d): string
+	local best = {}
+	for _, entry in d.pets or {} do
+		best[entry.pet] = math.max(best[entry.pet] or 0, entry.tier or 0)
+	end
+	local out = {}
+	for _, cfg in Config.Pets do
+		table.insert(out, if (d.dex or {})[cfg.id] then tostring(best[cfg.id] or 0) else "x")
+	end
+	return table.concat(out, ",")
+end
+
+-- 飾る 場所: とびらの 左右に 2段ずつ。前の段から うめる
+local function displayFrames(width: number, depth: number, count: number): { CFrame }
+	local per = math.ceil(count / 4)
+	local frames = {}
+	for _, row in { { z = 3.1, y = 0.4 }, { z = 1.3, y = 1.3 } } do
+		for _, side in { -1, 1 } do
+			local inner, outer = 3.2, width / 2 - 1.3
+			for i = 1, per do
+				local x = side * (inner + (outer - inner) * (i - 0.5) / per)
+				-- へやの 中（+Z）を 向く（ペットの 前は -Z）
+				table.insert(frames, CFrame.new(x, row.y, -depth / 2 + row.z) * CFrame.Angles(0, math.pi, 0))
+			end
+		end
+	end
+	return frames
+end
+
+local function placeCollection(room: Model, d)
+	if not d then
+		return
+	end
+	local key = collectionKey(d)
+	if room:GetAttribute("CollectionKey") == key and room:FindFirstChild("Collection") then
+		return
+	end
+	local old = room:FindFirstChild("Collection")
+	if old then
+		old:Destroy()
+	end
+	room:SetAttribute("CollectionKey", key)
+	local w, depth = room:GetAttribute("Width") or 18, room:GetAttribute("Depth") or 16
+	local base = room:GetPivot()
+	local folder = Instance.new("Folder")
+	folder.Name = "Collection"
+	-- レアな子ほど うしろ（高い段）
+	local pets = table.clone(Config.Pets)
+	table.sort(pets, function(a, b)
+		if a.rarity ~= b.rarity then
+			return a.rarity < b.rarity
+		end
+		return table.find(Config.Pets, a) < table.find(Config.Pets, b)
+	end)
+	local frames = displayFrames(w, depth, #pets)
+	-- ひなだん（左右 × 2段）
+	local trim = C(255, 205, 225)
+	for _, row in { { z = 3.1, h = 0.4 }, { z = 1.3, h = 1.3 } } do
+		for _, side in { -1, 1 } do
+			local inner, outer = 2.6, w / 2 - 0.6
+			part(folder, {
+				Name = "Stand",
+				Size = Vector3.new(outer - inner, row.h, 1.8),
+				CFrame = base * CFrame.new(side * (inner + outer) / 2, row.h / 2, -depth / 2 + row.z),
+				Color = if row.h > 1 then trim else trim:Lerp(Color3.new(1, 1, 1), 0.4),
+				CanCollide = true,
+			})
+		end
+	end
+	local best = {}
+	for _, entry in d.pets or {} do
+		best[entry.pet] = math.max(best[entry.pet] or 0, entry.tier or 0)
+	end
+	local found = 0
+	for i, cfg in pets do
+		local frame = frames[i]
+		local have = (d.dex or {})[cfg.id] == true
+		local model = frame and PetVisuals.create(cfg, 2)
+		if model then
+			if have then
+				found += 1
+				PetVisuals.applyTier(model, best[cfg.id])
+			else
+				-- まだ 会っていない 子: かげ だけ（形は 見せて、色と きらきらは かくす）
+				for _, object in model:GetDescendants() do
+					if object:IsA("MeshPart") then
+						object.TextureID = ""
+						object.Color = SILHOUETTE
+					elseif object:IsA("BasePart") and object.Transparency < 1 then
+						object.Color = SILHOUETTE
+					elseif object:IsA("ParticleEmitter") or object:IsA("Light") then
+						object:Destroy()
+					end
+				end
+			end
+			-- せまい へやに 明かりが たくさん あると まっしろに なるので、飾りの 明かりは けす（きらきらの 粒は のこす）
+			for _, object in model:GetDescendants() do
+				if object:IsA("Light") then
+					object:Destroy()
+				end
+			end
+			local _, bounds = model:GetBoundingBox()
+			local height = DISPLAY_HEIGHT * (cfg.scale or 1)
+			model:ScaleTo(model:GetScale() * (height / bounds.Y))
+			model:PivotTo(base * frame)
+			local box, size = model:GetBoundingBox()
+			local floorY = (base * frame).Position.Y
+			model:PivotTo(model:GetPivot() + Vector3.new(0, floorY - (box.Position.Y - size.Y / 2), 0))
+			if not have then
+				local tag = Instance.new("BillboardGui")
+				tag.Size = UDim2.fromOffset(40, 40)
+				tag.StudsOffsetWorldSpace = Vector3.new(0, size.Y / 2 + 0.6, 0)
+				tag.MaxDistance = 40
+				tag.Adornee = model.PrimaryPart
+				local mark = Instance.new("TextLabel")
+				mark.Size = UDim2.fromScale(1, 1)
+				mark.BackgroundTransparency = 1
+				mark.Text = "?"
+				mark.TextScaled = true
+				mark.Font = Enum.Font.FredokaOne
+				mark.TextColor3 = C(255, 255, 255)
+				mark.TextStrokeTransparency = 0.3
+				mark.Parent = tag
+				tag.Parent = model
+			end
+			model.Parent = folder
+		end
+	end
+	-- とびらの 上の かんばん「🐾 集めた数 / ぜんぶ」（数字だけなので どの ことばでも 読める）
+	local sign = part(folder, {
+		Name = "CollectionSign",
+		Size = Vector3.new(7, 1.8, 0.2),
+		CFrame = base * CFrame.new(0, 8.6, -depth / 2 + 0.15),
+		Color = C(255, 255, 255),
+	})
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = Enum.NormalId.Back -- へやの 中がわ（+Z）に 向ける
+	gui.CanvasSize = Vector2.new(700, 180)
+	gui.LightInfluence = 0
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.fromScale(1, 1)
+	text.BackgroundColor3 = C(255, 240, 248)
+	text.Text = ("🐾 %d / %d"):format(found, #pets)
+	text.TextScaled = true
+	text.Font = Enum.Font.FredokaOne
+	text.TextColor3 = C(214, 70, 128)
+	text.Parent = gui
+	gui.Parent = sign
+	folder.Parent = room
+end
+
 -- ひみつきちの段に合わせて へやを作る（Reform から呼ぶ）
 function Room.build(plot, level: number, d, parent: Instance)
 	local look = info(level)
@@ -158,6 +318,7 @@ function Room.build(plot, level: number, d, parent: Instance)
 	part(room, { Name = "ExitDoor", Size = Vector3.new(4, 6.5, 0.4), CFrame = origin * CFrame.new(0, 3.25, -depth / 2 + 0.1), Color = look.trim, Material = Enum.Material.Wood })
 	part(room, { Name = "ExitMat", Size = Vector3.new(4, 0.1, 2.4), CFrame = origin * CFrame.new(0, 0.05, -depth / 2 + 1.4), Color = look.trim, Transparency = 0.3 })
 	placeFurniture(room, level, (d.room and d.room.slots) or {})
+	placeCollection(room, d)
 	room.Parent = parent
 	return room
 end
@@ -176,6 +337,15 @@ local function partsOf(player: Player): (Model?, Model?)
 		return nil, nil
 	end
 	return reform:FindFirstChild("SecretBase") :: Model?, reform:FindFirstChild("Room") :: Model?
+end
+
+-- ペットが ふえた・がったいした ときに 飾りを 作りなおす（中身が 同じなら 何もしない）
+function Room.refreshCollection(player: Player)
+	local d = Data.get(player)
+	local _, room = partsOf(player)
+	if d and room then
+		placeCollection(room, d)
+	end
 end
 
 local function onDoor(player: Player, action: any)
