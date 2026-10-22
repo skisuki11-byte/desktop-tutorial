@@ -300,7 +300,41 @@ Config.Pets = {
 		ears = "guardian",
 		giftOnly = true,
 	},
+	-- 超超レア（★8 きせき）: たまごからは出ない。がったいの ときに ごくまれに おまけで 来る（Config.Fusion）。
+	-- scale: いつもの ペットより 大きく 見せる
+	{ id = "royallion", icon = "🦁", rarity = 8, bonus = 3.00, color = Color3.fromRGB(255, 214, 120), ears = "round", fusionOnly = true, scale = 1.2 },
+	{ id = "crystalfox", icon = "🦊", rarity = 8, bonus = 3.00, color = Color3.fromRGB(255, 170, 230), ears = "point", fusionOnly = true, scale = 1.2 },
+	{ id = "stardeer", icon = "🦌", rarity = 8, bonus = 3.00, color = Color3.fromRGB(140, 130, 255), ears = "horn", fusionOnly = true, scale = 1.2 },
 }
+
+-- ペットの がったい: 同じペット（同じ ランク）を count 匹 えらぶと、1つ上の ランクの 1匹に なる。
+-- かならず 成功する（ペットが きえる だけ、には しない。子どもが かなしく ならないように）。
+-- ランク: なし=ふつう → 1=きらきら → 2=にじいろ。売値ボーナスは bonusMul 倍
+Config.Fusion = {
+	count = 3,
+	tiers = {
+		{ id = "sparkle", icon = "✨", bonusMul = 2 },
+		{ id = "rainbow", icon = "🌈", bonusMul = 4 },
+	},
+	-- がったいの たびに、この 確率で 超超レアが おまけで もう1匹 来る（[できあがる ランク]）。確率は 画面に そのまま出す
+	secretChance = { 0.005, 0.02 },
+	secretPets = { "royallion", "crystalfox", "stardeer" }, -- どれも 同じ 確率
+}
+
+-- 1匹の 売値ボーナス（ランクの 倍率を かけたもの）
+function Config.petBonusOf(entry): number
+	local cfg = entry and Config.PetById[entry.pet]
+	if not cfg then
+		return 0
+	end
+	local tier = Config.Fusion.tiers[entry.tier or 0]
+	return cfg.bonus * (if tier then tier.bonusMul else 1)
+end
+
+-- こうかんに 出せるか（おくりもの・超超レアは 出せない。ねだられたり だまし取られたり しないように）
+function Config.canTrade(cfg): boolean
+	return cfg ~= nil and not cfg.giftOnly and not cfg.fusionOnly
+end
 
 -- weight の合計に対する割合が出る確率。画面にそのまま表示する
 Config.Eggs = {
@@ -337,7 +371,8 @@ Config.Dex = {
 		{ count = 3, coins = 1000 },
 		{ count = 5, coins = 5000, fertilizer = 3 },
 		{ count = 7, coins = 20000, fertilizer = 10 },
-		{ count = 8, coins = 100000 }, -- ぜんぶ（8しゅるい。まもりがみ も入る）
+		{ count = 8, coins = 100000 }, -- たまご・おくりものの ぜんぶ（8しゅるい。まもりがみ も入る）
+		{ count = 11, coins = 300000 }, -- 超超レア（がったいの おまけ）まで ぜんぶ
 	},
 }
 

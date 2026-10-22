@@ -24,7 +24,7 @@ local picker, pickerList
 local window, windowScroll
 local inviteBox
 
-local function petCard(parent: Instance, petId: string, order: number, size: number): TextButton
+local function petCard(parent: Instance, petId: string, order: number, size: number, tier: number?): TextButton
 	local cfg = Config.PetById[petId]
 	local card = Style.button({
 		LayoutOrder = order,
@@ -41,7 +41,7 @@ local function petCard(parent: Instance, petId: string, order: number, size: num
 	Style.label({
 		Position = UDim2.fromScale(0.04, 0.62),
 		Size = UDim2.fromScale(0.92, 0.34),
-		Text = cfg and t("pet." .. cfg.id) or "",
+		Text = cfg and I18n.petName(cfg.id, tier) or "",
 		TextSize = 11,
 		ZIndex = 43,
 	}, card)
@@ -151,7 +151,7 @@ local function refreshWindow()
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}, frame)
 		for i, item in items do
-			local card = petCard(frame, item.pet, i, 78)
+			local card = petCard(frame, item.pet, i, 78, item.tier)
 			if onTap then
 				onTap(card, item)
 			end
@@ -202,7 +202,7 @@ local function refreshWindow()
 	end
 	row(mine, function(card, item)
 		local cfg = Config.PetById[item.pet]
-		if cfg and cfg.giftOnly then
+		if cfg and not Config.canTrade(cfg) then
 			card.BackgroundColor3 = C.Dim
 			card.AutoButtonColor = false
 			Style.label({

@@ -80,6 +80,13 @@ Remotes.EggResult.OnClientEvent:Connect(function(petId, eggId)
 	end
 end)
 
+Remotes.FuseResult.OnClientEvent:Connect(function(petId, tier, secretId)
+	if type(petId) == "string" and Config.PetById[petId] and type(tier) == "number" then
+		UI.playFuse(petId, tier, if type(secretId) == "string" and Config.PetById[secretId] then secretId else nil)
+		Sounds.hatch()
+	end
+end)
+
 -- みんなの木のレベルアップ・パスの段・ログインコードは、和音でお祝い
 Remotes.TreeLevelUp.OnClientEvent:Connect(function()
 	Sounds.play("jingle")

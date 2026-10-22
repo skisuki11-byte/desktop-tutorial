@@ -48,6 +48,8 @@ local NAMES = {
 	"RemoveFurniture",
 	"PlaceDecor",
 	"RemoveDecor",
+	"FusePet",
+	"FuseResult",
 }
 
 local folder

@@ -1891,6 +1891,11 @@ function UI.playHatch(petId: string, eggId: string?)
 	PalsUI.playHatch(petId, eggId)
 end
 
+-- がったいの 演出（ペットの 画面は 開いたまま。つづけて がったい できるように）
+function UI.playFuse(petId: string, tier: number, secretId: string?)
+	PalsUI.playFuse(petId, tier, secretId)
+end
+
 function UI.update(state)
 	local coins = state.coins
 	-- 🏠 ひみつきち ボタン: テントを 買えるだけ たまったら（または もう あれば）出す。出たら 配置を 合わせなおす

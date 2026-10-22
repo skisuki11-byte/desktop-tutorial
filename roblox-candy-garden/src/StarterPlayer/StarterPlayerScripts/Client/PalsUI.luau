@@ -17,6 +17,7 @@ local t = I18n.t
 local RARITY_COLOR = Style.Rarity
 
 local panel, scroll, grid, countLabel, bonusLabel, hatchOverlay
+local fuseList -- がったい できる 組の 一覧
 local lastState = nil
 
 local function percentText(n: number): string
@@ -211,6 +212,90 @@ local function refreshDex()
 	dexNote.Text = if nextReward then t("ui.dexNext", nextReward.count - found) else t("ui.dexDone")
 end
 
+-- がったい: 同じペット・同じランクが そろった 組を ならべる。ボタン 1つで がったい
+local function refreshFuse(pets)
+	if not fuseList then
+		return
+	end
+	for _, child in fuseList:GetChildren() do
+		if child:IsA("GuiObject") then
+			child:Destroy()
+		end
+	end
+	local groups, order = {}, {}
+	for _, entry in pets do
+		local tier = entry.tier or 0
+		if Config.PetById[entry.pet] and tier < #Config.Fusion.tiers then
+			local key = entry.pet .. "@" .. tier
+			if not groups[key] then
+				groups[key] = { pet = entry.pet, tier = tier, count = 0 }
+				table.insert(order, key)
+			end
+			groups[key].count += 1
+		end
+	end
+	local shown = 0
+	for _, key in order do
+		local group = groups[key]
+		if group.count >= Config.Fusion.count then
+			shown += 1
+			local cfg = Config.PetById[group.pet]
+			local row = Style.make("Frame", {
+				LayoutOrder = shown,
+				Size = UDim2.new(1, 0, 0, 64),
+				BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+				ZIndex = 12,
+			}, fuseList)
+			Style.round(row, 16)
+			Style.stroke(row, RARITY_COLOR[cfg.rarity], 3)
+			Style.setIcon(Style.label({
+				Position = UDim2.fromOffset(6, 4),
+				Size = UDim2.fromOffset(56, 56),
+				Text = cfg.icon,
+				TextSize = 36,
+				ZIndex = 13,
+			}, row), "pet_" .. cfg.id, cfg.icon)
+			Style.label({
+				Position = UDim2.fromOffset(68, 0),
+				Size = UDim2.new(1, -200, 1, 0),
+				Text = t(
+					"fuse.row",
+					I18n.petName(group.pet, if group.tier > 0 then group.tier else nil),
+					Config.Fusion.count,
+					I18n.petName(group.pet, group.tier + 1)
+				),
+				TextSize = 16,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 13,
+			}, row)
+			local button = Style.button({
+				Name = "Fuse_" .. key,
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -8, 0.5, 0),
+				Size = UDim2.fromOffset(120, 50),
+				Text = t("fuse.button"),
+				TextSize = 20,
+				ZIndex = 13,
+			}, row)
+			button.Activated:Connect(function()
+				Remotes.FusePet:FireServer(group.pet, group.tier)
+			end)
+		end
+	end
+	if shown == 0 then
+		Style.label({
+			Size = UDim2.new(1, 0, 0, 0),
+			AutomaticSize = Enum.AutomaticSize.Y,
+			Text = t("fuse.none", Config.Fusion.count),
+			TextSize = 15,
+			TextColor3 = C.TextMuted,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextWrapped = true,
+			ZIndex = 12,
+		}, fuseList)
+	end
+end
+
 local function refresh()
 	if not lastState or not grid then
 		return
@@ -228,6 +313,7 @@ local function refresh()
 	end
 	countLabel.Text = t("ui.palsCount", #pets, Config.MaxPets)
 	refreshDex()
+	refreshFuse(pets)
 	bonusLabel.Text = t("ui.totalBonus", math.floor(((lastState.sellBonus or 1) - 1) * 100 + 0.5))
 
 	if #pets == 0 then
@@ -266,14 +352,25 @@ local function refresh()
 			Style.label({
 				Position = UDim2.new(0, 4, 1, -70),
 				Size = UDim2.new(1, -8, 0, 22),
-				Text = t("pet." .. cfg.id),
+				Text = I18n.petName(cfg.id, entry.tier),
 				TextSize = 15,
 				ZIndex = 13,
 			}, card)
+			-- がったいした子は、左上に ✨ / 🌈 の しるし
+			local tier = entry.tier and Config.Fusion.tiers[entry.tier]
+			if tier then
+				Style.label({
+					Position = UDim2.fromOffset(4, 2),
+					Size = UDim2.fromOffset(30, 30),
+					Text = tier.icon,
+					TextSize = 24,
+					ZIndex = 15,
+				}, card)
+			end
 			Style.label({
 				Position = UDim2.new(0, 4, 1, -49),
 				Size = UDim2.new(1, -8, 0, 16),
-				Text = t("ui.petBonus", math.floor(cfg.bonus * 100 + 0.5)),
+				Text = t("ui.petBonus", math.floor(Config.petBonusOf(entry) * 100 + 0.5)),
 				TextSize = 12,
 				TextColor3 = C.TextMuted,
 				ZIndex = 13,
@@ -348,6 +445,40 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 			PalsUI.onTrade()
 		end
 	end)
+
+	-- がったい（同じペット 3匹 → 1つ上の ランク。かならず 成功。おまけの 超超レアの 確率も 出す）
+	Style.label({
+		LayoutOrder = 6,
+		Size = UDim2.new(1, -8, 0, 30),
+		Text = t("fuse.title"),
+		TextSize = 22,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 12,
+	}, scroll)
+	local percent = {}
+	for i, chance in Config.Fusion.secretChance do
+		percent[i] = percentText(chance * 100)
+	end
+	Style.label({
+		LayoutOrder = 7,
+		Size = UDim2.new(1, -8, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Text = t("fuse.note", Config.Fusion.count) .. "\n" .. t("fuse.odds", percent[1], percent[2]),
+		TextSize = 14,
+		TextColor3 = C.AccentDark,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextWrapped = true,
+		ZIndex = 12,
+	}, scroll)
+	fuseList = Style.make("Frame", {
+		Name = "FuseList",
+		LayoutOrder = 8,
+		Size = UDim2.new(1, -8, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+		ZIndex = 11,
+	}, scroll)
+	Style.make("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }, fuseList)
 
 	local header = Style.make("Frame", {
 		LayoutOrder = 10,
@@ -502,8 +633,9 @@ function PalsUI.update(state)
 	end
 end
 
--- たまごが揺れて、ペットが出てくる演出
-function PalsUI.playHatch(petId: string, eggId: string?)
+-- たまご（または がったいの 前の ペット）が揺れて、ペットが出てくる演出。
+-- opts: startKey/startIcon=揺れる絵、tier=がったいの ランク、title=上の文、onOk=「やったー」の あと
+local function reveal(petId: string, opts)
 	local cfg = Config.PetById[petId]
 	if not cfg then
 		return
@@ -546,7 +678,7 @@ function PalsUI.playHatch(petId: string, eggId: string?)
 		}, column)
 	end
 	local white = Color3.fromRGB(255, 255, 255)
-	local title = line(1, t("hatch.title"), 40, 32, white)
+	local title = line(1, opts.title or t("hatch.title"), 40, 32, opts.titleColor or white)
 	local egg = Style.label({
 		LayoutOrder = 2,
 		Size = UDim2.fromOffset(iconSize, iconSize),
@@ -555,12 +687,11 @@ function PalsUI.playHatch(petId: string, eggId: string?)
 		TextWrapped = false,
 		ZIndex = 32,
 	}, column)
-	-- 割る前のたまご（買った たまごの絵）
-	local shownEgg = (eggId and Config.EggById[eggId]) or Config.Eggs[1]
-	Style.setIcon(egg, "egg_" .. shownEgg.id, shownEgg.icon)
-	local name = line(3, t("pet." .. cfg.id) .. "（" .. t("rarity." .. cfg.rarity) .. "）", 34, 26,
+	-- 割る前のたまご（買った たまごの絵）・がったいの 前の ペット
+	Style.setIcon(egg, opts.startKey, opts.startIcon)
+	local name = line(3, I18n.petName(cfg.id, opts.tier) .. "（" .. t("rarity." .. cfg.rarity) .. "）", 34, 26,
 		RARITY_COLOR[cfg.rarity]:Lerp(Color3.new(1, 1, 1), 0.35))
-	local bonus = line(4, t("ui.petBonus", math.floor(cfg.bonus * 100 + 0.5)), 26, 20, white)
+	local bonus = line(4, t("ui.petBonus", math.floor(Config.petBonusOf({ pet = cfg.id, tier = opts.tier }) * 100 + 0.5)), 26, 20, white)
 	local ok = Style.button({
 		LayoutOrder = 5,
 		Size = UDim2.fromOffset(220, 60),
@@ -571,6 +702,9 @@ function PalsUI.playHatch(petId: string, eggId: string?)
 	}, column)
 	ok.Activated:Connect(function()
 		hatchOverlay.Visible = false
+		if opts.onOk then
+			opts.onOk()
+		end
 	end)
 	-- 文字とボタンは、たまごが割れるまで場所だけ取っておく（並びがガタつかないように透明にしておく）
 	for _, item in { title, name, bonus } do
@@ -594,6 +728,18 @@ function PalsUI.playHatch(petId: string, eggId: string?)
 
 		Style.setIcon(egg, "pet_" .. cfg.id, cfg.icon)
 		Style.pop(egg, 1.5)
+		-- がったいの ランクの しるし（✨ / 🌈）を 絵の 右上に
+		local tier = opts.tier and Config.Fusion.tiers[opts.tier]
+		if tier then
+			Style.label({
+				AnchorPoint = Vector2.new(1, 0),
+				Position = UDim2.fromScale(1, 0),
+				Size = UDim2.fromScale(0.35, 0.35),
+				Text = tier.icon,
+				TextSize = math.floor(iconSize * 0.28),
+				ZIndex = 34,
+			}, egg)
+		end
 		for _, item in { title, name, bonus } do
 			item.TextTransparency = 0
 			local stroke = item:FindFirstChild("TextStroke")
@@ -604,6 +750,33 @@ function PalsUI.playHatch(petId: string, eggId: string?)
 		ok.Visible = true
 		Style.pop(ok, 0.6)
 	end)
+end
+
+function PalsUI.playHatch(petId: string, eggId: string?)
+	local shownEgg = (eggId and Config.EggById[eggId]) or Config.Eggs[1]
+	reveal(petId, { startKey = "egg_" .. shownEgg.id, startIcon = shownEgg.icon })
+end
+
+-- がったいの 演出。おまけの 超超レアが 来たときは、つづけて もう1回（虹色の 文字で）
+function PalsUI.playFuse(petId: string, tier: number, secretId: string?)
+	local cfg = Config.PetById[petId]
+	if not cfg then
+		return
+	end
+	reveal(petId, {
+		startKey = "pet_" .. cfg.id,
+		startIcon = cfg.icon,
+		tier = tier,
+		title = t("fuse.done"),
+		onOk = if secretId then function()
+			reveal(secretId, {
+				startKey = "pet_" .. cfg.id,
+				startIcon = cfg.icon,
+				title = t("fuse.secret"),
+				titleColor = Color3.fromRGB(255, 230, 120),
+			})
+		end else nil,
+	})
 end
 
 return PalsUI

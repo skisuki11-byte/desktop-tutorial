@@ -24,6 +24,7 @@ Style.Rarity = {
 	Color3.fromHex("d4a03b"),
 	Color3.fromHex("5a4d91"),
 	Color3.fromHex("d077a8"),
+	Color3.fromHex("1f9fb4"), -- ★8 きせき（がったいの おまけだけ）: ほかと まざらない 青みどり
 }
 
 Style.Color = {

@@ -64,7 +64,7 @@ local function sendState(session: Session)
 			for _, uid in session.offers[owner] do
 				local entry = d and petOf(d, uid)
 				if entry then
-					table.insert(out, { uid = uid, pet = entry.pet })
+					table.insert(out, { uid = uid, pet = entry.pet, tier = entry.tier })
 				end
 			end
 			return out
@@ -113,7 +113,7 @@ local function execute(session: Session)
 	for _, pair in { { da, giveA }, { db, giveB } } do
 		for _, uid in pair[2] do
 			local entry = petOf(pair[1], uid)
-			if not entry or not Config.PetById[entry.pet] or Config.PetById[entry.pet].giftOnly then
+			if not entry or not Config.canTrade(Config.PetById[entry.pet]) then
 				close(session, "toast.tradeCanceled")
 				return
 			end
@@ -130,7 +130,7 @@ local function execute(session: Session)
 		for _, uid in uids do
 			for i, entry in d.pets do
 				if entry.uid == uid then
-					table.insert(taken, entry.pet)
+					table.insert(taken, { pet = entry.pet, tier = entry.tier })
 					table.remove(d.pets, i)
 					break
 				end
@@ -144,12 +144,12 @@ local function execute(session: Session)
 		end
 		return taken
 	end
-	local function give(player: Player, d, petIds)
-		for _, petId in petIds do
+	local function give(player: Player, d, pets)
+		for _, item in pets do
 			local uid = d.nextPetUid
 			d.nextPetUid += 1
-			table.insert(d.pets, { uid = uid, pet = petId })
-			Pals.markDex(player, petId, true)
+			table.insert(d.pets, { uid = uid, pet = item.pet, tier = item.tier }) -- がったいの ランクも そのまま
+			Pals.markDex(player, item.pet, true)
 		end
 	end
 	local fromA = take(da, giveA)
@@ -250,7 +250,7 @@ function Trade.init()
 			if type(uid) == "number" and not seen[uid] then
 				local entry = d and petOf(d, uid)
 				local cfg = entry and Config.PetById[entry.pet]
-				if cfg and not cfg.giftOnly then
+				if Config.canTrade(cfg) then
 					seen[uid] = true
 					table.insert(clean, uid)
 				end

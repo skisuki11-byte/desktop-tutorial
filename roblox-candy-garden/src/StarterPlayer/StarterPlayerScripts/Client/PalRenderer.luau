@@ -256,10 +256,13 @@ local function sync(player: Player)
 	clear(player)
 	local pals = {}
 	if key ~= "" then
-		for id in string.gmatch(key, "[^,]+") do
-			local cfg = Config.PetById[id]
+		-- 「id」か、がったいした子は「id@ランク」
+		for item in string.gmatch(key, "[^,]+") do
+			local id, tierText = string.match(item, "^([^@]+)@?(%d*)$")
+			local cfg = id and Config.PetById[id]
 			if cfg and #pals < Config.MaxEquipped then
 				local model, size = buildPet(cfg)
+				PetVisuals.applyTier(model, tonumber(tierText))
 				model.Parent = folder
 				table.insert(pals, { model = model, pos = nil, size = size })
 			end

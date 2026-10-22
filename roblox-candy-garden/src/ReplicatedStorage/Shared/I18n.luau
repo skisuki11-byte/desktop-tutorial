@@ -290,6 +290,20 @@ local STRINGS = {
 		["pet.cottonwhale"] = "わたあめクジラ",
 		["pet.dreamphoenix"] = "ゆめいろフェニックス",
 		["rarity.7"] = "ゆめいろ",
+		["pet.royallion"] = "ロイヤルシュガーライオン",
+		["pet.crystalfox"] = "にじいろキュウビ",
+		["pet.stardeer"] = "ほしぞらジカ",
+		["rarity.8"] = "きせき",
+		["fuse.tierName.1"] = "✨きらきら %s",
+		["fuse.tierName.2"] = "🌈にじいろ %s",
+		["fuse.title"] = "🔮 がったい",
+		["fuse.note"] = "おなじ ペットを %d匹 あわせると、✨きらきら → 🌈にじいろ に なるよ（かならず せいこう・うりね アップ）",
+		["fuse.odds"] = "ごくまれに ★8 きせきの ペットが おまけで くる！ かくりつ: ✨のとき %s / 🌈のとき %s",
+		["fuse.row"] = "%s ×%d → %s",
+		["fuse.button"] = "がったい",
+		["fuse.none"] = "おなじ ペットが %d匹 そろうと、ここで がったい できるよ",
+		["fuse.done"] = "がったい せいこう！",
+		["fuse.secret"] = "🌟 おまけ！ きせきの ペットが きた！",
 		["egg.staregg"] = "ほしのたまご",
 		["ui.dex"] = "📖 ずかん  %d / %d",
 		["ui.dexNext"] = "あと %d しゅるいで ごほうび！",
@@ -772,6 +786,20 @@ local STRINGS = {
 		["pet.cottonwhale"] = "Cotton Whale",
 		["pet.dreamphoenix"] = "Dream Phoenix",
 		["rarity.7"] = "Mythic",
+		["pet.royallion"] = "Royal Sugar Lion",
+		["pet.crystalfox"] = "Rainbow Nine-Tail",
+		["pet.stardeer"] = "Starry Fawn",
+		["rarity.8"] = "Miracle",
+		["fuse.tierName.1"] = "✨Sparkly %s",
+		["fuse.tierName.2"] = "🌈Rainbow %s",
+		["fuse.title"] = "🔮 Fusion",
+		["fuse.note"] = "Combine %d of the same pet: ✨Sparkly → 🌈Rainbow (always works, higher sell bonus)",
+		["fuse.odds"] = "Rarely, a ★8 Miracle pet comes as a bonus! Chance: ✨ %s / 🌈 %s",
+		["fuse.row"] = "%s ×%d → %s",
+		["fuse.button"] = "Fuse",
+		["fuse.none"] = "Get %d of the same pet to fuse them here",
+		["fuse.done"] = "Fusion success!",
+		["fuse.secret"] = "🌟 Bonus! A Miracle pet came!",
 		["egg.staregg"] = "Star Egg",
 		["ui.dex"] = "📖 Collection  %d / %d",
 		["ui.dexNext"] = "%d more kinds for a reward!",
@@ -1027,6 +1055,15 @@ function I18n.duration(seconds: number): string
 		return I18n.t("dur.m", seconds // 60)
 	end
 	return I18n.t("dur.s", seconds)
+end
+
+-- ペットの 名前。がったいした子は「✨きらきら グミベア」のように ランクを 前に つける
+function I18n.petName(petId: string, tier: number?): string
+	local name = I18n.t("pet." .. petId)
+	if tier and tier > 0 then
+		return I18n.t("fuse.tierName." .. tier, name)
+	end
+	return name
 end
 
 function I18n.t(key: string, ...): string

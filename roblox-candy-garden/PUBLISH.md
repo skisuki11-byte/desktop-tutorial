@@ -11,30 +11,41 @@
 
 ## 説明文（案）
 
-最初の2行で「何をするゲームか」が分かるようにする（Grow a Garden・Adopt Me! と同じ）。新しい遊びは上の方に。
+最初の2行で「何をするゲームか」が分かるようにする（Grow a Garden・Adopt Me! と同じ）。新しい遊びは上の方に（Adopt Me! は 説明文の 上に アップデートを 書いて、また来る きっかけに している）。
 （2026-10-18 更新: 3Dペット・なかよしレベル・やくそくの種・ずかん・まもりがみの木としょんぼり雲・ひみつきちとリフォーム を追加）
+（2026-10-22 全体を見直して書き直し: ペットの がったい・★8 きせきのペット・お天気イベントと キャンディラッシュ・いこいのひろば・まとめてしゅうかく を追加。たまごの ペットの 数は「8しゅるい」から 書きかえ）
 
-**日本語**（2026-10-19 にクリエイターハブへ入れた版）
+**日本語**（2026-10-22 版。まだ クリエイターハブには 入れていない）
 > 🍬 お菓子の庭で、ペットといっしょに育てよう！
 > 種を植えて → 水をあげて → しゅうかくして → 売って、庭をかわいく大きくしよう。
-> ・🐾 たまごから生まれる 8しゅるいのペット
-> ・📖 ペットずかん・さくもつずかん。天気で「きんいろ」「にじいろ」の作物が出るかも
+>
+> 🆕 ペットの がったい！ 同じペット3匹で ✨きらきら → 🌈にじいろ に。かならず せいこうして、うりねボーナスも アップ。ごくまれに ★8「きせき」のペットが おまけで来るよ（確率はゲームの中に出ています）
+>
+> ・🐾 たまごから生まれるペット ＋ がったいでしか会えない きせきのペット 3しゅるい
+> ・🌦️ お天気イベントで「ジャンボ」「きんいろ」「にじいろ」の作物が実るかも。🍭キャンディラッシュの あいだは 売値アップ
 > ・🌳 この土地の まもりがみ「みんなの木」を みんなで育てよう。しょんぼり雲が来たら、みんなで げんきを あげて まもろう
-> ・🏠 じぶんだけの ひみつきちを たてて、中を家具で かざろう。柵や看板も 豪華に リフォーム
+> ・🏠 じぶんだけの ひみつきちを たてて、家具で かざろう。柵や看板も 豪華に リフォーム
+> ・☕ ふんすいの そばの「いこいのひろば」で ひとやすみ
+> ・📖 ペットずかん・さくもつずかん
 > ・🎁 毎日のボーナス、きょうのおねがい、日替わりショップ
 
 注意: 次の行は Roblox の文字チェックで保存できなかった（「不明なエラー」になる）。説明文には入れない。
 - 「友だちと遊ぶと『なかよしレベル』が上がる。2人で水をあげる『やくそくの花』も」
 - 「いっしょに水をあげて さかせる『やくそくの花』」と「だれかの庭を こわすことは できないよ。」（言いかえても保存できなかった）
 
-**English**
+**English**（2026-10-22 版）
 > 🍬 Grow a candy garden with your cute pets!
 > Plant → water → harvest → sell, and make your garden bigger and cuter.
-> • 🐾 8 pets hatch from eggs (the Dream Phoenix is super rare)
+>
+> 🆕 Pet Fusion! Combine 3 of the same pet: ✨Sparkly → 🌈Rainbow. It always works and boosts your sell bonus. Rarely, a ★8 Miracle pet comes as a bonus (chances are shown in the game)
+>
+> • 🐾 Pets hatch from eggs — plus 3 Miracle pets you can only meet through fusion
+> • 🌦️ Weather events can grow Jumbo, Golden or Rainbow crops. Sell prices go up during the 🍭Candy Rush
 > • 🤝 Play with friends to raise your Friendship Level — and grow a Promise Flower together
-> • 📖 Pet Book & Crop Book. Weather can turn crops Golden or Rainbow
 > • 🌳 Grow the Community Tree, the guardian of this land, together — and cheer it up when a gloomy cloud comes
-> • 🏠 Build your own secret base, decorate the room with furniture, and give your garden a makeover
+> • 🏠 Build your own secret base, decorate it with furniture, and give your garden a makeover
+> • ☕ Take a break at the Lounge by the fountain
+> • 📖 Pet Book & Crop Book
 > • 🎁 Daily bonus, daily wishes, and a daily shop
 > No stealing — nobody can mess with your garden.
 

@@ -107,8 +107,7 @@ local function reconcile(data)
 	if #data.equipped > Config.MaxEquipped then
 		local bonusOf = {}
 		for _, entry in data.pets do
-			local cfg = Config.PetById[entry.pet]
-			bonusOf[entry.uid] = cfg and cfg.bonus or 0
+			bonusOf[entry.uid] = Config.petBonusOf(entry)
 		end
 		table.sort(data.equipped, function(a, b)
 			return (bonusOf[a] or 0) > (bonusOf[b] or 0)
@@ -338,8 +337,8 @@ function Data.petBonus(d): number
 	local bonus = 0
 	for _, uid in d.equipped do
 		for _, entry in d.pets do
-			if entry.uid == uid and Config.PetById[entry.pet] then
-				bonus += Config.PetById[entry.pet].bonus
+			if entry.uid == uid then
+				bonus += Config.petBonusOf(entry)
 			end
 		end
 	end

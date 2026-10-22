@@ -1,5 +1,7 @@
 -- ペット（Pals）。たまごの抽選・所持・連れ歩きの管理。抽選はサーバーだけで行う。
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -59,7 +61,8 @@ function Pals.refreshAttribute(player: Player)
 	for _, uid in d.equipped do
 		for _, entry in d.pets do
 			if entry.uid == uid and Config.PetById[entry.pet] then
-				table.insert(ids, entry.pet)
+				-- がったいした子は「id@ランク」（きらきら・にじいろの 見た目を ほかの人の 画面にも 出す）
+				table.insert(ids, if entry.tier then entry.pet .. "@" .. entry.tier else entry.pet)
 			end
 		end
 	end
@@ -186,9 +189,115 @@ local function equipPet(player: Player, uid: any)
 	Data.push(player)
 end
 
+-- がったい: 同じペット・同じランクの 子を Config.Fusion.count 匹 あわせて、1つ上の ランクの 1匹に する。
+-- かならず 成功。ごくまれに 超超レアが おまけで もう1匹 来る（確率は Config.Fusion.secretChance）
+local function fusePet(player: Player, petId: any, tier: any)
+	if type(petId) ~= "string" or not Config.PetById[petId] then
+		return
+	end
+	tier = if tier == nil then 0 else tier
+	if type(tier) ~= "number" or tier ~= math.floor(tier) or tier < 0 or tier >= #Config.Fusion.tiers then
+		return
+	end
+	if not RateLimit.ok(player, "fusePet", 0.5) then
+		return
+	end
+	local d = Data.get(player)
+	if not d then
+		return
+	end
+	-- あわせる 子を えらぶ。連れていない 子から 先に つかう
+	local picked = {}
+	for _, wantEquipped in { false, true } do
+		for _, entry in d.pets do
+			if #picked < Config.Fusion.count and entry.pet == petId and (entry.tier or 0) == tier
+				and (isEquipped(d, entry.uid) ~= nil) == wantEquipped then
+				table.insert(picked, entry.uid)
+			end
+		end
+	end
+	if #picked < Config.Fusion.count then
+		return
+	end
+
+	local newTier = tier + 1
+	local uid = d.nextPetUid
+	d.nextPetUid += 1
+	-- 連れていた子を つかったときは、その 場所に できあがった 子を 連れる
+	local slot = nil
+	for _, old in picked do
+		local index = isEquipped(d, old)
+		if index then
+			if slot == nil then
+				slot = index
+				d.equipped[index] = uid
+			else
+				table.remove(d.equipped, index)
+			end
+		end
+		for i, entry in d.pets do
+			if entry.uid == old then
+				table.remove(d.pets, i)
+				break
+			end
+		end
+	end
+	table.insert(d.pets, { uid = uid, pet = petId, tier = newTier })
+
+	-- おまけの 超超レア
+	local secretId = nil
+	-- Studioでの確認用（本番では動かない）: workspace の属性 DebugSecretChance（0〜1）で おまけの 確率を かえる
+	local chance = Config.Fusion.secretChance[newTier] or 0
+	if RunService:IsStudio() and type(workspace:GetAttribute("DebugSecretChance")) == "number" then
+		chance = workspace:GetAttribute("DebugSecretChance")
+	end
+	if rng:NextNumber() < chance then
+		local list = Config.Fusion.secretPets
+		secretId = list[rng:NextInteger(1, #list)]
+		local secretUid = d.nextPetUid
+		d.nextPetUid += 1
+		table.insert(d.pets, { uid = secretUid, pet = secretId })
+		if #d.equipped < Config.MaxEquipped then
+			table.insert(d.equipped, secretUid)
+		end
+		Pals.markDex(player, secretId, false)
+	end
+
+	Remotes.FuseResult:FireClient(player, petId, newTier, secretId)
+	Pals.refreshAttribute(player)
+	Data.push(player)
+	Data.saveSoon(player)
+end
+
 function Pals.init()
 	Remotes.BuyEgg.OnServerEvent:Connect(buyEgg)
 	Remotes.EquipPet.OnServerEvent:Connect(equipPet)
+	Remotes.FusePet.OnServerEvent:Connect(fusePet)
+	-- Studioでの確認用（本番では動かない）: workspace の属性 DebugPets に "gummybear=3,gummybear@1=3" のように入れると、そのペットを もらえる
+	if RunService:IsStudio() then
+		workspace:GetAttributeChangedSignal("DebugPets"):Connect(function()
+			local text = workspace:GetAttribute("DebugPets")
+			if type(text) ~= "string" then
+				return
+			end
+			for _, player in Players:GetPlayers() do
+				local d = Data.get(player)
+				if d then
+					for id, tier, n in string.gmatch(text, "(%w+)@?(%d*)=(%d+)") do
+						if Config.PetById[id] then
+							for _ = 1, tonumber(n) or 0 do
+								local uid = d.nextPetUid
+								d.nextPetUid += 1
+								table.insert(d.pets, { uid = uid, pet = id, tier = tonumber(tier) })
+							end
+						end
+					end
+					Pals.refreshAttribute(player)
+					Data.push(player)
+				end
+			end
+		end)
+	end
 end
 
 return Pals
