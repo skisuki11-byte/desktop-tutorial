@@ -433,7 +433,7 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 	}, tools)
 	local tradeButton = Style.button({
 		LayoutOrder = 1,
-		Size = UDim2.new(1, 0, 1, 0),
+		Size = UDim2.new(0.5, -4, 1, 0),
 		BackgroundColor3 = C.Mint,
 		TextColor3 = C.Text,
 		Text = t("ui.trade"),
@@ -443,6 +443,22 @@ function PalsUI.build(gui: ScreenGui, onClose: () -> ())
 	tradeButton.Activated:Connect(function()
 		if PalsUI.onTrade then
 			PalsUI.onTrade()
+		end
+	end)
+	-- ひみつきちの 見学に 友だちを まねく（はくぶつかんの ペットを 見てもらう）
+	local visitButton = Style.button({
+		Name = "VisitButton",
+		LayoutOrder = 2,
+		Size = UDim2.new(0.5, -4, 1, 0),
+		BackgroundColor3 = C.Lilac,
+		TextColor3 = C.Text,
+		Text = t("ui.visit"),
+		TextSize = 20,
+		ZIndex = 12,
+	}, tools)
+	visitButton.Activated:Connect(function()
+		if PalsUI.onVisit then
+			PalsUI.onVisit()
 		end
 	end)
 

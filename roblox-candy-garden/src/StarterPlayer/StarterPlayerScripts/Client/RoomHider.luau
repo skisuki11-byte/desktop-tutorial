@@ -19,7 +19,18 @@ local hidden: { [Model]: boolean } = {}
 local watched: { [Model]: RBXScriptConnection } = {}
 local fade: Frame
 local busy = false
-local armed = { enter = true, exit = true } -- 一度はなれるまで もう一度は 切りかえない
+local armed = { enter = true, exit = true, museum = true, museumExit = true } -- 一度はなれるまで もう一度は 切りかえない
+
+-- その へや（または はくぶつかん）の 中に いるか（高さも 見る。はくぶつかんは へやの 上に ある）
+local function isInside(root: BasePart?, model: Model): boolean
+	if not root or root.Position.Y <= INSIDE_HEIGHT then
+		return false
+	end
+	local center = model:GetPivot().Position
+	local w = model:GetAttribute("Width") or 20
+	local flat = (Vector3.new(root.Position.X, 0, root.Position.Z) - Vector3.new(center.X, 0, center.Z)).Magnitude
+	return flat < w + 6 and math.abs(root.Position.Y - center.Y) < 25
+end
 
 local function apply(d: Instance, hide: boolean)
 	if d:IsA("BasePart") then
@@ -123,16 +134,18 @@ function RoomHider.init()
 				local reform = reformOf(plot)
 				local room = reform and reform:FindFirstChild("Room")
 				local house = reform and reform:FindFirstChild("SecretBase")
+				local museum = reform and reform:FindFirstChild("Museum")
+				local rootPart = if root and root:IsA("BasePart") then root else nil
+				if museum and museum:IsA("Model") then
+					setHidden(museum, not isInside(rootPart, museum))
+				end
 				if room and room:IsA("Model") then
-					local inside = false
-					if root and root:IsA("BasePart") and root.Position.Y > INSIDE_HEIGHT then
-						local center = room:GetPivot().Position
-						local w = room:GetAttribute("Width") or 20
-						inside = (Vector3.new(root.Position.X, 0, root.Position.Z) - Vector3.new(center.X, 0, center.Z)).Magnitude < w + 6
-					end
-					setHidden(room, not inside)
+					setHidden(room, not isInside(rootPart, room))
 					-- 自分の家の とびら・へやの とびら
-					if root and root:IsA("BasePart") and house and house:GetAttribute("OwnerUserId") == player.UserId then
+					-- 見学中は、まねいてくれた子の 家の 中の とびらも つかえる（入口からは 入らない）
+					local owner = house and house:GetAttribute("OwnerUserId")
+					local visiting = owner ~= nil and owner == player:GetAttribute("VisitingUserId")
+					if root and root:IsA("BasePart") and house and (owner == player.UserId or visiting) then
 						local entrance = house:FindFirstChild("Entrance") :: BasePart?
 						local exitMat = room:FindFirstChild("ExitMat") :: BasePart?
 						local nearEnter = entrance ~= nil and (root.Position - entrance.Position).Magnitude < DOOR_NEAR
@@ -143,10 +156,25 @@ function RoomHider.init()
 						if not nearExit then
 							armed.exit = true
 						end
-						if not busy and nearEnter and armed.enter then
+						-- はくぶつかんの 入口（へやの 中）と 出口（はくぶつかんの 中）
+						local museumMat = room:FindFirstChild("MuseumMat") :: BasePart?
+						local museumExit = museum and museum:FindFirstChild("ExitMat") :: BasePart?
+						local nearMuseum = museumMat ~= nil and (root.Position - museumMat.Position).Magnitude < DOOR_NEAR
+						local nearMuseumExit = museumExit ~= nil and (root.Position - museumExit.Position).Magnitude < DOOR_NEAR
+						if not nearMuseum then
+							armed.museum = true
+						end
+						if not nearMuseumExit then
+							armed.museumExit = true
+						end
+						if not busy and nearEnter and armed.enter and not visiting then
 							task.spawn(switch, "enter")
 						elseif not busy and nearExit and armed.exit then
 							task.spawn(switch, "exit")
+						elseif not busy and nearMuseum and armed.museum then
+							task.spawn(switch, "museum")
+						elseif not busy and nearMuseumExit and armed.museumExit then
+							task.spawn(switch, "museumExit")
 						end
 					end
 				end

@@ -384,6 +384,12 @@ Config.Trade = {
 	requestSeconds = 30, -- おさそいの有効時間
 }
 
+-- ひみつきちの 見学（しょうたい）: Robloxで 友だちの 人だけ。見に来た子は 1人で 見る（持ち主と 同じ へやに ならない）
+Config.Visit = {
+	seconds = 300, -- 見学の 長さ（このあと 自動で おしまい）
+	requestSeconds = 30, -- おさそいの 有効時間
+}
+
 -- お天気イベント。天気の間は、収穫のきらきら確率が sparkleChance に上がる
 Config.Weather = {
 	FirstDelay = 60, -- 最初の天気までの秒数（早く体験してもらう）

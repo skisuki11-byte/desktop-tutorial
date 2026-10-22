@@ -50,6 +50,10 @@ local NAMES = {
 	"RemoveDecor",
 	"FusePet",
 	"FuseResult",
+	"VisitInvite",
+	"VisitRespond",
+	"VisitEnd",
+	"VisitState",
 }
 
 local folder

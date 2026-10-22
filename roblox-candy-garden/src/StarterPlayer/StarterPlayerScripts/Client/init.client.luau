@@ -21,6 +21,7 @@ local StarGiftUI = require(script.StarGiftUI)
 local RoomHider = require(script.RoomHider)
 local BackFade = require(script.BackFade)
 local TradeUI = require(script.TradeUI)
+local VisitUI = require(script.VisitUI)
 local PalsUI = require(script.PalsUI)
 local Style = require(script.Style)
 
@@ -65,6 +66,8 @@ RoomHider.init()
 BackFade.init()
 TradeUI.init(UI)
 PalsUI.onTrade = TradeUI.openPicker
+VisitUI.init(UI)
+PalsUI.onVisit = VisitUI.openPicker
 
 Remotes.Toast.OnClientEvent:Connect(function(key, ...)
 	if type(key) == "string" then
