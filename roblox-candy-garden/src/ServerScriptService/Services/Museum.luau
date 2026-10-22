@@ -2,8 +2,8 @@
 -- 出会った ペットを 台に 飾る。高級な 博物館のように:
 --   ・くらい むらさきの かべ・大理石の ゆか・赤い じゅうたん・金の ふち
 --   ・かべの 上の 間接照明（天井を てらす）と、1体ずつ 天井から スポットライト
---   ・★8 きせきの ペットは おくの 舞台の ガラスケースに 入れる
---   ・まだ 会っていない 子は かげと「？」（形と ★の数だけ 見せて、わくわくを のこす）
+--   ・★8 きせきの ペットは おくの 舞台の ガラスケースに 入れて、左右の 下から ライトで てらす
+--   ・まだ 会っていない 子の 台・ケースは 空けておく（かげも 置かない。出てからの 楽しみに。ユーザーの 希望）
 -- 参考: あつまれ どうぶつの森の はくぶつかん（暗い 館内に 照明で 展示を うかび上がらせる）、
 --       実在の 美術館・宝物館（スポットライト＋間接照明、宝物は ガラスケース）
 -- 文字は 絵文字と 数字・★だけ（どの ことばでも 読める。名前は ペットずかんで 見られる）
@@ -23,7 +23,6 @@ local PANEL = C(78, 44, 46)
 local FLOOR = C(44, 36, 58)
 local CARPET = C(150, 28, 58)
 local MARBLE = C(246, 242, 236)
-local SILHOUETTE = C(36, 28, 50)
 local SPOT = C(255, 240, 215)
 
 local function part(parent: Instance, props: { [string]: any }): Part
@@ -178,41 +177,59 @@ local function placePet(model: Model, cf: CFrame, height: number)
 	return size
 end
 
-local function petModel(cfg, have: boolean, tier: number?): Model?
+-- 飾る ペット（会った 子だけ。まだの子は 何も 置かない。出てからの 楽しみに）
+local function petModel(cfg, tier: number?): Model?
 	local model = PetVisuals.create(cfg, 2)
 	if not model then
 		return nil
 	end
-	if have then
-		PetVisuals.applyTier(model, tier)
-	end
+	PetVisuals.applyTier(model, tier)
 	for _, object in model:GetDescendants() do
-		if object:IsA("Light") then
-			object:Destroy() -- 照明は スポットライトに まかせる（明かりが かさなると まっしろに なる）
-		elseif not have then
-			-- まだ 会っていない 子: かげ だけ
-			if object:IsA("MeshPart") then
-				object.TextureID = ""
-				object.Color = SILHOUETTE
-			elseif object:IsA("BasePart") and object.Transparency < 1 then
-				object.Color = SILHOUETTE
-			elseif object:IsA("ParticleEmitter") then
-				object:Destroy()
-			end
+		-- 照明は スポットライトに まかせる（明かりが かさなると まっしろに なる）。
+		-- ★8 の 足もとから のぼる 光の 粒も、ケースの 中では うるさいので 出さない
+		if object:IsA("Light") or object.Name == "MiracleStars" then
+			object:Destroy()
 		end
 	end
 	return model
 end
 
--- 台の 前の 小さな ふだ（絵文字と ★の数。まだの子は「？」）
-local function plaque(parent: Instance, cf: CFrame, cfg, have: boolean)
+-- ケースの 左右の 下から ペットを 見上げて てらす 小さな ライト（美術館の アップライト）
+local function uplight(parent: Instance, from: Vector3, target: Vector3)
+	local body = part(parent, {
+		Name = "Uplight",
+		Size = Vector3.new(0.5, 0.5, 0.7),
+		CFrame = CFrame.lookAt(from, target),
+		Color = C(25, 22, 30),
+		Material = Enum.Material.Metal,
+	})
+	local lens = part(parent, {
+		Name = "UplightLens",
+		Size = Vector3.new(0.38, 0.38, 0.06),
+		CFrame = CFrame.lookAt(from, target) * CFrame.new(0, 0, -0.36),
+		Color = SPOT,
+		Material = Enum.Material.Neon,
+	})
+	local light = Instance.new("SpotLight")
+	light.Face = Enum.NormalId.Front -- ペットの ほう（-Z）
+	light.Angle = 45
+	light.Range = 9
+	light.Brightness = 3.5
+	light.Color = SPOT
+	light.Shadows = false
+	light.Parent = lens
+	return body
+end
+
+-- 台の 前の 小さな ふだ（絵文字と ★の数）
+local function plaque(parent: Instance, cf: CFrame, cfg)
 	local p = part(parent, { Name = "Plaque", Size = Vector3.new(2, 1, 0.12), CFrame = cf, Color = C(30, 22, 34), Material = Enum.Material.Metal })
-	-- 上に 絵文字（まだの子は「?」）、下に ★の数（小さく ならないよう 2つに 分ける）
+	-- 上に 絵文字、下に ★の数（小さく ならないよう 2つに 分ける）
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Front
 	gui.CanvasSize = Vector2.new(400, 200)
 	gui.LightInfluence = 0
-	for _, row in { { text = if have then cfg.icon else "?", y = 0.04, h = 0.56 }, { text = string.rep("★", cfg.rarity), y = 0.62, h = 0.32 } } do
+	for _, row in { { text = cfg.icon, y = 0.04, h = 0.56 }, { text = string.rep("★", cfg.rarity), y = 0.62, h = 0.32 } } do
 		local t = Instance.new("TextLabel")
 		t.Position = UDim2.fromScale(0.05, row.y)
 		t.Size = UDim2.fromScale(0.9, row.h)
@@ -272,13 +289,14 @@ local function placeDisplays(museum: Model, d)
 		part(folder, { Size = Vector3.new(2.6, 0.2, 2.6), CFrame = base * CFrame.new(0, 2.85, 0), Color = GOLD, Material = Enum.Material.Metal })
 		-- へやの まん中を 向く（ペットの 前は -Z）
 		local facing = CFrame.Angles(0, if side < 0 then -math.pi / 2 else math.pi / 2, 0)
-		local model = petModel(cfg, have, best[cfg.id])
+		-- まだ 会っていない 子の 台は 空けておく（あかりも つけない）
+		local model = have and petModel(cfg, best[cfg.id])
 		if model then
 			placePet(model, base * CFrame.new(0, 2.95, 0) * facing, 2.6 * (cfg.scale or 1))
 			model.Parent = folder
+			plaque(folder, base * facing * CFrame.new(0, 1.4, -1.22) * CFrame.Angles(math.rad(-20), 0, 0), cfg)
+			spotlight(folder, o, Vector3.new(x, 0, z), 3.2)
 		end
-		plaque(folder, base * facing * CFrame.new(0, 1.4, -1.22) * CFrame.Angles(math.rad(-20), 0, 0), cfg, have)
-		spotlight(folder, o, Vector3.new(x, 0, z), 3.2)
 	end
 	-- ★8 は おくの 舞台の ガラスケース
 	local stage = o * CFrame.new(0, 0.8, D / 2 - 7.5)
@@ -291,9 +309,6 @@ local function placeDisplays(museum: Model, d)
 		end
 		part(folder, { Size = Vector3.new(2.7, 1.4, 2.7), CFrame = base * CFrame.new(0, 0.7, 0), Color = MARBLE, Material = Enum.Material.Marble, CanCollide = true })
 		part(folder, { Size = Vector3.new(3, 0.2, 3), CFrame = base * CFrame.new(0, 1.5, 0), Color = GOLD, Material = Enum.Material.Metal })
-		-- ケースの 中の ゆかが ほんのり 光る（★8 の 色）
-		local glow = part(folder, { Size = Vector3.new(2.5, 0.06, 2.5), CFrame = base * CFrame.new(0, 1.63, 0), Color = Config.PetById[cfg.id].color, Material = Enum.Material.Neon, Transparency = if have then 0.25 else 0.8 })
-		glow.Name = "CaseGlow"
 		-- ガラスと 金の わく
 		part(folder, { Name = "CaseGlass", Size = Vector3.new(2.7, 4.6, 2.7), CFrame = base * CFrame.new(0, 3.9, 0), Color = C(210, 230, 255), Material = Enum.Material.Glass, Transparency = 0.82, CanCollide = true })
 		for _, cx in { -1.35, 1.35 } do
@@ -302,13 +317,17 @@ local function placeDisplays(museum: Model, d)
 			end
 		end
 		part(folder, { Size = Vector3.new(3, 0.3, 3), CFrame = base * CFrame.new(0, 6.35, 0), Color = GOLD, Material = Enum.Material.Metal })
-		local model = petModel(cfg, have, best[cfg.id])
+		local model = have and petModel(cfg, best[cfg.id])
 		if model then
-			placePet(model, base * CFrame.new(0, 1.66, 0), 3.4)
+			placePet(model, base * CFrame.new(0, 1.6, 0), 3.4)
 			model.Parent = folder
+			plaque(folder, base * CFrame.new(0, 1.1, -1.42) * CFrame.Angles(math.rad(-20), 0, 0), cfg)
+			-- 左右の 前・下から、ケースの 中の ペットを 見上げて てらす
+			local target = (base * CFrame.new(0, 3.2, 0)).Position
+			for _, sx in { -1, 1 } do
+				uplight(folder, (base * CFrame.new(sx * 2.1, 0.3, -2.1)).Position, target)
+			end
 		end
-		plaque(folder, base * CFrame.new(0, 1.1, -1.42) * CFrame.Angles(math.rad(-20), 0, 0), cfg, have)
-		spotlight(folder, o, (o:Inverse() * base).Position, if have then 5 else 2.2, if have then C(255, 236, 250) else nil)
 	end
 	-- おくの かべの 金の かんばん「🐾 集めた数 / ぜんぶ」
 	local sign = part(folder, { Name = "CollectionSign", Size = Vector3.new(9, 2.2, 0.2), CFrame = o * CFrame.new(0, 10.5, D / 2 - 0.15), Color = C(30, 22, 34), Material = Enum.Material.Metal })

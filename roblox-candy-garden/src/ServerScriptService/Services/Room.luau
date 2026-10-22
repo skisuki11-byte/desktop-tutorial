@@ -58,18 +58,20 @@ function Room.capacity(level: number): number
 	return Config.RoomSlots[math.clamp(level, 1, #Config.RoomSlots)]
 end
 
--- 置き場所: うしろの かべぞいに半分、左右の かべぞいに残り。前（とびらがわ）は あけておく
+-- 置き場所: うしろの かべの まん中は はくぶつかんの とびら なので、その 左右に 1つずつ。のこりは 左右の かべぞい。
+-- 前（とびらがわ）は あけておく
 local function slotFrames(level: number): { CFrame }
 	local n = Room.capacity(level)
 	local size = info(level).size
 	local w, d = size.X, size.Y
 	local frames = {}
-	local back = math.ceil(n / 2)
+	local back = math.min(2, n)
 	local side = n - back
 	local left = math.ceil(side / 2)
 	local right = side - left
 	for i = 1, back do
-		local x = if back == 1 then 0 else -(w / 2 - 4) + (i - 1) * ((w - 8) / (back - 1))
+		-- とびら（まん中 はば 5）と かべの すみの あいだ
+		local x = (if i == 1 then -1 else 1) * ((w / 2 - 3 + 4.2) / 2)
 		table.insert(frames, CFrame.new(x, 0, d / 2 - 3)) -- 前（-Z）が とびらを向く
 	end
 	local function sideRow(count: number, x: number, yaw: number)
@@ -158,22 +160,35 @@ function Room.build(plot, level: number, d, parent: Instance)
 	-- 出口の とびら（とびらの前に来ると 外へ）
 	part(room, { Name = "ExitDoor", Size = Vector3.new(4, 6.5, 0.4), CFrame = origin * CFrame.new(0, 3.25, -depth / 2 + 0.1), Color = look.trim, Material = Enum.Material.Wood })
 	part(room, { Name = "ExitMat", Size = Vector3.new(4, 0.1, 2.4), CFrame = origin * CFrame.new(0, 0.05, -depth / 2 + 1.4), Color = look.trim, Transparency = 0.3 })
-	-- おくの はくぶつかんへの とびら（前の かべの 右がわ。金の わくと 🏛️ の ふだ）
-	local museumX = w / 2 - 3
-	part(room, { Name = "MuseumDoor", Size = Vector3.new(3.2, 6, 0.4), CFrame = origin * CFrame.new(museumX, 3, -depth / 2 + 0.1), Color = C(70, 40, 30), Material = Enum.Material.Wood })
-	part(room, { Size = Vector3.new(3.8, 0.35, 0.5), CFrame = origin * CFrame.new(museumX, 6.15, -depth / 2 + 0.15), Color = C(232, 192, 96), Material = Enum.Material.Metal })
-	local plate = part(room, { Size = Vector3.new(2.4, 1.2, 0.15), CFrame = origin * CFrame.new(museumX, 7.2, -depth / 2 + 0.15), Color = C(40, 28, 44) })
+	-- はくぶつかんへの とびら: へやに 入って 正面の おくの かべの まん中（入った しゅんかんに 見える）。
+	-- 大きな 金の わく・アーチの 看板・左右の 小さな 明かりで「ここから 入る」と わかるように
+	local backZ = depth / 2 - 0.1
+	local GOLDC = C(232, 192, 96)
+	part(room, { Name = "MuseumDoor", Size = Vector3.new(3.6, 6.4, 0.4), CFrame = origin * CFrame.new(0, 3.2, backZ), Color = C(70, 40, 30), Material = Enum.Material.Wood })
+	part(room, { Size = Vector3.new(4.6, 0.5, 0.6), CFrame = origin * CFrame.new(0, 6.65, backZ - 0.05), Color = GOLDC, Material = Enum.Material.Metal })
+	for _, x in { -2.05, 2.05 } do
+		part(room, { Size = Vector3.new(0.5, 6.9, 0.6), CFrame = origin * CFrame.new(x, 3.45, backZ - 0.05), Color = GOLDC, Material = Enum.Material.Metal })
+		-- とびらの 左右の かべの 明かり
+		local lamp = part(room, { Shape = Enum.PartType.Ball, Size = Vector3.one * 0.6, CFrame = origin * CFrame.new(x * 1.45, 5.2, backZ - 0.35), Color = C(255, 225, 160), Material = Enum.Material.Neon })
+		local glow = Instance.new("PointLight")
+		glow.Range = 6
+		glow.Brightness = 0.8
+		glow.Color = C(255, 220, 160)
+		glow.Parent = lamp
+	end
+	local plate = part(room, { Size = Vector3.new(4.6, 1.5, 0.15), CFrame = origin * CFrame.new(0, 7.8, backZ - 0.05), Color = C(40, 28, 44), Material = Enum.Material.Metal })
 	local gui = Instance.new("SurfaceGui")
-	gui.Face = Enum.NormalId.Back -- へやの 中がわ（+Z）
-	gui.CanvasSize = Vector2.new(240, 120)
+	gui.Face = Enum.NormalId.Front -- へやの 中がわ（-Z）
+	gui.CanvasSize = Vector2.new(460, 150)
+	gui.LightInfluence = 0
 	local text = Instance.new("TextLabel")
 	text.Size = UDim2.fromScale(1, 1)
 	text.BackgroundTransparency = 1
-	text.Text = "🏛️🐾"
+	text.Text = "🏛️ 🐾 🏛️"
 	text.TextScaled = true
 	text.Parent = gui
 	gui.Parent = plate
-	part(room, { Name = "MuseumMat", Size = Vector3.new(3.2, 0.1, 2.2), CFrame = origin * CFrame.new(museumX, 0.05, -depth / 2 + 1.3), Color = C(232, 192, 96), Transparency = 0.4 })
+	part(room, { Name = "MuseumMat", Size = Vector3.new(3.6, 0.1, 2.2), CFrame = origin * CFrame.new(0, 0.05, depth / 2 - 1.3), Color = GOLDC, Transparency = 0.3 })
 	placeFurniture(room, level, (d.room and d.room.slots) or {})
 	room.Parent = parent
 	Museum.build(room, d, parent)
@@ -303,9 +318,9 @@ local function onDoor(player: Player, action: any)
 		if exitMat and mat and (root.Position - exitMat.Position).Magnitude < DOOR_REACH then
 			World.standUp(player.Character)
 			root.AssemblyLinearVelocity = Vector3.zero
-			-- へやの はくぶつかんの とびらの 前に もどって、へやの 中を 向く
-			local out = mat.CFrame * CFrame.new(0, 3, 3)
-			root.CFrame = CFrame.lookAt(out.Position, out.Position + room:GetPivot().LookVector * -1)
+			-- へやの はくぶつかんの とびらの 前に もどって、へやの 中（入口がわ）を 向く
+			local out = mat.CFrame * CFrame.new(0, 3, -3.2)
+			root.CFrame = CFrame.lookAt(out.Position, out.Position + room:GetPivot().LookVector)
 		end
 	elseif action == "exit" then
 		local exitMat = room:FindFirstChild("ExitMat") :: BasePart?
