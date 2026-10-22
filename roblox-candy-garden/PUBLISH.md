@@ -60,7 +60,7 @@
 - [ ] ゲームパスを作るなら、ID を `Config.Passes` に入れる（0 の間は画面に出ない）
 - [x] 音の素材が使えるか確認（2026-10-19 に Studio で読み込めることを確認）（効果音: Daily Sounds、BGM: DistrokidOfficial。どちらも無料で使える素材。公開後に音が鳴らなければ、権利の都合で使えなくなっているので差し替える）
 - [ ] スマホで遊んでみる（Studio の「テスト → デバイス」で iPhone SE・タブレットを確認）
-- [x] 名前（キャンディガーデン Candy Garden）と説明文を入れる（Studio の「バーチャル空間設定」で設定済み）
+- [x] 名前と説明文を入れる。名前は 2026-10-22 に「きせきのペットを作る！キャンディ畑」に かえた（クリエイターハブ「ゲームの詳細」＋ 多言語化の 9言語。英: Make Miracle Pets! Candy Farm / 独: Wunder-Haustiere erschaffen! Bonbon-Farm / 仏: Crée des Animaux Miracle ! Ferme Bonbon / 西: ¡Crea Mascotas Milagro! Granja Dulce / 葡: Crie Mascotes Milagre! Fazenda Doce / 韓: 기적의 펫을 만들자! 캔디 농장 / 中繁: 製作奇蹟寵物！糖果農場 / 印尼: Buat Peliharaan Keajaiban! Kebun Permen / タイ: สร้างสัตว์เลี้ยงปาฏิหาริย์! ไร่แคนดี้）。ゲームの中の文字には 名前は 出てこない
 - [x] アイコン・サムネイルを入れる（2026-10-20: ホームと 詳細ページの 両方に 3枚。詳細ページの 順番は ペット → 畑 → 木。ホームは 3枚とも アクティブ）（アイコンは 2026-10-19 に `icon_pets.png` へ差しかえ済み）（クリエイターハブ → 作品 → 「場所」→ サムネイル／アイコン からアップロード）
   - 新しい版（2026-10-18、新しい3Dペットで撮り直し）: アイコン `icon_pets.png`（512×512、文字なし）、1枚目のサムネイル `thumb0_pets.jpg`（1920×1080、ペット8匹とみんなの木＋タイトル）
   - 2枚目 `thumb4_garden_new.jpg`（2026-10-20 撮影。実った畑・今の3Dペット・キャラ。名前の札は かくして撮った）、3枚目 `thumb2_tree.jpg`
