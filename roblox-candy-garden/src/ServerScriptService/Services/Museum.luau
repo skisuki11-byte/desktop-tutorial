@@ -84,7 +84,7 @@ local function spotlight(parent: Instance, origin: CFrame, at: Vector3, brightne
 	light.Range = H + 2
 	light.Brightness = brightness
 	light.Color = color or SPOT
-	light.Shadows = true
+	light.Shadows = false -- 影つきの ライトは スマホで 重い。9こ ならぶので 影は なし
 	light.Parent = lens
 end
 
