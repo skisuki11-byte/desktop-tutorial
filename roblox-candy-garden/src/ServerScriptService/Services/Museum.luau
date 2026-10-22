@@ -144,7 +144,8 @@ local function buildHall(hall: Model, o: CFrame)
 	-- おくの 舞台（★8 の ガラスケースを のせる）
 	local stage = o * CFrame.new(0, 0, D / 2 - 7.5)
 	part(hall, { Name = "Stage", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.8, 15, 15), CFrame = stage * CFrame.new(0, 0.4, 0) * CFrame.Angles(0, 0, math.pi / 2), Color = MARBLE, Material = Enum.Material.Marble, CanCollide = true })
-	part(hall, { Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.2, 15.4, 15.4), CFrame = stage * CFrame.new(0, 0.7, 0) * CFrame.Angles(0, 0, math.pi / 2), Color = GOLD, Material = Enum.Material.Metal })
+	-- 金の ふちは 舞台の 横だけ（上の面を 舞台と 同じ 高さに すると、2つの面が 重なって ちらちら 光って 見える）
+	part(hall, { Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.5, 15.4, 15.4), CFrame = stage * CFrame.new(0, 0.4, 0) * CFrame.Angles(0, 0, math.pi / 2), Color = GOLD, Material = Enum.Material.Metal })
 	-- 出口の とびら（入口がわ）。金の わく
 	part(hall, { Name = "ExitDoor", Size = Vector3.new(4, 7, 0.4), CFrame = o * CFrame.new(0, 3.5, -D / 2 + 0.2), Color = C(70, 40, 30), Material = Enum.Material.Wood })
 	part(hall, { Size = Vector3.new(4.8, 0.4, 0.5), CFrame = o * CFrame.new(0, 7.2, -D / 2 + 0.25), Color = GOLD, Material = Enum.Material.Metal })
