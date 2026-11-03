@@ -118,8 +118,9 @@
   <section class="view" id="view-camera">
     <div class="panel">
       <div class="panel-head"><h2>カメラで手書き出納帳を読み取る</h2></div>
-      <p class="lead">
-        物理ノートのページを撮影すると、AIが行を読み取って一覧にします。
+      <p class="lead" id="camLead">
+        物理ノートのページを撮影すると、行を読み取って一覧にします。
+        <b>無料の読み取り</b>はこの端末の中だけで動き、APIキーは要りません（手書きは誤読が多いので、表で確認して直してください）。
         内容を確認・修正してから出納帳に追記でき、そのままExcelに書き出せます。
       </p>
       <div class="mode-tag" data-mode-tag></div>
@@ -136,6 +137,21 @@
       </div>
       <div id="camStatus" class="status"></div>
       <div id="camShots" class="shots"></div>
+      <details class="filter-box" id="camPasteBox">
+        <summary>📝 文字で取り込む（認識結果の修正／スマホでコピーした文字）</summary>
+        <p class="hint">
+          無料の読み取りで出た文字がここに入ります。誤読を直してから「表にする」を押し直せます。<br>
+          写真を使わず、スマホの文字認識でコピーした文字を貼り付けてもかまいません
+          （iPhone：写真を開いて文字を長押し→すべてを選択→コピー ／ Android：Googleレンズ→テキスト→すべてコピー）。<br>
+          1行を「日付 科目 摘要 金額 残高」の順に並べると読み取れます（例：<code>4/12 交際費(手土産) 菓子折り 3000 189085</code>）。
+        </p>
+        <textarea id="camPaste" rows="7" spellcheck="false"
+          placeholder="4/12 交際費(手土産) 菓子折り 3000 189085&#10;4/20 収入 保護者会費 5000 194085"></textarea>
+        <div class="actions mt">
+          <button class="btn btn-primary" id="btnPasteRead">表にする</button>
+          <button class="btn" id="btnPasteClear">文字を消す</button>
+        </div>
+      </details>
       <div id="camResult"></div>
     </div>
   </section>

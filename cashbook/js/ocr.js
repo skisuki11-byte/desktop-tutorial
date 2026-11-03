@@ -202,10 +202,146 @@
     });
   }
 
+  /* ================= 無料の読み取り（この端末の中だけで動く） =================
+   * Tesseract.js（文字認識）を vendor/tesseract/ に同梱している。
+   * 外部へは何も送らず、APIキーも要らない。ただし手書きの日本語は誤読が多いので、
+   * 結果は必ず確認用の表に出して、人が直してから追記する。
+   * 初回だけ ライブラリと日本語データ（約6MB）を読み込む。 */
+  var VENDOR = 'vendor/tesseract/';
+  var tessLoading = null;
+  var worker = null;
+
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = function () { reject(new Error('文字認識の部品を読み込めませんでした（' + src + '）')); };
+      document.head.appendChild(s);
+    });
+  }
+
+  /* 最初の1回だけ部品を用意して、同じ認識エンジンを使い回す */
+  function getWorker(onProgress) {
+    if (worker) return Promise.resolve(worker);
+    if (!tessLoading) {
+      tessLoading = (global.Tesseract ? Promise.resolve() : loadScript(VENDOR + 'tesseract.min.js'))
+        .then(function () {
+          return global.Tesseract.createWorker('jpn', 1, {
+            workerPath: new URL(VENDOR + 'worker.min.js', global.location.href).href,
+            corePath: new URL(VENDOR + 'tesseract-core-simd-lstm.wasm.js', global.location.href).href,
+            langPath: new URL(VENDOR + 'lang', global.location.href).href,
+            workerBlobURL: false,      // 同じ場所から直接読む
+            cacheMethod: 'none',       // 保存は Service Worker に任せる
+            logger: function (m) { if (onProgress) onProgress(m); }
+          });
+        })
+        .then(function (w) { worker = w; return w; });
+      tessLoading.catch(function () { tessLoading = null; });
+    }
+    return tessLoading;
+  }
+
+  /* 画像（dataURL）を文字にする。進み具合は onProgress({status, progress}) で知らせる */
+  function recognize(dataUrl, onProgress) {
+    return getWorker(onProgress).then(function (w) {
+      return w.setParameters({ preserve_interword_spaces: '1', tessedit_pageseg_mode: '6' })
+        .then(function () { return w.recognize(dataUrl); });
+    }).then(function (res) { return (res && res.data && res.data.text) || ''; });
+  }
+
+  /* ---------- 文字 → 行 ---------- */
+  var KAMOKU_RE = /^(収入|諸費|交際費|消耗品費?|交通費|大会補助|事業費|その他)(?:\(([^)]*)\)?)?/;
+  var DATE_RE = /^\s*(?:(\d{4})\s*[\/\-.年]\s*)?(\d{1,2})\s*[\/\-.月]\s*(\d{1,2})\s*日?(?=\s|[^\d]|$)/;
+
+  /* 文字認識の結果（または、スマホの「テキスト認識」でコピーした文字）を行に直す。
+   * 日付で始まる行を1件の始まりとみなし、次の日付までを同じ行として読む。
+   * 金額が2つ以上あるときは、直前の残高とのつながりで「金額」と「残高」を見分ける。
+   * 自信がない行は uncertain を立てる（確認用の表で「要確認」と出る）。 */
+  function parseText(text, startBalance) {
+    var t = String(text || '')
+      .replace(/[①-⑳㉑-㉟]/g, ' ')     // 丸数字（通し番号）は捨てる
+      .normalize('NFKC')
+      .replace(/[¥￥円]/g, ' ');
+    // 3桁区切りのカンマを外す（1,200 → 1200）
+    for (var k = 0; k < 3; k++) t = t.replace(/(\d),(\d{3})(?!\d)/g, '$1$2');
+
+    var recs = [], cur = null;
+    t.split(/\r?\n/).forEach(function (line) {
+      var m = DATE_RE.exec(line);
+      var mo = m && Number(m[2]), da = m && Number(m[3]);
+      if (m && mo >= 1 && mo <= 12 && da >= 1 && da <= 31) {
+        cur = { month: mo, day: da, body: line.slice(m[0].length) };
+        recs.push(cur);
+      } else if (cur) {
+        cur.body += ' ' + line;
+      }
+    });
+
+    var bal = Number(startBalance) || 0;
+    var rows = [];
+    recs.forEach(function (rc) {
+      // 空白区切りに分け、1文字ずつ離れて出た文字（「交 際 費」）はつなぎ直す
+      var raw = rc.body.split(/[\s,、|｜]+/).filter(Boolean);
+      var toks = [];
+      var run = '';
+      raw.forEach(function (tk) {
+        if (tk.length === 1 && !/\d/.test(tk)) { run += tk; return; }
+        if (run) { toks.push(run); run = ''; }
+        toks.push(tk);
+      });
+      if (run) toks.push(run);
+
+      var nums = [], words = [], kamoku = '', uchiwake = '';
+      toks.forEach(function (tk) {
+        if (/^-?\d+$/.test(tk)) { nums.push(Number(tk)); return; }
+        var km = !kamoku && KAMOKU_RE.exec(tk);
+        if (km) {
+          kamoku = km[1] === '消耗品費' ? '消耗品' : km[1];
+          uchiwake = (km[2] || '').trim();
+          var rest = tk.slice(km[0].length).replace(/^\)/, '');
+          if (rest) words.push(rest);
+          return;
+        }
+        words.push(tk);
+      });
+      if (!nums.length) return;     // 金額が読めない行は表に出さない
+
+      var income = 0, expense = 0, balance = 0, uncertain = !kamoku;
+      var n = nums.length;
+      var amt = nums[0];
+      if (n >= 2) {
+        var last = nums[n - 1], prev = nums[n - 2];
+        if (last === bal + prev) { income = prev; balance = last; }
+        else if (last === bal - prev) { expense = prev; balance = last; }
+        else if (n >= 3 && last === bal + nums[n - 3] - prev) {      // 収入・支払・残高の3列
+          income = nums[n - 3]; expense = prev; balance = last;
+        } else { uncertain = true; }
+      }
+      if (!income && !expense) {
+        // 残高で確かめられなかった：科目から収入か支出かを決める
+        if (kamoku === '収入') income = amt; else expense = amt;
+        if (n >= 2) uncertain = true;
+      }
+      bal = balance || (bal + income - expense);
+
+      var tekiyo = words.join(' ').replace(/^[\s・:：.\-]+/, '').trim();
+      rows.push({
+        no: 0, month: rc.month, day: rc.day,
+        kamoku: kamoku || 'その他', uchiwake: uchiwake || 'その他',
+        tekiyo: tekiyo, income: income, expense: expense,
+        balance: balance, uncertain: uncertain
+      });
+    });
+    return rows;
+  }
+
   global.OCR = {
     KAMOKU: KAMOKU,
     toBase64Jpeg: toBase64Jpeg,
     readImage: readImage,
+    recognize: recognize,
+    parseText: parseText,
     assignYear: assignYear,
     reconcile: reconcile
   };

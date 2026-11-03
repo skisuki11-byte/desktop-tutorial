@@ -9,10 +9,11 @@
      ビルド時に window.CASHBOOK_HOST で機能を切り替える。
      何も指定が無ければ（＝ローカルや自前のサーバー）すべて有効。 */
   /* アプリの版。古い画面のまま使っていないか確かめられるよう画面に出す。 */
-  var APP_VER = 'v21';
+  var APP_VER = 'v22';
 
   var HOST = window.CASHBOOK_HOST || {};
   var canAI = HOST.ai !== false;      // カメラのAI読み取り
+  var canLocal = HOST.ocrLocal !== false;   // 無料の読み取り（部品を同梱している配信でのみ）
   var canXlsx = HOST.xlsx !== false;  // .xlsx での書き出し
   var canSync = HOST.sync !== false;  // 置き場所からの「反映」（外部への通信が要る）
 
@@ -500,12 +501,16 @@
     $('camShots').innerHTML = shots.map(function (s, i) {
       return '<div class="shot"><img src="' + s.preview + '" alt=""><button data-rm="' + i + '">✕</button></div>';
     }).join('') + (shots.length
-      ? '<div style="display:flex;align-items:center"><button class="btn btn-primary btn-big" id="btnRunOcr">' +
-        shots.length + '枚を読み取る</button></div>' : '');
+      ? '<div class="run-btns">' +
+        (canLocal ? '<button class="btn btn-primary btn-big" id="btnRunLocal">' +
+          shots.length + '枚を無料で読み取る</button>' : '') +
+        (canAI && (S.settings().apiKey || '').trim() ? '<button class="btn btn-big" id="btnRunOcr">AIで読み取る（APIキー）</button>' : '') +
+        '</div>' : '');
     $('camShots').onclick = function (e) {
       var rm = e.target.dataset.rm;
       if (rm != null) { shots.splice(Number(rm), 1); renderShots(); return; }
       if (e.target.id === 'btnRunOcr') runOcr();
+      if (e.target.id === 'btnRunLocal') runLocal();
     };
   }
 
@@ -538,6 +543,7 @@
     }
     var model = S.settings().model || 'claude-opus-5';
     var all = [], i = 0;
+    ocrSrc = 'カメラ読み取り';
 
     function next() {
       if (i >= shots.length) {
@@ -557,6 +563,77 @@
       });
     }
     next();
+  }
+
+  /* ---- 無料の読み取り（この端末の中だけ。APIキー不要） ---- */
+  var ocrSrc = 'カメラ読み取り';
+  var localBusy = false;
+
+  function lastBalance(rows) {
+    var rec = OCR.reconcile(rows, S.currentBalance());
+    return rec.length ? rec[rec.length - 1].runningBalance : S.currentBalance();
+  }
+
+  /* 文字 → 行 → 確認用の表。写真の読み取りと貼り付けの両方がここを通る */
+  function showParsed(text, src) {
+    var rows;
+    try { rows = OCR.parseText(text, S.currentBalance()); }
+    catch (err) { status('文字を解釈できませんでした: ' + esc(err.message), 'err'); return false; }
+    if (!rows.length) {
+      status('行として読み取れる文字がありませんでした。1行を「日付 科目 摘要 金額 残高」の順に並べ、' +
+        '日付は 4/12 のように書いてください。', 'err');
+      $('camResult').innerHTML = ''; ocrRows = [];
+      offerManualAdd();
+      return false;
+    }
+    ocrRows = rows; ocrSrc = src;
+    var bad = rows.filter(function (r) { return r.uncertain; }).length;
+    status(rows.length + ' 行を読み取りました' + (bad ? '（うち ' + bad + ' 行は要確認）' : '') +
+      '。手書きは誤読が多いので、表の内容を確かめてから追記してください。', 'ok');
+    renderOcrResult();
+    return true;
+  }
+
+  function runLocal() {
+    if (!Auth.isAdmin()) { requireAdmin(function () { runLocal(); }); return; }
+    if (localBusy || !shots.length) return;
+    localBusy = true;
+    var i = 0, texts = [];
+
+    function done() {
+      localBusy = false;
+      var all = texts.join('\n');
+      $('camPaste').value = all;
+      $('camPasteBox').open = true;
+      showParsed(all, 'カメラ読み取り（無料）');
+    }
+    function fail(err) {
+      localBusy = false;
+      status('無料の読み取りに失敗しました: ' + esc(err.message || err), 'err');
+      offerManualAdd();
+    }
+    function next() {
+      if (i >= shots.length) { done(); return; }
+      var label = (i + 1) + ' / ' + shots.length + ' 枚目';
+      status('<span class="spin"></span>' + label + ' を読み取っています…（初回は部品の読み込みで1分ほどかかります）');
+      OCR.recognize(shots[i].preview, function (m) {
+        if (m && m.status === 'recognizing text' && m.progress != null) {
+          status('<span class="spin"></span>' + label + ' を読み取っています… ' + Math.round(m.progress * 100) + '%');
+        } else if (m && /loading|initializ/.test(m.status || '')) {
+          status('<span class="spin"></span>文字認識の部品を準備しています…（初回のみ）');
+        }
+      }).then(function (txt) {
+        texts.push(txt); i++; next();
+      }).catch(fail);
+    }
+    next();
+  }
+
+  function pasteRead() {
+    if (!Auth.isAdmin()) { requireAdmin(function () { pasteRead(); }); return; }
+    var text = $('camPaste').value;
+    if (!text.trim()) { toast('文字を貼り付けてください'); return; }
+    showParsed(text, '文字の取り込み');
   }
 
   function renderOcrResult() {
@@ -635,7 +712,7 @@
         income: r.income || 0,
         expense: r.expense || 0,
         check: !!(r.uncertain || r.mismatch),
-        src: 'カメラ読み取り'
+        src: ocrSrc
       };
     }).filter(function (r) { return r.income || r.expense; });
     if (!added.length) { toast('追記できる行がありません'); return; }
@@ -1540,6 +1617,10 @@
     // （<label> は disabled にできないので、中の input を止めたうえで枠ごと隠す）
     if ($('camShoot')) $('camShoot').hidden = !on;
     if ($('camLockNote')) $('camLockNote').hidden = on;
+    if ($('camPasteBox')) $('camPasteBox').hidden = !on;
+    ['camPaste', 'btnPasteRead', 'btnPasteClear'].forEach(function (id) {
+      if ($(id)) $(id).disabled = !on;
+    });
     ['camCapture', 'camPick'].forEach(function (id) {
       if ($(id)) $(id).disabled = !on;
     });
@@ -1549,6 +1630,8 @@
       if ($('camShots')) $('camShots').innerHTML = '';
       if ($('camResult')) $('camResult').innerHTML = '';
       if ($('camStatus')) status('');
+      if ($('camPaste')) $('camPaste').value = '';
+      if ($('camPasteBox')) $('camPasteBox').open = false;
     }
 
     // いまのモードは札で示すだけにする（操作の説明は書かない）
@@ -1588,11 +1671,13 @@
       if (host && host.parentElement) host.parentElement.after(note);
     }
     if (!canAI) {
-      var lead = document.querySelector('#view-camera .lead');
+      var lead = $('camLead');
       if (lead) {
         lead.innerHTML = '物理ノートのページを撮影し、<b>写真を見ながら手入力</b>で出納帳に追加できます。<br>' +
-          '<span class="warn">このページでは外部への通信が許可されていないため、AIの自動読み取りは動きません。' +
-          '自動読み取りを使う場合は配布版（ZIP）をお使いください。</span>';
+          (canLocal ? '<b>無料の読み取り</b>（この端末の中だけで動き、APIキーは要りません）も使えます。手書きは誤読が多いので、表で確認して直してください。'
+            : '<span class="warn">このページでは外部への通信が許可されていないため、写真の自動読み取りは動きません。</span><br>' +
+              'スマホの文字認識でコピーした文字を、下の「文字で取り込む」に貼り付けると、表にできます。') +
+          '<br><span class="hint">AIの自動読み取りを使う場合は配布版（ZIP）をお使いください。</span>';
       }
       var keyPanel = $('setApiKey');
       if (keyPanel) {
@@ -1690,6 +1775,8 @@
       }).catch(function (e) { toast('取り込みに失敗: ' + e.message); });
     };
 
+    if ($('btnPasteRead')) $('btnPasteRead').onclick = pasteRead;
+    if ($('btnPasteClear')) $('btnPasteClear').onclick = function () { $('camPaste').value = ''; };
     if ($('btnCopyAll')) $('btnCopyAll').onclick = copyAll;
     if ($('btnCopyData')) $('btnCopyData').onclick = copyData;
     if ($('btnHandoff')) $('btnHandoff').onclick = handoff;

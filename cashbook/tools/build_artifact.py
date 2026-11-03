@@ -108,7 +108,7 @@ def main(data_path=None):
     parts.append(
         '<script>\n'
         '/* claude.ai で公開したページでは、外部通信と .xlsx 保存ができない。 */\n'
-        'window.CASHBOOK_HOST = { name: "artifact", ai: false, xlsx: false, sync: false };\n'
+        'window.CASHBOOK_HOST = { name: "artifact", ai: false, ocrLocal: false, xlsx: false, sync: false };\n'
         '</script>'
     )
     parts.append('<script>\n%s\n</script>' % js)
