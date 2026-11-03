@@ -9,7 +9,7 @@
      ビルド時に window.CASHBOOK_HOST で機能を切り替える。
      何も指定が無ければ（＝ローカルや自前のサーバー）すべて有効。 */
   /* アプリの版。古い画面のまま使っていないか確かめられるよう画面に出す。 */
-  var APP_VER = 'v24';
+  var APP_VER = 'v25';
 
   var HOST = window.CASHBOOK_HOST || {};
   var canAI = HOST.ai !== false;      // カメラのAI読み取り
@@ -1532,10 +1532,18 @@
   }
 
   /* ファイルの保存。claude.ai の公開ページでは確認ダイアログ経由になる。 */
+  /* ファイルの種類は拡張子に合わせて付ける。text/plain のままだと、iPhone などで
+     .json が .txt として保存され、あとで読み込めなくなる。 */
+  function mimeOf(filename) {
+    if (/\.json$/i.test(filename)) return 'application/json';
+    if (/\.csv$/i.test(filename)) return 'text/csv;charset=utf-8';
+    return 'text/plain;charset=utf-8';
+  }
+
   function saveFile(data, filename) {
     var cd = window.claude && window.claude.downloads;
     if (!cd) {
-      xw().download(data instanceof Blob ? data : new Blob([data], { type: 'text/plain' }), filename);
+      xw().download(data instanceof Blob ? data : new Blob([data], { type: mimeOf(filename) }), filename);
       toast('書き出しました');
       return;
     }
@@ -1780,12 +1788,12 @@
     $('btnExportXlsxAll').onclick = function () { exportXlsx('all'); };
 
     $('btnExportCsv').onclick = function () {
-      saveFile(S.toCsv(S.withBalances()), '出納帳_' + todayStr() + '.csv');
+      saveFile(S.toCsv(S.withBalances()), 'cashbook_' + todayStr() + '.csv');
     };
     $('btnExportJson').onclick = function () {
       var st = stampNow();
       saveFile(JSON.stringify(exportPayload(st), null, 1),
-        '出納帳バックアップ_' + st.file + '.json');
+        'cashbook-backup_' + st.file + '.json');
     };
     $('impCsv').onchange = function () {
       var f = this.files[0]; this.value = '';
@@ -1806,7 +1814,7 @@
       var f = this.files[0]; this.value = '';
       if (!f) return;
       f.text().then(function (txt) {
-        var d = JSON.parse(txt);
+        var d = JSON.parse(txt.replace(/^\uFEFF/, ''));
         if (!d.entries) throw new Error('形式が違います');
         var wasEmpty = S.data().entries.length === 0;
         var dj = S.dedupe(d.entries);

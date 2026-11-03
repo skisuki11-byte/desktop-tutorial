@@ -297,11 +297,12 @@
         <button class="btn btn-primary" id="btnExportXlsxAll">Excelで書き出す（全シート）</button>
         <button class="btn" id="btnExportCsv">CSVで書き出す</button>
         <button class="btn" id="btnExportJson">バックアップ（JSON）</button>
-        <label class="btn">CSVを取り込む<input type="file" id="impCsv" accept=".csv,text/csv" hidden></label>
-        <label class="btn">JSONを取り込む<input type="file" id="impJson" accept=".json,application/json" hidden></label>
+        <label class="btn">CSVを取り込む<input type="file" id="impCsv" accept=".csv,.txt,text/csv,text/plain" hidden></label>
+        <label class="btn">JSONを取り込む<input type="file" id="impJson" accept=".json,.txt,application/json,text/plain" hidden></label>
       </div>
       <p class="hint mt">
-        取り込みは「追記」です。No.が重複する行は新しい番号を振り直します。
+        取り込みは「追記」です。すでにある行と同じ行（日付・金額・摘要が同じ）は入れません。
+        バックアップが <b>.txt</b> で保存されていても、中身がJSON／CSVなら読み込めます。
       </p>
       <div class="actions wrap mt">
         <button class="btn btn-danger" id="btnReset">読み取り直後の状態に戻す</button>
