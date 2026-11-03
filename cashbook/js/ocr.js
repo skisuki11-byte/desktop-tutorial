@@ -375,6 +375,7 @@
         if (km) {
           kamoku = km[1] === '消耗品費' ? '消耗品' : km[1];
           uchiwake = (km[2] || '').trim();
+          if (km[1] === '事業費' && !uchiwake) uchiwake = '－';   // 事業費の内訳は「－」だけ
           var rest = tk.slice(km[0].length).replace(/^\)/, '');
           if (rest) words.push(rest);
           return;
