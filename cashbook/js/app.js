@@ -9,7 +9,7 @@
      ビルド時に window.CASHBOOK_HOST で機能を切り替える。
      何も指定が無ければ（＝ローカルや自前のサーバー）すべて有効。 */
   /* アプリの版。古い画面のまま使っていないか確かめられるよう画面に出す。 */
-  var APP_VER = 'v25';
+  var APP_VER = 'v26';
 
   var HOST = window.CASHBOOK_HOST || {};
   var canAI = HOST.ai !== false;      // カメラのAI読み取り
@@ -935,10 +935,7 @@
     var colW = [cw * 0.36, cw * 0.24, cw * 0.24, cw * 0.16];
     var colX = [PG.margin];
     for (var i = 0; i < 3; i++) colX.push(colX[i] + colW[i]);
-    var pad = 2.6 * MM;
-    var fs = 3.0 * MM;                 // 本文の文字サイズ
-    var ROW_MIN = 5.2 * MM;
-    var HEAD_H = 5.2 * MM;             // 表の見出し行
+    var pad, fs, ROW_MIN, HEAD_H;      // 倍率 k で決まる（下の layout）
     var HEADER_H = 23.1 * MM;          // 表題〜表の直前まで
     var hasWarn = S.withBalances().some(function (e) { return e.check; });
     var FOOTER_H = (5 + 4.4 + (hasWarn ? 4.4 : 0) + 6 + 7 + 3.5) * MM;
@@ -954,13 +951,31 @@
       });
       return n;
     }
-    var heights = R.rows.map(function (r) {
-      return r.type === 'sec' ? ROW_MIN
-        : Math.max(ROW_MIN, wrapCount(r) * (fs * 1.35) + pad * 1.6);
-    });
+    var heights = [];
+
+    /* 倍率 k で、文字の大きさと行の高さを決める（k=1 が標準） */
+    function layout(k) {
+      pad = 2.6 * MM * k;
+      fs = 3.0 * MM * k;                 // 本文の文字サイズ
+      ROW_MIN = 5.2 * MM * k;
+      HEAD_H = 5.2 * MM * k;             // 表の見出し行
+      heights = R.rows.map(function (r) {
+        return r.type === 'sec' ? ROW_MIN
+          : Math.max(ROW_MIN, wrapCount(r) * (fs * 1.35) + pad * 1.6);
+      });
+      var used = HEADER_H + HEAD_H + heights.reduce(function (a, h) { return a + h; }, 0) + FOOTER_H;
+      return used <= PG.h - PG.margin * 2;
+    }
+
+    /* 収支報告書は必ず1枚に収める。
+       標準の大きさで収まらなければ、収まるまで文字と行を少しずつ縮める。 */
+    var scale = 1;
+    var fits = layout(scale);
+    while (!fits && scale > 0.5) { scale = Math.round((scale - 0.03) * 100) / 100; fits = layout(scale); }
 
     /* ページ割りを決める。末尾の注記と署名欄は最終ページにだけ場所を空ける。
-       確定するまで数回まわす（行が押し出されてページ数が増えることがあるため）。*/
+       確定するまで数回まわす（行が押し出されてページ数が増えることがあるため）。
+       ふだんは使わない。限界まで縮めても1枚に入らないときだけ、行が欠けないよう複数ページに分ける。 */
     function plan(lastPage) {
       var pages = [[]], y = PG.margin + HEADER_H + HEAD_H;
       for (var i = 0; i < R.rows.length; i++) {
@@ -973,16 +988,20 @@
         pages[pages.length - 1].push(i);
         y += heights[i];
       }
-      // 最終ページに注記が入らないなら、注記だけのページを足す
       var extra = (y + FOOTER_H > PG.h - PG.margin);
       return { pages: pages, footerOwnPage: extra, count: pages.length + (extra ? 1 : 0) };
     }
 
-    var got = plan(1);
-    for (var k = 0; k < 6 && got.count !== 0; k++) {
-      var again = plan(got.count);
-      if (again.count === got.count) { got = again; break; }
-      got = again;
+    var got;
+    if (fits) {
+      got = { pages: [R.rows.map(function (_, i) { return i; })], footerOwnPage: false, count: 1 };
+    } else {
+      got = plan(1);
+      for (var kk = 0; kk < 6 && got.count !== 0; kk++) {
+        var again = plan(got.count);
+        if (again.count === got.count) { got = again; break; }
+        got = again;
+      }
     }
 
     /* ---- 描画 ---- */
