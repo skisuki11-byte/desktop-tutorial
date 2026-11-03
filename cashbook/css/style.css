@@ -206,6 +206,10 @@ tr.sub td{font-weight:600;background:var(--bg)}
 
 /* ---------- camera ---------- */
 .shoot{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+#camShots .shot img{cursor:zoom-in}
+.zoom{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.92);overflow:auto;-webkit-overflow-scrolling:touch}
+.zoom img{display:block;width:220vw;max-width:none;height:auto}
+.zoom button{position:fixed;top:max(12px,env(safe-area-inset-top));right:12px;z-index:1}
 .run-btns{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 #camPasteBox textarea{width:100%;font-size:16px;line-height:1.5;resize:vertical}
 #camPasteBox code{font-size:.9em;background:var(--bg);padding:1px 5px;border-radius:5px}

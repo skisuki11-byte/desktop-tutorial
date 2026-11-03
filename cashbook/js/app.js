@@ -9,7 +9,7 @@
      ビルド時に window.CASHBOOK_HOST で機能を切り替える。
      何も指定が無ければ（＝ローカルや自前のサーバー）すべて有効。 */
   /* アプリの版。古い画面のまま使っていないか確かめられるよう画面に出す。 */
-  var APP_VER = 'v22';
+  var APP_VER = 'v23';
 
   var HOST = window.CASHBOOK_HOST || {};
   var canAI = HOST.ai !== false;      // カメラのAI読み取り
@@ -509,9 +509,19 @@
     $('camShots').onclick = function (e) {
       var rm = e.target.dataset.rm;
       if (rm != null) { shots.splice(Number(rm), 1); renderShots(); return; }
+      if (e.target.tagName === 'IMG') { zoomShot(e.target.src); return; }
       if (e.target.id === 'btnRunOcr') runOcr();
       if (e.target.id === 'btnRunLocal') runLocal();
     };
+  }
+
+  /* 撮った写真を大きく見る（見ながら入力できるよう、スクロールで動かせる） */
+  function zoomShot(src) {
+    var box = document.createElement('div');
+    box.className = 'zoom';
+    box.innerHTML = '<button class="btn btn-primary" type="button">閉じる</button><img alt="" src="' + src + '">';
+    box.onclick = function () { box.remove(); };
+    document.body.appendChild(box);
   }
 
   function status(msg, cls) {
@@ -577,7 +587,8 @@
   /* 文字 → 行 → 確認用の表。写真の読み取りと貼り付けの両方がここを通る */
   function showParsed(text, src) {
     var rows;
-    try { rows = OCR.parseText(text, S.currentBalance()); }
+    var lastMonth = Number((S.dateRange().to || '').slice(5, 7)) || 0;
+    try { rows = OCR.parseText(text, S.currentBalance(), { month: lastMonth }); }
     catch (err) { status('文字を解釈できませんでした: ' + esc(err.message), 'err'); return false; }
     if (!rows.length) {
       status('行として読み取れる文字がありませんでした。1行を「日付 科目 摘要 金額 残高」の順に並べ、' +
@@ -588,8 +599,13 @@
     }
     ocrRows = rows; ocrSrc = src;
     var bad = rows.filter(function (r) { return r.uncertain; }).length;
+    var weak = rows.filter(function (r) { return r.weak; }).length;
+    var poor = src.indexOf('カメラ') === 0 && weak / rows.length > 0.5;
     status(rows.length + ' 行を読み取りました' + (bad ? '（うち ' + bad + ' 行は要確認）' : '') +
-      '。手書きは誤読が多いので、表の内容を確かめてから追記してください。', 'ok');
+      '。手書きは誤読が多いので、表の内容を確かめてから追記してください。' +
+      (poor ? '<br><b>読み取りが大きく崩れています。</b>手書きの日本語は無料の読み取りが苦手です。' +
+        '写真をタップして拡大し、見ながら下の「文字で取り込む」欄に 1 行ずつ' +
+        '（例：4/12 交際費 菓子折り 3000）入力して「表にする」を押すのが確実です。' : ''), poor ? 'err' : 'ok');
     renderOcrResult();
     return true;
   }
@@ -639,57 +655,81 @@
   function renderOcrResult() {
     if (!ocrRows.length) { $('camResult').innerHTML = ''; return; }
     var opening = S.data().opening.date;
-    var start = S.currentBalance();
-    var rec = OCR.reconcile(ocrRows, start);
+
+    // すでにある行との重複を調べる。重複と判った行は、初期状態では追記しない。
+    var cand = ocrRows.map(function (r) {
+      return { date: OCR.assignYear(r.month || 1, r.day || 1, opening),
+        income: r.income || 0, expense: r.expense || 0, tekiyo: r.tekiyo };
+    });
+    var dupFlags = S.markDuplicates(cand, false);
+    ocrRows.forEach(function (r, i) {
+      r._dup = dupFlags[i];
+      if (r.include === undefined) r.include = !dupFlags[i];
+    });
+
+    // 残高の検算は、追記する行だけで行う（除いた行は、すでに帳簿に入っているため）
+    var inc = ocrRows.filter(function (r) { return r.include; });
+    var rec = OCR.reconcile(inc, S.currentBalance());
+    var nDup = ocrRows.filter(function (r) { return r._dup; }).length;
 
     var h = '<h3 style="margin:16px 0 8px">読み取り結果の確認</h3>' +
       '<p class="hint">セルを直接なおせます。残高から金額を自動補正した行は「補正」、' +
-      '残高と合わない行は「不一致」と出ます。不要な行は削除してください。</p>' +
+      '残高と合わない行は「不一致」と出ます。不要な行は「追記」のチェックを外すか、削除してください。' +
+      (nDup ? '<br><b>すでに帳簿にある行と同じ日付・金額の ' + nDup + ' 行は「重複」とし、チェックを外してあります。</b>' +
+        '別の取引なら、チェックを入れ直してください。' : '') + '</p>' +
       '<div class="table-wrap"><table><thead><tr>' +
-      '<th>日付</th><th>科目</th><th>内訳</th><th class="wide">摘要</th>' +
+      '<th>追記</th><th>日付</th><th>科目</th><th>内訳</th><th class="wide">摘要</th>' +
       '<th class="num">収入</th><th class="num">支出</th><th class="num">残高</th><th>状態</th><th></th>' +
       '</tr></thead><tbody>';
 
-    rec.forEach(function (r, idx) {
+    var k = 0;
+    ocrRows.forEach(function (row, idx) {
+      var r = row.include ? rec[k++] : row;
       var date = OCR.assignYear(r.month || 1, r.day || 1, opening);
-      var st = r.mismatch ? '<span class="tag check">不一致</span>'
-        : r.fixed ? '<span class="tag">補正</span>'
-          : r.uncertain ? '<span class="tag check">要確認</span>' : '<span class="tag">OK</span>';
-      h += '<tr' + (r.mismatch || r.uncertain ? ' class="flagged"' : '') + '>' +
+      var st = row._dup ? '<span class="tag check">重複</span>'
+        : r.mismatch ? '<span class="tag check">不一致</span>'
+          : r.fixed ? '<span class="tag">補正</span>'
+            : r.uncertain ? '<span class="tag check">要確認</span>' : '<span class="tag">OK</span>';
+      h += '<tr' + (!row.include ? ' style="opacity:.55"' : (r.mismatch || r.uncertain ? ' class="flagged"' : '')) + '>' +
+        '<td><input type="checkbox" data-i="' + idx + '" data-k="include"' + (row.include ? ' checked' : '') + '></td>' +
         '<td><input class="editable" type="date" data-i="' + idx + '" data-k="date" value="' + date + '"></td>' +
         '<td><select class="editable" data-i="' + idx + '" data-k="kamoku">' +
-        OCR.KAMOKU.map(function (k) {
-          return '<option' + (k === r.kamoku ? ' selected' : '') + '>' + esc(k) + '</option>';
+        OCR.KAMOKU.map(function (kk) {
+          return '<option' + (kk === r.kamoku ? ' selected' : '') + '>' + esc(kk) + '</option>';
         }).join('') + '</select></td>' +
         '<td><input class="editable" data-i="' + idx + '" data-k="uchiwake" value="' + esc(r.uchiwake || 'その他') + '"></td>' +
         '<td class="wide"><input class="editable" data-i="' + idx + '" data-k="tekiyo" value="' + esc(r.tekiyo || '') + '"></td>' +
         '<td class="num"><input class="editable num" type="number" data-i="' + idx + '" data-k="income" value="' + (r.income || 0) + '"></td>' +
         '<td class="num"><input class="editable num" type="number" data-i="' + idx + '" data-k="expense" value="' + (r.expense || 0) + '"></td>' +
-        '<td class="num">' + yen(r.runningBalance) + '</td>' +
+        '<td class="num">' + (row.include ? yen(r.runningBalance) : '—') + '</td>' +
         '<td>' + st + '</td>' +
         '<td><button class="btn" data-del="' + idx + '">削除</button></td>' +
         '</tr>';
     });
     h += '</tbody></table></div>' +
       '<div class="actions wrap mt">' +
-      '<button class="btn btn-primary" id="ocrCommit">出納帳に ' + rec.length + ' 行を追記</button>' +
+      '<button class="btn btn-primary" id="ocrCommit"' + (rec.length ? '' : ' disabled') + '>出納帳に ' + rec.length + ' 行を追記</button>' +
       '<button class="btn" id="ocrClear">読み取り結果を破棄</button>' +
       '</div>';
     $('camResult').innerHTML = h;
 
     $('camResult').oninput = $('camResult').onchange = function (e) {
-      var i = e.target.dataset.i, k = e.target.dataset.k;
+      var i = e.target.dataset.i, kk = e.target.dataset.k;
       if (i == null) return;
       var row = ocrRows[Number(i)];
-      if (k === 'date') {
+      if (kk === 'include') {
+        row.include = e.target.checked;
+        renderOcrResult();
+      } else if (kk === 'date') {
         row.month = Number(e.target.value.slice(5, 7));
         row.day = Number(e.target.value.slice(8, 10));
-      } else if (k === 'income' || k === 'expense') {
-        row[k] = Number(e.target.value) || 0;
+        if (e.type === 'change') { row.include = undefined; renderOcrResult(); }   // 日付を直したら重複を調べ直す
+      } else if (kk === 'income' || kk === 'expense') {
+        row[kk] = Number(e.target.value) || 0;
         row.balance = 0;                 // 手で直したら残高チェックはやり直し
-        renderOcrResult();
+        if (e.type === 'change') { row.include = undefined; renderOcrResult(); }
       } else {
-        row[k] = e.target.value;
+        row[kk] = e.target.value;
       }
     };
     $('camResult').onclick = function (e) {
@@ -703,6 +743,7 @@
   function commitOcr(rec) {
     if (!Auth.isAdmin()) { requireAdmin(function () { commitOcr(rec); }); return; }
     var opening = S.data().opening.date;
+    var skipped = ocrRows.length - rec.length;
     var added = rec.map(function (r) {
       return {
         date: OCR.assignYear(r.month || 1, r.day || 1, opening),
@@ -719,7 +760,7 @@
     S.addMany(added);
     ocrRows = []; shots = [];
     renderShots(); $('camResult').innerHTML = '';
-    status(added.length + ' 行を出納帳に追記しました。', 'ok');
+    status(added.length + ' 行を出納帳に追記しました。' + (skipped ? '（' + skipped + ' 行は重複・除外のため追記していません）' : ''), 'ok');
     toast(added.length + ' 行を追記しました');
     renderTop();
   }
@@ -1752,8 +1793,13 @@
       f.text().then(function (txt) {
         var rows = S.parseCsv(txt);
         if (!rows.length) { toast('取り込める行がありませんでした'); return; }
-        if (!confirm(rows.length + ' 行を追記します。よろしいですか？')) return;
-        S.addMany(rows); refresh(); toast(rows.length + ' 行を取り込みました');
+        var dd = S.dedupe(rows);
+        if (!dd.fresh.length) { toast('すべて取り込み済みの行でした（重複 ' + dd.dups.length + ' 行）'); return; }
+        if (!confirm(dd.fresh.length + ' 行を追記します。' +
+          (dd.dups.length ? '\n（すでにある行と同じ ' + dd.dups.length + ' 行は重複のため除きます）' : '') +
+          '\nよろしいですか？')) return;
+        S.addMany(dd.fresh); refresh();
+        toast(dd.fresh.length + ' 行を取り込みました' + (dd.dups.length ? '（重複 ' + dd.dups.length + ' 行は除外）' : ''));
       }).catch(function (e) { toast('取り込みに失敗: ' + e.message); });
     };
     $('impJson').onchange = function () {
@@ -1763,7 +1809,11 @@
         var d = JSON.parse(txt);
         if (!d.entries) throw new Error('形式が違います');
         var wasEmpty = S.data().entries.length === 0;
-        if (!confirm(d.entries.length + ' 行を追記します。よろしいですか？')) return;
+        var dj = S.dedupe(d.entries);
+        if (!dj.fresh.length && !wasEmpty) { toast('すべて取り込み済みの行でした（重複 ' + dj.dups.length + ' 行）'); return; }
+        if (!confirm(dj.fresh.length + ' 行を追記します。' +
+          (dj.dups.length ? '\n（すでにある行と同じ ' + dj.dups.length + ' 行は重複のため除きます）' : '') +
+          '\nよろしいですか？')) return;
         // 空の帳簿への復元なら、帳簿名と前年度繰越金もそのまま戻す。
         // すでに行があるときは、勝手に上書きせず確認する。
         if (d.opening && (wasEmpty || confirm(
@@ -1771,7 +1821,7 @@
           '（キャンセル＝いまの設定のままで、行だけ追記します）'))) {
           S.setMeta(d.title, d.opening.amount, d.opening.date);
         }
-        S.addMany(d.entries); refresh(); toast('取り込みました');
+        S.addMany(dj.fresh); refresh(); toast('取り込みました');
       }).catch(function (e) { toast('取り込みに失敗: ' + e.message); });
     };
 

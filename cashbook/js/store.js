@@ -292,7 +292,37 @@
     return out;
   }
 
+  /* ---------------- 重複の検出 ----------------
+   * すでに帳簿にある行と「同じ日付・同じ収入・同じ支出」なら重複とみなす。
+   * strict のときは摘要も同じであることを求める（自動で除外するとき用）。
+   * 同じ組み合わせが帳簿に2件あれば、2件までを重複と数える（同じ日に同額が2回あっても潰さない）。 */
+  function normT(v) { return String(v || '').normalize('NFKC').replace(/\s+/g, ''); }
+  function dupKey(e, strict) {
+    return [e.date, Math.round(Number(e.income) || 0), Math.round(Number(e.expense) || 0),
+      strict ? normT(e.tekiyo) : ''].join('|');
+  }
+  function markDuplicates(rows, strict) {
+    var pool = {};
+    state.entries.forEach(function (e) {
+      var k = dupKey(e, strict);
+      pool[k] = (pool[k] || 0) + 1;
+    });
+    return rows.map(function (r) {
+      var k = dupKey(r, strict);
+      if (pool[k] > 0) { pool[k]--; return true; }
+      return false;
+    });
+  }
+  /* 取り込む前に、重複を取り除く。{fresh: 追記する行, dups: 除いた行} */
+  function dedupe(rows) {
+    var flags = markDuplicates(rows, true);
+    var out = { fresh: [], dups: [] };
+    rows.forEach(function (r, i) { (flags[i] ? out.dups : out.fresh).push(r); });
+    return out;
+  }
+
   global.Store = {
+    markDuplicates: markDuplicates, dedupe: dedupe,
     EXPENSE_ORDER: EXPENSE_ORDER,
     INCOME_KAMOKU: INCOME_KAMOKU,
     UCHIWAKE: UCHIWAKE,

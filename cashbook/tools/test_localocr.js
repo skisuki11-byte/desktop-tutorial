@@ -35,7 +35,8 @@ const server = http.createServer((req, res) => {
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/404/.test(m.text())) errors.push('console: ' + m.text()); });
   page.on('request', (r) => { if (!r.url().startsWith(base) && !r.url().startsWith('data:') && !r.url().startsWith('blob:')) external.push(r.url()); });
-  page.on('dialog', (d) => d.accept());
+  let lastDialog = '';
+  page.on('dialog', (d) => { lastDialog = d.message(); d.accept(); });
 
   const checks = [];
   const expect = (label, cond, detail) => checks.push({ label, ok: !!cond, detail });
@@ -85,6 +86,21 @@ const server = http.createServer((req, res) => {
   r = await P('4/12 交際費 3000 999999', 1000000);
   expect('残高が合わない行は「要確認」', r.length === 1 && r[0].uncertain, JSON.stringify(r));
 
+  // ---------- 日付が読めない／崩れている行 ----------
+  r = await P('17] カステラ代 2133 997867', 1000000);
+  expect('「17]」のように日だけ読めた行は、月を引き継いで要確認で残す',
+    r.length === 1 && r[0].day === 17 && r[0].expense === 2133 && r[0].uncertain, JSON.stringify(r));
+  r = await page.evaluate(() => OCR.parseText('17] カステラ代 2133 997867', 1000000, { month: 4 }));
+  expect('最初の行の月は、いまの帳簿の最終月を使う', r.length === 1 && r[0].month === 4, JSON.stringify(r));
+
+  r = await P('4/12 交際費 カステラ 3000 997000\n(08) バナナ代 386 996614', 1000000);
+  expect('日付が読めない行も、前の行の日付を引き継いで残す',
+    r.length === 2 && r[1].month === 4 && r[1].day === 12 && r[1].expense === 386 && r[1].uncertain && r[1].tekiyo === 'バナナ代',
+    JSON.stringify(r));
+
+  r = await P('|7 大会 バナナイや 38 ルル隔\n|8 カステラ 771 5000', 1000000);
+  expect('先頭の「|」などの記号は無視して日付を読む', r.length === 2 && r[0].day === 7 && r[1].day === 8, JSON.stringify(r));
+
   // ---------- 管理者になって貼り付け ----------
   await page.click('#btnAdmin');
   await page.waitForTimeout(250);
@@ -118,6 +134,45 @@ const server = http.createServer((req, res) => {
   expect('残高が合う', after.bal === b2, `${after.bal} vs ${b2}`);
   expect('出典が「文字の取り込み」になる', after.last.every((e) => e.src === '文字の取り込み'), JSON.stringify(after.last.map((e) => e.src)));
 
+  // ---------- すでにある行との重複 ----------
+  const nA = await page.evaluate(() => Store.data().entries.length);
+  await page.fill('#camPaste', '4/12 交際費 菓子折り 3000\n4/25 収入 会費 7000');
+  await page.click('#btnPasteRead');
+  await page.waitForTimeout(300);
+  expect('すでにある行は「重複」と出る', (await page.locator('#camResult .tag', { hasText: '重複' }).count()) === 1);
+  expect('重複の行は初期状態でチェックが外れる',
+    (await page.locator('#camResult tbody tr').first().locator('input[data-k="include"]').isChecked()) === false);
+  expect('追記ボタンは重複を除いた行数', (await page.textContent('#ocrCommit')).includes('1 行を追記'), await page.textContent('#ocrCommit'));
+  await page.click('#ocrCommit');
+  await page.waitForTimeout(300);
+  expect('重複を除いて追記される', (await page.evaluate(() => Store.data().entries.length)) === nA + 1);
+
+  // 別の取引だとわかっていれば、チェックを入れ直して追記できる
+  await page.fill('#camPaste', '4/12 交際費 菓子折り 3000');
+  await page.click('#btnPasteRead');
+  await page.waitForTimeout(300);
+  await page.locator('#camResult tbody tr').first().locator('input[data-k="include"]').check();
+  await page.waitForTimeout(200);
+  await page.click('#ocrCommit');
+  await page.waitForTimeout(300);
+  expect('チェックを入れ直せば追記できる', (await page.evaluate(() => Store.data().entries.length)) === nA + 2);
+
+  // CSV の取り込みでも、同じ行は入れない
+  const csvPath = path.join(process.argv[2] || '/tmp', 'dup.csv');
+  fs.writeFileSync(csvPath, '日付,科目,内訳,摘要,収入金額,支払金額\n2026-04-12,交際費,手土産,菓子折り,,3000\n2026-05-09,消耗品,その他,テープ,,400\n');
+  const nB = await page.evaluate(() => Store.data().entries.length);
+  await page.click('.tab[data-view="settings"]');
+  await page.waitForTimeout(250);
+  await page.setInputFiles('#impCsv', csvPath);
+  await page.waitForTimeout(500);
+  expect('CSVの確認に重複の件数が出る', lastDialog.includes('1 行を追記') && lastDialog.includes('重複'), lastDialog);
+  expect('CSVは重複を除いて入る', (await page.evaluate(() => Store.data().entries.length)) === nB + 1);
+  await page.setInputFiles('#impCsv', csvPath);
+  await page.waitForTimeout(500);
+  expect('もう一度入れても増えない', (await page.evaluate(() => Store.data().entries.length)) === nB + 1);
+  await page.click('.tab[data-view="camera"]');
+  await page.waitForTimeout(250);
+
   // ---------- 写真 → 同梱の文字認識 ----------
   // 画像を用意する（表のような行を3つ描く）
   const png = await page.evaluate(async () => {
@@ -136,6 +191,10 @@ const server = http.createServer((req, res) => {
   await page.setInputFiles('#camPick', imgPath);
   await page.waitForTimeout(500);
   expect('撮影後に「無料で読み取る」ボタンが出る', await page.locator('#btnRunLocal').isVisible());
+  await page.click('#camShots .shot img');
+  expect('写真をタップすると拡大して見られる', await page.locator('.zoom img').isVisible());
+  await page.click('.zoom');
+  expect('拡大は閉じられる', (await page.locator('.zoom').count()) === 0);
   await page.click('#btnRunLocal');
   await page.waitForFunction(() => /行を読み取りました|失敗/.test(document.getElementById('camStatus').textContent), null, { timeout: 150000 });
   const stat = await page.textContent('#camStatus');

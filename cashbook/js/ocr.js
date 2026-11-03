@@ -244,21 +244,79 @@
 
   /* 画像（dataURL）を文字にする。進み具合は onProgress({status, progress}) で知らせる */
   function recognize(dataUrl, onProgress) {
-    return getWorker(onProgress).then(function (w) {
+    return Promise.all([getWorker(onProgress), enhance(dataUrl)]).then(function (a) {
+      var w = a[0];
       return w.setParameters({ preserve_interword_spaces: '1', tessedit_pageseg_mode: '6' })
-        .then(function () { return w.recognize(dataUrl); });
+        .then(function () { return w.recognize(a[1]); });
     }).then(function (res) { return (res && res.data && res.data.text) || ''; });
+  }
+
+  /* ---------- 写真の前処理 ----------
+   * 手書きノートの写真は、紙の濃淡・罫線・影で文字認識が乱れやすい。
+   * 灰色にして、まわりの明るさで割る（影や紙の濃淡が消え、文字だけが暗く残る）。 */
+  function enhance(dataUrl) {
+    return new Promise(function (resolve) {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var cv = document.createElement('canvas');
+          cv.width = w; cv.height = h;
+          var ctx = cv.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          var im = ctx.getImageData(0, 0, w, h), d = im.data;
+          var g = new Uint8ClampedArray(w * h), i, x, y;
+          for (i = 0; i < w * h; i++) {
+            // 赤い罫線を弱めるため、緑を重く見る
+            g[i] = (d[i * 4] * 0.25 + d[i * 4 + 1] * 0.6 + d[i * 4 + 2] * 0.15);
+          }
+          // 積分画像で、まわり（半径 r）の平均をすばやく出す
+          var W = w + 1, ii = new Float64Array(W * (h + 1));
+          for (y = 0; y < h; y++) {
+            var row = 0;
+            for (x = 0; x < w; x++) {
+              row += g[y * w + x];
+              ii[(y + 1) * W + x + 1] = ii[y * W + x + 1] + row;
+            }
+          }
+          var r = Math.max(10, Math.round(Math.min(w, h) / 40));
+          for (y = 0; y < h; y++) {
+            var y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1);
+            for (x = 0; x < w; x++) {
+              var x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1);
+              var sum = ii[y1 * W + x1] - ii[y0 * W + x1] - ii[y1 * W + x0] + ii[y0 * W + x0];
+              var mean = sum / ((x1 - x0) * (y1 - y0));
+              // 背景をそろえる（明るさのムラ・影を消す）。二値化は文字認識エンジンに任せる
+              var v = Math.min(255, g[y * w + x] / Math.max(mean, 1) * 238);
+              i = (y * w + x) * 4;
+              d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
+            }
+          }
+          ctx.putImageData(im, 0, 0);
+          resolve(cv.toDataURL('image/png'));
+        } catch (e) { resolve(dataUrl); }     // 失敗したら元の画像のまま読む
+      };
+      img.onerror = function () { resolve(dataUrl); };
+      img.src = dataUrl;
+    });
   }
 
   /* ---------- 文字 → 行 ---------- */
   var KAMOKU_RE = /^(収入|諸費|交際費|消耗品費?|交通費|大会補助|事業費|その他)(?:\(([^)]*)\)?)?/;
-  var DATE_RE = /^\s*(?:(\d{4})\s*[\/\-.年]\s*)?(\d{1,2})\s*[\/\-.月]\s*(\d{1,2})\s*日?(?=\s|[^\d]|$)/;
+  // 左端が「月/日」。OCR は区切りを読み違えやすいので、区切りは広めに許す
+  var DATE_RE = /^(?:(\d{4})\s*[\/\-.年]\s*)?(\d{1,2})\s*[\/\-.月]\s*(\d{1,2})\s*日?(?=\s|[^\d]|$)/;
+  // 「17]大人軍記…」のように日だけ読めた行（月は前の行から引き継ぐ）
+  var DAY_RE = /^(\d{1,2})(?!\d)(?:\s+|\s*[\]|)\.、:;!]\s*)(?=[^\d\s])/;
+  var LEAD_RE = /^[\s|｜\[\]「」'"`‘’]*/;
+  var NUMTOK_RE = /(?:^|\s)\d{2,}(?:\s|$)/;
 
   /* 文字認識の結果（または、スマホの「テキスト認識」でコピーした文字）を行に直す。
-   * 日付で始まる行を1件の始まりとみなし、次の日付までを同じ行として読む。
+   * 一番左が日付。日付で始まる行を1件の始まりとみなし、次の日付までを同じ行として読む。
+   * 日付が読めなくても、文字と金額がそろった行は捨てず、前の行の日付を引き継いで「要確認」にする。
    * 金額が2つ以上あるときは、直前の残高とのつながりで「金額」と「残高」を見分ける。
-   * 自信がない行は uncertain を立てる（確認用の表で「要確認」と出る）。 */
-  function parseText(text, startBalance) {
+   * opts.month … 最初の行で月が読めないときに使う月（いまの帳簿の最終月など） */
+  function parseText(text, startBalance, opts) {
+    opts = opts || {};
     var t = String(text || '')
       .replace(/[①-⑳㉑-㉟]/g, ' ')     // 丸数字（通し番号）は捨てる
       .normalize('NFKC')
@@ -267,25 +325,43 @@
     for (var k = 0; k < 3; k++) t = t.replace(/(\d),(\d{3})(?!\d)/g, '$1$2');
 
     var recs = [], cur = null;
+    var month0 = Number(opts.month) >= 1 && Number(opts.month) <= 12 ? Number(opts.month) : 0;
+
     t.split(/\r?\n/).forEach(function (line) {
-      var m = DATE_RE.exec(line);
+      var body = line.slice(LEAD_RE.exec(line)[0].length);
+      if (!body.trim()) return;
+      var m = DATE_RE.exec(body);
       var mo = m && Number(m[2]), da = m && Number(m[3]);
       if (m && mo >= 1 && mo <= 12 && da >= 1 && da <= 31) {
-        cur = { month: mo, day: da, body: line.slice(m[0].length) };
+        cur = { month: mo, day: da, body: body.slice(m[0].length), guess: false };
         recs.push(cur);
-      } else if (cur) {
-        cur.body += ' ' + line;
+        return;
       }
+      var dm = DAY_RE.exec(body);
+      if (dm && Number(dm[1]) >= 1 && Number(dm[1]) <= 31) {
+        cur = { month: cur ? cur.month : (month0 || 1), day: Number(dm[1]),
+          body: body.slice(dm[0].length), guess: true };
+        recs.push(cur);
+        return;
+      }
+      // 日付は読めないが、前の行に金額があり、この行にも文字と金額がある → 別の行
+      if (cur && NUMTOK_RE.test(cur.body) && /[^\d\s|]/.test(body) && NUMTOK_RE.test(' ' + body + ' ')) {
+        cur = { month: cur.month, day: cur.day, body: body, guess: true };
+        recs.push(cur);
+        return;
+      }
+      if (cur) cur.body += ' ' + body;
     });
 
     var bal = Number(startBalance) || 0;
     var rows = [];
     recs.forEach(function (rc) {
       // 空白区切りに分け、1文字ずつ離れて出た文字（「交 際 費」）はつなぎ直す
-      var raw = rc.body.split(/[\s,、|｜]+/).filter(Boolean);
+      var raw = rc.body.split(/[\s,、|｜_]+/).filter(Boolean);
       var toks = [];
       var run = '';
       raw.forEach(function (tk) {
+        if (/^[(（]\d{1,3}[)）]$/.test(tk)) return;          // 「(08)」のような通し番号
         if (tk.length === 1 && !/\d/.test(tk)) { run += tk; return; }
         if (run) { toks.push(run); run = ''; }
         toks.push(tk);
@@ -307,9 +383,9 @@
       });
       if (!nums.length) return;     // 金額が読めない行は表に出さない
 
-      var income = 0, expense = 0, balance = 0, uncertain = !kamoku;
+      var income = 0, expense = 0, balance = 0, uncertain = !kamoku || rc.guess;
       var n = nums.length;
-      var amt = nums[0];
+      var amt = nums[n >= 2 ? n - 2 : 0];     // 「金額 残高」の並びなら、残高の1つ前が金額
       if (n >= 2) {
         var last = nums[n - 1], prev = nums[n - 2];
         if (last === bal + prev) { income = prev; balance = last; }
@@ -330,7 +406,8 @@
         no: 0, month: rc.month, day: rc.day,
         kamoku: kamoku || 'その他', uchiwake: uchiwake || 'その他',
         tekiyo: tekiyo, income: income, expense: expense,
-        balance: balance, uncertain: uncertain
+        balance: balance, uncertain: uncertain,
+        weak: !kamoku || rc.guess      // 科目か日付が読めていない（文字認識が崩れている目安）
       });
     });
     return rows;
@@ -341,6 +418,7 @@
     toBase64Jpeg: toBase64Jpeg,
     readImage: readImage,
     recognize: recognize,
+    enhance: enhance,
     parseText: parseText,
     assignYear: assignYear,
     reconcile: reconcile
