@@ -294,15 +294,16 @@ function clearAuth() {
     var box = $('day-summary');
     if (!box) return;
     box.textContent = '';
-    if (!view.day) { box.hidden = true; return; }
-    var d = API.days.filter(function (x) { return x.id === view.day; })[0];
+    // 「すべて」のときは全日程の合計、日付を選んだときはその日の合計（どちらも同じ形で出す）
+    var days = view.day ? [view.day] : API.days.map(function (x) { return x.id; });
+    var d = view.day ? API.days.filter(function (x) { return x.id === view.day; })[0] : null;
     var head = el('p', 'ds-head');
-    head.appendChild(el('b', null, API.dayLabel(d) + ' の集計'));
+    head.appendChild(el('b', null, d ? API.dayLabel(d) + ' の集計' : '全日程（' + API.days.map(function (x) { return x.label; }).join('・') + '）の集計'));
     head.appendChild(el('span', null, list.length + ' 家庭' + (view.f === 'unpaid' ? '（集金まだ）' : view.f === 'unhanded' ? '（渡しまだ）' : view.f === 'cancelled' ? '（取り消し）' : '')));
     box.appendChild(head);
     var grid = el('div', 'ds-grid'), total = 0, yen = 0;
     API.kinds.forEach(function (k) {
-      var n = list.reduce(function (a, x) { return a + (x.counts[view.day + '-' + k.id] || 0); }, 0);
+      var n = list.reduce(function (a, x) { return a + days.reduce(function (b, day) { return b + (x.counts[day + '-' + k.id] || 0); }, 0); }, 0);
       total += n; yen += n * k.price;
       var c = el('div', 'ds-cell'); c.appendChild(el('span', 'ds-label', k.label)); var v = el('span', 'ds-value num', String(n)); v.appendChild(el('small', null, '枚')); c.appendChild(v); grid.appendChild(c);
     });
@@ -390,11 +391,8 @@ function clearAuth() {
       else if (view.f === 'cancelled' && !view.q) { $('empty-title').textContent = '取り消した申し込みはありません'; $('empty-text').textContent = ''; }
       else { $('empty-title').textContent = '当てはまる申し込みはありません'; $('empty-text').textContent = 'さがす言葉を変えてみてください。'; }
     } else empty.hidden = true;
-    var sumShown = list.reduce(function (a, x) { return a + x.total; }, 0);
-    var yenShown = list.reduce(function (a, x) { return a + x.amount; }, 0);
     renderDaySummary(list);
-    if (view.day) $('result-count').textContent = list.length + ' 家庭';
-    else $('result-count').textContent = list.length + ' 家庭・' + sumShown + ' 枚・' + API.yen(yenShown);
+    $('result-count').textContent = list.length + ' 家庭';
   }
 
   function setFilter(f, scroll) {

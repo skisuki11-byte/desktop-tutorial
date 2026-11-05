@@ -908,3 +908,59 @@ dialog .grid { margin-top: 6px; }
 .ds-yen { grid-column: span 3; display: flex; align-items: baseline; justify-content: space-between; }
 .ds-yen .ds-value { font-size: 26px; color: var(--navy); }
 @media (min-width: 900px) { .ds-grid { grid-template-columns: repeat(3, 1fr) 1.4fr; } .ds-yen { grid-column: auto; display: grid; } }
+
+/* ===================================================== */
+/* 仕上げ（design-best-practices：階層・一貫性・余白・ノイズを減らす） */
+/* ===================================================== */
+/* 家庭ごとの内訳表：主役（枚数のある日）だけが目に入るよう、軽く・小さく */
+.fam { max-width: 17rem; margin-top: 8px; font-size: 13px; }
+.fam th, .fam td { padding: 2px 6px; border-bottom-color: var(--surface-2); }
+.fam thead th { font-size: 10.5px; letter-spacing: .04em; }
+.fam tbody th { font-size: 12.5px; font-weight: 400; }
+.fam td { font-size: 15px; }
+.fam tbody tr:not(.is-empty) th { font-weight: 700; color: var(--ink); }
+.fam tbody tr.is-empty th, .fam tbody tr.is-empty td { opacity: .45; }
+.fam tfoot th, .fam tfoot td { border-top: 1.5px solid var(--line-strong); padding-top: 4px; }
+.fam tfoot td { font-size: 15px; }
+@media (min-width: 900px) { .fam { width: 100%; } }
+
+/* 一覧の行：内訳表で背が伸びても、各項目は行の上端にそろえる。マウスを乗せた行は薄く色づけ */
+@media (min-width: 900px) {
+  .row { align-items: start; padding-block: var(--s4); }
+  .cell-no, .cell-count { padding-top: 22px; }
+  .cell-paid, .cell-handed, .cell-menu { padding-top: 18px; }
+  .row:hover { background: #fafbfd; }
+}
+.row { transition: background .15s; }
+
+/* 日付で見る：上のタブと同じ「下線で選択」の形にそろえる */
+.days-filter { gap: 0; border-bottom: 2px solid var(--line); }
+.days-filter-label { padding-bottom: 4px; }
+.day-btn { min-height: 40px; border: 0; border-bottom: 4px solid transparent; margin-bottom: -2px; border-radius: 0; background: transparent; color: var(--ink-3); font-weight: 700; font-size: 14px; cursor: pointer; }
+.day-btn:hover { color: var(--ink); }
+.day-btn[aria-pressed="true"] { background: transparent; color: var(--navy); border-bottom-color: var(--ball-strong); }
+@media (min-width: 900px) { .days-filter { grid-template-columns: auto repeat(4, 7.5rem); } .days-filter-label { padding: 0 var(--s3) 0 0; } }
+
+/* 集計パネル：数字の桁をそろえ、金額を最後に大きく */
+.day-summary { background: linear-gradient(180deg, var(--ball-soft), #fffaf0); }
+.ds-cell { box-shadow: 0 1px 0 rgb(13 25 55 / .05); }
+
+/* 集計画面の見出しにもチケットの印（申し込み画面と見た目をそろえる） */
+.admin-band .title::before {
+  content: "";
+  display: inline-block;
+  width: 1.5em; height: .9em;
+  margin-right: .35em;
+  vertical-align: -.05em;
+  border-radius: 3px;
+  background:
+    radial-gradient(circle at 0 50%, var(--band) 0 .16em, transparent .17em),
+    radial-gradient(circle at 100% 50%, var(--band) 0 .16em, transparent .17em),
+    var(--ball);
+  transform: rotate(-4deg);
+}
+
+/* 合計枚数（KPI）の数字の上下の余白を詰め、内訳表との距離をそろえる */
+.kpi-main .kpi-value .num { line-height: .95; }
+.breakdown tbody tr.bd-day { cursor: pointer; }
+.breakdown tbody tr.bd-day:hover th, .breakdown tbody tr.bd-day:hover td { background: var(--ball-soft); }
