@@ -260,6 +260,31 @@ function clearAuth() {
     return ul;
   }
 
+  /* 1家庭の内訳を表に：日付を縦に並べ、いちばん下に 大人・高校生以下 の合計 */
+  function detailTable(x) {
+    var t = el('table', 'fam'), thead = el('thead'), tbody = el('tbody'), tfoot = el('tfoot');
+    var hr = el('tr'); hr.appendChild(el('th', null, '日付'));
+    API.kinds.forEach(function (k) { hr.appendChild(el('th', null, k.label)); });
+    thead.appendChild(hr);
+    var sum = {};
+    API.kinds.forEach(function (k) { sum[k.id] = 0; });
+    API.days.forEach(function (d) {
+      var tr = el('tr'), any = 0;
+      tr.appendChild(el('th', null, API.dayLabel(d)));
+      API.kinds.forEach(function (k) {
+        var n = x.counts[d.id + '-' + k.id] || 0; sum[k.id] += n; any += n;
+        tr.appendChild(el('td', n ? null : 'is-zero', n ? String(n) : '—'));
+      });
+      if (!any) tr.className = 'is-empty';
+      tbody.appendChild(tr);
+    });
+    var fr = el('tr'); fr.appendChild(el('th', null, '合計'));
+    API.kinds.forEach(function (k) { fr.appendChild(el('td', sum[k.id] ? null : 'is-zero', sum[k.id] + '枚')); });
+    tfoot.appendChild(fr);
+    t.appendChild(thead); t.appendChild(tbody); t.appendChild(tfoot);
+    return t;
+  }
+
   function render() {
     var s = stats();
     renderKpis(s);
@@ -282,9 +307,9 @@ function clearAuth() {
       var name = el('p', 'row-name');
       name.appendChild(el('span', null, x.name));
       name.appendChild(el('small', null, 'さん'));
-      if (x.courtname) { name.appendChild(el('span', 'row-court-label', COURT)); name.appendChild(el('span', 'row-court-inline', x.courtname)); }
       who.appendChild(name);
-      who.appendChild(detailList(x));
+      if (x.courtname) { var court = el('p', 'row-court'); court.appendChild(el('span', 'row-court-label', COURT)); court.appendChild(el('b', null, x.courtname)); who.appendChild(court); }
+      who.appendChild(detailTable(x));
       var chips = el('p', 'row-chips');
       if (cancelled) chips.appendChild(chip('chip-danger', '取り消し済み'));
       if (!cancelled && dup[norm(x.name)]) chips.appendChild(chip('chip-warn', '同じお名前が2件以上'));
@@ -300,11 +325,6 @@ function clearAuth() {
       cnt.appendChild(el('span', 'num', String(x.total)));
       cnt.appendChild(el('span', 'unit', '枚'));
       cnt.appendChild(el('small', 'num', API.yen(x.amount)));
-    // 家庭ごとの区分別の合計枚数（大人○枚・高校生以下○枚）
-    API.kinds.forEach(function (k) {
-      var n = API.days.reduce(function (a, d) { return a + (x.counts[d.id + '-' + k.id] || 0); }, 0);
-      cnt.appendChild(el('small', 'kind-line' + (n ? '' : ' is-zero'), k.label + ' ' + n + '枚'));
-    });
       li.appendChild(cnt);
 
       var paid = el('div', 'cell-paid'); paid.appendChild(flag(x, 'paid')); li.appendChild(paid);
