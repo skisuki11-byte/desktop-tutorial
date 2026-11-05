@@ -1032,33 +1032,3 @@ dialog .grid { margin-top: 6px; }
 /* 日本語の見出しを、単語の途中ではなく文節で折り返す（対応ブラウザのみ） */
 .result-title, .result-sub, .card-title { word-break: auto-phrase; }
 
-/* ===================================================== */
-/* PDF（印刷）用の集計表：画面では隠し、印刷のときだけこれだけを出す */
-/* ===================================================== */
-.print-sheet { display: none; }
-@media print {
-  @page { size: A4 landscape; margin: 10mm; }
-  html, body { background: #ffffff !important; }
-  body > *:not(.print-sheet) { display: none !important; }
-  .print-sheet { display: block !important; color: #000000; font-family: var(--font-body); font-size: 9.5pt; line-height: 1.4; }
-  .ps-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12pt; border-bottom: 2pt solid #12235a; padding-bottom: 4pt; margin-bottom: 8pt; }
-  .ps-head h1 { margin: 0; font-size: 15pt; color: #12235a; }
-  .ps-head p { margin: 0; font-size: 9pt; }
-  .print-sheet h2 { margin: 10pt 0 4pt; font-size: 11pt; color: #12235a; }
-  .ps-table { width: 100%; border-collapse: collapse; }
-  .ps-table th, .ps-table td { border: .5pt solid #8a93a8; padding: 2.5pt 4pt; text-align: right; font-variant-numeric: tabular-nums; }
-  .ps-table thead th { background: #eef1f7 !important; text-align: center; font-size: 8.5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .ps-table tbody th { text-align: left; }
-  .ps-table tfoot th, .ps-table tfoot td { background: #fff3c9 !important; font-weight: 700; border-top: 1.2pt solid #12235a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .ps-sum { width: auto; min-width: 60%; }
-  .ps-strong { font-weight: 700; }
-  .ps-no, .ps-name, .ps-memo { text-align: left !important; }
-  .ps-name { white-space: nowrap; }
-  .ps-memo { font-size: 8pt; max-width: 50mm; }
-  .ps-mark { text-align: center !important; }
-  .ps-zero { color: #b7c1d8; }
-  .ps-status { margin: 6pt 0 0; font-size: 9pt; }
-  .ps-list tr { break-inside: avoid; }
-  .ps-list thead { display: table-header-group; }   /* 2ページ以上になっても見出しを毎ページに */
-  .ps-list tfoot { display: table-row-group; }      /* 合計は最後のページにだけ */
-}

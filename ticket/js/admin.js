@@ -659,83 +659,152 @@ function clearAuth() {
     copyText(lines.join('\n'), '集計をコピーしました。LINE などに貼り付けられます');
   }
 
-  /* ---------- PDF（印刷）用の集計表 ----------
-     ブラウザの「印刷 → PDFに保存」を使う（日本語の文字がそのまま綺麗に出て、追加の読み込みもいらない）。
-     中身：日付×区分の購入枚数・金額／集金と受け渡しの状況／申し込み一覧（取り消しは除く・受付番号順） */
-  function buildPrintSheet() {
-    var s = stats(), d = new Date(), box = $('print-sheet');
-    box.textContent = '';
-    var stamp = d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + '（' + '日月火水木金土'[d.getDay()] + '） ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2);
-    var head = el('div', 'ps-head');
-    head.appendChild(el('h1', null, (CFG.item || '応援チケット') + ' 申し込み集計表'));
-    head.appendChild(el('p', null, (CFG.team ? CFG.team + '　' : '') + stamp + ' 時点' + (auth && auth.officer ? '　出力：' + auth.officer : '') + '　（部員の分はのぞく）'));
-    box.appendChild(head);
+  /* ---------- 集計表の PDF ----------
+     A4縦向きの紙面を canvas に描き、js/pdf.js で PDF ファイルにまとめる（家計簿アプリと同じ方式）。
+     日本語はブラウザの文字で描くので、どの端末でも画面と同じ字形で出る。
+     スマホは共有メニュー（ファイルに保存・LINEで送る）、PC はそのままダウンロード。
+     中身：購入する枚数（日付×区分・計・金額）／申し込み・集金・受け渡しの状況／申し込み一覧（取り消しは除く・受付番号順） */
+  var PMM = 8;                                   // 1mm あたりの画素数
+  var PPG = { w: 210 * PMM, h: 297 * PMM, m: 10 * PMM };   // A4縦向き
+  var PFONT = '"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
+  var PCOL = { ink: '#111827', sub: '#4b5563', line: '#9aa3b8', head: '#eef1f7', foot: '#fff3c9', navy: '#12235a', zero: '#b7c1d8' };
 
-    // 1. 購入する枚数（日付 × 区分）
-    box.appendChild(el('h2', null, '購入する枚数'));
-    var t1 = el('table', 'ps-table ps-sum'), h1 = el('tr');
-    h1.appendChild(el('th', null, '日付'));
-    API.kinds.forEach(function (k) { h1.appendChild(el('th', null, k.label + '（' + API.yen(k.price) + '）')); });
-    h1.appendChild(el('th', null, '計')); h1.appendChild(el('th', null, '金額'));
-    var th1 = el('thead'); th1.appendChild(h1); t1.appendChild(th1);
-    var tb1 = el('tbody'), kindSum = {};
-    API.kinds.forEach(function (k) { kindSum[k.id] = 0; });
-    API.days.forEach(function (day) {
-      var tr = el('tr'), sum = 0, yen = 0;
-      tr.appendChild(el('th', null, API.dayLabel(day)));
-      API.kinds.forEach(function (k) { var n = s.cells[day.id + '-' + k.id]; sum += n; yen += n * k.price; kindSum[k.id] += n; tr.appendChild(el('td', null, String(n))); });
-      tr.appendChild(el('td', 'ps-strong', String(sum))); tr.appendChild(el('td', null, API.yen(yen)));
-      tb1.appendChild(tr);
-    });
-    t1.appendChild(tb1);
-    var tf1 = el('tfoot'), fr1 = el('tr');
-    fr1.appendChild(el('th', null, '合計'));
-    API.kinds.forEach(function (k) { fr1.appendChild(el('td', null, String(kindSum[k.id]))); });
-    fr1.appendChild(el('td', 'ps-strong', String(s.total))); fr1.appendChild(el('td', 'ps-strong', API.yen(s.amount)));
-    tf1.appendChild(fr1); t1.appendChild(tf1);
-    box.appendChild(t1);
-
-    // 2. 集金・受け渡し
-    var st = el('p', 'ps-status');
-    st.textContent = '申し込み ' + s.orders + ' 家庭・' + s.total + ' 枚・' + API.yen(s.amount) +
-      '　／　集金済み ' + s.paidOrders + ' / ' + s.orders + ' 家庭（' + API.yen(s.paidAmount) + '、残り ' + API.yen(s.amount - s.paidAmount) + '）' +
-      '　／　受け渡し済み ' + s.handedOrders + ' / ' + s.orders + ' 家庭';
-    box.appendChild(st);
-
-    // 3. 申し込み一覧
-    box.appendChild(el('h2', null, '申し込み一覧'));
-    var t2 = el('table', 'ps-table ps-list'), th2 = el('thead'), r1 = el('tr'), r2 = el('tr');
-    ['No.', 'お名前', COURT].forEach(function (x) { var c = el('th', null, x); c.rowSpan = 2; r1.appendChild(c); });
-    API.days.forEach(function (day) { var c = el('th', 'ps-day', API.dayLabel(day)); c.colSpan = API.kinds.length; r1.appendChild(c); API.kinds.forEach(function (k) { r2.appendChild(el('th', null, k.label)); }); });
-    ['枚数', '金額', '集金', '受渡', 'メモ'].forEach(function (x) { var c = el('th', null, x); c.rowSpan = 2; r1.appendChild(c); });
-    th2.appendChild(r1); th2.appendChild(r2); t2.appendChild(th2);
-    var tb2 = el('tbody');
-    items.filter(function (x) { return x.status !== 'cancelled'; }).sort(function (a, b) { return a.id - b.id; }).forEach(function (x) {
-      var tr = el('tr');
-      tr.appendChild(el('td', 'ps-no', API.no(x.id)));
-      tr.appendChild(el('td', 'ps-name', x.name));
-      tr.appendChild(el('td', 'ps-name', x.courtname || ''));
-      API.items.forEach(function (it) { var n = x.counts[it.key]; tr.appendChild(el('td', n ? null : 'ps-zero', n ? String(n) : '')); });
-      tr.appendChild(el('td', 'ps-strong', String(x.total)));
-      tr.appendChild(el('td', null, API.yen(x.amount)));
-      tr.appendChild(el('td', 'ps-mark', x.paid ? '済' : ''));
-      tr.appendChild(el('td', 'ps-mark', x.handed ? '済' : ''));
-      tr.appendChild(el('td', 'ps-memo', x.memo || ''));
-      tb2.appendChild(tr);
-    });
-    t2.appendChild(tb2);
-    var tf2 = el('tfoot'), fr2 = el('tr'), lab = el('th', null, '合計'); lab.colSpan = 3; fr2.appendChild(lab);
-    API.items.forEach(function (it) { fr2.appendChild(el('td', null, String(s.cells[it.key]))); });
-    fr2.appendChild(el('td', 'ps-strong', String(s.total))); fr2.appendChild(el('td', 'ps-strong', API.yen(s.amount)));
-    fr2.appendChild(el('td', 'ps-mark', s.paidOrders + '/' + s.orders)); fr2.appendChild(el('td', 'ps-mark', s.handedOrders + '/' + s.orders)); fr2.appendChild(el('td'));
-    tf2.appendChild(fr2); t2.appendChild(tf2);
-    box.appendChild(t2);
+  function pdfPage() {
+    var c = document.createElement('canvas');
+    c.width = PPG.w; c.height = PPG.h;
+    var x = c.getContext('2d');
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, c.width, c.height);
+    x.textBaseline = 'middle';
+    return { c: c, x: x };
   }
-  function printPdf() {
+  function pFont(x, px, bold) { x.font = (bold ? '700 ' : '400 ') + px + 'px ' + PFONT; }
+  function pFit(x, text, w) {          // 幅に収まらない文字は「…」で切る
+    text = String(text == null ? '' : text);
+    if (x.measureText(text).width <= w) return text;
+    while (text.length && x.measureText(text + '…').width > w) text = text.slice(0, -1);
+    return text + '…';
+  }
+  /* 1行ぶんのセルを描く。cols: [{w(mm), align}]、cells: 文字（'\n' で2行）、style: {bg, bold, color, size} */
+  function pRow(x, top, h, cols, cells, style) {
+    style = style || {};
+    var left = PPG.m;
+    cols.forEach(function (col, k) {
+      var w = col.w * PMM, txt = cells[k] == null ? '' : String(cells[k]);
+      if (style.bg) { x.fillStyle = style.bg; x.fillRect(left, top, w, h); }
+      x.strokeStyle = PCOL.line; x.lineWidth = 2; x.strokeRect(left, top, w, h);
+      var lines = txt.split('\n'), size = (style.size || 23) - (lines.length > 1 ? 3 : 0);
+      pFont(x, size, style.bold || col.bold);
+      x.fillStyle = (style.zero && style.zero[k]) ? PCOL.zero : (style.color || PCOL.ink);
+      lines.forEach(function (ln, li) {
+        var t = pFit(x, ln, w - 16), ty = top + h / 2 + (li - (lines.length - 1) / 2) * (size + 4);
+        var align = style.center ? 'center' : (col.align || 'left');
+        x.textAlign = align;
+        x.fillText(t, align === 'right' ? left + w - 8 : align === 'center' ? left + w / 2 : left + 8, ty);
+      });
+      left += w;
+    });
+    x.textAlign = 'left';
+  }
+  function buildSummaryPages() {
+    var s = stats(), d = new Date(), pages = [];
+    var stamp = d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + '（' + '日月火水木金土'[d.getDay()] + '） ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2);
+    var pg, x, y;
+    function header() {
+      pg = pdfPage(); x = pg.x; pages.push(pg.c);
+      pFont(x, 40, true); x.fillStyle = PCOL.navy;
+      x.fillText((CFG.item || '応援チケット') + ' 申し込み集計表', PPG.m, PPG.m + 22);
+      pFont(x, 20); x.fillStyle = PCOL.sub;
+      x.fillText((CFG.team ? CFG.team + '　' : '') + stamp + ' 時点' + (auth && auth.officer ? '　出力：' + auth.officer : '') + '　（部員の分はのぞく）', PPG.m, PPG.m + 66);
+      x.fillStyle = PCOL.navy; x.fillRect(PPG.m, PPG.m + 88, PPG.w - PPG.m * 2, 4);
+      y = PPG.m + 112;
+    }
+    function section(title, note) {
+      pFont(x, 26, true); x.fillStyle = PCOL.navy; x.fillText(title, PPG.m, y + 16);
+      if (note) { var tw = x.measureText(title).width; pFont(x, 19); x.fillStyle = PCOL.sub; x.fillText(note, PPG.m + tw + 20, y + 18); }
+      y += 40;
+    }
+    header();
+
+    // 1. 購入する枚数
+    section('購入する枚数');
+    var sc = [{ w: 36 }].concat(API.kinds.map(function () { return { w: 44, align: 'right' }; }), [{ w: 26, align: 'right', bold: true }, { w: 40, align: 'right' }]);
+    var RH = 46;
+    pRow(x, y, RH, sc, ['日付'].concat(API.kinds.map(function (k) { return k.label + '（' + API.yen(k.price) + '）'; }), ['計', '金額']), { bg: PCOL.head, bold: true, center: true, size: 21 }); y += RH;
+    var kindSum = {}; API.kinds.forEach(function (k) { kindSum[k.id] = 0; });
+    API.days.forEach(function (day) {
+      var sum = 0, yen = 0, cells = [API.dayLabel(day)];
+      API.kinds.forEach(function (k) { var n = s.cells[day.id + '-' + k.id]; sum += n; yen += n * k.price; kindSum[k.id] += n; cells.push(String(n)); });
+      cells.push(String(sum)); cells.push(API.yen(yen));
+      pRow(x, y, RH, sc, cells); y += RH;
+    });
+    pRow(x, y, RH, sc, ['合計'].concat(API.kinds.map(function (k) { return String(kindSum[k.id]); }), [String(s.total), API.yen(s.amount)]), { bg: PCOL.foot, bold: true }); y += RH + 18;
+
+    // 2. 状況
+    section('状況');
+    var st = [{ w: 58 }, { w: 74 }, { w: 58 }];
+    pRow(x, y, 40, st, ['申し込み', '集金', '受け渡し'], { bg: PCOL.head, bold: true, center: true, size: 20 }); y += 40;
+    pRow(x, y, 48, st, [s.orders + ' 家庭・' + s.total + ' 枚・' + API.yen(s.amount),
+      '済み ' + s.paidOrders + ' / ' + s.orders + ' 家庭（残り ' + API.yen(s.amount - s.paidAmount) + '）',
+      '済み ' + s.handedOrders + ' / ' + s.orders + ' 家庭'], { center: true, size: 21 }); y += 48 + 22;
+
+    // 3. 申し込み一覧（ページをまたぐときは見出しを付け直す）
+    var lc = [{ w: 12, align: 'center' }, { w: 29 }, { w: 20 }].concat(API.items.map(function () { return { w: 10, align: 'right' }; }),
+      [{ w: 10, align: 'right', bold: true }, { w: 20, align: 'right' }, { w: 9, align: 'center' }, { w: 9, align: 'center' }]);
+    var used = lc.reduce(function (a, c) { return a + c.w; }, 0);
+    lc.push({ w: (PPG.w - PPG.m * 2) / PMM - used });   // メモは残りの幅
+    var LH = 42, HH = 58;
+    var lhead = ['No.', 'お名前', COURT].concat(API.items.map(function (it) { return it.day.label + '\n' + it.kind.short; }), ['枚数', '金額', '集金', '受渡', 'メモ']);
+    var legend = API.kinds.map(function (k) { return k.short + '＝' + k.label; }).join('　');
+    function listHead(cont) { section('申し込み一覧' + (cont ? '（つづき）' : ''), legend); pRow(x, y, HH, lc, lhead, { bg: PCOL.head, bold: true, center: true, size: 20 }); y += HH; }
+    listHead(false);
+    var list = items.filter(function (it) { return it.status !== 'cancelled'; }).sort(function (a, b) { return a.id - b.id; });
+    list.forEach(function (it) {
+      if (y + LH > PPG.h - PPG.m - LH) { header(); listHead(true); }
+      var zero = [];
+      var cells = [('00' + it.id).slice(-3), it.name, it.courtname || ''].concat(API.items.map(function (item, k) { var n = it.counts[item.key]; zero[3 + k] = !n; return n ? String(n) : '・'; }),
+        [String(it.total), API.yen(it.amount), it.paid ? '済' : '', it.handed ? '済' : '', it.memo || '']);
+      pRow(x, y, LH, lc, cells, { zero: zero }); y += LH;
+    });
+    if (y + LH > PPG.h - PPG.m) { header(); listHead(true); }
+    pRow(x, y, LH, lc, ['合計', '', ''].concat(API.items.map(function (item) { return String(s.cells[item.key]); }),
+      [String(s.total), API.yen(s.amount), '', '', '']), { bg: PCOL.foot, bold: true, size: 21 });
+    pages.forEach(function (c, i) {        // ページ番号「1 / 2」を下中央に
+      var px = c.getContext('2d'); pFont(px, 19); px.fillStyle = PCOL.sub; px.textAlign = 'center';
+      px.fillText((i + 1) + ' / ' + pages.length, PPG.w / 2, PPG.h - PPG.m / 2);
+    });
+    return pages;
+  }
+  function pdfFileName() {
+    var d = new Date();
+    return '春高チケット_集計表_' + d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2) + '_' + ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2) + '.pdf';
+  }
+  function downloadBlob(blob, name) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
+  }
+  function savePdf() {
     if (!items.length) { toast('まだ申し込みがありません'); return; }
-    buildPrintSheet();
-    toast('印刷の画面で「PDFに保存」を選んでください（LINE の中で開いているときは、Safari や Chrome で開き直してください）');
-    setTimeout(function () { window.print(); }, 300);
+    var btn = $('pdf'); btn.disabled = true; btn.textContent = 'PDFを作っています…';
+    var name = pdfFileName();
+    var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    ready.then(function () { return window.PDFOut.build(buildSummaryPages(), { page: window.PDFOut.A4 }); }).then(function (blob) {
+      var file = null;
+      try { file = new File([blob], name, { type: 'application/pdf' }); } catch (e) { /* 古い端末 */ }
+      var mobile = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      // スマホは共有メニュー（「ファイルに保存」「LINE」などを選べる）。PC やシェアできない端末はダウンロード
+      if (mobile && file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        return navigator.share({ files: [file], title: name }).then(function () { toast('PDFを共有しました'); }, function (e) {
+          if (e && e.name === 'AbortError') return;
+          downloadBlob(blob, name); toast('PDFを保存しました');
+        });
+      }
+      downloadBlob(blob, name);
+      toast(mobile ? 'PDFを保存しました（保存されないときは、LINE の中ではなく Safari や Chrome で開いてください）' : 'PDFを保存しました');
+    }).catch(function (e) {
+      toast('PDFを作れませんでした：' + (e && e.message ? e.message : 'もう一度お試しください'), true);
+    }).then(function () { btn.disabled = false; btn.textContent = 'PDFで保存（集計表）'; });
   }
 
   /* ---------- お知らせ ---------- */
@@ -772,7 +841,7 @@ function clearAuth() {
     $('rows').addEventListener('change', onRowsChange);
     $('rows').addEventListener('click', onRowsClick);
     $('add').addEventListener('click', function () { openDialog(null); });
-    $('pdf').addEventListener('click', printPdf);
+    $('pdf').addEventListener('click', savePdf);
     $('csv').addEventListener('click', csv);
     $('copy-table').addEventListener('click', copyTable);
     $('copy-summary').addEventListener('click', copySummary);
