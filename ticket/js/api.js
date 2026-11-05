@@ -185,7 +185,7 @@
         demoSave(db); return { ok: true, item: pub(r3) };
       }
       case 'admin_login': admin(); return { ok: true };
-      case 'admin_list': admin(); return { ok: true, items: db.rows.map(adminView), serverTime: now };
+      case 'admin_list': admin(); return { ok: true, items: db.rows.map(adminView), serverTime: now, version: 2 };
       case 'admin_save': {
         admin();
         var r4 = find(d.id); if (!r4) throw { code: 'not_found' };
