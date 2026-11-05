@@ -1069,17 +1069,35 @@ dialog .grid { margin-top: 6px; }
   .name-row .label { font-size: 14px; }
 }
 
-/* 見出しの右下：集計表 PDF（紺地の上で目立つボールの黄色）。指が届きやすいよう下側に置く */
-.admin-hero { position: relative; align-items: stretch; }
+/* 見出しの操作：上に「更新時刻・最新にする・ログアウト」（小さく）、下に［PDF集計表］（大きく）。
+   下の黄色い帯と重ならないよう、青帯の下に余白をとる */
+.hero-admin .admin-hero { position: relative; align-items: stretch; padding-block: 16px 46px; }
 .admin-hero > div:first-child { align-self: flex-end; }
-.admin-hero-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 10px; }
-.hero-pdf { order: 2; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 16px; font-size: 15px; border-radius: var(--r-s); box-shadow: 0 3px 0 var(--ball-strong), 0 6px 16px rgb(0 0 0 / .25); }
-.hero-pdf:disabled { opacity: .85; cursor: progress; }
-/* スマホ：青帯のいちばん下に、横いっぱいの大きなボタン（親指で押しやすい位置） */
+.admin-hero-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.hero-admin .band-tools { gap: 6px 8px; font-size: 13px; }
+.hero-admin .band-tools .btn-sm { min-height: 36px; padding: 4px 12px; font-size: 13px; border-radius: 10px; }
+.hero-pdf {
+  order: 2; display: inline-flex; align-items: center; gap: 12px;
+  min-width: 15.5rem; min-height: 60px; padding: 8px 14px 8px 8px;
+  border: 0; border-radius: 14px; background: var(--ball); color: var(--navy); text-align: left;
+  box-shadow: 0 4px 0 var(--ball-strong), 0 10px 24px rgb(0 0 0 / .28);
+  transition: transform .12s, box-shadow .12s, background .12s;
+}
+.hero-pdf:hover { background: #ffd04f; }
+.hero-pdf:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ball-strong), 0 4px 12px rgb(0 0 0 / .25); }
+.hero-pdf:disabled { opacity: .85; cursor: progress; transform: none; }
+.hero-pdf-icon { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: var(--navy); color: var(--ball); }
+.hero-pdf-text { flex: 1; display: grid; gap: 1px; line-height: 1.25; }
+.hero-pdf-text b { font-size: 17px; letter-spacing: .02em; }
+.hero-pdf-text small { font-size: 12px; font-weight: 700; color: rgb(18 35 90 / .72); }
+.hero-pdf-go { flex: none; display: grid; place-items: center; color: var(--navy); }
+/* スマホ：見出しの下に「更新・ボタン」を1行、その下に［PDF集計表］を横いっぱい（親指で押しやすい） */
 @media (max-width: 559px) {
   .admin-hero-side { display: contents; }
-  .hero-admin .band-tools { order: 2; }
-  .hero-pdf { order: 3; width: 100%; justify-content: center; min-height: 52px; font-size: 17px; }
+  .hero-admin .admin-hero { padding-bottom: 44px; row-gap: 14px; }
+  .hero-admin .band-tools { order: 2; width: 100%; justify-content: flex-end; }
+  .hero-admin .band-tools .updated { margin-right: auto; }
+  .hero-pdf { order: 3; width: 100%; min-width: 0; }
 }
 
 /* 学年：ラベルの右に 1年・2年・3年 の3つのボタンを1行で（押すだけで選べる） */
@@ -1127,3 +1145,9 @@ dialog .grid { margin-top: 6px; }
 .server-warn { display: grid; gap: 4px; padding: 12px 16px; border-radius: var(--r-m); background: var(--danger-soft); border: 2px solid var(--danger); color: var(--ink); font-size: 14px; line-height: 1.6; }
 .server-warn b { color: var(--danger); font-size: 15px; }
 @media (min-width: 900px) { .server-warn { grid-column: 1 / -1; } }
+/* 幅の狭いスマホ：更新時刻を1行、その下に［最新にする］［ログアウト］を同じ幅で並べる */
+@media (max-width: 359px) {
+  .hero-admin .band-tools { display: grid; grid-template-columns: 1fr 1fr; }
+  .hero-admin .band-tools .updated { grid-column: 1 / -1; }
+  .hero-admin .band-tools .btn-sm { padding-inline: 6px; white-space: nowrap; }
+}
