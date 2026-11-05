@@ -24,19 +24,19 @@
   var lastLoaded = 0, timer = null, dlgTarget = null, dGrid = null;
 
   /* ---------- 合言葉 ---------- */
-  function readAuth() {
-    var raw = null;
-    try { raw = sessionStorage.getItem(KEY) || localStorage.getItem(KEY); } catch (e) { /* 読めなければ毎回入力 */ }
-    try { return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
-  }
-  function writeAuth(a, remember) {
-    try {
-      sessionStorage.setItem(KEY, JSON.stringify(a));
-      if (remember) localStorage.setItem(KEY, JSON.stringify(a)); else localStorage.removeItem(KEY);
-      localStorage.setItem(OFFICER_KEY, a.officer || '');
-    } catch (e) { /* 保存できなくても、この表示のあいだは使える */ }
-  }
-  function clearAuth() {
+  function readAuth() { // 合言葉は、このタブを開いているあいだだけ覚える（開き直したら毎回入力）
+  var raw = null;
+  try { raw = sessionStorage.getItem(KEY); localStorage.removeItem(KEY); } catch (e) { /* 読めなければ毎回入力 */ }
+  try { return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+}
+function writeAuth(a, remember) {
+  try {
+    sessionStorage.setItem(KEY, JSON.stringify(a));
+    // 「次から入力を省く」はお名前だけ。合言葉はこの端末に残さない
+    if (remember) localStorage.setItem(OFFICER_KEY, a.officer || ''); else localStorage.removeItem(OFFICER_KEY);
+  } catch (e) { /* 保存できなくても、この表示のあいだは使える */ }
+}
+function clearAuth() {
     try { sessionStorage.removeItem(KEY); localStorage.removeItem(KEY); } catch (e) { /* なにもしない */ }
   }
 
@@ -605,7 +605,6 @@
 
     var saved = readAuth();
     if (saved && saved.pass && saved.officer) { // お名前なしで覚えた端末は、もう一度入力してもらう
-      try { $('remember').checked = !!localStorage.getItem(KEY); } catch (e) { /* なにもしない */ }
       enter(saved);
     } else showGate();
   }
