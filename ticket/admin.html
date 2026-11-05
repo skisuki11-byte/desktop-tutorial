@@ -24,11 +24,18 @@
   <div class="wrap"><b>デモ表示</b>：見本の申し込みを表示しています。本番の集計につなぐ手順は gas/README.md にあります</div>
 </div>
 
-<header class="band admin-band">
-  <div class="band-inner wrap">
+<!-- 見出し：役員用は紺地（白い保護者用ページと取りちがえない） -->
+<header class="hero hero-admin">
+  <div class="hero-net" aria-hidden="true"></div>
+  <div class="hero-stripe" aria-hidden="true"></div>
+  <div class="hero-inner wrap admin-hero">
     <div>
-      <p class="eyebrow" id="team-line">役員用</p>
-      <h1 class="title">春高チケット 集計</h1>
+      <p class="admin-kicker"><span class="only-badge">役員専用</span><span id="team-line">土浦日大 女子バレーボール部</span></p>
+      <div class="hero-title">
+        <h1 class="hero-haruko">春高<span class="visually-hidden">チケット集計</span></h1>
+        <svg class="hero-ball" aria-hidden="true" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="#FFC52E" stroke="#FFFFFF" stroke-width="3"/><path d="M24 2.5c-7 8-7 18 0 21.5M24 24c9.5 3 17.5-.5 21.5-7M24 24c-3.5 9.5-.5 17 6.5 21.5" fill="none" stroke="#12235A" stroke-width="3" stroke-linecap="round"/></svg>
+        <p class="hero-sub" aria-hidden="true">チケット集計</p>
+      </div>
     </div>
     <div class="band-tools" id="band-tools" hidden>
       <span class="updated" id="updated">読み込み中…</span>
@@ -73,7 +80,7 @@
       <div class="card kpi kpi-main">
         <div class="kpi-main-top">
           <div>
-            <p class="kpi-label">購入する枚数<span>日付ごと・部員の分はのぞく</span></p>
+            <p class="kpi-label"><b class="kpi-no num">01</b>購入する枚数<span>日付ごと・部員の分はのぞく</span></p>
             <p class="kpi-value"><span class="num" id="k-total">0</span><small>枚</small></p>
             <p class="kpi-sub" id="k-total-sub"></p>
           </div>
@@ -94,14 +101,14 @@
         </div>
       </div>
       <button type="button" class="card kpi kpi-task" id="k-paid-card" data-goto="unpaid">
-        <span class="kpi-label">集金</span>
+        <span class="kpi-label"><b class="kpi-no num">02</b>集金</span>
         <span class="kpi-value"><span class="num" id="k-paid">0</span><small id="k-paid-of">/ 0 家庭</small></span>
         <span class="meter" role="img" id="k-paid-meter-label"><span id="k-paid-meter"></span></span>
         <span class="kpi-sub" id="k-paid-sub"></span>
         <span class="kpi-go" id="k-paid-go">集金がまだの家庭を見る</span>
       </button>
       <button type="button" class="card kpi kpi-task" id="k-handed-card" data-goto="unhanded">
-        <span class="kpi-label">チケットの受け渡し</span>
+        <span class="kpi-label"><b class="kpi-no num">03</b>チケットの受け渡し</span>
         <span class="kpi-value"><span class="num" id="k-handed">0</span><small id="k-handed-of">/ 0 家庭</small></span>
         <span class="meter" role="img" id="k-handed-meter-label"><span id="k-handed-meter"></span></span>
         <span class="kpi-sub" id="k-handed-sub"></span>

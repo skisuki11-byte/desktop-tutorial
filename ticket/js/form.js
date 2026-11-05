@@ -70,11 +70,7 @@
   function applyConfig() {
     if (API.demo) $('demo-bar').hidden = false;
     // チーム名と「春高バレー」は、それぞれの途中で改行しない（切れ目でだけ折り返す）
-    var tl = $('team-line'); tl.textContent = '';
-    (CFG.team ? [CFG.team] : []).forEach(function (t, i) {
-      if (i) tl.appendChild(document.createTextNode(' '));
-      var sp = document.createElement('span'); sp.textContent = t; tl.appendChild(sp);
-    });
+    if (CFG.team) $('team-name').textContent = CFG.team; else $('team-line').hidden = true;
     document.title = '春高チケット申し込み';
 
     var label = CFG.courtnameLabel || 'コートネーム';
@@ -128,6 +124,7 @@
   }
   function drawStub(n) {
     var b = $('stub-badge');
+    if (!b) return;   // 見出しに枚数の札がないデザインでは何もしない
     if (b.textContent !== '×' + n) { b.textContent = '×' + n; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
   }
   function readForm() { return { name: $('name').value, courtname: $('courtname').value, counts: grid.get() }; }
@@ -204,6 +201,7 @@
     $('send-error').hidden = true;
     setSending(false);
     $('result-note').textContent = '';
+    $('cheer').hidden = true;
     show('confirm');
     goTop($('result'));
   }
@@ -257,6 +255,7 @@
     $('done-actions').hidden = false;
     $('done-new').hidden = true; // 1家庭1申し込み：別のお名前での申し込みは出さない
     $('result-note').textContent = 'スクリーンショットを撮っておくと安心です';
+    $('cheer').hidden = false;
     show('done');
     goTop($('result'));
   }

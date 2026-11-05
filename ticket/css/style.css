@@ -118,50 +118,6 @@ p { margin: 0; }
   margin-top: var(--s2);
 }
 
-/* チケットの半券（黄色の券・両端の切り欠き・ミシン目）。右上の数字は入力中の合計枚数 */
-.stub-stage { position: relative; width: clamp(96px, 28vw, 150px); padding: 0 6px 8px 0; }
-.stub {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  aspect-ratio: 2.3 / 1;
-  border-radius: 6px;
-  color: var(--navy);
-  background:
-    radial-gradient(circle at 0 50%, var(--band) 0 7px, transparent 7.5px),
-    radial-gradient(circle at 100% 50%, var(--band) 0 7px, transparent 7.5px),
-    var(--ball);
-  box-shadow: var(--shadow-towel);
-  transform: rotate(-4deg);
-}
-.stub::after {   /* ミシン目 */
-  content: "";
-  position: absolute;
-  top: 10%; bottom: 10%; right: 30%;
-  border-left: 2px dashed rgb(18 35 90 / .45);
-}
-.stub-main { display: grid; justify-items: center; line-height: 1; padding-left: 8px; }
-.stub-main b { font-family: var(--font-display); font-weight: 400; font-size: clamp(17px, 5.2vw, 26px); letter-spacing: .06em; }
-.stub-main small { font-size: clamp(9px, 2.4vw, 12px); font-weight: 700; letter-spacing: .14em; margin-top: 2px; }
-.stub-side { width: 30%; min-width: 30px; text-align: center; font-size: clamp(9px, 2.3vw, 11px); font-weight: 700; line-height: 1.15; }
-.stub-badge {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  min-width: 40px;
-  padding: 0 8px;
-  border-radius: var(--r-pill);
-  background: var(--navy);
-  color: #ffffff;
-  font-family: var(--font-num);
-  font-weight: 700;
-  font-size: 16px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  box-shadow: 0 4px 10px rgb(13 25 55 / .2);
-}
-.stub-badge.pop { animation: pop .32s cubic-bezier(.2,.8,.3,1.4); }
 @keyframes pop { 0% { transform: scale(.8); } 100% { transform: scale(1); } }
 
 @media (min-width: 640px) {
@@ -945,22 +901,71 @@ dialog .grid { margin-top: 6px; }
 .day-summary { background: linear-gradient(180deg, var(--ball-soft), #fffaf0); }
 .ds-cell { box-shadow: 0 1px 0 rgb(13 25 55 / .05); }
 
-/* 集計画面の見出しにもチケットの印（申し込み画面と見た目をそろえる） */
-.admin-band .title::before {
-  content: "";
-  display: inline-block;
-  width: 1.5em; height: .9em;
-  margin-right: .35em;
-  vertical-align: -.05em;
-  border-radius: 3px;
-  background:
-    radial-gradient(circle at 0 50%, var(--band) 0 .16em, transparent .17em),
-    radial-gradient(circle at 100% 50%, var(--band) 0 .16em, transparent .17em),
-    var(--ball);
-  transform: rotate(-4deg);
-}
 
 /* 合計枚数（KPI）の数字の上下の余白を詰め、内訳表との距離をそろえる */
 .kpi-main .kpi-value .num { line-height: .95; }
 .breakdown tbody tr.bd-day { cursor: pointer; }
 .breakdown tbody tr.bd-day:hover th, .breakdown tbody tr.bd-day:hover td { background: var(--ball-soft); }
+
+/* ===================================================== */
+/* 全国大会デザイン（Claude Design のデザイン案を反映）      */
+/* 見出し：極太の「春高」・ボール・スピード帯・ネット目      */
+/* 保護者用は白地、役員用は紺地（取りちがえない）            */
+/* ===================================================== */
+.hero { position: relative; overflow: hidden; background: #ffffff; color: var(--ink); border-bottom: 1px solid var(--line); }
+.hero-net { position: absolute; right: -40px; top: -24px; width: 240px; height: 220px; pointer-events: none;
+  background-image: linear-gradient(#e3e8f2 1px, transparent 1px), linear-gradient(90deg, #e3e8f2 1px, transparent 1px);
+  background-size: 14px 14px; transform: rotate(-12deg); }
+.hero-stripe { position: absolute; right: -30px; bottom: 16px; width: 300px; height: 20px; background: var(--ball); transform: skewX(-24deg); }
+.hero-stripe2 { position: absolute; right: 70px; bottom: 42px; width: 150px; height: 7px; background: var(--navy); transform: skewX(-24deg); }
+.hero-inner { position: relative; padding-block: 10px 30px; }
+.hero-kicker { margin: 0; font-weight: 700; font-size: 12px; letter-spacing: .22em; color: var(--navy); }
+.hero-title { display: flex; align-items: flex-end; gap: 8px; margin-top: 2px; }
+.hero-haruko { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(46px, 14vw, 64px); line-height: .95; letter-spacing: .02em; color: var(--navy); }
+.hero-ball { flex: none; width: clamp(32px, 10vw, 44px); height: auto; margin-bottom: 4px; transform: rotate(-18deg); }
+.hero-sub { margin: 0 0 4px; font-family: var(--font-display); font-size: clamp(16px, 5vw, 20px); line-height: 1.15; }
+.team-badge { position: relative; display: inline-flex; align-items: stretch; margin: 10px 0 0; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 12px rgb(18 35 90 / .22); }
+.team-name { display: flex; align-items: center; gap: 6px; padding: 5px 11px; background: var(--navy); color: #ffffff; font-size: 14px; font-weight: 700; letter-spacing: .04em; }
+.team-only { display: flex; align-items: center; padding: 5px 11px; background: var(--ball); color: var(--navy); font-family: var(--font-display); font-size: 15px; letter-spacing: .1em; }
+.hero .band-meta { position: relative; margin-left: 8px; }
+.page-form .main { margin-top: -14px; }
+
+/* 役員用：紺地 */
+.hero-admin { background: var(--navy); color: #ffffff; border-bottom: 0; }
+.hero-admin .hero-net { right: 8%; top: -40px; width: 360px;
+  background-image: linear-gradient(rgb(255 255 255 / .08) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .08) 1px, transparent 1px); }
+.hero-admin .hero-stripe { bottom: 12px; width: 420px; height: 14px; }
+.admin-hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; padding-block: 14px 24px; }
+.hero-admin .hero-haruko { color: #ffffff; font-size: clamp(34px, 9vw, 48px); }
+.hero-admin .hero-ball { width: clamp(24px, 7vw, 34px); }
+.hero-admin .hero-sub { font-size: clamp(16px, 4.6vw, 24px); }
+.admin-kicker { margin: 0 0 4px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: 13px; font-weight: 700; }
+.only-badge { padding: 2px 9px; background: var(--ball); color: var(--navy); border-radius: 4px; }
+.hero-admin .band-tools { color: #c3cdea; }
+.hero-admin .band-tools .btn-ghost { color: #ffffff; border-color: rgb(255 255 255 / .4); }
+.hero-admin .band-tools .btn-ghost:hover { background: rgb(255 255 255 / .1); }
+.kpi-no { margin-right: 6px; color: var(--ink-3); font-weight: 700; }
+
+/* 合計：得点板のように（紺地・黄色の枚数・白い金額札） */
+.sum-bar, .sum-bar.has-value { align-items: center; padding: 6px 6px 6px 14px; border: 0; border-radius: 12px; background: var(--navy); color: #ffffff; }
+.sum-bar > span:first-child { color: #ffffff; letter-spacing: .1em; font-size: 13px; }
+.sum-count { color: #ffffff; }
+.sum-count b { color: var(--ball); }
+.sum-yen { padding: 0 12px; border-radius: 8px; background: #ffffff; color: var(--navy); }
+
+/* 確認・完了：チケットの券面（紺の帯 → 名前と内訳 → ミシン目 → 合計 → 受付番号） */
+.page-form .ticket { padding: 0; gap: 0; border: 2px solid var(--navy); border-radius: 14px; box-shadow: none; }
+.page-form .ticket::before { display: none; }
+.ticket-strip { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px; background: var(--navy); color: #ffffff; font-size: 12px; font-weight: 700; }
+.ticket-strip .num { letter-spacing: .2em; }
+.ticket-body { padding: 10px 14px 12px; display: grid; gap: 2px; }
+.page-form .ticket-total { margin: 0; padding: 10px 14px; border-top: 2px dashed var(--line-strong); background: var(--ball-soft); }
+.page-form .ticket-foot { margin: 0; padding: 8px 14px; border-top: 0; background: var(--navy); color: #c3cdea; }
+.page-form .ticket-foot b { color: var(--ball); font-size: 24px; }
+.page-form #confirm-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+.cheer { margin: 0; text-align: center; font-family: var(--font-display); font-size: 18px; color: var(--navy); letter-spacing: .06em; }
+
+/* 背の低い画面：英字の小見出しを外して、ボタンまでを1画面に */
+@media (max-height: 700px) { .hero-kicker { display: none; } .hero-inner { padding-top: 12px; } }
+.page-form .hero-inner { padding-bottom: 26px; }
+.page-form .team-badge { margin-top: 8px; }

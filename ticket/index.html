@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Barlow+Condensed:wght@600;700&display=swap">
 <!-- 見出しの太字は、使う文字だけを読み込む（日本語フォント全体を落とさない） -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap&text=%E3%81%97%E3%81%BF%E3%82%B1%E3%83%81%E3%83%83%E3%83%88%E6%98%A5%E7%94%B3%E8%BE%BC%E9%AB%98">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap&text=%E3%80%81%E3%81%97%E3%81%BF%E3%82%A1%E3%82%A4%E3%82%B1%E3%83%81%E3%83%83%E3%83%88%E3%83%95%E5%A4%A7%E5%B0%82%E6%97%A5%E6%98%A5%E7%94%A8%E7%94%B3%E8%BE%BC%E9%AB%98%EF%BC%81">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="page-form">
@@ -24,21 +24,20 @@
   <div class="wrap"><b>デモ表示</b>：入力はこの端末にだけ保存されます</div>
 </div>
 
-<!-- 見出し（1画面に収めるため、チケットの絵は小さく右に置く） -->
-<header class="band band-compact">
-  <div class="band-inner wrap">
-    <div class="band-text">
-      <p class="eyebrow" id="team-line">春高バレー</p>
-      <h1 class="title" id="page-title">春高チケット申し込み</h1>
-      <p class="band-meta" id="band-meta" hidden></p>
+<!-- 見出し：全国大会の熱さ（極太の「春高」・ボール・スピード帯・ネット目）と「部の専用ページ」 -->
+<header class="hero">
+  <div class="hero-net" aria-hidden="true"></div>
+  <div class="hero-stripe" aria-hidden="true"></div>
+  <div class="hero-stripe2" aria-hidden="true"></div>
+  <div class="hero-inner wrap">
+    <p class="hero-kicker num">NATIONAL CHAMPIONSHIP · 2027.1.4–1.6</p>
+    <div class="hero-title">
+      <h1 class="hero-haruko">春高<span class="visually-hidden">チケット申し込み</span></h1>
+      <svg class="hero-ball" aria-hidden="true" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="#FFC52E" stroke="#12235A" stroke-width="3"/><path d="M24 2.5c-7 8-7 18 0 21.5M24 24c9.5 3 17.5-.5 21.5-7M24 24c-3.5 9.5-.5 17 6.5 21.5" fill="none" stroke="#12235A" stroke-width="3" stroke-linecap="round"/></svg>
+      <p class="hero-sub" aria-hidden="true">チケット<br>申し込み</p>
     </div>
-    <div class="stub-stage" aria-hidden="true">
-      <div class="stub">
-        <span class="stub-main"><b>春高</b><small class="num">2027</small></span>
-        <span class="stub-side num">1.4<br>–1.6</span>
-      </div>
-      <span class="stub-badge num" id="stub-badge">×0</span>
-    </div>
+    <p class="team-badge" id="team-line"><span class="team-name"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1l2 4.3 4.7.6-3.4 3.3.9 4.7L8 11.6 3.8 13.9l.9-4.7L1.3 5.9 6 5.3z" fill="#FFC52E"/></svg><span id="team-name">土浦日大 女子バレーボール部</span></span><span class="team-only">専用</span></p>
+    <p class="band-meta" id="band-meta" hidden></p>
   </div>
 </header>
 
@@ -129,7 +128,7 @@
     </div>
 
     <div class="actions">
-      <button type="submit" class="btn btn-primary btn-block" id="to-confirm">確認する</button>
+      <button type="submit" class="btn btn-primary btn-block" id="to-confirm">確認する →</button>
       <button type="button" class="btn btn-ghost btn-block" id="cancel-edit" hidden>修正をやめる</button>
     </div>
     <p class="note note-center" id="form-note">まだ送信されません。次の画面で内容を確かめます</p>
@@ -163,6 +162,8 @@
     </div>
 
     <div class="ticket" id="ticket">
+      <div class="ticket-strip"><span class="num">ADMISSION · 2027</span><span>応援チケット</span></div>
+      <div class="ticket-body">
       <p class="ticket-label">お名前（生徒名）</p>
       <p class="ticket-name"><span id="t-name"></span><small>さん</small></p>
       <p class="ticket-code" id="t-code-row"><span id="t-code-label">コートネーム</span>　<b id="t-code"></b></p>
@@ -170,6 +171,7 @@
         <thead><tr id="t-head"></tr></thead>
         <tbody id="t-body"></tbody>
       </table>
+      </div>
       <div class="ticket-total">
         <p><span class="ticket-label">合計</span><span class="num" id="t-count">0</span><span class="unit">枚</span></p>
         <p class="ticket-amount num" id="t-yen">¥0</p>
@@ -210,6 +212,7 @@
     </div>
 
     <p class="note note-center" id="result-note"></p>
+    <p class="cheer" id="cheer" hidden>日大、ファイト！</p>
     <button type="button" class="btn btn-text" id="done-new" hidden>別のお名前でも申し込む</button>
   </section>
 
