@@ -21,7 +21,7 @@ window.TOWEL_CONFIG = {
   // 入力欄
   maxPerOrder: 20,                  // 1件で申し込める最大枚数
   courtnameLabel: 'コートネーム',
-  courtnameHint: '選手のコートネーム（例：ハル）',
+  courtnameHint: '選手のコートネーム（例：ニコ）',
   courtnameRequired: false,         // true にすると必須になる
 
   // 受付を手動で締めるとき false にする（締切日を待たずに止められる）

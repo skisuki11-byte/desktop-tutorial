@@ -121,6 +121,15 @@ for (let i = 0; i < 20; i++) call(e2, { action: 'admin_login', pass: 'nope' + i 
 r = call(e2, { action: 'admin_login', pass: 'pw' }); assert.strictEqual(r.error, 'locked');
 console.log('ok 合言葉を20回間違えると10分止まる（総当たり対策）');
 
+let e5 = env('ビビビ');
+['ビビビ', 'びびび', 'ﾋﾞﾋﾞﾋﾞ', ' ビビビ ', 'ヒ\u3099ヒ\u3099ヒ\u3099'].forEach((p) => {
+  r = call(e5, { action: 'admin_login', pass: p }); assert.ok(r.ok, p);
+});
+['ビビ', 'ピピピ', 'ビビビビ', ''].forEach((p) => {
+  r = call(e5, { action: 'admin_login', pass: p }); assert.strictEqual(r.error, 'wrong_pass', p);
+});
+console.log('ok 合言葉は ひらがな／カタカナ・全角／半角・濁点の付け方・前後の空白 の違いを同じとみなす（ほかの言葉は通さない）');
+
 let e3 = env(null);
 r = call(e3, { action: 'admin_login', pass: 'any' }); assert.strictEqual(r.error, 'no_pass');
 console.log('ok 合言葉が未設定なら誰も集計を読めない');
