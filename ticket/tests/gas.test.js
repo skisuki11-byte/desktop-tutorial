@@ -6,7 +6,7 @@ const src = fs.readFileSync(path.join(__dirname, '../gas/Code.gs'), 'utf8');
 function env(pass) {
   const cells = [];        // cells[r][c]（0始まり）
   const formulas = [];     // 数式として入ってしまった値（入ってはいけない）
-  const cache = {};
+  const cache = {}, props = {};
   const range = (r, c, nr = 1, nc = 1) => ({
     getValues: () => Array.from({ length: nr }, (_, i) => Array.from({ length: nc }, (_, j) => {
       const v = (cells[r - 1 + i] || [])[c - 1 + j]; return v === undefined ? '' : v;
@@ -41,14 +41,14 @@ function env(pass) {
       getActiveSpreadsheet: () => ({ getSheetByName: () => (made ? sheet : null), insertSheet: () => { made = true; return sheet; } }),
       newDataValidation: () => ({ requireCheckbox() { return this; }, build: () => ({}) })
     },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (k === 'ADMIN_PASS' ? pass : null) }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (k === 'ADMIN_PASS' ? pass : (k in props ? props[k] : null)), setProperty: (k, v) => { props[k] = String(v); }, deleteProperty: (k) => { delete props[k]; } }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     CacheService: { getScriptCache: () => ({ get: (k) => cache[k] || null, put: (k, v) => { cache[k] = v; } }) },
     Utilities: { getUuid: () => 'uuid-' + (++uid), formatDate: () => '11/6 9:30' },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (t) => ({ setMimeType() { return { c: t }; } }) }
   };
   vm.createContext(ctx); vm.runInContext(src, ctx);
-  return { ctx, cells, formulas };
+  return { ctx, cells, formulas, props };
 }
 const call = (e, d) => JSON.parse(e.ctx.doPost({ postData: { contents: typeof d === 'string' ? d : JSON.stringify(Object.assign({ app: 'ticket' }, d)) } }).c);
 const C = (o) => Object.assign({ '0104-adult': 0, '0104-student': 0, '0105-adult': 0, '0105-student': 0, '0106-adult': 0, '0106-student': 0 }, o);
@@ -226,9 +226,39 @@ console.log('ok 別アプリ（タオルの画面）・壊れたJSON・大きす
 // 版：新しいコードかどうかを画面側が見分けられる
 {
   const v = env('pw');
-  assert.strictEqual(JSON.parse(v.ctx.doGet().c).version, 2);
-  assert.strictEqual(call(v, { action: 'admin_list', pass: 'pw' }).version, 2);
-  console.log('ok 動作確認URLと集計の読み込みで、コードの版（学年対応＝2）が分かる');
+  assert.strictEqual(JSON.parse(v.ctx.doGet().c).version, 3);
+  assert.strictEqual(call(v, { action: 'admin_list', pass: 'pw' }).version, 3);
+  console.log('ok 動作確認URLと集計の読み込みで、コードの版（締め切り設定対応＝3）が分かる');
+}
+
+// 締め切り
+{
+  const g = env('pw'), ymd = (dt) => new Date(dt.getTime() + 9 * 3600e3).toISOString().slice(0, 10);   // 日本時間の日付
+  const today = ymd(new Date()), yesterday = ymd(new Date(Date.now() - 86400e3));
+  let x = call(g, { action: 'submit', name: '締切前', counts: C({ '0104-adult': 1 }), requestId: 'd1' });
+  assert.ok(x.ok);
+  assert.strictEqual(call(g, { action: 'ping' }).deadline, '');
+  // 役員以外は設定できない・おかしな日付は受け付けない
+  assert.strictEqual(call(g, { action: 'admin_settings', pass: 'wrong', deadline: today }).error, 'wrong_pass');
+  assert.strictEqual(call(g, { action: 'admin_settings', pass: 'pw', deadline: '2026-02-30' }).error, 'invalid');
+  assert.strictEqual(call(g, { action: 'admin_settings', pass: 'pw', deadline: '12/10' }).error, 'invalid');
+  // 今日を締め切りにする：今日の 23:59 までは申し込める。申し込み画面にも日付が届く
+  assert.strictEqual(call(g, { action: 'admin_settings', pass: 'pw', deadline: today }).deadline, today);
+  assert.strictEqual(call(g, { action: 'ping' }).deadline, today);
+  assert.strictEqual(call(g, { action: 'mine', items: [{ id: x.item.id, token: x.token }] }).deadline, today);
+  assert.strictEqual(call(g, { action: 'admin_list', pass: 'pw' }).deadline, today);
+  assert.ok(call(g, { action: 'submit', name: '当日', counts: C({ '0104-adult': 1 }), requestId: 'd2' }).ok);
+  // 昨日を締め切りにする：申し込み・修正・取り消しは closed。役員の修正・追加はできる
+  call(g, { action: 'admin_settings', pass: 'pw', deadline: yesterday });
+  assert.strictEqual(call(g, { action: 'submit', name: '締切後', counts: C({ '0104-adult': 1 }), requestId: 'd3' }).error, 'closed');
+  assert.strictEqual(call(g, { action: 'update', id: x.item.id, token: x.token, name: '締切前', counts: C({ '0104-adult': 2 }) }).error, 'closed');
+  assert.strictEqual(call(g, { action: 'cancel', id: x.item.id, token: x.token }).error, 'closed');
+  assert.ok(call(g, { action: 'admin_save', pass: 'pw', id: x.item.id, patch: { paid: true } }).ok);
+  assert.ok(call(g, { action: 'admin_add', pass: 'pw', name: '役員が追加', counts: C({ '0105-adult': 1 }), requestId: 'd4' }).ok);
+  // 締め切りをなくすと、また申し込める
+  assert.strictEqual(call(g, { action: 'admin_settings', pass: 'pw', deadline: '' }).deadline, '');
+  assert.ok(call(g, { action: 'submit', name: '再開後', counts: C({ '0104-adult': 1 }), requestId: 'd5' }).ok);
+  console.log('ok 締め切り：役員だけが設定でき、当日23:59までは受付・過ぎたら家庭の申し込み/修正/取り消しは止まる（役員の操作はできる）');
 }
 
 const e4 = env('pw'); e4.ctx.LockService = { getScriptLock: () => ({ tryLock: () => false, releaseLock() { throw new Error('not held'); } }) };

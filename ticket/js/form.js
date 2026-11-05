@@ -83,6 +83,31 @@
       lab.appendChild(inp); lab.appendChild(sp); seg.appendChild(lab);
     });
   }
+  /* 締め切りは見出しの中に（申し込む前に必ず目に入る場所）。日付は役員の画面で決めたものが集計先から届く */
+  function renderDeadline() {
+    var end = API.deadlineEnd(), meta = $('band-meta');
+    meta.classList.remove('is-soon');
+    if (!end) { meta.hidden = true; meta.textContent = ''; $('closed-date').hidden = true; return; }
+    var label = (end.getMonth() + 1) + '/' + end.getDate() + '（' + '日月火水木金土'[end.getDay()] + '）';
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    var days = Math.round((endDay - today) / 86400000);   // 暦の日数で数える（当日は「今日まで」）
+    if (API.isClosed()) meta.textContent = '受付終了（締切 ' + label + '）';
+    else {
+      meta.textContent = '締切 ' + label + (days <= 0 ? ' 今日まで' : ' あと' + days + '日');
+      if (days <= 3) meta.classList.add('is-soon');
+    }
+    meta.hidden = false;
+    $('closed-date').textContent = '締め切り：' + label;
+    $('closed-date').hidden = false;
+  }
+  /* 役員が締め切り日を変えたら、開いている画面にもすぐ反映（受付終了・再開） */
+  function onDeadlineChange() {
+    renderDeadline();
+    var closed = API.isClosed();
+    if (closed && ['input', 'home', 'saved', 'finished'].indexOf(state.step) >= 0) home();
+    else if (!closed && state.step === 'closed') home();
+  }
   function applyConfig() {
     buildGrades();
     if (API.demo) $('demo-bar').hidden = false;
@@ -101,16 +126,7 @@
     fillNotes($('declare-list'));
     if (!(CFG.notes || []).length) { $('notes').hidden = true; $('declare').hidden = true; }
 
-    // 締切は見出しの中に（申し込む前に必ず目に入る場所）
-    var end = API.deadlineEnd();
-    if (end) {
-      var days = Math.ceil((end.getTime() - Date.now()) / 86400000);
-      var dl = '締切 ' + (end.getMonth() + 1) + '/' + end.getDate() + '（' + '日月火水木金土'[end.getDay()] + '）';
-      if (days >= 0) dl += days === 0 ? ' 今日まで' : ' あと' + days + '日';
-      $('band-meta').textContent = dl;
-      $('band-meta').hidden = false;
-      if (days >= 0 && days <= 3) $('band-meta').classList.add('is-soon');
-    }
+    renderDeadline();
 
     // 受け取り・支払いは、フォームの下のご案内に
     [['受け取り', CFG.delivery], ['お支払い', CFG.payment]].forEach(function (it) {
@@ -263,6 +279,7 @@
       var el = $('send-error');
       el.textContent = err && err.code === 'invalid' ? '入力内容に誤りがあります。「修正する」で直してください。' : API.message(err);
       el.hidden = false;
+      if (err && err.code === 'closed') API.call('ping').then(function () { if (API.isClosed()) { renderDeadline(); home(); goTop(); } }, function () {});
     });
   }
 
@@ -479,10 +496,10 @@
     $('done-new').addEventListener('click', function () { startNew(true); });
     $('mine-new').addEventListener('click', function () { startNew(true); });
 
-    // GAS は起動に数秒かかることがある。入力を始めた時点で起こしておく
-    // （申し込み済みの端末は、開いたときの「最新の内容の取り直し」で起きるので、温めは送らない）
-    var warmed = loadMine().length > 0;
-    $('form').addEventListener('focusin', function () { if (!warmed) { warmed = true; API.call('ping').catch(function () {}); } });
+    API.onDeadline(onDeadlineChange);
+    // 開いたらすぐ集計先に1回だけ問い合わせる：最新の締め切り日を受け取り、ついでに GAS を起こしておく（起動に数秒かかることがある）
+    // （申し込み済みの端末は、開いたときの「最新の内容の取り直し」で同じことが起きるので送らない）
+    if (!loadMine().length) API.call('ping').catch(function () {});
 
     fillForm(null);
     home();

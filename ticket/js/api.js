@@ -144,6 +144,7 @@
   }
   function demoRun(action, d) {
     var db = demoDb(), now = new Date().toISOString();
+    function demoClosed() { return !!db.deadline && Date.now() > endOfDay(db.deadline).getTime(); }
     function find(id) { for (var i = 0; i < db.rows.length; i++) if (db.rows[i].id === Number(id)) return db.rows[i]; return null; }
     function own(id, token) { var r = find(id); if (!r || r.token !== token) throw { code: 'not_found' }; return r; }
     function admin() { if (normPass(d.pass) !== normPass(DEMO_PASS)) throw { code: 'wrong_pass' }; }
@@ -161,8 +162,9 @@
       return r;
     }
     switch (action) {
-      case 'ping': return { ok: true };
+      case 'ping': return { ok: true, deadline: db.deadline || '' };
       case 'submit': {
+        if (demoClosed()) throw { code: 'closed' };
         for (var i = 0; i < db.rows.length; i++) {
           if (d.requestId && db.rows[i].requestId === d.requestId) return { ok: true, item: pub(db.rows[i]), token: db.rows[i].token };
         }
@@ -172,20 +174,29 @@
       case 'mine': {
         var out = [];
         (d.items || []).forEach(function (x) { var r = find(x.id); if (r && r.token === x.token) out.push(pub(r)); });
-        return { ok: true, items: out };
+        return { ok: true, items: out, deadline: db.deadline || '' };
       }
       case 'update': {
+        if (demoClosed()) throw { code: 'closed' };
         var r2 = own(d.id, d.token), v2 = clean(d);
         r2.name = v2.name; r2.courtname = v2.courtname; r2.counts = v2.counts; r2.status = 'active'; r2.updatedAt = now;
         if ('grade' in d) r2.grade = v2.grade;
         demoSave(db); return { ok: true, item: pub(r2) };
       }
       case 'cancel': {
+        if (demoClosed()) throw { code: 'closed' };
         var r3 = own(d.id, d.token); r3.status = 'cancelled'; r3.updatedAt = now;
         demoSave(db); return { ok: true, item: pub(r3) };
       }
       case 'admin_login': admin(); return { ok: true };
-      case 'admin_list': admin(); return { ok: true, items: db.rows.map(adminView), serverTime: now, version: 2 };
+      case 'admin_list': admin(); return { ok: true, items: db.rows.map(adminView), serverTime: now, version: 3, deadline: db.deadline || '' };
+      case 'admin_settings': {
+        admin();
+        var dl = String(d.deadline || '').trim();
+        if (dl && !validYmd(dl)) throw { code: 'invalid' };
+        db.deadline = dl; demoSave(db);
+        return { ok: true, deadline: dl };
+      }
       case 'admin_save': {
         admin();
         var r4 = find(d.id); if (!r4) throw { code: 'not_found' };
@@ -309,10 +320,28 @@
   }
   function yen(n) { return '¥' + Number(n || 0).toLocaleString('ja-JP'); }
   function no(id) { return 'No.' + ('00' + id).slice(-3); }
+  /* 締め切り日：役員の画面で決めた日（集計先から届く）を使う。届くまでは前回の値、それもなければ config.js の deadline */
+  var DL_KEY = DEMO ? 'ticket.deadline.demo' : 'ticket.deadline';
+  var deadline = (function () { try { var v = localStorage.getItem(DL_KEY); return v === null ? null : v; } catch (e) { return null; } })();
+  var deadlineListeners = [];
+  function validYmd(v) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v || ''));
+    if (!m) return false;
+    var t = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return t.getMonth() === Number(m[2]) - 1 && t.getDate() === Number(m[3]);
+  }
+  function endOfDay(ymd) { return new Date(ymd + 'T23:59:59+09:00'); }   // その日の 23:59（日本時間）まで
+  function currentDeadline() { return deadline !== null ? deadline : (CFG.deadline || ''); }
+  function setDeadline(v) {
+    v = validYmd(v) ? v : '';
+    var changed = v !== currentDeadline();
+    deadline = v;
+    try { localStorage.setItem(DL_KEY, v); } catch (e) { /* 覚えられなくても動く */ }
+    if (changed) deadlineListeners.forEach(function (fn) { try { fn(v); } catch (e) { /* 画面の更新の失敗で止めない */ } });
+  }
   function deadlineEnd() {
-    if (!CFG.deadline || !/^\d{4}-\d{2}-\d{2}$/.test(CFG.deadline)) return null;
-    var p = CFG.deadline.split('-');
-    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 23, 59, 59);
+    var v = currentDeadline();
+    return validYmd(v) ? endOfDay(v) : null;
   }
   function isClosed() {
     if (CFG.accepting === false) return true;
@@ -341,7 +370,14 @@
     demoPass: DEMO_PASS,
     days: DAYS, kinds: KINDS, items: ITEMS, grades: GRADES, useGrade: CFG.useGrade === true, maxPerCell: MAX_CELL,
     gradeLabel: gradeLabel, toGrade: toGrade,
-    call: function (action, body) { return DEMO ? demo(action, body) : remote(action, body); },
+    call: function (action, body) {
+      return (DEMO ? demo(action, body) : remote(action, body)).then(function (res) {
+        if (res && typeof res.deadline === 'string') setDeadline(res.deadline);   // 集計先から届いた締め切り日を、画面に反映
+        return res;
+      });
+    },
+    onDeadline: function (fn) { deadlineListeners.push(fn); },
+    deadline: currentDeadline, validYmd: validYmd,
     uuid: uuid, validate: validate, toCount: toCount, squish: squish,
     emptyCounts: emptyCounts, cleanCounts: cleanCounts, totalOf: totalOf, amountOf: amountOf, kindTotals: kindTotals, byDay: byDay, dayLabel: dayLabel,
     buildGrid: buildGrid,

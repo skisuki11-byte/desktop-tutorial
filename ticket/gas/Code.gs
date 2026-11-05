@@ -35,7 +35,7 @@ var EXTRA_HEADERS = ['学年'];
 var HEADERS = BASE_HEADERS.concat(ITEMS.map(function (it) { return it.header; }), TAIL_HEADERS, EXTRA_HEADERS);
 var GRADES = [1, 2, 3];   // 学年（画面側 config.js の grades とそろえる）
 // このコードの版。画面側（admin.js の SERVER_VERSION）は、これより古い集計先につながっていると「更新してください」と出す
-var VERSION = 2;          // 2：学年に対応
+var VERSION = 3;          // 2：学年に対応 / 3：締め切り日を役員の画面で設定
 var C = (function () {   // 列の位置（0始まり）
   var c = { id: 0, createdAt: 1, updatedAt: 2, name: 3, courtname: 4, item0: 5 };
   var t = c.item0 + ITEMS.length;
@@ -63,7 +63,7 @@ function doPost(e) {
   if (!d || d.app !== 'ticket') return json_({ ok: false, error: 'bad_request' });
   try {
     switch (d.action) {
-      case 'ping': return json_({ ok: true });
+      case 'ping': return json_({ ok: true, deadline: deadline_() });
       case 'submit': return json_(submit_(d));
       case 'mine': return json_(mine_(d));
       case 'update': return json_(updateOwn_(d));
@@ -72,6 +72,7 @@ function doPost(e) {
       case 'admin_list': return json_(admin_(d, adminList_));
       case 'admin_save': return json_(admin_(d, adminSave_));
       case 'admin_add': return json_(admin_(d, adminAdd_));
+      case 'admin_settings': return json_(admin_(d, adminSettings_));
     }
     return json_({ ok: false, error: 'bad_request' });
   } catch (err) {
@@ -85,6 +86,7 @@ function doPost(e) {
 
 function submit_(d) {
   if (d.website) return { ok: true, item: { id: 0, name: '', courtname: '', counts: {}, total: 0, amount: 0, status: 'active' }, token: '' };  // ボット（見えない欄に入力）
+  if (isClosed_()) throw { code: 'closed' };
   if (!countUp_('submit', 3600, MAX_SUBMIT_PER_HOUR)) return { ok: false, error: 'rate' };
   var v = validate_(d);
   var requestId = str_(d.requestId, 64);
@@ -109,10 +111,11 @@ function mine_(d) {
     var r = findRow_(rows, x && x.id);
     if (r && x.token && r.row[C.token] === String(x.token)) out.push(pub_(r.row));
   });
-  return { ok: true, items: out };
+  return { ok: true, items: out, deadline: deadline_() };
 }
 
 function updateOwn_(d) {
+  if (isClosed_()) throw { code: 'closed' };
   var v = validate_(d);
   return withLock_(function () {
     var sh = sheet_(), r = own_(sh, d);
@@ -125,6 +128,7 @@ function updateOwn_(d) {
 }
 
 function cancelOwn_(d) {
+  if (isClosed_()) throw { code: 'closed' };
   return withLock_(function () {
     var sh = sheet_(), r = own_(sh, d);
     r.row[C.status] = STATUS_CANCELLED;
@@ -157,7 +161,31 @@ function admin_(d, fn) {
 
 function adminList_() {
   var rows = rows_(sheet_());
-  return { ok: true, items: rows.map(adminView_), serverTime: new Date().toISOString(), version: VERSION };
+  return { ok: true, items: rows.map(adminView_), serverTime: new Date().toISOString(), version: VERSION, deadline: deadline_() };
+}
+
+/* ---------- 申し込みの締め切り（役員の画面で設定・スクリプトのプロパティ DEADLINE に 'YYYY-MM-DD' で保存） ---------- */
+
+/** 締め切り日（'YYYY-MM-DD'、なければ ''）。その日の 23:59（日本時間）まで受け付ける */
+function deadline_() {
+  var v = PropertiesService.getScriptProperties().getProperty('DEADLINE') || '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : '';
+}
+function isClosed_() {
+  var d = deadline_();
+  return !!d && Date.now() > new Date(d + 'T23:59:59+09:00').getTime();
+}
+/** 役員：締め切り日を決める・なくす（{ deadline: 'YYYY-MM-DD' | '' }）。役員の修正・追加は締め切り後もできる */
+function adminSettings_(d) {
+  var v = String(d.deadline == null ? '' : d.deadline).trim();
+  var props = PropertiesService.getScriptProperties();
+  if (v === '') { props.deleteProperty('DEADLINE'); return { ok: true, deadline: '' }; }
+  var m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) throw { code: 'invalid' };
+  var y = Number(m[1]), mo = Number(m[2]), da = Number(m[3]), t = new Date(y, mo - 1, da);
+  if (y < 2020 || y > 2100 || t.getMonth() !== mo - 1 || t.getDate() !== da) throw { code: 'invalid' };
+  props.setProperty('DEADLINE', v);
+  return { ok: true, deadline: v };
 }
 
 function adminSave_(d) {
