@@ -89,9 +89,9 @@
 
     <div class="name-row">
       <div class="field" id="field-name">
-        <label class="label" for="name">お名前 <span class="tag tag-req">必須</span></label>
+        <label class="label" for="name">お名前（生徒名） <span class="tag tag-req">必須</span></label>
         <p class="error" id="name-error" hidden></p>
-        <input class="input" id="name" name="name" type="text" autocomplete="name" maxlength="40" enterkeyhint="next" placeholder="例：山田 花子" aria-describedby="name-error">
+        <input class="input" id="name" name="name" type="text" autocomplete="off" maxlength="40" enterkeyhint="next" placeholder="例：山田 花子" aria-describedby="name-error">
       </div>
       <div class="field" id="field-courtname">
         <label class="label" for="courtname"><span id="courtname-label">コートネーム</span> <span class="tag tag-opt" id="courtname-tag">任意</span></label>
@@ -158,7 +158,7 @@
     </div>
 
     <div class="ticket" id="ticket">
-      <p class="ticket-label">お名前</p>
+      <p class="ticket-label">お名前（生徒名）</p>
       <p class="ticket-name"><span id="t-name"></span><small>さん</small></p>
       <p class="ticket-code" id="t-code-row"><span id="t-code-label">コートネーム</span>　<b id="t-code"></b></p>
       <table class="ticket-table" id="t-table">
