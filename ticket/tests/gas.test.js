@@ -165,11 +165,11 @@ let e5 = env('bibi-TEST');
 ['bibi-TEST', 'BIBI-test', 'ｂｉｂｉ－ｔｅｓｔ', ' bibi-test '].forEach((p) => {
   r = call(e5, { action: 'admin_login', pass: p }); assert.ok(r.ok, p);
 });
-let e6 = env('ビビビ');
-['ビビビ', 'びびび', 'ﾋﾞﾋﾞﾋﾞ', 'ビビビ'].forEach((p) => {
+let e6 = env('ポポポ');
+['ポポポ', 'ぽぽぽ', 'ﾎﾟﾎﾟﾎﾟ', 'ポポポ'].forEach((p) => {
   r = call(e6, { action: 'admin_login', pass: p }); assert.ok(r.ok, p);
 });
-['ビビ', 'ピピピ', ''].forEach((p) => {
+['ポポ', 'ボボボ', ''].forEach((p) => {
   r = call(e6, { action: 'admin_login', pass: p }); assert.strictEqual(r.error, 'wrong_pass', p);
 });
 console.log('ok 合言葉は 大文字／小文字・全角／半角・ひらがな／カタカナ・濁点の付け方・前後の空白 の違いを同じとみなす');

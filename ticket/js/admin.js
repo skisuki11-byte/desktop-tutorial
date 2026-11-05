@@ -61,7 +61,7 @@ function clearAuth() {
   if (!officerName) { $('gate-error').textContent = 'あなたのお名前を入力してください（集金・受け渡しの記録に残ります）'; $('gate-error').hidden = false; $('officer').focus(); return; }
   var btn = $('gate-submit');
     btn.disabled = true; btn.textContent = '確かめています…';
-    var a = { pass: pass, officer: API.squish($('officer').value).slice(0, 12) };
+    var a = { pass: pass, officer: officerName };
     API.call('admin_login', { pass: a.pass }).then(function () {
       writeAuth(a, $('remember').checked);
       enter(a);
@@ -253,17 +253,6 @@ function clearAuth() {
     return label;
   }
 
-  /* 1家庭の内訳：「1/4（月） 大人2・高校生以下1」を日付ごとに */
-  function detailList(x) {
-    var ul = el('ul', 'row-detail');
-    API.byDay(x.counts).forEach(function (row) {
-      var li = el('li');
-      li.appendChild(el('b', null, API.dayLabel(row.day)));
-      li.appendChild(el('span', null, row.parts.map(function (p) { return p.kind.label + ' ' + p.n; }).join('・')));
-      ul.appendChild(li);
-    });
-    return ul;
-  }
 
   /* 1家庭の内訳を表に：日付を縦に並べ、いちばん下に 大人・高校生以下 の合計 */
   function detailTable(x) {
