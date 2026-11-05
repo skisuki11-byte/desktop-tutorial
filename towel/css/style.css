@@ -551,6 +551,7 @@ p { margin: 0; }
   padding-block: var(--s4) calc(var(--s5) + 4px);
 }
 .band-compact .eyebrow { font-size: 12px; letter-spacing: .08em; }
+.eyebrow span { display: inline-block; white-space: nowrap; margin-right: .6em; }
 .band-compact .title { font-size: clamp(21px, 6.2vw, 30px); margin-top: 2px; line-height: 1.3; }
 .band-meta {
   display: inline-block;
@@ -630,6 +631,15 @@ p { margin: 0; }
 .updated.is-stale::before { background: var(--ball); box-shadow: none; }
 
 /* 合言葉 */
+.secret-wrap { position: relative; margin-top: var(--s1); }
+.secret-wrap .input { margin: 0; padding-right: 76px; }
+.secret:not(.is-shown) { -webkit-text-security: disc; text-security: disc; }
+.secret-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  min-height: 40px; min-width: 60px; padding: 0 10px;
+  border: 1px solid var(--line-strong); border-radius: var(--r-s);
+  background: var(--surface-2); color: var(--ink-2); font-size: 14px; font-weight: 700; cursor: pointer;
+}
 .gate { max-width: 26rem; margin: var(--s6) auto 0; display: grid; gap: var(--s4); }
 .gate .form { gap: var(--s4); }
 .check { display: flex; align-items: center; gap: var(--s2); min-height: var(--tap); font-size: 15px; cursor: pointer; }

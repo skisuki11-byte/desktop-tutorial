@@ -88,7 +88,7 @@
     var db = demoDb(), now = new Date().toISOString();
     function find(id) { for (var i = 0; i < db.rows.length; i++) if (db.rows[i].id === Number(id)) return db.rows[i]; return null; }
     function own(id, token) { var r = find(id); if (!r || r.token !== token) throw { code: 'not_found' }; return r; }
-    function admin() { if (d.pass !== DEMO_PASS) throw { code: 'wrong_pass' }; }
+    function admin() { if (normPass(d.pass) !== normPass(DEMO_PASS)) throw { code: 'wrong_pass' }; }
     function clean(src) {
       var v = validate(src);
       if (v.errors.length) throw { code: 'invalid' };
@@ -154,6 +154,13 @@
     var o = pub(r);
     o.paid = r.paid; o.paidBy = r.paidBy; o.handed = r.handed; o.handedBy = r.handedBy; o.memo = r.memo; o.source = r.source;
     return o;
+  }
+
+  /* 合言葉の表記ゆれをそろえる（GAS 側の normPass_ と同じ） */
+  function normPass(v) {
+    var s = String(v == null ? '' : v);
+    if (typeof s.normalize === 'function') s = s.normalize('NFKC');
+    return s.replace(/\s+/g, '').replace(/[\u3041-\u3096]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) + 0x60); }).toLowerCase();
   }
 
   /* ---------- 入力のチェック（GAS 側とそろえる） ---------- */

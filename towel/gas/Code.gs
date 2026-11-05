@@ -1,3 +1,6 @@
+/** @OnlyCurrentDoc */
+// ↑ 権限を「このスプレッドシートだけ」に絞る印。消さないでください。
+
 /**
  * 春高タオル 申し込みの集計先（Google Apps Script）
  *
@@ -128,7 +131,7 @@ function admin_(d, fn) {
   var cache = CacheService.getScriptCache();
   var fails = Number(cache.get('fail') || 0);
   if (fails >= MAX_FAIL) return { ok: false, error: 'locked' };
-  if (typeof d.pass !== 'string' || !safeEqual_(d.pass.trim(), pass.trim())) {
+  if (typeof d.pass !== 'string' || !safeEqual_(normPass_(d.pass), normPass_(pass))) {
     cache.put('fail', String(fails + 1), 600);
     return { ok: false, error: 'wrong_pass' };
   }
@@ -340,6 +343,13 @@ function countUp_(key, ttl, max) {
   if (n >= max) return false;
   cache.put(k, String(n + 1), ttl);
   return true;
+}
+
+/** 合言葉の表記ゆれをそろえる：全角・半角、ひらがな・カタカナ、大文字・小文字、空白、濁点の付け方 */
+function normPass_(s) {
+  s = String(s == null ? '' : s);
+  if (typeof s.normalize === 'function') s = s.normalize('NFKC');
+  return s.replace(/\s+/g, '').replace(/[\u3041-\u3096]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) + 0x60); }).toLowerCase();
 }
 
 function safeEqual_(a, b) {
