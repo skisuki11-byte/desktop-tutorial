@@ -255,7 +255,7 @@
     $('declare').hidden = true;
     $('confirm-actions').hidden = true;
     $('done-actions').hidden = false;
-    $('done-new').hidden = false;
+    $('done-new').hidden = true; // 1家庭1申し込み：別のお名前での申し込みは出さない
     $('result-note').textContent = 'スクリーンショットを撮っておくと安心です';
     show('done');
     goTop($('result'));
@@ -371,7 +371,7 @@
       ul.appendChild(li);
     });
     $('mine-lead').textContent = closed ? '受付は終了しました。修正は役員にご相談ください。' : '内容を直したいときは「修正・取り消し」を押してください。';
-    $('mine-new').hidden = closed;
+    $('mine-new').hidden = true; // 1家庭1申し込み
     $('mine').hidden = false;
   }
   function refreshMine() {   // 役員が直した分も反映するため、開いたときに最新の内容を取り直す
