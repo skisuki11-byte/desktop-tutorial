@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>春高タオル 集計</title>
+<meta name="description" content="春高バレー出場記念タオル 役員用の集計画面">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#12235a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2312235a'/%3E%3Crect x='8' y='22' width='48' height='20' rx='2' fill='%23ffc52e'/%3E%3Crect x='14' y='22' width='2' height='20' fill='%2312235a'/%3E%3Crect x='48' y='22' width='2' height='20' fill='%2312235a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Barlow+Condensed:wght@600;700&family=Dela+Gothic+One&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="page-admin">
+
+<div class="demo-bar" id="demo-bar" hidden>
+  <div class="wrap"><b>デモ表示</b>：見本の申し込みを表示しています。本番の集計につなぐ手順は gas/README.md にあります</div>
+</div>
+
+<header class="band admin-band">
+  <div class="band-inner wrap">
+    <div>
+      <p class="eyebrow" id="team-line">役員用</p>
+      <h1 class="title">記念タオル 集計</h1>
+    </div>
+    <div class="band-tools" id="band-tools" hidden>
+      <span class="updated" id="updated">読み込み中…</span>
+      <button type="button" class="btn btn-ghost btn-sm" id="refresh">最新にする</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="logout">ログアウト</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap main" id="main">
+
+  <!-- 合言葉 -->
+  <section class="card gate" id="gate" aria-labelledby="gate-title">
+    <form class="form" id="gate-form" novalidate>
+      <div class="form-head">
+        <h2 class="card-title" id="gate-title">役員の合言葉を入力</h2>
+        <p class="lead">申し込んだご家庭のお名前が並ぶため、役員だけが見られるようにしています。</p>
+      </div>
+      <p class="demo-hint" id="demo-hint" hidden>デモ表示の合言葉は <b>demo</b> です</p>
+      <div class="field">
+        <label class="label" for="pass">合言葉</label>
+        <input class="input" id="pass" type="password" autocomplete="current-password" enterkeyhint="go">
+      </div>
+      <div class="field">
+        <label class="label" for="officer">あなたのお名前 <span class="tag tag-opt">任意</span></label>
+        <p class="hint" id="officer-hint">集金・受け渡しの記録に「誰がつけたか」として残ります（例：佐藤）</p>
+        <input class="input" id="officer" type="text" autocomplete="nickname" maxlength="12" aria-describedby="officer-hint">
+      </div>
+      <label class="check"><input type="checkbox" id="remember"> この端末では次から入力を省く</label>
+      <p class="send-error" id="gate-error" role="alert" hidden></p>
+      <button type="submit" class="btn btn-dark btn-block" id="gate-submit">集計を見る</button>
+    </form>
+  </section>
+
+  <!-- 集計 -->
+  <section id="board" hidden aria-label="集計">
+    <div class="kpis">
+      <div class="card kpi kpi-main">
+        <p class="kpi-label">申し込み合計</p>
+        <p class="kpi-value"><span class="num" id="k-total">0</span><small>枚</small></p>
+        <p class="kpi-sub" id="k-total-sub"></p>
+        <div id="k-target" hidden>
+          <div class="meter" role="img" id="k-target-meter-label"><span id="k-target-meter"></span></div>
+          <p class="kpi-sub" id="k-target-sub"></p>
+        </div>
+        <div class="kpi-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="copy-summary">集計をコピー（LINE用）</button>
+        </div>
+      </div>
+      <div class="card kpi">
+        <p class="kpi-label">集金</p>
+        <p class="kpi-value"><span class="num" id="k-paid">0</span><small id="k-paid-of">/ 0 件</small></p>
+        <div class="meter" role="img" id="k-paid-meter-label"><span id="k-paid-meter"></span></div>
+        <p class="kpi-sub" id="k-paid-sub"></p>
+      </div>
+      <div class="card kpi">
+        <p class="kpi-label">受け渡し</p>
+        <p class="kpi-value"><span class="num" id="k-handed">0</span><small id="k-handed-of">/ 0 件</small></p>
+        <div class="meter" role="img" id="k-handed-meter-label"><span id="k-handed-meter"></span></div>
+        <p class="kpi-sub" id="k-handed-sub"></p>
+      </div>
+    </div>
+
+    <div class="card list-card">
+      <div class="toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.4"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          <input class="input" id="q" type="search" placeholder="名前・コードネーム・番号でさがす" aria-label="さがす" autocomplete="off">
+        </div>
+        <div class="seg" role="group" aria-label="しぼりこみ" id="filters">
+          <button type="button" data-f="all" aria-pressed="true">すべて <span class="num" id="f-all"></span></button>
+          <button type="button" data-f="unpaid" aria-pressed="false">未集金 <span class="num" id="f-unpaid"></span></button>
+          <button type="button" data-f="unhanded" aria-pressed="false">未渡し <span class="num" id="f-unhanded"></span></button>
+          <button type="button" data-f="cancelled" aria-pressed="false">取り消し <span class="num" id="f-cancelled"></span></button>
+        </div>
+        <select class="select" id="sort" aria-label="並び順">
+          <option value="new">新しい順</option>
+          <option value="old">受付順</option>
+          <option value="name">名前順</option>
+          <option value="count">枚数の多い順</option>
+        </select>
+      </div>
+      <div class="toolbar-2">
+        <p class="result-count" id="result-count"></p>
+        <div class="group">
+          <button type="button" class="btn btn-ghost btn-sm" id="add">＋ 代わりに追加</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="copy-table">表をコピー</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="csv">CSVで保存</button>
+          <a class="btn btn-ghost btn-sm" id="sheet-link" href="#" target="_blank" rel="noopener" hidden>スプレッドシート</a>
+        </div>
+      </div>
+      <div class="row-head" aria-hidden="true">
+        <span>番号</span><span>お名前・コードネーム</span><span class="h-count">枚数</span><span>集金・受け渡し</span><span></span>
+      </div>
+      <ul class="rows" id="rows"></ul>
+      <div class="empty" id="empty" hidden>
+        <b id="empty-title">まだ申し込みはありません</b>
+        <p id="empty-text">ご家庭が申し込みフォームから送ると、ここに届いた順に並びます。</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 編集・追加 -->
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <form class="dialog-body" id="dlg-form" method="dialog" novalidate>
+    <h2 class="card-title" id="dlg-title">内容を直す</h2>
+    <div class="field" id="dfield-name">
+      <label class="label" for="d-name">お名前 <span class="tag tag-req">必須</span></label>
+      <p class="error" id="d-name-error" hidden></p>
+      <input class="input" id="d-name" type="text" maxlength="40" autocomplete="off">
+    </div>
+    <div class="field" id="dfield-codename">
+      <label class="label" for="d-codename"><span id="d-codename-label">コードネーム</span></label>
+      <p class="error" id="d-codename-error" hidden></p>
+      <input class="input" id="d-codename" type="text" maxlength="30" autocomplete="off">
+    </div>
+    <div class="field" id="dfield-count">
+      <label class="label" for="d-count">枚数 <span class="tag tag-req">必須</span></label>
+      <p class="error" id="d-count-error" hidden></p>
+      <input class="input" id="d-count" type="text" inputmode="numeric" maxlength="3" autocomplete="off">
+    </div>
+    <div class="field">
+      <label class="label" for="d-memo">役員メモ <span class="tag tag-opt">任意</span></label>
+      <p class="hint">ご家庭には見えません（例：LINEで受付・お釣りあり）</p>
+      <textarea class="input" id="d-memo" maxlength="200"></textarea>
+    </div>
+    <p class="send-error" id="dlg-error" role="alert" hidden></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="dlg-close">やめる</button>
+      <button type="submit" class="btn btn-dark" id="dlg-save">保存する</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-text"></span><button type="button" id="toast-btn" hidden>元に戻す</button></div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
