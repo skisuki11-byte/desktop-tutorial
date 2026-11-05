@@ -46,12 +46,8 @@
       <p class="demo-hint" id="demo-hint" hidden>デモ表示の合言葉は <b>demo</b> です</p>
       <div class="field">
         <label class="label" for="pass">合言葉</label>
-        <p class="hint" id="pass-hint">大文字・小文字、全角・半角のちがいは気にしなくて大丈夫です</p>
-        <div class="secret-wrap">
-          <!-- スマホのパスワード欄は日本語を入力できないので、ふつうの欄にして文字を ● で隠す -->
-          <input class="input secret" id="pass" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-describedby="pass-hint">
-          <button type="button" class="secret-toggle" id="pass-toggle" aria-pressed="false" aria-controls="pass">表示</button>
-        </div>
+        <p class="hint" id="pass-hint">ひらがな・カタカナ、大文字・小文字、全角・半角のちがいは気にしなくて大丈夫です</p>
+        <input class="input" id="pass" type="text" lang="ja" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-describedby="pass-hint">
       </div>
       <div class="field">
         <label class="label" for="officer">あなたのお名前 <span class="tag tag-opt">任意</span></label>
