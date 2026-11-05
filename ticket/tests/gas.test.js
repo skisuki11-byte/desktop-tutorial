@@ -223,6 +223,14 @@ console.log('ok 別アプリ（タオルの画面）・壊れたJSON・大きす
   console.log('ok 以前のシートには右端に「学年」の列を足すだけで、入っている申し込みはずれない');
 }
 
+// 版：新しいコードかどうかを画面側が見分けられる
+{
+  const v = env('pw');
+  assert.strictEqual(JSON.parse(v.ctx.doGet().c).version, 2);
+  assert.strictEqual(call(v, { action: 'admin_list', pass: 'pw' }).version, 2);
+  console.log('ok 動作確認URLと集計の読み込みで、コードの版（学年対応＝2）が分かる');
+}
+
 const e4 = env('pw'); e4.ctx.LockService = { getScriptLock: () => ({ tryLock: () => false, releaseLock() { throw new Error('not held'); } }) };
 r = call(e4, { action: 'submit', name: 'x', counts: C({ '0104-adult': 1 }) }); assert.strictEqual(r.error, 'busy');
 console.log('ok 混み合ってロックを取れないときは busy を返す（例外にしない）');

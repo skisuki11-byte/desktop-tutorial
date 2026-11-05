@@ -34,6 +34,8 @@ var TAIL_HEADERS = ['枚数', '金額', '状態', '集金', '集金の記録', '
 var EXTRA_HEADERS = ['学年'];
 var HEADERS = BASE_HEADERS.concat(ITEMS.map(function (it) { return it.header; }), TAIL_HEADERS, EXTRA_HEADERS);
 var GRADES = [1, 2, 3];   // 学年（画面側 config.js の grades とそろえる）
+// このコードの版。画面側（admin.js の SERVER_VERSION）は、これより古い集計先につながっていると「更新してください」と出す
+var VERSION = 2;          // 2：学年に対応
 var C = (function () {   // 列の位置（0始まり）
   var c = { id: 0, createdAt: 1, updatedAt: 2, name: 3, courtname: 4, item0: 5 };
   var t = c.item0 + ITEMS.length;
@@ -47,7 +49,7 @@ var MAX_SUBMIT_PER_HOUR = 300;
 var MAX_FAIL = 20;           // 合言葉の失敗を10分あたり何回まで受け付けるか
 
 function doGet() {
-  return json_({ ok: true, app: 'ticket' });   // 公開URLをブラウザで開いたときの動作確認用
+  return json_({ ok: true, app: 'ticket', version: VERSION });   // 公開URLをブラウザで開いたときの動作確認用（version で新しいコードか分かる）
 }
 
 function doPost(e) {
@@ -155,7 +157,7 @@ function admin_(d, fn) {
 
 function adminList_() {
   var rows = rows_(sheet_());
-  return { ok: true, items: rows.map(adminView_), serverTime: new Date().toISOString() };
+  return { ok: true, items: rows.map(adminView_), serverTime: new Date().toISOString(), version: VERSION };
 }
 
 function adminSave_(d) {

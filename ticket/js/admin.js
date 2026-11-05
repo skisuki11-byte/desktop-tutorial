@@ -85,7 +85,9 @@ function clearAuth() {
 
   /* ---------- 読み込み ---------- */
   var loading = false;
+  var SERVER_VERSION = 2;   // gas/Code.gs の VERSION。これより古い集計先では学年が保存されない
   function applyList(res) {
+    $('server-warn').hidden = Number(res.version || 0) >= SERVER_VERSION;
     items = (res.items || []).map(normalize);
     lastLoaded = Date.now();
     render();
