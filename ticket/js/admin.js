@@ -74,6 +74,7 @@ function clearAuth() {
 
   function enter(a) {
     auth = a;
+    $('logout').textContent = 'ログアウト' + (a.officer ? '（' + a.officer + '）' : '');
     $('gate').hidden = true;
     $('board').hidden = false;
     $('band-tools').hidden = false;
@@ -637,11 +638,7 @@ function clearAuth() {
   /* ---------- はじめに ---------- */
   function init() {
     if (API.demo) { $('demo-bar').hidden = false; $('demo-hint').hidden = false; }
-    var tl = $('team-line'); tl.textContent = '';
-    (CFG.team ? [CFG.team, '役員用'] : ['役員用']).forEach(function (t, i) {
-      if (i) tl.appendChild(document.createTextNode(' '));
-      tl.appendChild(el('span', null, t));
-    });
+    $('team-line').textContent = CFG.team || '';
     $('d-courtname-label').textContent = COURT;
     if (CFG.sheetUrl) { $('sheet-link').href = CFG.sheetUrl; $('sheet-link').hidden = false; }
     dGrid = API.buildGrid($('d-grid'), 'd-', updateDlgSum);
