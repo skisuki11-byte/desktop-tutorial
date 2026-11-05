@@ -156,6 +156,7 @@
       <div class="list-foot">
         <p class="list-foot-label">書き出し</p>
         <div class="group">
+          <button type="button" class="btn btn-dark btn-sm" id="pdf">PDFで保存（集計表）</button>
           <button type="button" class="btn btn-ghost btn-sm" id="csv">CSVで保存</button>
           <button type="button" class="btn btn-ghost btn-sm" id="copy-table">表をコピー</button>
           <a class="btn btn-ghost btn-sm" id="sheet-link" href="#" target="_blank" rel="noopener" hidden>スプレッドシートを開く</a>
@@ -215,6 +216,9 @@
 </dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-text"></span><button type="button" id="toast-btn" hidden>元に戻す</button></div>
+
+<!-- PDF（印刷）用の集計表：［PDFで保存］を押したときだけ中身を作り、印刷のときだけ見せる -->
+<section class="print-sheet" id="print-sheet" aria-hidden="true"></section>
 
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
