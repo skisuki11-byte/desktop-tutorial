@@ -317,7 +317,7 @@ function clearAuth() {
   function buildDayFilter() {
     var box = el('div', 'days-filter'); box.id = 'days-filter';
     box.appendChild(el('span', 'days-filter-label', '日付で見る'));
-    [{ id: '', label: 'すべて' }].concat(API.days.map(function (d) { return { id: d.id, label: API.dayLabel(d) }; })).forEach(function (o) {
+    [{ id: '', label: '全日' }].concat(API.days.map(function (d) { return { id: d.id, label: API.dayLabel(d) }; })).forEach(function (o) {
       var b = el('button', 'day-btn', o.label); b.type = 'button'; b.dataset.day = o.id; b.setAttribute('aria-pressed', String(o.id === ''));
       box.appendChild(b);
     });
