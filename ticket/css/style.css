@@ -1016,3 +1016,13 @@ dialog .grid { margin-top: 6px; }
   .day-btn[data-day=""] { padding: 0 6px; margin-right: 6px; }
   .day-btn[data-day=""][aria-pressed="true"]::before { content: none; }
 }
+
+/* 絞り込み中の帯：何で絞っているかと［すべてに戻す］（迷子にならないように） */
+.filter-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 8px 8px 8px 14px; border-radius: var(--r-m); background: var(--navy); color: #ffffff; font-size: 14px; font-weight: 700; }
+@media (min-width: 900px) { .filter-note { grid-column: 1 / -1; } }
+.filter-note-text::before { content: "▼ "; color: var(--ball); }
+.filter-reset { background: var(--ball); color: var(--navy); border: 0; min-height: 40px; }
+.filter-reset:hover { background: var(--ball-strong); }
+/* 押したカード：表示中 */
+.kpi-task.is-active { border: 2px solid var(--navy); box-shadow: 0 0 0 3px rgb(18 35 90 / .12); }
+.kpi-task.is-active .kpi-go { color: var(--navy); }
