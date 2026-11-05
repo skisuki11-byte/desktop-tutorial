@@ -6,7 +6,7 @@
 <title>春高チケット 集計</title>
 <meta name="description" content="春高バレー 応援チケット 役員用の集計画面">
 <meta name="robots" content="noindex, nofollow">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
 
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#ffffff">
@@ -156,7 +156,7 @@
       <div class="list-foot">
         <p class="list-foot-label">書き出し</p>
         <div class="group">
-          <button type="button" class="btn btn-dark btn-sm" id="pdf">PDFで保存（集計表）</button>
+          <button type="button" class="btn btn-dark btn-sm" id="pdf">PDFを表示（集計表）</button>
           <button type="button" class="btn btn-ghost btn-sm" id="csv">CSVで保存</button>
           <button type="button" class="btn btn-ghost btn-sm" id="copy-table">表をコピー</button>
           <a class="btn btn-ghost btn-sm" id="sheet-link" href="#" target="_blank" rel="noopener" hidden>スプレッドシートを開く</a>
@@ -211,6 +211,25 @@
     <div class="dialog-actions">
       <button type="button" class="btn btn-ghost" id="ask-no">やめる</button>
       <button type="button" class="btn btn-danger" id="ask-yes">取り消す</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 集計表 PDF のプレビュー（まず画面で見て、よければ保存） -->
+<dialog id="pv" class="pv" aria-labelledby="pv-title">
+  <div class="pv-head">
+    <div>
+      <h2 class="card-title" id="pv-title">集計表（PDF）</h2>
+      <p class="pv-meta" id="pv-meta"></p>
+    </div>
+    <button type="button" class="pv-x" id="pv-x" aria-label="閉じる">×</button>
+  </div>
+  <div class="pv-pages" id="pv-pages"></div>
+  <div class="pv-foot">
+    <p class="pv-hint" id="pv-hint"></p>
+    <div class="pv-actions">
+      <button type="button" class="btn btn-ghost" id="pv-close">閉じる</button>
+      <button type="button" class="btn btn-dark" id="pv-save">PDFを保存</button>
     </div>
   </div>
 </dialog>

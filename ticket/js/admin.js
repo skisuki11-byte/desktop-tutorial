@@ -784,27 +784,64 @@ function clearAuth() {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 10000);
   }
-  function savePdf() {
+  /* まず画面にプレビューを出し、見てから保存する。
+     PDF はプレビューを開く時点で作っておくので、［保存］を押した瞬間に共有メニューを出せる
+     （iPhone は「押した直後」でないと共有メニューを出せないため、こうすると確実） */
+  var pv = { blob: null, name: '', urls: [] };
+  var MOBILE = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  function pageUrl(c) {
+    return new Promise(function (resolve) {
+      if (!c.toBlob) { resolve(c.toDataURL('image/jpeg', 0.92)); return; }
+      c.toBlob(function (b) { resolve(b ? URL.createObjectURL(b) : c.toDataURL('image/jpeg', 0.92)); }, 'image/jpeg', 0.92);
+    });
+  }
+  function openPreview() {
     if (!items.length) { toast('まだ申し込みがありません'); return; }
     var btn = $('pdf'); btn.disabled = true; btn.textContent = 'PDFを作っています…';
-    var name = pdfFileName();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-    ready.then(function () { return window.PDFOut.build(buildSummaryPages(), { page: window.PDFOut.A4 }); }).then(function (blob) {
-      var file = null;
-      try { file = new File([blob], name, { type: 'application/pdf' }); } catch (e) { /* 古い端末 */ }
-      var mobile = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-      // スマホは共有メニュー（「ファイルに保存」「LINE」などを選べる）。PC やシェアできない端末はダウンロード
-      if (mobile && file && navigator.canShare && navigator.canShare({ files: [file] })) {
-        return navigator.share({ files: [file], title: name }).then(function () { toast('PDFを共有しました'); }, function (e) {
-          if (e && e.name === 'AbortError') return;
-          downloadBlob(blob, name); toast('PDFを保存しました');
-        });
-      }
-      downloadBlob(blob, name);
-      toast(mobile ? 'PDFを保存しました（保存されないときは、LINE の中ではなく Safari や Chrome で開いてください）' : 'PDFを保存しました');
+    ready.then(function () {
+      var pages = buildSummaryPages();
+      pv.name = pdfFileName();
+      return Promise.all([window.PDFOut.build(pages, { page: window.PDFOut.A4 }), Promise.all(pages.map(pageUrl))]);
+    }).then(function (r) {
+      pv.blob = r[0]; pv.urls = r[1];
+      var box = $('pv-pages'); box.textContent = '';
+      pv.urls.forEach(function (u, i) {
+        var img = document.createElement('img');
+        img.src = u; img.alt = '集計表 ' + (i + 1) + 'ページ目'; img.className = 'pv-page';
+        img.width = 1680; img.height = 2376;
+        box.appendChild(img);
+      });
+      var n = items.filter(function (it) { return it.status !== 'cancelled'; }).length;
+      $('pv-meta').textContent = 'A4縦・' + pv.urls.length + 'ページ・' + n + '家庭ぶん';
+      $('pv').showModal();
+      box.scrollTop = 0;
     }).catch(function (e) {
       toast('PDFを作れませんでした：' + (e && e.message ? e.message : 'もう一度お試しください'), true);
-    }).then(function () { btn.disabled = false; btn.textContent = 'PDFで保存（集計表）'; });
+    }).then(function () { btn.disabled = false; btn.textContent = 'PDFを表示（集計表）'; });
+  }
+  function closePreview() { if ($('pv').open) $('pv').close(); }
+  function onPreviewClosed() {
+    pv.urls.forEach(function (u) { if (u.indexOf('blob:') === 0) URL.revokeObjectURL(u); });
+    pv.urls = []; pv.blob = null; $('pv-pages').textContent = '';
+  }
+  function savePreview() {
+    if (!pv.blob) return;
+    var blob = pv.blob, name = pv.name, file = null;
+    try { file = new File([blob], name, { type: 'application/pdf' }); } catch (e) { /* 古い端末 */ }
+    // スマホは共有メニュー（「"ファイル"に保存」「LINE」などを選べる）。PC やシェアできない端末はダウンロード
+    if (MOBILE && file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: name }).then(function () {
+        closePreview(); toast('PDFを保存・共有しました');
+      }, function (e) {
+        if (e && e.name === 'AbortError') return;         // 共有メニューを閉じただけ：プレビューはそのまま
+        downloadBlob(blob, name); closePreview(); toast('PDFを保存しました');
+      });
+      return;
+    }
+    downloadBlob(blob, name);
+    closePreview();
+    toast(MOBILE ? 'PDFを保存しました（保存されないときは、LINE の中ではなく Safari や Chrome で開いてください）' : 'PDFをダウンロードしました');
   }
 
   /* ---------- お知らせ ---------- */
@@ -841,7 +878,15 @@ function clearAuth() {
     $('rows').addEventListener('change', onRowsChange);
     $('rows').addEventListener('click', onRowsClick);
     $('add').addEventListener('click', function () { openDialog(null); });
-    $('pdf').addEventListener('click', savePdf);
+    $('pdf').addEventListener('click', openPreview);
+    $('pv-save').addEventListener('click', savePreview);
+    $('pv-close').addEventListener('click', closePreview);
+    $('pv-x').addEventListener('click', closePreview);
+    $('pv').addEventListener('close', onPreviewClosed);
+    $('pv-save').textContent = MOBILE ? '保存・送る' : 'PDFをダウンロード';
+    var ANDROID = /Android/i.test(navigator.userAgent);
+    $('pv-hint').textContent = !MOBILE ? 'よければ［PDFをダウンロード］を押してください。'
+      : '指2本で広げると拡大できます。［保存・送る］から' + (ANDROID ? '「ドライブに保存」' : '「"ファイル"に保存」') + 'や LINE を選べます。';
     $('csv').addEventListener('click', csv);
     $('copy-table').addEventListener('click', copyTable);
     $('copy-summary').addEventListener('click', copySummary);
