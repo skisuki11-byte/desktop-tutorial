@@ -3,12 +3,13 @@
  * Layout: 1カラム。上に紺の「コート」帯（タオルの絵＝申し込むものを最初に見せる）、
  *         下に白いカード。申し込みは最大 34rem、集計は 72rem まで広がり、一覧は
  *         スマホではカード、広い画面では表になる。
- * Color : 紺（学校の部活ジャージ）＋ボールの黄色。黄色は「押すもの・いま選んでいる数」にだけ使う。
+ * Color : 白が基調。紺（部活のジャージ）は文字とタオルの線に、ボールの黄色は「押すもの・いま選んでいる数・
+ *         強調の線」にだけ使う。スマホがダークモードでも白のまま。
  * Type  : 見出し＝Dela Gothic One（タオルのプリント文字）／本文＝BIZ UDPゴシック（UDフォント。
  *         保護者・祖父母世代のスマホでも読みやすい）／数字＝Barlow Condensed（得点板の数字）
  */
 :root {
-  --bg: #f1f4fa;
+  --bg: #f5f6f9;
   --surface: #ffffff;
   --surface-2: #f6f8fc;
   --ink: #0d1937;
@@ -16,11 +17,11 @@
   --ink-3: #626d8c;
   --line: #d7deeb;
   --line-strong: #b7c1d8;
-  --band: #12235a;
-  --band-2: #1b3274;
-  --band-ink: #ffffff;
-  --band-ink-2: #c3cdea;
-  --court-line: rgb(255 255 255 / .16);
+  --navy: #12235a;
+  --band: #ffffff;
+  --band-2: #ffffff;
+  --band-ink: #0d1937;
+  --band-ink-2: #47526f;
   --ball: #ffc52e;
   --ball-strong: #f2b200;
   --ball-ink: #0d1937;
@@ -35,7 +36,7 @@
   --demo: #5b3fb8;
   --demo-soft: #ece7fb;
   --shadow: 0 1px 2px rgb(13 25 55 / .06), 0 10px 28px rgb(13 25 55 / .08);
-  --shadow-towel: 0 2px 0 rgb(0 0 0 / .12), 0 14px 26px rgb(0 0 0 / .28);
+  --shadow-towel: 0 1px 0 rgb(13 25 55 / .08), 0 8px 18px rgb(13 25 55 / .16);
 
   --font-display: "Dela Gothic One", "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", sans-serif;
   --font-body: "BIZ UDPGothic", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
@@ -45,38 +46,6 @@
   --r-s: 8px; --r-m: 14px; --r-l: 20px; --r-pill: 999px;
   --tap: 48px;
   color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0a1024;
-    --surface: #121b36;
-    --surface-2: #17213f;
-    --ink: #eaeef8;
-    --ink-2: #b3bdd6;
-    --ink-3: #95a0bd;
-    --line: #27345a;
-    --line-strong: #3a4973;
-    --band: #0d1940;
-    --band-2: #142458;
-    --band-ink: #ffffff;
-    --band-ink-2: #aebbe2;
-    --court-line: rgb(255 255 255 / .12);
-    --ball: #ffcb3d;
-    --ball-strong: #ffd666;
-    --ball-ink: #0d1937;
-    --ball-soft: #3a3216;
-    --ok: #55c88a;
-    --ok-soft: #133526;
-    --warn: #f2b25c;
-    --warn-soft: #3a2a12;
-    --danger: #ff7b85;
-    --danger-soft: #3d1a20;
-    --focus: #7aa2ff;
-    --demo: #b9a6ff;
-    --demo-soft: #261d47;
-    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 10px 28px rgb(0 0 0 / .35);
-    color-scheme: dark;
-  }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -125,11 +94,9 @@ p { margin: 0; }
 .band {
   position: relative;
   overflow: hidden;
-  background:
-    linear-gradient(var(--court-line), var(--court-line)) right 30% top 0 / 2px 100% no-repeat,
-    linear-gradient(var(--court-line), var(--court-line)) left 0 bottom 26px / 100% 2px no-repeat,
-    linear-gradient(160deg, var(--band-2), var(--band) 60%);
+  background: var(--band);
   color: var(--band-ink);
+  border-bottom: 1px solid var(--line);
 }
 .band-inner {
   display: grid;
@@ -140,7 +107,7 @@ p { margin: 0; }
   font-size: 13px;
   font-weight: 700;
   letter-spacing: .12em;
-  color: var(--ball);
+  color: var(--navy);
 }
 .title {
   font-family: var(--font-display);
@@ -158,11 +125,11 @@ p { margin: 0; }
   margin-top: var(--s4);
   padding: 6px 14px;
   border-radius: var(--r-pill);
-  background: rgb(255 255 255 / .1);
-  border: 1px solid rgb(255 255 255 / .22);
+  background: var(--ball-soft);
+  border: 1px solid var(--ball);
   font-size: 15px;
 }
-.deadline b { font-family: var(--font-num); font-size: 22px; line-height: 1; color: var(--ball); font-variant-numeric: tabular-nums; }
+.deadline b { font-family: var(--font-num); font-size: 22px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
 .deadline.is-soon { background: var(--ball); color: var(--ball-ink); border-color: var(--ball); }
 .deadline.is-soon b { color: var(--ball-ink); }
 
@@ -175,7 +142,7 @@ p { margin: 0; }
   border-radius: 4px;
   background:
     repeating-linear-gradient(0deg, rgb(255 255 255 / .1) 0 1px, transparent 1px 3px),
-    linear-gradient(90deg, transparent 0 7%, var(--band) 7% 8.4%, transparent 8.4% 91.6%, var(--band) 91.6% 93%, transparent 93%),
+    linear-gradient(90deg, transparent 0 7%, var(--navy) 7% 8.4%, transparent 8.4% 91.6%, var(--navy) 91.6% 93%, transparent 93%),
     var(--ball);
   box-shadow: var(--shadow-towel);
   transition: transform .28s cubic-bezier(.2,.8,.3,1.2), opacity .2s;
@@ -198,7 +165,7 @@ p { margin: 0; }
   align-items: center;
   justify-content: center;
   gap: 4.5%;
-  color: var(--band);
+  color: var(--navy);
 }
 .towel-word { font-family: var(--font-display); font-size: clamp(26px, 9vw, 40px); line-height: 1; letter-spacing: .06em; }
 .towel-side { display: grid; gap: 2px; font-size: clamp(9px, 2.6vw, 12px); font-weight: 700; letter-spacing: .1em; line-height: 1.2; text-align: center; }
@@ -210,14 +177,14 @@ p { margin: 0; }
   min-width: 56px;
   padding: 2px 12px;
   border-radius: var(--r-pill);
-  background: var(--band-ink);
-  color: var(--band);
+  background: var(--navy);
+  color: #ffffff;
   font-family: var(--font-num);
   font-weight: 700;
   font-size: 22px;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  box-shadow: 0 6px 16px rgb(0 0 0 / .25);
+  box-shadow: 0 4px 10px rgb(13 25 55 / .2);
 }
 .towel-badge.pop { animation: pop .32s cubic-bezier(.2,.8,.3,1.4); }
 @keyframes pop { 0% { transform: scale(.8); } 100% { transform: scale(1); } }
@@ -479,10 +446,9 @@ p { margin: 0; }
   gap: var(--s1);
   padding: var(--s5);
   border-radius: var(--r-l);
-  background:
-    linear-gradient(var(--court-line), var(--court-line)) right 22% top 0 / 2px 100% no-repeat,
-    linear-gradient(160deg, var(--band-2), var(--band) 70%);
+  background: var(--surface);
   color: var(--band-ink);
+  border: 2px solid var(--line);
   overflow: hidden;
   box-shadow: var(--shadow);
 }
@@ -498,9 +464,9 @@ p { margin: 0; }
 .ticket-name small { font-size: .5em; margin-left: .35em; color: var(--band-ink-2); }
 .ticket-code { font-size: 15px; color: var(--band-ink-2); overflow-wrap: anywhere; }
 .ticket-code b { color: var(--band-ink); font-size: 17px; }
-.ticket-count { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid rgb(255 255 255 / .18); }
+.ticket-count { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--line); }
 .ticket-count p:last-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; line-height: 1; }
-.ticket-count .num { font-size: clamp(80px, 24vw, 120px); font-weight: 700; color: var(--ball); line-height: .9; }
+.ticket-count .num { font-size: clamp(80px, 24vw, 120px); font-weight: 700; color: var(--navy); line-height: .9; }
 .ticket-count .unit { font-size: 26px; font-weight: 700; }
 .ticket-yen { margin-left: auto; font-size: 14px; color: var(--band-ink-2); align-self: flex-end; }
 .ticket-yen b { font-size: 24px; color: var(--band-ink); margin-left: 6px; }
@@ -511,8 +477,8 @@ p { margin: 0; }
   gap: var(--s1) var(--s4);
   margin: var(--s4) calc(-1 * var(--s5)) calc(-1 * var(--s5));
   padding: var(--s3) var(--s5);
-  border-top: 2px dashed rgb(255 255 255 / .28);
-  background: rgb(0 0 0 / .14);
+  border-top: 2px dashed var(--line-strong);
+  background: var(--surface-2);
   font-size: 14px;
   color: var(--band-ink-2);
 }
@@ -558,7 +524,8 @@ p { margin: 0; }
   margin-top: 6px;
   padding: 2px 10px;
   border-radius: var(--r-pill);
-  background: rgb(255 255 255 / .12);
+  background: var(--ball-soft);
+  color: var(--ink);
   font-size: 13px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -624,8 +591,8 @@ p { margin: 0; }
 .admin-band .band-inner { padding-block: var(--s5); display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--s3) var(--s5); }
 .admin-band .title { font-size: clamp(24px, 6vw, 30px); margin-top: var(--s1); }
 .band-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); font-size: 14px; color: var(--band-ink-2); }
-.band-tools .btn-ghost { color: var(--band-ink); border-color: rgb(255 255 255 / .35); }
-.band-tools .btn-ghost:hover { background: rgb(255 255 255 / .1); }
+.band-tools .btn-ghost { color: var(--band-ink); border-color: var(--line-strong); }
+.band-tools .btn-ghost:hover { background: var(--surface-2); }
 .updated { display: inline-flex; align-items: center; gap: 6px; }
 .updated::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgb(85 200 138 / .25); }
 .updated.is-stale::before { background: var(--ball); box-shadow: none; }
@@ -659,19 +626,19 @@ p { margin: 0; }
 .kpi-value { display: flex; align-items: baseline; gap: 4px; line-height: 1; flex-wrap: wrap; }
 .kpi-value .num { font-size: 48px; font-weight: 700; }
 .kpi-value small { font-size: 15px; font-weight: 700; color: var(--ink-2); }
-.kpi-main { background: var(--band); color: var(--band-ink); border-color: var(--band); }
+.kpi-main { background: var(--surface); color: var(--band-ink); border-color: var(--line); border-top: 6px solid var(--ball); }
 .kpi-main .kpi-label { color: var(--band-ink); }
-.kpi-main .kpi-value .num { font-size: 88px; color: var(--ball); }
+.kpi-main .kpi-value .num { font-size: 88px; color: var(--navy); }
 .kpi-main .kpi-value small { font-size: 22px; color: var(--band-ink); }
 .kpi-sub { font-size: 14px; color: var(--ink-2); line-height: 1.6; }
 .kpi-main .kpi-sub { color: var(--band-ink-2); font-size: 15px; }
 .meter { display: block; height: 10px; border-radius: var(--r-pill); background: var(--line); overflow: hidden; }
 .meter > span { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--ok); transition: width .4s ease-out; }
-.kpi-main .meter { background: rgb(255 255 255 / .16); }
+.kpi-main .meter { background: var(--line); }
 .kpi-main .meter > span { background: var(--ball); }
 .kpi-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s1); }
-.kpi-main .btn-ghost { color: var(--band-ink); border-color: rgb(255 255 255 / .4); }
-.kpi-main .btn-ghost:hover { background: rgb(255 255 255 / .1); }
+.kpi-main .btn-ghost { color: var(--band-ink); border-color: var(--line-strong); }
+.kpi-main .btn-ghost:hover { background: var(--surface-2); }
 /* 集金・受け渡しの数字は押せる（まだの家庭だけを一覧に出す） */
 .kpi-task { font: inherit; color: inherit; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .08s; }
 .kpi-task:hover { border-color: var(--ink-3); }
