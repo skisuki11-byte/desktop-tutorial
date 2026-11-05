@@ -579,12 +579,6 @@
     dGrid = API.buildGrid($('d-grid'), 'd-', updateDlgSum);
 
     $('gate-form').addEventListener('submit', onGate);
-    $('pass-toggle').addEventListener('click', function () {
-      var shown = $('pass').classList.toggle('is-shown');
-      $('pass-toggle').setAttribute('aria-pressed', String(shown));
-      $('pass-toggle').textContent = shown ? '隠す' : '表示';
-      $('pass').focus();
-    });
     $('refresh').addEventListener('click', function () { load(); });
     $('logout').addEventListener('click', function () { clearAuth(); showGate(); });
     $('q').addEventListener('input', function () { view.q = $('q').value; render(); });
