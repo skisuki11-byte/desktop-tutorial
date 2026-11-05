@@ -5,7 +5,7 @@
  * 空欄（'' や 0）にした項目は、画面に出さない。
  */
 window.TOWEL_CONFIG = {
-  endpoint: '',
+  endpoint: 'https://script.google.com/macros/s/AKfycbzfFnxAh-pdsc1T14DPaaX4LZCVpBMPFdkZ3Lx4hW5aVnWZGx2RU8QThMKRZIlAv_a6/exec',
 
   // 画面の見出しまわり
   team: '',                         // 例：'〇〇高校 男子バレーボール部'
