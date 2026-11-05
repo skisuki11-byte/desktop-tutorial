@@ -953,6 +953,20 @@ dialog .grid { margin-top: 6px; }
 .cell-count small.num { display: block; font-size: 15px; font-weight: 700; color: var(--ink-2); margin-top: 4px; }
 @media (min-width: 900px) { .row, .row-head { grid-template-columns: 4.5rem minmax(0, 1fr) 7rem 11rem 11rem 11rem; } }
 
-/* 管理画面：家庭ごとの区分別の合計枚数 */
-.cell-count .kind-line { display: block; margin-top: 2px; font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; }
-.cell-count .kind-line.is-zero { color: var(--ink-3); font-weight: 400; }
+
+/* 管理画面：家庭ごとの内訳表（日付を縦に、いちばん下に区分別の合計） */
+.row-court { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-court b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+.fam { width: calc(100% + 5.5rem); max-width: 22rem; margin-top: 10px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.fam th, .fam td { padding: 3px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.fam th:first-child { padding-left: 0; text-align: left; width: 40%; }
+.fam thead th { padding-top: 0; font-size: 11px; font-weight: 700; color: var(--ink-3); }
+.fam tbody th { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.fam td { font-size: 16px; font-weight: 700; color: var(--ink); }
+.fam td.is-zero { color: var(--line-strong); font-weight: 400; }
+.fam tbody tr.is-empty th { color: var(--ink-3); font-weight: 400; }
+.fam tfoot th, .fam tfoot td { border-bottom: 0; border-top: 2px solid var(--ink); }
+.fam tfoot th { font-size: 13px; color: var(--ink); }
+.fam tfoot td { font-size: 17px; color: var(--navy); }
+.fam tfoot td.is-zero { color: var(--ink-3); font-size: 14px; }
+@media (min-width: 900px) { .fam { width: 100%; } }
