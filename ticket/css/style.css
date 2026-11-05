@@ -969,3 +969,24 @@ dialog .grid { margin-top: 6px; }
 @media (max-height: 700px) { .hero-kicker { display: none; } .hero-inner { padding-top: 12px; } }
 .page-form .hero-inner { padding-bottom: 26px; }
 .page-form .team-badge { margin-top: 8px; }
+
+/* 日付で見る：「すべて」だけは全日程の集計に切り替える大事なボタンなので、塗りの札にして目立たせる */
+.day-btn[data-day=""] {
+  align-self: center;
+  min-height: 36px;
+  margin: 0 8px 4px 0;
+  padding: 0 14px;
+  border: 2px solid var(--navy);
+  border-radius: var(--r-pill);
+  background: #ffffff;
+  color: var(--navy);
+  font-size: 14px;
+}
+.day-btn[data-day=""]:hover { background: var(--surface-2); }
+.day-btn[data-day=""][aria-pressed="true"] {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #ffffff;
+  box-shadow: 0 3px 0 var(--ball-strong);
+}
+.day-btn[data-day=""][aria-pressed="true"]::before { content: "★ "; color: var(--ball); }
