@@ -970,3 +970,15 @@ dialog .grid { margin-top: 6px; }
 .fam tfoot td { font-size: 17px; color: var(--navy); }
 .fam tfoot td.is-zero { color: var(--ink-3); font-size: 14px; }
 @media (min-width: 900px) { .fam { width: 100%; } }
+
+/* 管理画面：日付で絞り込むボタン（4つを1行に）と、内訳表の日付の行 */
+.days-filter { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; gap: 6px; }
+.days-filter-label { grid-column: 1 / -1; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.day-btn { min-height: 40px; padding: 4px 2px; border: 1.5px solid var(--line-strong); border-radius: var(--r-m); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 700; white-space: nowrap; cursor: pointer; touch-action: manipulation; }
+.day-btn[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+.day-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (min-width: 900px) { .days-filter { grid-column: 1 / -1; grid-template-columns: auto repeat(4, 8rem); justify-content: start; } .days-filter-label { grid-column: auto; margin-right: 6px; } }
+.fam tr.is-focus th, .fam tr.is-focus td { background: var(--ball-soft); }
+.fam tr.is-focus th:first-child { padding-left: 6px; }
+.breakdown tr.bd-day { cursor: pointer; }
+.breakdown tr.bd-day:hover th, .breakdown tr.bd-day:hover td { background: var(--ball-soft); }
