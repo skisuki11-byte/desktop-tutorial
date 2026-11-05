@@ -406,7 +406,8 @@
     $('mine-new').addEventListener('click', function () { startNew(true); });
 
     // GAS は起動に数秒かかることがある。入力を始めた時点で起こしておく
-    var warmed = false;
+    // （申し込み済みの端末は、開いたときの「最新の内容の取り直し」で起きるので、温めは送らない）
+    var warmed = loadMine().length > 0;
     $('form').addEventListener('focusin', function () { if (!warmed) { warmed = true; API.call('ping').catch(function () {}); } });
 
     fillForm(null);

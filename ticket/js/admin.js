@@ -62,9 +62,10 @@ function clearAuth() {
   var btn = $('gate-submit');
     btn.disabled = true; btn.textContent = '確かめています…';
     var a = { pass: pass, officer: officerName };
-    API.call('admin_login', { pass: a.pass }).then(function () {
+    // 合言葉の確認と一覧の読み込みを、1回の問い合わせでまとめて行う（admin_list は合言葉が違えば wrong_pass を返す）
+    API.call('admin_list', { pass: a.pass }).then(function (res) {
       writeAuth(a, $('remember').checked);
-      enter(a);
+      enter(a, res);
     }, function (err) {
       $('gate-error').textContent = API.message(err);
       $('gate-error').hidden = false;
@@ -72,31 +73,36 @@ function clearAuth() {
     }).then(function () { btn.disabled = false; btn.textContent = '集計を見る'; });
   }
 
-  function enter(a) {
+  function enter(a, res) {
     auth = a;
     $('logout').textContent = 'ログアウト' + (a.officer ? '（' + a.officer + '）' : '');
     $('gate').hidden = true;
     $('board').hidden = false;
     $('band-tools').hidden = false;
-    load(true);
+    if (res) applyList(res); else load(true);
     startTimer();
   }
 
   /* ---------- 読み込み ---------- */
-  function load(first) {
-    if (!auth) return Promise.resolve();
+  var loading = false;
+  function applyList(res) {
+    items = (res.items || []).map(normalize);
+    lastLoaded = Date.now();
+    render();
+  }
+  /* first：開いた直後／manual：［最新にする］を押したとき。どちらでもない自動更新の失敗は、
+     画面にエラーを出さず「更新できませんでした」とだけ出して、次の自動更新で取り直す */
+  function load(first, manual) {
+    if (!auth || loading) return Promise.resolve();   // 自動更新・タブに戻ったとき・ボタンが重なっても1本だけ
     if (Object.keys(pending).length) return Promise.resolve();   // 保存中は上書きしない
+    loading = true;
     $('refresh').disabled = true;
     if (first) $('updated').textContent = '読み込み中…';
-    return API.call('admin_list', { pass: auth.pass }).then(function (res) {
-      items = (res.items || []).map(normalize);
-      lastLoaded = Date.now();
-      render();
-    }, function (err) {
+    return API.call('admin_list', { pass: auth.pass }).then(applyList, function (err) {
       if (err.code === 'wrong_pass' || err.code === 'locked' || err.code === 'no_pass') { clearAuth(); showGate(API.message(err)); return; }
-      toast(API.message(err), true);
-      markStale();
-    }).then(function () { $('refresh').disabled = false; });
+      if (first || manual) toast(API.message(err), true);
+      markStale(true);
+    }).then(function () { loading = false; $('refresh').disabled = false; });
   }
   function normalize(x) {
     var o = Object.assign({}, x);
@@ -114,10 +120,10 @@ function clearAuth() {
     }, 15000);
   }
   function stopTimer() { if (timer) clearInterval(timer); timer = null; }
-  function markStale() {
+  function markStale(failed) {
     if (!lastLoaded) return;
     var el = $('updated'), d = new Date(lastLoaded);
-    el.textContent = d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2) + ' に更新';
+    el.textContent = d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2) + ' に更新' + (failed ? '（最新の取得に失敗・自動で再試行します）' : '');
     el.classList.toggle('is-stale', Date.now() - lastLoaded > 3 * 60000);
   }
 
@@ -675,7 +681,7 @@ function clearAuth() {
     dGrid = API.buildGrid($('d-grid'), 'd-', updateDlgSum);
 
     $('gate-form').addEventListener('submit', onGate);
-    $('refresh').addEventListener('click', function () { load(); });
+    $('refresh').addEventListener('click', function () { load(false, true); });
     $('logout').addEventListener('click', function () { clearAuth(); showGate(); });
     $('q').addEventListener('input', function () { view.q = $('q').value; render(); });
     $('sort').addEventListener('change', function () { view.sort = $('sort').value; render(); });
@@ -698,6 +704,9 @@ function clearAuth() {
     $('ask').addEventListener('close', function () { closeAsk(false); });
     $('toast-btn').addEventListener('click', function () { var f = undoFn; $('toast').classList.remove('show'); undoFn = null; if (f) f(); });
     document.addEventListener('visibilitychange', function () { if (!document.hidden && auth && Date.now() - lastLoaded > 20000) load(); });
+
+    // GAS は使われていないと起動に数秒〜十数秒かかる。合言葉を入力しているあいだに起こしておき、ログインを速くする
+    if (!API.demo) API.call('ping').catch(function () {});
 
     var saved = readAuth();
     if (saved && saved.pass && saved.officer) { // お名前なしで覚えた端末は、もう一度入力してもらう
