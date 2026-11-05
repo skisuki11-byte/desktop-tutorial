@@ -117,21 +117,6 @@ p { margin: 0; }
   letter-spacing: .02em;
   margin-top: var(--s2);
 }
-.band-sub { color: var(--band-ink-2); font-size: 15px; margin-top: var(--s3); line-height: 1.6; }
-.deadline {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--s2);
-  margin-top: var(--s4);
-  padding: 6px 14px;
-  border-radius: var(--r-pill);
-  background: var(--ball-soft);
-  border: 1px solid var(--ball);
-  font-size: 15px;
-}
-.deadline b { font-family: var(--font-num); font-size: 22px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
-.deadline.is-soon { background: var(--ball); color: var(--ball-ink); border-color: var(--ball); }
-.deadline.is-soon b { color: var(--ball-ink); }
 
 /* チケットの半券（黄色の券・両端の切り欠き・ミシン目）。右上の数字は入力中の合計枚数 */
 .stub-stage { position: relative; width: clamp(96px, 28vw, 150px); padding: 0 6px 8px 0; }
@@ -269,56 +254,6 @@ p { margin: 0; }
 .input:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 4px rgb(42 98 255 / .18); }
 .field.has-error .input { border-color: var(--danger); }
 .field.has-error { padding-left: var(--s3); border-left: 4px solid var(--danger); }
-
-/* 枚数のステッパー */
-.stepper {
-  display: grid;
-  grid-template-columns: 64px 1fr 64px;
-  align-items: stretch;
-  gap: var(--s2);
-  margin-top: var(--s2);
-}
-.step-btn {
-  min-height: 64px;
-  border: 2px solid var(--line-strong);
-  border-radius: var(--r-m);
-  background: var(--surface-2);
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: background .12s, transform .08s, border-color .12s;
-}
-.step-btn:hover { border-color: var(--ink-3); }
-.step-btn:active { transform: scale(.96); background: var(--line); }
-.step-btn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
-.step-value {
-  position: relative;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 4px;
-  border-radius: var(--r-m);
-  background: var(--ball-soft);
-  border: 2px solid var(--ball);
-}
-.step-value:focus-within { border-color: var(--focus); box-shadow: 0 0 0 4px rgb(42 98 255 / .18); }
-.step-input {
-  width: 3.2ch;
-  border: 0;
-  background: transparent;
-  text-align: right;
-  font-family: var(--font-num);
-  font-weight: 700;
-  font-size: 44px;
-  line-height: 60px;
-  padding: 0;
-  font-variant-numeric: tabular-nums;
-}
-.step-input:focus { outline: none; }
-.step-unit { font-weight: 700; font-size: 17px; }
-.count-yen { font-size: 16px; font-weight: 700; margin-top: var(--s1); }
 /* 見えない欄（ボット対策） */
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
@@ -454,12 +389,6 @@ p { margin: 0; }
 .ticket-name small { font-size: .5em; margin-left: .35em; color: var(--band-ink-2); }
 .ticket-code { font-size: 15px; color: var(--band-ink-2); overflow-wrap: anywhere; }
 .ticket-code b { color: var(--band-ink); font-size: 17px; }
-.ticket-count { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--line); }
-.ticket-count p:last-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; line-height: 1; }
-.ticket-count .num { font-size: clamp(80px, 24vw, 120px); font-weight: 700; color: var(--navy); line-height: .9; }
-.ticket-count .unit { font-size: 26px; font-weight: 700; }
-.ticket-yen { margin-left: auto; font-size: 14px; color: var(--band-ink-2); align-self: flex-end; }
-.ticket-yen b { font-size: 24px; color: var(--band-ink); margin-left: 6px; }
 .ticket-foot {
   display: flex;
   flex-wrap: wrap;
@@ -474,7 +403,6 @@ p { margin: 0; }
 }
 .ticket-foot b { font-size: 20px; color: var(--band-ink); margin-left: 4px; letter-spacing: .04em; }
 .ticket-foot span { display: inline-flex; align-items: baseline; }
-.ticket.is-new .ticket-count .num { animation: pop .45s .15s cubic-bezier(.2,.8,.3,1.4) backwards; }
 
 /* 2つのボタン：同じ大きさで横に並べ、アイコンと文字の両方で何が起きるかを示す */
 .pair-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
@@ -534,9 +462,6 @@ p { margin: 0; }
 .form-compact .hint { font-size: 13px; }
 .form-compact .error { font-size: 14px; }
 .form-compact .input { min-height: 48px; margin-top: 2px; padding: 8px 12px; font-size: 17px; }
-.form-compact .stepper { grid-template-columns: 56px 1fr 56px; margin-top: 2px; }
-.form-compact .step-btn { min-height: 56px; font-size: 26px; }
-.form-compact .step-input { font-size: 38px; line-height: 52px; }
 .form-compact .actions { margin-top: var(--s1); }
 .form-compact .btn-primary { min-height: 56px; }
 .note-center { text-align: center; font-size: 13px; }
@@ -549,8 +474,6 @@ p { margin: 0; }
 .page-form .result-title { font-size: 19px; }
 .page-form .result-sub { font-size: 14px; }
 .page-form .ticket { padding: var(--s4) var(--s5) var(--s5); }
-.page-form .ticket-count { margin-top: var(--s2); padding-top: var(--s2); }
-.page-form .ticket-count .num { font-size: clamp(64px, 19vw, 112px); }
 .page-form .ticket-name { font-size: clamp(26px, 7.4vw, 34px); }
 .page-form .ticket-foot { flex-wrap: nowrap; align-items: baseline; margin-top: var(--s3); padding-block: var(--s2); font-size: 13px; }
 .page-form .ticket-foot b { font-size: 18px; }
@@ -649,17 +572,6 @@ p { margin: 0; }
 .updated { display: inline-flex; align-items: center; gap: 6px; }
 .updated::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgb(85 200 138 / .25); }
 .updated.is-stale::before { background: var(--ball); box-shadow: none; }
-
-/* 合言葉 */
-.secret-wrap { position: relative; margin-top: var(--s1); }
-.secret-wrap .input { margin: 0; padding-right: 76px; }
-.secret:not(.is-shown) { -webkit-text-security: disc; text-security: disc; }
-.secret-toggle {
-  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-  min-height: 40px; min-width: 60px; padding: 0 10px;
-  border: 1px solid var(--line-strong); border-radius: var(--r-s);
-  background: var(--surface-2); color: var(--ink-2); font-size: 14px; font-weight: 700; cursor: pointer;
-}
 .gate { max-width: 26rem; margin: var(--s6) auto 0; display: grid; gap: var(--s4); }
 .gate .form { gap: var(--s4); }
 .check { display: flex; align-items: center; gap: var(--s2); min-height: var(--tap); font-size: 15px; cursor: pointer; }
@@ -923,11 +835,6 @@ textarea.input { min-height: 88px; resize: vertical; font-size: 16px; line-heigh
 .breakdown .row-sum { background: var(--surface-2); }
 .breakdown tfoot th, .breakdown tfoot td { border-bottom: 0; border-top: 2px solid var(--ink); }
 .breakdown tfoot td { color: var(--navy); }
-
-.row-detail { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 6px; }
-.row-detail li { display: inline-flex; gap: 6px; align-items: baseline; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); font-size: 13px; }
-.row-detail b { font-size: 13px; }
-.row-court-inline { font-size: 15px; font-weight: 700; margin-left: 4px; }
 .row-name .row-court-label { margin-left: 10px; }
 .flag-amount { color: var(--ink-2) !important; font-size: 13px !important; }
 .cell-count small { font-size: 14px; color: var(--ink-2); }
@@ -952,7 +859,6 @@ dialog .grid { margin-top: 6px; }
 @media (max-height: 760px) { .page-form .steps { display: none; } .page-form .main { margin-top: calc(-1 * var(--s3)); } }
 .cell-count small.num { display: block; font-size: 15px; font-weight: 700; color: var(--ink-2); margin-top: 4px; }
 @media (min-width: 900px) { .row, .row-head { grid-template-columns: 4.5rem minmax(0, 1fr) 7rem 11rem 11rem 11rem; } }
-
 
 /* 管理画面：家庭ごとの内訳表（日付を縦に、いちばん下に区分別の合計） */
 .row-court { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
