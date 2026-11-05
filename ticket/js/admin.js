@@ -326,6 +326,13 @@ function clearAuth() {
     line.parentNode.insertBefore(box, line);
     var sum = el('div', 'day-summary'); sum.id = 'day-summary'; sum.hidden = true; sum.setAttribute('aria-live', 'polite');
     line.parentNode.insertBefore(sum, line);
+    // 絞り込み中は「何で絞っているか」と［すべてに戻す］を、集計の上に必ず出す
+    var note = el('div', 'filter-note'); note.id = 'filter-note'; note.hidden = true; note.setAttribute('role', 'status');
+    note.appendChild(el('span', 'filter-note-text')); 
+    var reset = el('button', 'btn btn-dark btn-sm filter-reset', '× すべてに戻す'); reset.type = 'button';
+    reset.addEventListener('click', function () { resetFilters(); });
+    note.appendChild(reset);
+    $('days-filter').parentNode.insertBefore(note, $('days-filter'));
   }
 
   function render() {
@@ -393,9 +400,33 @@ function clearAuth() {
       else { $('empty-title').textContent = '当てはまる申し込みはありません'; $('empty-text').textContent = 'さがす言葉を変えてみてください。'; }
     } else empty.hidden = true;
     renderDaySummary(list);
+    renderFilterNote();
     $('result-count').textContent = list.length + ' 家庭';
   }
 
+  var FILTER_NAMES = { unpaid: '集金まだ', unhanded: '渡しまだ', cancelled: '取り消し' };
+  function renderFilterNote() {
+    var note = $('filter-note'); if (!note) return;
+    var parts = [];
+    if (view.f !== 'all') parts.push('「' + FILTER_NAMES[view.f] + '」');
+    if (view.day) { var d = API.days.filter(function (x) { return x.id === view.day; })[0]; parts.push('「' + API.dayLabel(d) + '」'); }
+    if (view.q) parts.push('「' + view.q + '」で検索');
+    note.hidden = !parts.length;
+    note.querySelector('.filter-note-text').textContent = parts.join('・') + 'の家庭だけを表示中';
+    // 押したカードに「表示中」の印。もう一度押すと すべて に戻る
+    [['k-paid-card', 'unpaid', 'k-paid-go', '集金がまだの家庭を見る'], ['k-handed-card', 'unhanded', 'k-handed-go', 'まだ渡していない家庭を見る']].forEach(function (c) {
+      var on = view.f === c[1];
+      $(c[0]).classList.toggle('is-active', on);
+      $(c[0]).setAttribute('aria-pressed', String(on));
+      $(c[2]).textContent = on ? '表示中 ・ もう一度押すと すべてに戻る' : c[3];
+      if (on) $(c[2]).hidden = false;
+    });
+  }
+  function resetFilters() {
+    view.q = ''; $('q').value = '';
+    if (view.day) { view.day = ''; Array.prototype.forEach.call($('days-filter').querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String(b.dataset.day === '')); }); }
+    setFilter('all');
+  }
   function setFilter(f, scroll) {
     view.f = f;
     Array.prototype.forEach.call($('filters').querySelectorAll('button'), function (x) { x.setAttribute('aria-selected', String(x.dataset.f === f)); });
@@ -651,8 +682,8 @@ function clearAuth() {
     buildDayFilter();
     $('bd-body').addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-day]'); if (tr) setDay(tr.dataset.day, true); });
     $('filters').addEventListener('click', function (ev) { var b = ev.target.closest('button[data-f]'); if (b) setFilter(b.dataset.f); });
-    $('k-paid-card').addEventListener('click', function () { setFilter('unpaid', true); });
-    $('k-handed-card').addEventListener('click', function () { setFilter('unhanded', true); });
+    $('k-paid-card').addEventListener('click', function () { setFilter(view.f === 'unpaid' ? 'all' : 'unpaid', true); });
+    $('k-handed-card').addEventListener('click', function () { setFilter(view.f === 'unhanded' ? 'all' : 'unhanded', true); });
     $('rows').addEventListener('change', onRowsChange);
     $('rows').addEventListener('click', onRowsClick);
     $('add').addEventListener('click', function () { openDialog(null); });
