@@ -518,7 +518,11 @@
   /* ---------- はじめに ---------- */
   function init() {
     if (API.demo) { $('demo-bar').hidden = false; $('demo-hint').hidden = false; }
-    $('team-line').textContent = (CFG.team ? CFG.team + '　' : '') + '役員用';
+    var tl = $('team-line'); tl.textContent = '';
+    (CFG.team ? [CFG.team, '役員用'] : ['役員用']).forEach(function (t, i) {
+      if (i) tl.appendChild(document.createTextNode(' '));
+      var sp = document.createElement('span'); sp.textContent = t; tl.appendChild(sp);
+    });
     $('d-courtname-label').textContent = COURT;
     if (CFG.sheetUrl) { $('sheet-link').href = CFG.sheetUrl; $('sheet-link').hidden = false; }
 

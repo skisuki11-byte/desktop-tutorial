@@ -71,7 +71,12 @@
   /* ---------- 設定を画面に反映 ---------- */
   function applyConfig() {
     if (API.demo) $('demo-bar').hidden = false;
-    $('team-line').textContent = (CFG.team ? CFG.team + '　' : '') + '春高バレー 出場記念';
+    // チーム名と「春高バレー 出場記念」は、それぞれの途中で改行しない（切れ目でだけ折り返す）
+    var tl = $('team-line'); tl.textContent = '';
+    (CFG.team ? [CFG.team, '春高バレー 出場記念'] : ['春高バレー 出場記念']).forEach(function (t, i) {
+      if (i) tl.appendChild(document.createTextNode(' '));
+      var sp = document.createElement('span'); sp.textContent = t; tl.appendChild(sp);
+    });
     if (CFG.item) document.title = CFG.item + ' 申し込み';
 
     var label = CFG.courtnameLabel || 'コートネーム';
