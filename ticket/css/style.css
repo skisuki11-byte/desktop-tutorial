@@ -1151,3 +1151,20 @@ dialog .grid { margin-top: 6px; }
   .hero-admin .band-tools .updated { grid-column: 1 / -1; }
   .hero-admin .band-tools .btn-sm { padding-inline: 6px; white-space: nowrap; }
 }
+
+/* 申し込みの締め切り（管理画面）：今の状態を大きく、変えるときだけ日付の欄を開く */
+.deadline-card { padding: var(--s4) var(--s5); display: grid; gap: var(--s3); }
+.dl-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); }
+.dl-now { display: grid; gap: 2px; min-width: 0; }
+.dl-value { font-size: 20px; font-weight: 700; color: var(--navy); }
+.dl-sub { font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+.deadline-card.is-soon { border: 2px solid var(--ball-strong); }
+.deadline-card.is-soon .dl-value { color: var(--warn); }
+.deadline-card.is-closed { border: 2px solid var(--danger); }
+.deadline-card.is-closed .dl-value { color: var(--danger); }
+.dl-form { display: grid; gap: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--line); }
+.dl-hint { font-size: 12px; font-weight: 400; color: var(--ink-3); }
+.dl-date { max-width: 14rem; font-size: 17px; }
+.dl-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.dl-actions #dl-clear { margin-right: auto; }
+@media (max-width: 559px) { .deadline-card { padding: var(--s4); } .dl-row .btn { width: 100%; } .dl-date { max-width: none; } }

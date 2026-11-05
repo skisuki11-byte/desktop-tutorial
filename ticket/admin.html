@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Barlow+Condensed:wght@600;700&display=swap">
 <!-- 見出しの太字は、使う文字だけを読み込む（日本語フォント全体を落とさない） -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap&text=%E3%82%B1%E3%83%81%E3%83%83%E3%83%88%E6%98%A5%E8%A8%88%E9%9B%86%E9%AB%98">
-<link rel="stylesheet" href="css/style.css?v=20261106c">
+<link rel="stylesheet" href="css/style.css?v=20261106d">
 </head>
 <body class="page-admin">
 
@@ -136,6 +136,28 @@
         <span class="kpi-sub" id="k-handed-sub"></span>
         <span class="kpi-go" id="k-handed-go">まだ渡していない家庭を見る</span>
       </button>
+    </div>
+
+    <!-- 申し込みの締め切り（ここで決めた日は、申し込み画面の見出しにも出る。過ぎるとご家庭は申し込み・修正できなくなる） -->
+    <div class="card deadline-card" id="deadline-card">
+      <div class="dl-row">
+        <div class="dl-now">
+          <p class="kpi-label">申し込みの締め切り</p>
+          <p class="dl-value" id="dl-value">設定していません</p>
+          <p class="dl-sub" id="dl-sub"></p>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="dl-edit">締め切りを決める</button>
+      </div>
+      <form class="dl-form" id="dl-form" hidden novalidate>
+        <label class="label" for="dl-date">締め切り日 <small class="dl-hint">その日の 23:59 まで受け付けます</small></label>
+        <input class="input dl-date" type="date" id="dl-date" min="2020-01-01" max="2100-12-31">
+        <p class="send-error" id="dl-error" role="alert" hidden></p>
+        <div class="dl-actions">
+          <button type="button" class="btn-text-danger" id="dl-clear">締め切りをなくす</button>
+          <button type="button" class="btn btn-ghost" id="dl-cancel">やめる</button>
+          <button type="submit" class="btn btn-dark" id="dl-save">保存する</button>
+        </div>
+      </form>
     </div>
 
     <!-- 申し込み一覧 -->
@@ -263,9 +285,9 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-text"></span><button type="button" id="toast-btn" hidden>元に戻す</button></div>
 
-<script src="js/config.js?v=20261106c"></script>
-<script src="js/api.js?v=20261106c"></script>
-<script src="js/pdf.js?v=20261106c"></script>
-<script src="js/admin.js?v=20261106c"></script>
+<script src="js/config.js?v=20261106d"></script>
+<script src="js/api.js?v=20261106d"></script>
+<script src="js/pdf.js?v=20261106d"></script>
+<script src="js/admin.js?v=20261106d"></script>
 </body>
 </html>

@@ -391,6 +391,7 @@ function clearAuth() {
   }
 
   function render() {
+    renderDeadlineCard();   // 日付が変わって締め切りを過ぎたときも、自動更新のたびに表示を合わせる
     var s = stats();
     renderKpis(s);
     markStale();
@@ -494,6 +495,66 @@ function clearAuth() {
 
   /* ---------- 確認ダイアログ ---------- */
   var askResolve = null;
+  /* ---------- 申し込みの締め切り ---------- */
+  function dayLabel(end) { return (end.getMonth() + 1) + '/' + end.getDate() + '（' + '日月火水木金土'[end.getDay()] + '）'; }
+  function daysLeft(end) {
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    return Math.round((new Date(end.getFullYear(), end.getMonth(), end.getDate()) - today) / 86400000);
+  }
+  function renderDeadlineCard() {
+    var end = API.deadlineEnd(), card = $('deadline-card'), closed = API.isClosed();
+    card.classList.toggle('is-closed', !!end && closed);
+    card.classList.toggle('is-soon', !!end && !closed && daysLeft(end) <= 3);
+    if (!end) {
+      $('dl-value').textContent = '設定していません';
+      $('dl-sub').textContent = 'いつでも申し込めます。日付を決めると、申し込み画面の見出しにも「締切」と出ます。';
+      $('dl-edit').textContent = '締め切りを決める';
+      $('dl-clear').hidden = true;
+      return;
+    }
+    var d = daysLeft(end);
+    $('dl-value').textContent = dayLabel(end) + ' 23:59 まで' + (closed ? '（受付終了）' : d <= 0 ? '・今日まで' : '・あと ' + d + ' 日');
+    $('dl-sub').textContent = closed
+      ? 'ご家庭は申し込み・修正・取り消しができません。役員の［修正］［代わりに追加］はできます。受付を再開するときは、日付を変えるか締め切りをなくしてください。'
+      : '申し込み画面の見出しにも「締切 ' + dayLabel(end) + '」と出ています。過ぎると自動で受付を終えます。';
+    $('dl-edit').textContent = '変更する';
+    $('dl-clear').hidden = false;
+  }
+  function openDeadlineForm() {
+    var v = API.deadline();
+    if (!v) { var t = new Date(Date.now() + 14 * 86400000); v = t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2); }
+    $('dl-date').value = v;
+    $('dl-error').hidden = true;
+    $('dl-form').hidden = false; $('dl-edit').hidden = true;
+    $('dl-date').focus();
+  }
+  function closeDeadlineForm() { $('dl-form').hidden = true; $('dl-edit').hidden = false; }
+  function saveDeadline(v) {
+    var b = $('dl-save'); b.disabled = true; $('dl-clear').disabled = true;
+    $('dl-error').hidden = true;
+    return API.call('admin_settings', { pass: auth.pass, officer: auth.officer || '', deadline: v }).then(function () {
+      closeDeadlineForm();
+      var end = API.deadlineEnd();
+      toast(end ? '締め切りを ' + dayLabel(end) + ' にしました。申し込み画面にも出ます' : '締め切りをなくしました（いつでも申し込めます）');
+    }, function (err) {
+      if (err.code === 'wrong_pass') { clearAuth(); showGate(API.message(err)); return; }
+      $('dl-error').textContent = err.code === 'invalid' ? '日付を正しく選んでください。' : API.message(err);
+      $('dl-error').hidden = false;
+    }).then(function () { b.disabled = false; $('dl-clear').disabled = false; });
+  }
+  function onDeadlineSubmit(ev) {
+    ev.preventDefault();
+    var v = $('dl-date').value;
+    if (!API.validYmd(v)) { $('dl-error').textContent = '日付を選んでください。'; $('dl-error').hidden = false; return; }
+    var end = new Date(v + 'T23:59:59+09:00');
+    if (end.getTime() < Date.now()) {   // 過去の日にすると、すぐに受付が終わる：必ず確かめる
+      ask({ title: 'すぐに受付が終わります。よろしいですか？', body: dayLabel(end) + ' はもう過ぎているため、保存するとご家庭は申し込み・修正・取り消しができなくなります。', ok: '受付を終える' })
+        .then(function (yes) { if (yes) saveDeadline(v); });
+      return;
+    }
+    saveDeadline(v);
+  }
+
   function ask(o) {
     $('ask-title').textContent = o.title;
     var t = $('ask-target'); t.textContent = '';
@@ -963,6 +1024,12 @@ function clearAuth() {
 
     $('gate-form').addEventListener('submit', onGate);
     $('refresh').addEventListener('click', function () { load(false, true); });
+    API.onDeadline(function () { renderDeadlineCard(); if (auth) render(); });
+    renderDeadlineCard();
+    $('dl-edit').addEventListener('click', openDeadlineForm);
+    $('dl-cancel').addEventListener('click', closeDeadlineForm);
+    $('dl-form').addEventListener('submit', onDeadlineSubmit);
+    $('dl-clear').addEventListener('click', function () { saveDeadline(''); });
     $('logout').addEventListener('click', function () { clearAuth(); showGate(); });
     $('q').addEventListener('input', function () { view.q = $('q').value; render(); });
     $('sort').addEventListener('change', function () { view.sort = $('sort').value; render(); });
