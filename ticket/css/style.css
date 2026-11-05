@@ -990,3 +990,29 @@ dialog .grid { margin-top: 6px; }
   box-shadow: 0 3px 0 var(--ball-strong);
 }
 .day-btn[data-day=""][aria-pressed="true"]::before { content: "★ "; color: var(--ball); }
+
+/* 上のしぼりこみ（すべて／集金まだ…）の「すべて」も、日付で見るの「すべて」とそろえて紺の札に */
+.tabs button[data-f="all"] {
+  align-self: center;
+  margin: 4px 6px 6px 0;
+  min-height: 40px;
+  border: 2px solid var(--navy);
+  border-radius: var(--r-pill);
+  background: #ffffff;
+  color: var(--navy);
+}
+.tabs button[data-f="all"]:hover { background: var(--surface-2); }
+.tabs button[data-f="all"][aria-selected="true"] {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #ffffff;
+  box-shadow: 0 3px 0 var(--ball-strong);
+}
+.tabs button[data-f="all"][aria-selected="true"] .num { color: var(--ball); }
+.tabs button[data-f="all"][aria-selected="true"]::before { content: "★"; margin-right: 4px; color: var(--ball); }
+@media (max-width: 559px) {
+  .tabs button[data-f="all"] { border-radius: 12px; margin: 4px 6px 6px 0; padding: 4px 2px; }
+  .tabs button[data-f="all"][aria-selected="true"]::before { content: none; }
+  .day-btn[data-day=""] { padding: 0 6px; margin-right: 6px; }
+  .day-btn[data-day=""][aria-pressed="true"]::before { content: none; }
+}
