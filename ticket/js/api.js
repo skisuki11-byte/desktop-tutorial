@@ -339,7 +339,7 @@
     config: CFG,
     demo: DEMO,
     demoPass: DEMO_PASS,
-    days: DAYS, kinds: KINDS, items: ITEMS, grades: GRADES, maxPerCell: MAX_CELL,
+    days: DAYS, kinds: KINDS, items: ITEMS, grades: GRADES, useGrade: CFG.useGrade === true, maxPerCell: MAX_CELL,
     gradeLabel: gradeLabel, toGrade: toGrade,
     call: function (action, body) { return DEMO ? demo(action, body) : remote(action, body); },
     uuid: uuid, validate: validate, toCount: toCount, squish: squish,

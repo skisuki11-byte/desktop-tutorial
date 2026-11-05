@@ -24,6 +24,7 @@ window.TICKET_CONFIG = {
     { id: 'adult', label: '大人', short: '大', price: 2000 },
     { id: 'student', label: '高校生以下', short: '高', price: 1500 }
   ],
+  useGrade: false,                 // 学年の欄を使うか（true にすると申し込み・管理画面・PDF に学年が出る）
   grades: [1, 2, 3],               // 学年（選手の学年。gas/Code.gs の GRADES とそろえる）
   maxPerCell: 20,                   // 1か所（1日・1区分）に入れられる最大枚数
 

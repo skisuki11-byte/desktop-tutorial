@@ -87,7 +87,7 @@ function clearAuth() {
   var loading = false;
   var SERVER_VERSION = 2;   // gas/Code.gs の VERSION。これより古い集計先では学年が保存されない
   function applyList(res) {
-    $('server-warn').hidden = Number(res.version || 0) >= SERVER_VERSION;
+    $('server-warn').hidden = !GRADE || Number(res.version || 0) >= SERVER_VERSION;   // 古いと困るのは学年だけなので、学年を使うときだけ
     items = (res.items || []).map(normalize);
     lastLoaded = Date.now();
     render();
@@ -194,7 +194,9 @@ function clearAuth() {
       return r;
     });
   }
+  var GRADE = API.useGrade;   // 学年を使うか（config.js の useGrade）。使わないときは学年の表・札・列をすべて出さない
   function renderGrades() {
+    if (!GRADE) return;
     var head = $('gd-head'), body = $('gd-body');
     head.textContent = ''; body.textContent = '';
     ['学年', '家庭'].concat(API.kinds.map(function (k) { return k.label; }), ['計', '金額']).forEach(function (t, i) {
@@ -259,7 +261,7 @@ function clearAuth() {
       if (view.day && !dayTotal(x, view.day)) return false;
       if (view.grade !== '' && String(x.grade || 0) !== view.grade) return false;
       if (!q) return true;
-      return (x.grade && norm(API.gradeLabel(x.grade)) === q) || norm(x.name).indexOf(q) >= 0 || norm(x.courtname).indexOf(q) >= 0 || norm(x.memo).indexOf(q) >= 0 ||
+      return (GRADE && x.grade && norm(API.gradeLabel(x.grade)) === q) || norm(x.name).indexOf(q) >= 0 || norm(x.courtname).indexOf(q) >= 0 || norm(x.memo).indexOf(q) >= 0 ||
         String(x.id) === q.replace(/^no\.?0*/, '') || norm(API.no(x.id)).indexOf(q) >= 0;
     });
     var by = {
@@ -408,7 +410,7 @@ function clearAuth() {
       top.appendChild(el('span', null, API.longDate(x.createdAt) + ' 受付'));
       who.appendChild(top);
       var name = el('p', 'row-name');
-      if (x.grade) name.appendChild(el('span', 'row-grade', API.gradeLabel(x.grade)));
+      if (GRADE && x.grade) name.appendChild(el('span', 'row-grade', API.gradeLabel(x.grade)));
       name.appendChild(el('span', null, x.name));
       name.appendChild(el('small', null, 'さん'));
       who.appendChild(name);
@@ -416,7 +418,7 @@ function clearAuth() {
       who.appendChild(detailTable(x));
       var chips = el('p', 'row-chips');
       if (cancelled) chips.appendChild(chip('chip-danger', '取り消し済み'));
-      if (!cancelled && !x.grade) chips.appendChild(chip('chip-warn', '学年が未入力（［修正］で入れられます）'));
+      if (GRADE && !cancelled && !x.grade) chips.appendChild(chip('chip-warn', '学年が未入力（［修正］で入れられます）'));
       if (!cancelled && dup[norm(x.name)]) chips.appendChild(chip('chip-warn', '同じお名前が2件以上'));
       if (end && new Date(x.createdAt) > end) chips.appendChild(chip('chip-warn', '締切後の申し込み'));
       if (new Date(x.updatedAt) - new Date(x.createdAt) > 60000) chips.appendChild(chip('chip-info', API.shortDate(x.updatedAt) + ' に修正あり'));
@@ -617,7 +619,10 @@ function clearAuth() {
   }
   function onDialogSave(ev) {
     ev.preventDefault();
-    var v = API.validate({ name: $('d-name').value, courtname: $('d-courtname').value, grade: $('d-grade').value, counts: dGrid.get() });
+    var src = { name: $('d-name').value, courtname: $('d-courtname').value, counts: dGrid.get() };
+    if (GRADE) src.grade = $('d-grade').value;
+    var v = API.validate(src);
+    var gradePart = GRADE ? { grade: v.value.grade || '' } : {};   // 使わないときは送らない（入っている学年は消さない）
     clearDlgErrors();
     if (v.errors.length) {
       v.errors.forEach(function (e) { $('dfield-' + e.field).classList.add('has-error'); var p = $('d-' + e.field + '-error'); p.textContent = e.msg; p.hidden = false; });
@@ -631,11 +636,11 @@ function clearAuth() {
     if (dlgTarget) {
       var id = dlgTarget.id;
       pending[id] = true;
-      p = API.call('admin_save', { pass: auth.pass, officer: auth.officer || '', id: id, patch: { name: v.value.name, courtname: v.value.courtname, grade: v.value.grade || '', counts: v.value.counts, memo: memo } })
+      p = API.call('admin_save', { pass: auth.pass, officer: auth.officer || '', id: id, patch: Object.assign({ name: v.value.name, courtname: v.value.courtname, counts: v.value.counts, memo: memo }, gradePart) })
         .then(function (res) { delete pending[id]; Object.assign(find(id), normalize(res.item)); return res.item.name + ' さんの内容を修正しました'; },
           function (err) { delete pending[id]; throw err; });
     } else {
-      p = API.call('admin_add', { pass: auth.pass, officer: auth.officer || '', name: v.value.name, courtname: v.value.courtname, grade: v.value.grade || '', counts: v.value.counts, memo: memo, requestId: API.uuid() })
+      p = API.call('admin_add', Object.assign({ pass: auth.pass, officer: auth.officer || '', name: v.value.name, courtname: v.value.courtname, counts: v.value.counts, memo: memo, requestId: API.uuid() }, gradePart))
         .then(function (res) { items.push(normalize(res.item)); return res.item.name + ' さんを追加しました（' + API.no(res.item.id) + '）'; });
     }
     p.then(function (msg) {
@@ -649,11 +654,11 @@ function clearAuth() {
   }
 
   /* ---------- 書き出し・コピー ---------- */
-  var HEAD = ['受付番号', 'お名前', COURT, '学年'].concat(API.items.map(function (it) { return it.day.label + ' ' + it.kind.label; }),
+  var HEAD = ['受付番号', 'お名前', COURT].concat(GRADE ? ['学年'] : [], API.items.map(function (it) { return it.day.label + ' ' + it.kind.label; }),
     ['枚数', '金額', '状態', '集金', '集金の記録', '受け渡し', '受け渡しの記録', '受付日時', '役員メモ']);
   function rowsForExport() {
     return items.slice().sort(function (a, b) { return a.id - b.id; }).map(function (x) {
-      return [API.no(x.id), x.name, x.courtname || '', x.grade ? API.gradeLabel(x.grade) : ''].concat(API.items.map(function (it) { return x.counts[it.key]; }),
+      return [API.no(x.id), x.name, x.courtname || ''].concat(GRADE ? [x.grade ? API.gradeLabel(x.grade) : ''] : [], API.items.map(function (it) { return x.counts[it.key]; }),
         [x.total, x.amount, x.status === 'cancelled' ? '取り消し' : '有効',
           x.paid ? '済' : '', x.paidBy || '', x.handed ? '済' : '', x.handedBy || '', API.longDate(x.createdAt), x.memo || '']);
     });
@@ -703,7 +708,7 @@ function clearAuth() {
       lines.push(API.dayLabel(day) + '　' + parts.join('・') + '（計 ' + sum + '・' + API.yen(yen) + '）');
     });
     lines.push('合計 ' + s.total + ' 枚（' + s.orders + ' 家庭）' + API.yen(s.amount));
-    lines.push('学年別　' + gradeStats().map(function (r) { return API.gradeLabel(r.grade) + ' ' + r.orders + '家庭・' + r.total + '枚'; }).join('／'));
+    if (GRADE) lines.push('学年別　' + gradeStats().map(function (r) { return API.gradeLabel(r.grade) + ' ' + r.orders + '家庭・' + r.total + '枚'; }).join('／'));
     lines.push('集金 ' + s.paidOrders + ' / ' + s.orders + ' 家庭（' + API.yen(s.paidAmount) + ' / ' + API.yen(s.amount) + '）');
     lines.push('受け渡し ' + s.handedOrders + ' / ' + s.orders + ' 家庭');
     var end = API.deadlineEnd();
@@ -715,7 +720,7 @@ function clearAuth() {
      A4縦向きの紙面を canvas に描き、js/pdf.js で PDF ファイルにまとめる（家計簿アプリと同じ方式）。
      日本語はブラウザの文字で描くので、どの端末でも画面と同じ字形で出る。
      スマホは共有メニュー（ファイルに保存・LINEで送る）、PC はそのままダウンロード。
-     中身：購入する枚数（日付×区分・計・金額）／学年別／申し込み・集金・受け渡しの状況／申し込み一覧（取り消しは除く・受付番号順） */
+     中身：購入する枚数（日付×区分・計・金額）／学年別（学年を使うときだけ）／申し込み・集金・受け渡しの状況／申し込み一覧（取り消しは除く・受付番号順） */
   var PMM = 8;                                   // 1mm あたりの画素数
   var PPG = { w: 210 * PMM, h: 297 * PMM, m: 10 * PMM };   // A4縦向き
   var PFONT = '"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
@@ -792,7 +797,8 @@ function clearAuth() {
     });
     pRow(x, y, RH, sc, ['合計'].concat(API.kinds.map(function (k) { return String(kindSum[k.id]); }), [String(s.total), API.yen(s.amount)]), { bg: PCOL.foot, bold: true }); y += RH + 18;
 
-    // 2. 学年別
+    // 2. 学年別（学年を使うときだけ）
+    if (GRADE) {
     section('学年別');
     var gc = [{ w: 30 }, { w: 26, align: 'right' }].concat(API.kinds.map(function () { return { w: 36, align: 'right' }; }), [{ w: 26, align: 'right', bold: true }, { w: 36, align: 'right' }]);
     pRow(x, y, RH, gc, ['学年', '家庭'].concat(API.kinds.map(function (k) { return k.label; }), ['計', '金額']), { bg: PCOL.head, bold: true, center: true, size: 21 }); y += RH;
@@ -801,6 +807,7 @@ function clearAuth() {
         { color: r.grade ? null : '#8f4d00' }); y += RH;
     });
     y += 18;
+    }
 
     // 3. 状況
     section('状況');
@@ -811,15 +818,15 @@ function clearAuth() {
       '済み ' + s.handedOrders + ' / ' + s.orders + ' 家庭'], { center: true, size: 21 }); y += 48 + 22;
 
     // 4. 申し込み一覧（ページをまたぐときは見出しを付け直す）
-    var lc = [{ w: 12, align: 'center' }, { w: 27 }, { w: 18 }, { w: 9, align: 'center' }].concat(API.items.map(function () { return { w: 10, align: 'right' }; }),
+    var lc = (GRADE ? [{ w: 12, align: 'center' }, { w: 27 }, { w: 18 }, { w: 9, align: 'center' }] : [{ w: 12, align: 'center' }, { w: 29 }, { w: 20 }]).concat(API.items.map(function () { return { w: 10, align: 'right' }; }),
       [{ w: 10, align: 'right', bold: true }, { w: 20, align: 'right' }, { w: 9, align: 'center' }, { w: 9, align: 'center' }]);
     var used = lc.reduce(function (a, c) { return a + c.w; }, 0);
     lc.push({ w: (PPG.w - PPG.m * 2) / PMM - used });   // メモは残りの幅
     var LH = 42, HT = 34, HB = 30, HH = HT + HB;
-    var K = API.kinds.length, I0 = 4, IN = I0 + API.items.length;      // 枚数の列は I0 から（日付ごとに K 列）
+    var K = API.kinds.length, I0 = GRADE ? 4 : 3, IN = I0 + API.items.length;      // 枚数の列は I0 から（日付ごとに K 列）
     var colX = [], lx = PPG.m;
     lc.forEach(function (c) { colX.push(lx); lx += c.w * PMM; }); colX.push(lx);
-    var lhead = ['No.', 'お名前', COURT, '学年'].concat(API.items.map(function () { return ''; }), ['枚数', '金額', '集金', '受渡', 'メモ']);
+    var lhead = ['No.', 'お名前', COURT].concat(GRADE ? ['学年'] : [], API.items.map(function () { return ''; }), ['枚数', '金額', '集金', '受渡', 'メモ']);
     var legend = API.kinds.map(function (k) { return k.short + '＝' + k.label; }).join('　');
     // 日付ごとのまとまりを見やすく：1つおきに薄く色をつけ、日付の境目に太い紺の線
     var tint = lc.map(function (c, k) { return k >= I0 && k < IN && Math.floor((k - I0) / K) % 2 === 1 ? '#eef2fa' : null; });
@@ -849,12 +856,12 @@ function clearAuth() {
     list.forEach(function (it) {
       if (y + LH > PPG.h - PPG.m - LH) { header(); listHead(true); }
       var zero = [];
-      var cells = [('00' + it.id).slice(-3), it.name, it.courtname || '', it.grade ? it.grade + '年' : '—'].concat(API.items.map(function (item, k) { var n = it.counts[item.key]; zero[I0 + k] = !n; return n ? String(n) : '・'; }),
+      var cells = [('00' + it.id).slice(-3), it.name, it.courtname || ''].concat(GRADE ? [it.grade ? it.grade + '年' : '—'] : [], API.items.map(function (item, k) { var n = it.counts[item.key]; zero[I0 + k] = !n; return n ? String(n) : '・'; }),
         [String(it.total), API.yen(it.amount), it.paid ? '済' : '', it.handed ? '済' : '', it.memo || '']);
       pRow(x, y, LH, lc, cells, { zero: zero, colBg: tint }); dayLines(y, LH); y += LH;
     });
     if (y + LH > PPG.h - PPG.m) { header(); listHead(true); }
-    pRow(x, y, LH, lc, ['合計', '', '', ''].concat(API.items.map(function (item) { return String(s.cells[item.key]); }),
+    pRow(x, y, LH, lc, ['合計', '', ''].concat(GRADE ? [''] : [], API.items.map(function (item) { return String(s.cells[item.key]); }),
       [String(s.total), API.yen(s.amount), '', '', '']), { bg: PCOL.foot, bold: true, size: 21 });
     dayLines(y, LH);
     pages.forEach(function (c, i) {        // ページ番号「1 / 2」を下中央に
@@ -960,6 +967,11 @@ function clearAuth() {
     $('q').addEventListener('input', function () { view.q = $('q').value; render(); });
     $('sort').addEventListener('change', function () { view.sort = $('sort').value; render(); });
     buildDayFilter();
+    if (!GRADE) {   // 学年を使わない設定：学年別の表・修正の学年欄・「学年順」を外す
+      document.querySelector('.grade-wrap').hidden = true;
+      $('dfield-grade').hidden = true;
+      var og = document.querySelector('#sort option[value="grade"]'); if (og) og.remove();
+    }
     $('gd-body').addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-grade]'); if (tr) setGrade(tr.dataset.grade, true); });
     API.grades.forEach(function (g) { var o = document.createElement('option'); o.value = String(g); o.textContent = API.gradeLabel(g); $('d-grade').appendChild(o); });
     $('bd-body').addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-day]'); if (tr) setDay(tr.dataset.day, true); });
