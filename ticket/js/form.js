@@ -374,16 +374,21 @@
     $('mine-new').hidden = true; // 1家庭1申し込み
     $('mine').hidden = false;
   }
-  function refreshMine() {   // 役員が直した分も反映するため、開いたときに最新の内容を取り直す
-    var list = loadMine();
-    if (!list.length) return;
-    API.call('mine', { items: list.map(function (x) { return { id: x.id, token: x.token }; }) }).then(function (res) {
-      (res.items || []).forEach(function (it) { upsertMine(it); });
-      if (!$('mine').hidden) renderMine($('finished').hidden ? 'home' : 'finished');
-    }, function () { /* 取り直せなくても、覚えている内容で表示を続ける */ });
-  }
+  function refreshMine() { // 役員が直した分も反映するため、開いたときに最新の内容を取り直す
+  var list = loadMine();
+  if (!list.length) return;
+  API.call('mine', { items: list.map(function (x) { return { id: x.id, token: x.token }; }) }).then(function (res) {
+    var got = {};
+    (res.items || []).forEach(function (it) { got[it.id] = true; upsertMine(it); });
+    // シートから消された申し込み（テストなど）は、この端末の記録からも外す
+    var kept = loadMine().filter(function (x) { return got[x.id]; });
+    saveMine(kept);
+    if (!kept.length) { if (!$('mine').hidden && $('form').hidden && $('result').hidden) startNew(); return; }
+    if (!$('mine').hidden) renderMine($('finished').hidden ? 'home' : 'finished');
+  }, function () { /* 取り直せなくても、覚えている内容で表示を続ける */ });
+}
 
-  /* ---------- はじめに ---------- */
+/* ---------- はじめに ---------- */
   function init() {
     grid = API.buildGrid($('grid'), 'c-', onInput);
     applyConfig();
