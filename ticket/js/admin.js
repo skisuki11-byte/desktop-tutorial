@@ -415,7 +415,7 @@ function clearAuth() {
     var note = $('filter-note'); if (!note) return;
     var parts = [];
     if (view.f !== 'all') parts.push('「' + FILTER_NAMES[view.f] + '」');
-    if (view.day) { var d = API.days.filter(function (x) { return x.id === view.day; })[0]; parts.push('「' + API.dayLabel(d) + '」'); }
+    // 日付の絞り込みは「日付で見る」のボタン自体が選択中を示すので、帯には出さない
     if (view.q) parts.push('「' + view.q + '」で検索');
     note.hidden = !parts.length;
     note.querySelector('.filter-note-text').textContent = parts.join('・') + 'の家庭だけを表示中';
