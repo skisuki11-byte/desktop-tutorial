@@ -9,7 +9,7 @@
   'use strict';
   var CFG = window.TICKET_CONFIG || {};
   var DEMO = !CFG.endpoint;
-  var TIMEOUT = 20000;   // GAS はしばらく使われないと起動に数秒かかるので、待ち時間は長めにとる
+  var TIMEOUT = 30000;   // GAS はしばらく使われないと起動に十数秒かかることがあるので、待ち時間は長めにとる
   var DAYS = CFG.days || [];
   var KINDS = CFG.kinds || [];
   var MAX_CELL = Number(CFG.maxPerCell) || 20;
@@ -48,7 +48,7 @@
   function dayLabel(d) { return d.label + '（' + d.dow + '）'; }
 
   /* ---------- 本番：GAS ---------- */
-  function remote(action, body) {
+  function once(action, body) {
     var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, TIMEOUT);
     return fetch(CFG.endpoint, {
@@ -67,6 +67,16 @@
     }).then(function (res) {
       if (!res || !res.ok) throw { code: (res && res.error) || 'server' };
       return res;
+    });
+  }
+
+  /* 一時的な失敗（電波の途切れ・GAS の起動待ち・混雑）は、1.5秒おいて1回だけ自動でやり直す。
+     どの操作も同じ内容を2回送っても結果は変わらない（申し込み・代わりに追加は requestId で1件にまとまり、
+     修正・取り消し・集金のチェックは「その値にする」操作）ので、やり直しても二重にならない */
+  function remote(action, body) {
+    return once(action, body).catch(function (err) {
+      if (!err || (err.code !== 'network' && err.code !== 'busy')) throw err;
+      return new Promise(function (resolve) { setTimeout(resolve, 1500); }).then(function () { return once(action, body); });
     });
   }
 

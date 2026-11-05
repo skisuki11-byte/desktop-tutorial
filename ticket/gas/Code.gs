@@ -115,7 +115,7 @@ function updateOwn_(d) {
     r.row[C.status] = STATUS_ACTIVE;
     r.row[C.updatedAt] = new Date();
     writeRow_(sh, r);
-    return { ok: true, item: pub_(reread_(sh, r)) };
+    return { ok: true, item: pub_(r.row) };
   });
 }
 
@@ -125,7 +125,7 @@ function cancelOwn_(d) {
     r.row[C.status] = STATUS_CANCELLED;
     r.row[C.updatedAt] = new Date();
     writeRow_(sh, r);
-    return { ok: true, item: pub_(reread_(sh, r)) };
+    return { ok: true, item: pub_(r.row) };
   });
 }
 
@@ -171,7 +171,7 @@ function adminSave_(d) {
       r.row[C.updatedAt] = new Date();
     }
     writeRow_(sh, r);
-    return { ok: true, item: adminView_(reread_(sh, r)) };
+    return { ok: true, item: adminView_(r.row) };
   });
 }
 
@@ -290,11 +290,6 @@ function writeRow_(sh, r) {
   var at = rowIndex_(sh, r.id);
   if (!at) throw { code: 'not_found' };
   sh.getRange(at, 1, 1, HEADERS.length).setValues([forSheet_(r.row)]);
-}
-
-function reread_(sh, r) {
-  var at = rowIndex_(sh, r.id);
-  return sh.getRange(at, 1, 1, HEADERS.length).getValues()[0];
 }
 
 function appendRow_(sh, row) {
