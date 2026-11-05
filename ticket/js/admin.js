@@ -148,22 +148,25 @@ function clearAuth() {
     var h0 = el('th', null, '日付'); h0.scope = 'col'; head.appendChild(h0);
     API.kinds.forEach(function (k) { var th = el('th', 'num-col'); th.scope = 'col'; th.appendChild(el('span', null, k.label)); th.appendChild(el('small', 'num', API.yen(k.price))); head.appendChild(th); });
     var hs = el('th', 'num-col', '計'); hs.scope = 'col'; head.appendChild(hs);
+    var hy = el('th', 'num-col yen-col', '金額'); hy.scope = 'col'; head.appendChild(hy);
     var kindSum = {};
     API.kinds.forEach(function (k) { kindSum[k.id] = 0; });
     API.days.forEach(function (d) {
       var tr = el('tr'), th = el('th', null, API.dayLabel(d)); th.scope = 'row'; tr.appendChild(th);
       tr.dataset.day = d.id; tr.className = 'bd-day'; tr.title = 'この日の申し込みだけを一覧で見る';
-      var rowSum = 0;
+      var rowSum = 0, rowYen = 0;
       API.kinds.forEach(function (k) {
-        var n = s.cells[d.id + '-' + k.id]; rowSum += n; kindSum[k.id] += n;
+        var n = s.cells[d.id + '-' + k.id]; rowSum += n; kindSum[k.id] += n; rowYen += n * k.price;
         tr.appendChild(el('td', 'num' + (n ? '' : ' is-zero'), String(n)));
       });
       tr.appendChild(el('td', 'num row-sum', String(rowSum)));
+      tr.appendChild(el('td', 'num yen-col' + (rowYen ? '' : ' is-zero'), API.yen(rowYen)));
       body.appendChild(tr);
     });
     var ft = el('th', null, '合計'); ft.scope = 'row'; foot.appendChild(ft);
     API.kinds.forEach(function (k) { foot.appendChild(el('td', 'num', String(kindSum[k.id]))); });
     foot.appendChild(el('td', 'num row-sum', String(s.total)));
+    foot.appendChild(el('td', 'num yen-col', API.yen(s.amount)));
   }
 
   function renderKpis(s) {
@@ -297,6 +300,29 @@ function clearAuth() {
     render();
     if (scroll) $('list').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+  /* 日付を選んだときの集計（家庭数・大人・高校生以下・合計枚数・金額）。一覧の絞り込み（集金まだ など）にも合わせる */
+  function renderDaySummary(list) {
+    var box = $('day-summary');
+    if (!box) return;
+    box.textContent = '';
+    if (!view.day) { box.hidden = true; return; }
+    var d = API.days.filter(function (x) { return x.id === view.day; })[0];
+    var head = el('p', 'ds-head');
+    head.appendChild(el('b', null, API.dayLabel(d) + ' の集計'));
+    head.appendChild(el('span', null, list.length + ' 家庭' + (view.f === 'unpaid' ? '（集金まだ）' : view.f === 'unhanded' ? '（渡しまだ）' : view.f === 'cancelled' ? '（取り消し）' : '')));
+    box.appendChild(head);
+    var grid = el('div', 'ds-grid'), total = 0, yen = 0;
+    API.kinds.forEach(function (k) {
+      var n = list.reduce(function (a, x) { return a + (x.counts[view.day + '-' + k.id] || 0); }, 0);
+      total += n; yen += n * k.price;
+      var c = el('div', 'ds-cell'); c.appendChild(el('span', 'ds-label', k.label)); var v = el('span', 'ds-value num', String(n)); v.appendChild(el('small', null, '枚')); c.appendChild(v); grid.appendChild(c);
+    });
+    var t = el('div', 'ds-cell ds-total'); t.appendChild(el('span', 'ds-label', '合計')); var tv = el('span', 'ds-value num', String(total)); tv.appendChild(el('small', null, '枚')); t.appendChild(tv); grid.appendChild(t);
+    var y = el('div', 'ds-cell ds-yen'); y.appendChild(el('span', 'ds-label', '金額')); y.appendChild(el('span', 'ds-value num', API.yen(yen))); grid.appendChild(y);
+    box.appendChild(grid);
+    box.hidden = false;
+  }
+
   function buildDayFilter() {
     var box = el('div', 'days-filter'); box.id = 'days-filter';
     box.appendChild(el('span', 'days-filter-label', '日付で見る'));
@@ -307,6 +333,8 @@ function clearAuth() {
     box.addEventListener('click', function (ev) { var b = ev.target.closest('button[data-day]'); if (b) setDay(b.dataset.day); });
     var line = $('result-count').closest('.toolbar-line');
     line.parentNode.insertBefore(box, line);
+    var sum = el('div', 'day-summary'); sum.id = 'day-summary'; sum.hidden = true; sum.setAttribute('aria-live', 'polite');
+    line.parentNode.insertBefore(sum, line);
   }
 
   function render() {
@@ -375,12 +403,9 @@ function clearAuth() {
     } else empty.hidden = true;
     var sumShown = list.reduce(function (a, x) { return a + x.total; }, 0);
     var yenShown = list.reduce(function (a, x) { return a + x.amount; }, 0);
-    if (view.day) {
-      var dd = API.days.filter(function (d) { return d.id === view.day; })[0];
-      var parts = API.kinds.map(function (k) { return k.label + ' ' + list.reduce(function (a, x) { return a + (x.counts[view.day + '-' + k.id] || 0); }, 0); });
-      var dsum = list.reduce(function (a, x) { return a + dayTotal(x, view.day); }, 0);
-      $('result-count').textContent = API.dayLabel(dd) + '：' + list.length + ' 家庭・' + parts.join('・') + '（計 ' + dsum + ' 枚）';
-    } else $('result-count').textContent = list.length + ' 家庭・' + sumShown + ' 枚・' + API.yen(yenShown);
+    renderDaySummary(list);
+    if (view.day) $('result-count').textContent = list.length + ' 家庭';
+    else $('result-count').textContent = list.length + ' 家庭・' + sumShown + ' 枚・' + API.yen(yenShown);
   }
 
   function setFilter(f, scroll) {
@@ -598,8 +623,8 @@ function clearAuth() {
       (d.getMonth() + 1) + '/' + d.getDate() + '（' + '日月火水木金土'[d.getDay()] + '） ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2) + ' 時点（部員の分はのぞく）'
     ];
     API.days.forEach(function (day) {
-      var sum = 0, parts = API.kinds.map(function (k) { var n = s.cells[day.id + '-' + k.id]; sum += n; return k.label + ' ' + n; });
-      lines.push(API.dayLabel(day) + '　' + parts.join('・') + '（計 ' + sum + '）');
+      var sum = 0, yen = 0, parts = API.kinds.map(function (k) { var n = s.cells[day.id + '-' + k.id]; sum += n; yen += n * k.price; return k.label + ' ' + n; });
+      lines.push(API.dayLabel(day) + '　' + parts.join('・') + '（計 ' + sum + '・' + API.yen(yen) + '）');
     });
     lines.push('合計 ' + s.total + ' 枚（' + s.orders + ' 家庭）' + API.yen(s.amount));
     lines.push('集金 ' + s.paidOrders + ' / ' + s.orders + ' 家庭（' + API.yen(s.paidAmount) + ' / ' + API.yen(s.amount) + '）');
