@@ -20,7 +20,7 @@
   var auth = null;              // { pass, officer }
   var items = [];
   var pending = {};             // id → 保存中
-  var view = { q: '', f: 'all', sort: 'new' };
+  var view = { q: '', f: 'all', sort: 'new', day: '' }; // day：日付で絞り込み（'' はすべての日）
   var lastLoaded = 0, timer = null, dlgTarget = null, dGrid = null;
 
   /* ---------- 合言葉 ---------- */
@@ -152,6 +152,7 @@ function clearAuth() {
     API.kinds.forEach(function (k) { kindSum[k.id] = 0; });
     API.days.forEach(function (d) {
       var tr = el('tr'), th = el('th', null, API.dayLabel(d)); th.scope = 'row'; tr.appendChild(th);
+      tr.dataset.day = d.id; tr.className = 'bd-day'; tr.title = 'この日の申し込みだけを一覧で見る';
       var rowSum = 0;
       API.kinds.forEach(function (k) {
         var n = s.cells[d.id + '-' + k.id]; rowSum += n; kindSum[k.id] += n;
@@ -203,6 +204,7 @@ function clearAuth() {
       else if (x.status === 'cancelled') return false;
       if (view.f === 'unpaid' && x.paid) return false;
       if (view.f === 'unhanded' && x.handed) return false;
+      if (view.day && !dayTotal(x, view.day)) return false;
       if (!q) return true;
       return norm(x.name).indexOf(q) >= 0 || norm(x.courtname).indexOf(q) >= 0 || norm(x.memo).indexOf(q) >= 0 ||
         String(x.id) === q.replace(/^no\.?0*/, '') || norm(API.no(x.id)).indexOf(q) >= 0;
@@ -270,6 +272,7 @@ function clearAuth() {
     API.kinds.forEach(function (k) { sum[k.id] = 0; });
     API.days.forEach(function (d) {
       var tr = el('tr'), any = 0;
+      if (view.day === d.id) tr.classList.add('is-focus');
       tr.appendChild(el('th', null, API.dayLabel(d)));
       API.kinds.forEach(function (k) {
         var n = x.counts[d.id + '-' + k.id] || 0; sum[k.id] += n; any += n;
@@ -283,6 +286,27 @@ function clearAuth() {
     tfoot.appendChild(fr);
     t.appendChild(thead); t.appendChild(tbody); t.appendChild(tfoot);
     return t;
+  }
+
+  function dayTotal(x, day) { return API.kinds.reduce(function (a, k) { return a + (x.counts[day + '-' + k.id] || 0); }, 0); }
+
+  /* 日付で絞り込むボタン（すべて／1/4／1/5／1/6）。上の内訳表の日付の行を押しても切り替わる */
+  function setDay(day, scroll) {
+    view.day = day;
+    Array.prototype.forEach.call($('days-filter').querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String(b.dataset.day === day)); });
+    render();
+    if (scroll) $('list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function buildDayFilter() {
+    var box = el('div', 'days-filter'); box.id = 'days-filter';
+    box.appendChild(el('span', 'days-filter-label', '日付で見る'));
+    [{ id: '', label: 'すべて' }].concat(API.days.map(function (d) { return { id: d.id, label: API.dayLabel(d) }; })).forEach(function (o) {
+      var b = el('button', 'day-btn', o.label); b.type = 'button'; b.dataset.day = o.id; b.setAttribute('aria-pressed', String(o.id === ''));
+      box.appendChild(b);
+    });
+    box.addEventListener('click', function (ev) { var b = ev.target.closest('button[data-day]'); if (b) setDay(b.dataset.day); });
+    var line = $('result-count').closest('.toolbar-line');
+    line.parentNode.insertBefore(box, line);
   }
 
   function render() {
@@ -351,7 +375,12 @@ function clearAuth() {
     } else empty.hidden = true;
     var sumShown = list.reduce(function (a, x) { return a + x.total; }, 0);
     var yenShown = list.reduce(function (a, x) { return a + x.amount; }, 0);
-    $('result-count').textContent = list.length + ' 家庭・' + sumShown + ' 枚・' + API.yen(yenShown);
+    if (view.day) {
+      var dd = API.days.filter(function (d) { return d.id === view.day; })[0];
+      var parts = API.kinds.map(function (k) { return k.label + ' ' + list.reduce(function (a, x) { return a + (x.counts[view.day + '-' + k.id] || 0); }, 0); });
+      var dsum = list.reduce(function (a, x) { return a + dayTotal(x, view.day); }, 0);
+      $('result-count').textContent = API.dayLabel(dd) + '：' + list.length + ' 家庭・' + parts.join('・') + '（計 ' + dsum + ' 枚）';
+    } else $('result-count').textContent = list.length + ' 家庭・' + sumShown + ' 枚・' + API.yen(yenShown);
   }
 
   function setFilter(f, scroll) {
@@ -610,6 +639,8 @@ function clearAuth() {
     $('logout').addEventListener('click', function () { clearAuth(); showGate(); });
     $('q').addEventListener('input', function () { view.q = $('q').value; render(); });
     $('sort').addEventListener('change', function () { view.sort = $('sort').value; render(); });
+    buildDayFilter();
+    $('bd-body').addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-day]'); if (tr) setDay(tr.dataset.day, true); });
     $('filters').addEventListener('click', function (ev) { var b = ev.target.closest('button[data-f]'); if (b) setFilter(b.dataset.f); });
     $('k-paid-card').addEventListener('click', function () { setFilter('unpaid', true); });
     $('k-handed-card').addEventListener('click', function () { setFilter('unhanded', true); });
