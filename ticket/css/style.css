@@ -1026,3 +1026,8 @@ dialog .grid { margin-top: 6px; }
 /* 押したカード：表示中 */
 .kpi-task.is-active { border: 2px solid var(--navy); box-shadow: 0 0 0 3px rgb(18 35 90 / .12); }
 .kpi-task.is-active .kpi-go { color: var(--navy); }
+
+/* 申し込み済みの券面：［修正する］だけを大きく1つ */
+.pair-actions.is-single { grid-template-columns: 1fr; }
+/* 日本語の見出しを、単語の途中ではなく文節で折り返す（対応ブラウザのみ） */
+.result-title, .result-sub, .card-title { word-break: auto-phrase; }
