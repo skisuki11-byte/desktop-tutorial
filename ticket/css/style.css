@@ -729,6 +729,33 @@ dialog::backdrop { background: rgb(8 14 34 / .55); }
 .dialog-body { padding: var(--s5); display: grid; gap: var(--s4); }
 .dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--s2); }
 textarea.input { min-height: 88px; resize: vertical; font-size: 16px; line-height: 1.6; }
+/* 集計表 PDF のプレビュー：紙を並べて見せ、下に［閉じる］［保存］を固定 */
+dialog.pv {
+  width: min(52rem, calc(100% - 32px));
+  height: calc(100% - 32px);
+  max-height: none;
+  overflow: hidden;
+}
+dialog.pv[open] { display: flex; flex-direction: column; }
+.pv-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s3) var(--s4) var(--s3) var(--s5); border-bottom: 1px solid var(--line); background: var(--surface); }
+.pv-meta { margin-top: 2px; font-size: 13px; color: var(--ink-2); }
+.pv-x { width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; }
+.pv-x:hover { background: var(--line); }
+.pv-pages {
+  flex: 1; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch;
+  display: grid; gap: var(--s4); justify-items: center; align-content: start;
+  padding: var(--s4); background: #e6eaf2;
+}
+.pv-page { display: block; width: 100%; max-width: 46rem; height: auto; background: #fff; border-radius: 2px; box-shadow: 0 1px 3px rgb(13 25 55 / .18), 0 8px 24px rgb(13 25 55 / .14); }
+.pv-foot { padding: var(--s3) var(--s4) calc(var(--s3) + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--surface); display: grid; gap: var(--s2); }
+.pv-hint { font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+.pv-actions { display: grid; grid-template-columns: 1fr 2fr; gap: var(--s2); }
+.pv-actions .btn { min-height: 52px; }
+@media (max-width: 559px) {
+  dialog.pv { width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; border: 0; border-radius: 0; }
+  .pv-pages { padding: var(--s3); gap: var(--s3); }
+}
+
 /* 取り消し・記録を外すときの確認（何が・誰の・何枚かを、ボタンの前に必ず見せる） */
 .ask { width: min(26rem, calc(100% - 32px)); }
 .ask-head { display: flex; align-items: center; gap: var(--s3); }
@@ -1032,3 +1059,12 @@ dialog .grid { margin-top: 6px; }
 /* 日本語の見出しを、単語の途中ではなく文節で折り返す（対応ブラウザのみ） */
 .result-title, .result-sub, .card-title { word-break: auto-phrase; }
 
+
+/* 幅の狭いスマホ（幅360px未満・「表示サイズ：大」の Android など）：チーム名の帯を1行に保つ */
+@media (max-width: 359px) {
+  .team-name { padding: 4px 8px; font-size: 12.5px; letter-spacing: 0; gap: 4px; white-space: nowrap; }
+  .team-only { padding: 4px 8px; font-size: 13px; letter-spacing: .04em; white-space: nowrap; }
+  .hero-haruko { font-size: 42px; }
+  .page-form .hero-inner { padding-bottom: 22px; }
+  .name-row .label { font-size: 14px; }
+}
