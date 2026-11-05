@@ -57,7 +57,9 @@
     ev.preventDefault();
     var pass = $('pass').value.trim();
     if (!pass) { $('gate-error').textContent = '合言葉を入力してください'; $('gate-error').hidden = false; $('pass').focus(); return; }
-    var btn = $('gate-submit');
+    var officerName = API.squish($('officer').value).slice(0, 12);
+  if (!officerName) { $('gate-error').textContent = 'あなたのお名前を入力してください（集金・受け渡しの記録に残ります）'; $('gate-error').hidden = false; $('officer').focus(); return; }
+  var btn = $('gate-submit');
     btn.disabled = true; btn.textContent = '確かめています…';
     var a = { pass: pass, officer: API.squish($('officer').value).slice(0, 12) };
     API.call('admin_login', { pass: a.pass }).then(function () {
@@ -602,7 +604,7 @@
     document.addEventListener('visibilitychange', function () { if (!document.hidden && auth && Date.now() - lastLoaded > 20000) load(); });
 
     var saved = readAuth();
-    if (saved && saved.pass) {
+    if (saved && saved.pass && saved.officer) { // お名前なしで覚えた端末は、もう一度入力してもらう
       try { $('remember').checked = !!localStorage.getItem(KEY); } catch (e) { /* なにもしない */ }
       enter(saved);
     } else showGate();
