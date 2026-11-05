@@ -300,6 +300,11 @@ function clearAuth() {
       cnt.appendChild(el('span', 'num', String(x.total)));
       cnt.appendChild(el('span', 'unit', '枚'));
       cnt.appendChild(el('small', 'num', API.yen(x.amount)));
+    // 家庭ごとの区分別の合計枚数（大人○枚・高校生以下○枚）
+    API.kinds.forEach(function (k) {
+      var n = API.days.reduce(function (a, d) { return a + (x.counts[d.id + '-' + k.id] || 0); }, 0);
+      cnt.appendChild(el('small', 'kind-line' + (n ? '' : ' is-zero'), k.label + ' ' + n + '枚'));
+    });
       li.appendChild(cnt);
 
       var paid = el('div', 'cell-paid'); paid.appendChild(flag(x, 'paid')); li.appendChild(paid);
