@@ -73,6 +73,8 @@
   /* 学年の選択肢（1年・2年・3年）。見た目はボタン、中身はラジオボタン（キーボード・読み上げでも選べる） */
   function buildGrades() {
     var seg = $('grade-seg'); seg.textContent = '';
+    $('field-grade').hidden = !API.useGrade;          // 学年を使わない設定（config.js の useGrade）では欄ごと出さない
+    if (!API.useGrade) return;
     API.grades.forEach(function (g, i) {
       var lab = document.createElement('label'); lab.className = 'seg-opt';
       var inp = document.createElement('input'); inp.type = 'radio'; inp.name = 'grade'; inp.value = String(g);
@@ -142,16 +144,20 @@
     if (!b) return;   // 見出しに枚数の札がないデザインでは何もしない
     if (b.textContent !== '×' + n) { b.textContent = '×' + n; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
   }
-  var REQ = { requireGrade: true };   // ご家庭の画面では学年は必須
+  var REQ = { requireGrade: API.useGrade };   // 学年を使うときは、ご家庭の画面では必須
   function checkedGrade() { var c = document.querySelector('input[name="grade"]:checked'); return c ? c.value : ''; }
   function setGrade(g) { Array.prototype.forEach.call(document.querySelectorAll('input[name="grade"]'), function (r) { r.checked = String(g || '') === r.value; }); }
-  function readForm() { return { name: $('name').value, courtname: $('courtname').value, grade: checkedGrade(), counts: grid.get() }; }
+  function readForm() {
+    var f = { name: $('name').value, courtname: $('courtname').value, counts: grid.get() };
+    if (API.useGrade) f.grade = checkedGrade();   // 使わないときは送らない（集計先に入っている学年はそのまま残る）
+    return f;
+  }
 
   /* ---------- エラー表示（欄の横＋まとめ） ---------- */
   function clearError(f) {
     $('field-' + f).classList.remove('has-error');
     $(f + '-error').hidden = true;
-    if (f !== 'counts') $(f).removeAttribute('aria-invalid');
+    if (f !== 'counts' && $(f)) $(f).removeAttribute('aria-invalid');   // 学年を使わない設定では学年の入力欄がない
   }
   function focusField(f) { if (f === 'counts') grid.focus(); else $(f).focus(); }
   function showErrors(errors) {
@@ -178,9 +184,10 @@
     $('t-name').textContent = it.name;
     $('t-code').textContent = it.courtname || '';
     $('t-court').hidden = !it.courtname;
-    $('t-grade').textContent = it.grade ? API.gradeLabel(it.grade) : '';
-    $('t-grade').hidden = !it.grade;
-    $('t-code-row').hidden = !it.courtname && !it.grade;
+    var g = API.useGrade && it.grade;
+    $('t-grade').textContent = g ? API.gradeLabel(it.grade) : '';
+    $('t-grade').hidden = !g;
+    $('t-code-row').hidden = !it.courtname && !g;
     var body = $('t-body'); body.textContent = '';
     API.byDay(it.counts).forEach(function (row) {
       var tr = document.createElement('tr');
@@ -241,7 +248,8 @@
   function send() {
     if (state.sending || !state.draft) return;
     $('send-error').hidden = true;
-    var body = { name: state.draft.name, courtname: state.draft.courtname, grade: state.draft.grade, counts: state.draft.counts, website: $('website').value };
+    var body = { name: state.draft.name, courtname: state.draft.courtname, counts: state.draft.counts, website: $('website').value };
+    if (API.useGrade) body.grade = state.draft.grade;
     var edit = state.mode === 'edit';
     setSending(true);
     var p = edit
@@ -415,7 +423,7 @@
       var who = document.createElement('div'); who.className = 'mine-who';
       var b = document.createElement('b'); b.textContent = x.name + ' さん'; who.appendChild(b);
       var meta = document.createElement('p'); meta.className = 'mine-meta';
-      meta.textContent = API.no(x.id) + (x.grade ? '　' + API.gradeLabel(x.grade) : '') + (x.courtname ? '　' + x.courtname : '') + (x.status === 'cancelled' ? '　取り消し済み' : '');
+      meta.textContent = API.no(x.id) + (API.useGrade && x.grade ? '　' + API.gradeLabel(x.grade) : '') + (x.courtname ? '　' + x.courtname : '') + (x.status === 'cancelled' ? '　取り消し済み' : '');
       who.appendChild(meta);
       var detail = document.createElement('p'); detail.className = 'mine-meta'; detail.textContent = countsText(c);
       who.appendChild(detail);
