@@ -1068,3 +1068,20 @@ dialog .grid { margin-top: 6px; }
   .page-form .hero-inner { padding-bottom: 22px; }
   .name-row .label { font-size: 14px; }
 }
+
+/* 見出しの右上：集計表 PDF（紺地の上で目立つボールの黄色） */
+.admin-hero { position: relative; align-items: stretch; }
+.admin-hero > div:first-child { align-self: flex-end; }
+.admin-hero-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.hero-pdf { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 16px; font-size: 15px; border-radius: var(--r-s); box-shadow: 0 3px 0 var(--ball-strong), 0 6px 16px rgb(0 0 0 / .25); }
+.hero-pdf:disabled { opacity: .85; cursor: progress; }
+@media (max-width: 559px) {
+  .admin-hero-side { display: contents; }
+  .hero-pdf { position: absolute; top: 12px; right: max(16px, env(safe-area-inset-right, 0px)); min-height: 40px; padding: 6px 12px; font-size: 14px; }
+  .admin-kicker { padding-right: 128px; }
+}
+@media (max-width: 359px) {
+  .hero-pdf { padding: 6px 10px; font-size: 13px; }
+  .hero-pdf svg { display: none; }
+  .admin-kicker { padding-right: 96px; font-size: 12px; }
+}

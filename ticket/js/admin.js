@@ -44,7 +44,7 @@ function clearAuth() {
     stopTimer();
     auth = null;
     $('board').hidden = true;
-    $('band-tools').hidden = true;
+    $('band-tools').hidden = true; $('pdf').hidden = true;
     $('gate').hidden = false;
     var e = $('gate-error');
     if (msg) { e.textContent = msg; e.hidden = false; } else e.hidden = true;
@@ -78,7 +78,7 @@ function clearAuth() {
     $('logout').textContent = 'ログアウト' + (a.officer ? '（' + a.officer + '）' : '');
     $('gate').hidden = true;
     $('board').hidden = false;
-    $('band-tools').hidden = false;
+    $('band-tools').hidden = false; $('pdf').hidden = false;
     if (res) applyList(res); else load(true);
     startTimer();
   }
@@ -690,7 +690,8 @@ function clearAuth() {
     var left = PPG.m;
     cols.forEach(function (col, k) {
       var w = col.w * PMM, txt = cells[k] == null ? '' : String(cells[k]);
-      if (style.bg) { x.fillStyle = style.bg; x.fillRect(left, top, w, h); }
+      var bg = (style.colBg && style.colBg[k]) || style.bg;
+      if (bg) { x.fillStyle = bg; x.fillRect(left, top, w, h); }
       x.strokeStyle = PCOL.line; x.lineWidth = 2; x.strokeRect(left, top, w, h);
       var lines = txt.split('\n'), size = (style.size || 23) - (lines.length > 1 ? 3 : 0);
       pFont(x, size, style.bold || col.bold);
@@ -752,10 +753,35 @@ function clearAuth() {
       [{ w: 10, align: 'right', bold: true }, { w: 20, align: 'right' }, { w: 9, align: 'center' }, { w: 9, align: 'center' }]);
     var used = lc.reduce(function (a, c) { return a + c.w; }, 0);
     lc.push({ w: (PPG.w - PPG.m * 2) / PMM - used });   // メモは残りの幅
-    var LH = 42, HH = 58;
-    var lhead = ['No.', 'お名前', COURT].concat(API.items.map(function (it) { return it.day.label + '\n' + it.kind.short; }), ['枚数', '金額', '集金', '受渡', 'メモ']);
+    var LH = 42, HT = 34, HB = 30, HH = HT + HB;
+    var K = API.kinds.length, I0 = 3, IN = I0 + API.items.length;      // 枚数の列は I0 から（日付ごとに K 列）
+    var colX = [], lx = PPG.m;
+    lc.forEach(function (c) { colX.push(lx); lx += c.w * PMM; }); colX.push(lx);
+    var lhead = ['No.', 'お名前', COURT].concat(API.items.map(function () { return ''; }), ['枚数', '金額', '集金', '受渡', 'メモ']);
     var legend = API.kinds.map(function (k) { return k.short + '＝' + k.label; }).join('　');
-    function listHead(cont) { section('申し込み一覧' + (cont ? '（つづき）' : ''), legend); pRow(x, y, HH, lc, lhead, { bg: PCOL.head, bold: true, center: true, size: 20 }); y += HH; }
+    // 日付ごとのまとまりを見やすく：1つおきに薄く色をつけ、日付の境目に太い紺の線
+    var tint = lc.map(function (c, k) { return k >= I0 && k < IN && Math.floor((k - I0) / K) % 2 === 1 ? '#eef2fa' : null; });
+    function hCell(left, top, w, h, txt, size, bg, color) {
+      x.fillStyle = bg; x.fillRect(left, top, w, h);
+      x.strokeStyle = PCOL.line; x.lineWidth = 2; x.strokeRect(left, top, w, h);
+      pFont(x, size, true); x.fillStyle = color || PCOL.ink; x.textAlign = 'center';
+      x.fillText(pFit(x, txt, w - 8), left + w / 2, top + h / 2); x.textAlign = 'left';
+    }
+    function dayLines(top, h) {
+      x.strokeStyle = PCOL.navy; x.lineWidth = 5;
+      for (var k = I0; k <= IN; k += K) { x.beginPath(); x.moveTo(colX[k], top); x.lineTo(colX[k], top + h); x.stroke(); }
+    }
+    function listHead(cont) {
+      section('申し込み一覧' + (cont ? '（つづき）' : ''), legend);
+      lc.forEach(function (c, k) { if (k < I0 || k >= IN) hCell(colX[k], y, colX[k + 1] - colX[k], HH, lhead[k], 20, PCOL.head); });
+      API.days.forEach(function (day, g) {
+        var a = I0 + g * K;
+        hCell(colX[a], y, colX[a + K] - colX[a], HT, API.dayLabel(day), 20, PCOL.navy, '#ffffff');      // 日付は1つにまとめる
+        API.kinds.forEach(function (kd, j) { hCell(colX[a + j], y + HT, colX[a + j + 1] - colX[a + j], HB, kd.short, 19, g % 2 ? '#dfe6f4' : PCOL.head); });
+      });
+      dayLines(y, HH);
+      y += HH;
+    }
     listHead(false);
     var list = items.filter(function (it) { return it.status !== 'cancelled'; }).sort(function (a, b) { return a.id - b.id; });
     list.forEach(function (it) {
@@ -763,11 +789,12 @@ function clearAuth() {
       var zero = [];
       var cells = [('00' + it.id).slice(-3), it.name, it.courtname || ''].concat(API.items.map(function (item, k) { var n = it.counts[item.key]; zero[3 + k] = !n; return n ? String(n) : '・'; }),
         [String(it.total), API.yen(it.amount), it.paid ? '済' : '', it.handed ? '済' : '', it.memo || '']);
-      pRow(x, y, LH, lc, cells, { zero: zero }); y += LH;
+      pRow(x, y, LH, lc, cells, { zero: zero, colBg: tint }); dayLines(y, LH); y += LH;
     });
     if (y + LH > PPG.h - PPG.m) { header(); listHead(true); }
     pRow(x, y, LH, lc, ['合計', '', ''].concat(API.items.map(function (item) { return String(s.cells[item.key]); }),
       [String(s.total), API.yen(s.amount), '', '', '']), { bg: PCOL.foot, bold: true, size: 21 });
+    dayLines(y, LH);
     pages.forEach(function (c, i) {        // ページ番号「1 / 2」を下中央に
       var px = c.getContext('2d'); pFont(px, 19); px.fillStyle = PCOL.sub; px.textAlign = 'center';
       px.fillText((i + 1) + ' / ' + pages.length, PPG.w / 2, PPG.h - PPG.m / 2);
@@ -797,7 +824,7 @@ function clearAuth() {
   }
   function openPreview() {
     if (!items.length) { toast('まだ申し込みがありません'); return; }
-    var btn = $('pdf'); btn.disabled = true; btn.textContent = 'PDFを作っています…';
+    var btn = $('pdf'); btn.disabled = true; $('pdf-label').textContent = '作っています…';
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     ready.then(function () {
       var pages = buildSummaryPages();
@@ -818,7 +845,7 @@ function clearAuth() {
       box.scrollTop = 0;
     }).catch(function (e) {
       toast('PDFを作れませんでした：' + (e && e.message ? e.message : 'もう一度お試しください'), true);
-    }).then(function () { btn.disabled = false; btn.textContent = 'PDFを表示（集計表）'; });
+    }).then(function () { btn.disabled = false; $('pdf-label').textContent = 'PDF集計表'; });
   }
   function closePreview() { if ($('pv').open) $('pv').close(); }
   function onPreviewClosed() {
