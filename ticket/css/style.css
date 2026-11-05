@@ -952,3 +952,7 @@ dialog .grid { margin-top: 6px; }
 @media (max-height: 760px) { .page-form .steps { display: none; } .page-form .main { margin-top: calc(-1 * var(--s3)); } }
 .cell-count small.num { display: block; font-size: 15px; font-weight: 700; color: var(--ink-2); margin-top: 4px; }
 @media (min-width: 900px) { .row, .row-head { grid-template-columns: 4.5rem minmax(0, 1fr) 7rem 11rem 11rem 11rem; } }
+
+/* 管理画面：家庭ごとの区分別の合計枚数 */
+.cell-count .kind-line { display: block; margin-top: 2px; font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.cell-count .kind-line.is-zero { color: var(--ink-3); font-weight: 400; }
