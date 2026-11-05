@@ -50,11 +50,12 @@
         <input class="input" id="pass" type="text" lang="ja" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-describedby="pass-hint">
       </div>
       <div class="field">
-        <label class="label" for="officer">あなたのお名前 <span class="tag tag-opt">任意</span></label>
+        <label class="label" for="officer">あなたのお名前 <span class="tag tag-req">必須</span></label>
         <p class="hint" id="officer-hint">集金・受け渡しの記録に「誰がつけたか」として残ります（例：佐藤）</p>
         <input class="input" id="officer" type="text" autocomplete="nickname" maxlength="12" aria-describedby="officer-hint">
       </div>
-      <label class="check"><input type="checkbox" id="remember"> この端末では次から入力を省く</label>
+      <label class="check"><input type="checkbox" id="remember" checked> この端末では次から入力を省く（おすすめ）</label>
+      <p class="hint">チェックしたままにすると、次からは合言葉もお名前も入れずに、すぐ集計が開きます</p>
       <p class="send-error" id="gate-error" role="alert" hidden></p>
       <button type="submit" class="btn btn-dark btn-block" id="gate-submit">集計を見る</button>
     </form>
