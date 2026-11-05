@@ -100,6 +100,14 @@
             <tfoot><tr id="bd-foot"></tr></tfoot>
           </table>
         </div>
+        <!-- 学年別（行を押すとその学年の家庭だけを一覧で見る） -->
+        <div class="breakdown-wrap grade-wrap">
+          <p class="bd-caption">学年別</p>
+          <table class="breakdown grade-table" id="grade-table">
+            <thead><tr id="gd-head"></tr></thead>
+            <tbody id="gd-body"></tbody>
+          </table>
+        </div>
         <div class="kpi-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="copy-summary">集計をコピー（LINEに貼る用）</button>
         </div>
@@ -145,6 +153,7 @@
               <option value="old">受付順</option>
               <option value="name">お名前順</option>
               <option value="count">枚数の多い順</option>
+              <option value="grade">学年順</option>
             </select>
           </label>
         </div>
@@ -182,6 +191,11 @@
       <label class="label" for="d-courtname"><span id="d-courtname-label">コートネーム</span></label>
       <p class="error" id="d-courtname-error" hidden></p>
       <input class="input" id="d-courtname" type="text" maxlength="30" autocomplete="off">
+    </div>
+    <div class="field" id="dfield-grade">
+      <label class="label" for="d-grade">学年</label>
+      <p class="error" id="d-grade-error" hidden></p>
+      <select class="select" id="d-grade"><option value="">未入力</option></select>
     </div>
     <div class="field" id="dfield-counts" role="group" aria-labelledby="d-counts-label">
       <p class="label" id="d-counts-label">チケットの枚数 <span class="tag tag-req">必須</span></p>

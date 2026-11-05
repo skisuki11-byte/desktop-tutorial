@@ -81,7 +81,7 @@
     <details class="notes" id="notes">
       <summary>
         <span class="notes-mark" aria-hidden="true">!</span>
-        <span class="notes-head"><b id="notes-headline">部員の分は入れないでください。追加注文はできません。</b><small>注意事項をすべて見る</small></span>
+        <span class="notes-head"><b id="notes-headline">部員の分は入れないでください。</b><small>注意事項をすべて見る</small></span>
       </summary>
       <ul class="notes-list" id="notes-list"></ul>
     </details>
@@ -103,6 +103,13 @@
         <input class="input" id="courtname" name="courtname" type="text" autocomplete="off" maxlength="30" enterkeyhint="done" placeholder="例：ニコ" aria-describedby="courtname-hint courtname-error">
       </div>
       <p class="hint name-row-hint" id="courtname-hint">コートネームは選手のコートネームです</p>
+    </div>
+
+    <!-- 学年：3つのうち1つを押して選ぶ（打たなくてよい） -->
+    <div class="field grade-field" id="field-grade" role="radiogroup" aria-labelledby="grade-label" aria-describedby="grade-error">
+      <p class="label" id="grade-label">学年 <span class="tag tag-req">必須</span></p>
+      <div class="seg" id="grade-seg"></div>
+      <p class="error" id="grade-error" hidden></p>
     </div>
 
     <div class="field" id="field-counts" role="group" aria-labelledby="counts-label">
@@ -166,7 +173,7 @@
       <div class="ticket-body">
       <p class="ticket-label">お名前（生徒名）</p>
       <p class="ticket-name"><span id="t-name"></span><small>さん</small></p>
-      <p class="ticket-code" id="t-code-row"><span id="t-code-label">コートネーム</span>　<b id="t-code"></b></p>
+      <p class="ticket-code" id="t-code-row"><b class="ticket-grade" id="t-grade"></b><span id="t-court"><span id="t-code-label">コートネーム</span>　<b id="t-code"></b></span></p>
       <table class="ticket-table" id="t-table">
         <thead><tr id="t-head"></tr></thead>
         <tbody id="t-body"></tbody>

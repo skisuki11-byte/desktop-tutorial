@@ -2,7 +2,7 @@
  *
  * 流れ：1 入力 →［確認する］→ 2 確認（お名前・枚数・金額を大きく＋注意事項）→［申し込む］→ 3 完了
  *   - 入力はスマホ1画面に収める（お名前とコートネームを横に並べ、枚数は 日付×区分 の表）
- *   - いちばん間違えやすい注意（部員の分は入れない・追加注文はできない）は入力欄の上に、
+ *   - いちばん間違えやすい注意（部員の分は入れない）は入力欄の上に、
  *     5つの注意はすべて、申し込む直前の確認画面に出す
  *   - 送った申し込みは、この端末に「受付番号と合鍵（token）」だけ覚えておき、
  *     次に開いたときは「申し込み済みです」から修正・取り消しができる（入力欄は出さず、二重の申し込みを防ぐ）
@@ -18,7 +18,7 @@
   var state = {
     mode: 'new',          // 'new' | 'edit'
     editing: null,        // 修正中の申し込み { id, token, status }
-    draft: null,          // 確認画面に出している内容 { name, courtname, counts }
+    draft: null,          // 確認画面に出している内容 { name, courtname, grade, counts }
     last: null,           // 完了した申し込み
     sending: false,
     requestId: API.uuid() // 同じ申し込みの再送を1件にまとめるための番号（成功したら新しくする）
@@ -31,7 +31,7 @@
   function saveMine(list) {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(list.slice(-10))); } catch (e) { /* 保存できない端末でも申し込み自体はできる */ }
   }
-  function slim(it) { return { id: it.id, name: it.name, courtname: it.courtname, counts: it.counts, status: it.status, createdAt: it.createdAt, updatedAt: it.updatedAt }; }
+  function slim(it) { return { id: it.id, name: it.name, courtname: it.courtname, grade: it.grade || 0, counts: it.counts, status: it.status, createdAt: it.createdAt, updatedAt: it.updatedAt }; }
   function upsertMine(item, token) {
     var list = loadMine(), found = null;
     list.forEach(function (x) { if (x.id === item.id) { found = x; Object.assign(x, slim(item)); if (token) x.token = token; } });
@@ -70,7 +70,19 @@
     ul.textContent = '';
     (CFG.notes || []).forEach(function (t) { var li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
   }
+  /* 学年の選択肢（1年・2年・3年）。見た目はボタン、中身はラジオボタン（キーボード・読み上げでも選べる） */
+  function buildGrades() {
+    var seg = $('grade-seg'); seg.textContent = '';
+    API.grades.forEach(function (g, i) {
+      var lab = document.createElement('label'); lab.className = 'seg-opt';
+      var inp = document.createElement('input'); inp.type = 'radio'; inp.name = 'grade'; inp.value = String(g);
+      if (!i) inp.id = 'grade';
+      var sp = document.createElement('span'); sp.textContent = API.gradeLabel(g);
+      lab.appendChild(inp); lab.appendChild(sp); seg.appendChild(lab);
+    });
+  }
   function applyConfig() {
+    buildGrades();
     if (API.demo) $('demo-bar').hidden = false;
     // チーム名と「春高バレー」は、それぞれの途中で改行しない（切れ目でだけ折り返す）
     if (CFG.team) $('team-name').textContent = CFG.team; else $('team-line').hidden = true;
@@ -120,9 +132,9 @@
     $('sum-yen').textContent = API.yen(API.amountOf(c));
     $('sum-bar').classList.toggle('has-value', n > 0);
     drawStub(n);
-    ['name', 'courtname', 'counts'].forEach(function (f) {
+    ['name', 'courtname', 'grade', 'counts'].forEach(function (f) {
       if (!$('field-' + f).classList.contains('has-error')) return;
-      if (!API.validate(readForm()).errors.some(function (e) { return e.field === f; })) clearError(f);
+      if (!API.validate(readForm(), REQ).errors.some(function (e) { return e.field === f; })) clearError(f);
     });
   }
   function drawStub(n) {
@@ -130,7 +142,10 @@
     if (!b) return;   // 見出しに枚数の札がないデザインでは何もしない
     if (b.textContent !== '×' + n) { b.textContent = '×' + n; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
   }
-  function readForm() { return { name: $('name').value, courtname: $('courtname').value, counts: grid.get() }; }
+  var REQ = { requireGrade: true };   // ご家庭の画面では学年は必須
+  function checkedGrade() { var c = document.querySelector('input[name="grade"]:checked'); return c ? c.value : ''; }
+  function setGrade(g) { Array.prototype.forEach.call(document.querySelectorAll('input[name="grade"]'), function (r) { r.checked = String(g || '') === r.value; }); }
+  function readForm() { return { name: $('name').value, courtname: $('courtname').value, grade: checkedGrade(), counts: grid.get() }; }
 
   /* ---------- エラー表示（欄の横＋まとめ） ---------- */
   function clearError(f) {
@@ -140,7 +155,7 @@
   }
   function focusField(f) { if (f === 'counts') grid.focus(); else $(f).focus(); }
   function showErrors(errors) {
-    ['name', 'courtname', 'counts'].forEach(clearError);
+    ['name', 'courtname', 'grade', 'counts'].forEach(clearError);
     var list = $('error-list');
     list.textContent = '';
     errors.forEach(function (e) {
@@ -162,7 +177,10 @@
   function fillTicket(it) {
     $('t-name').textContent = it.name;
     $('t-code').textContent = it.courtname || '';
-    $('t-code-row').hidden = !it.courtname;
+    $('t-court').hidden = !it.courtname;
+    $('t-grade').textContent = it.grade ? API.gradeLabel(it.grade) : '';
+    $('t-grade').hidden = !it.grade;
+    $('t-code-row').hidden = !it.courtname && !it.grade;
     var body = $('t-body'); body.textContent = '';
     API.byDay(it.counts).forEach(function (row) {
       var tr = document.createElement('tr');
@@ -185,7 +203,7 @@
   /* ---------- 1 → 2：確認する ---------- */
   function toConfirm(ev) {
     ev.preventDefault();
-    var v = API.validate(readForm());
+    var v = API.validate(readForm(), REQ);
     if (v.errors.length) { showErrors(v.errors); return; }
     showErrors([]);
     state.draft = v.value;
@@ -223,7 +241,7 @@
   function send() {
     if (state.sending || !state.draft) return;
     $('send-error').hidden = true;
-    var body = { name: state.draft.name, courtname: state.draft.courtname, counts: state.draft.counts, website: $('website').value };
+    var body = { name: state.draft.name, courtname: state.draft.courtname, grade: state.draft.grade, counts: state.draft.counts, website: $('website').value };
     var edit = state.mode === 'edit';
     setSending(true);
     var p = edit
@@ -292,7 +310,7 @@
     $('result-sub').className = 'result-sub ' + (cancelled ? 'is-pending' : 'is-ok');
     $('mark-confirm').hidden = !cancelled; $('mark-done').hidden = cancelled;
     var c = API.cleanCounts(entry.counts);
-    fillTicket({ name: entry.name, courtname: entry.courtname, counts: c });
+    fillTicket({ name: entry.name, courtname: entry.courtname, grade: entry.grade, counts: c });
     $('t-no').textContent = API.no(entry.id);
     var edited = entry.updatedAt && entry.createdAt && new Date(entry.updatedAt) - new Date(entry.createdAt) > 60000;
     $('t-at').textContent = API.shortDate(edited ? entry.updatedAt : entry.createdAt) + (edited ? ' 修正' : ' 受付');
@@ -316,6 +334,7 @@
   function fillForm(it) {
     $('name').value = it ? it.name || '' : '';
     $('courtname').value = it ? it.courtname || '' : '';
+    setGrade(it ? it.grade : '');
     grid.set(it ? it.counts : API.emptyCounts());
     showErrors([]);
     onInput();
@@ -396,7 +415,7 @@
       var who = document.createElement('div'); who.className = 'mine-who';
       var b = document.createElement('b'); b.textContent = x.name + ' さん'; who.appendChild(b);
       var meta = document.createElement('p'); meta.className = 'mine-meta';
-      meta.textContent = API.no(x.id) + (x.courtname ? '　' + x.courtname : '') + (x.status === 'cancelled' ? '　取り消し済み' : '');
+      meta.textContent = API.no(x.id) + (x.grade ? '　' + API.gradeLabel(x.grade) : '') + (x.courtname ? '　' + x.courtname : '') + (x.status === 'cancelled' ? '　取り消し済み' : '');
       who.appendChild(meta);
       var detail = document.createElement('p'); detail.className = 'mine-meta'; detail.textContent = countsText(c);
       who.appendChild(detail);
@@ -439,6 +458,7 @@
     applyConfig();
     $('form').addEventListener('submit', toConfirm);
     ['name', 'courtname'].forEach(function (id) { $(id).addEventListener('input', onInput); });
+    $('grade-seg').addEventListener('change', onInput);
     $('cancel-edit').addEventListener('click', function () { home(); goTop(); });
     $('withdraw').addEventListener('click', function () { $('withdraw-confirm').hidden = false; $('withdraw').hidden = true; $('withdraw-yes').focus(); });
     $('withdraw-no').addEventListener('click', function () { $('withdraw-confirm').hidden = true; $('withdraw').hidden = false; $('withdraw').focus(); });

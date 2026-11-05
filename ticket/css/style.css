@@ -1069,19 +1069,56 @@ dialog .grid { margin-top: 6px; }
   .name-row .label { font-size: 14px; }
 }
 
-/* 見出しの右上：集計表 PDF（紺地の上で目立つボールの黄色） */
+/* 見出しの右下：集計表 PDF（紺地の上で目立つボールの黄色）。指が届きやすいよう下側に置く */
 .admin-hero { position: relative; align-items: stretch; }
 .admin-hero > div:first-child { align-self: flex-end; }
 .admin-hero-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 10px; }
-.hero-pdf { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 16px; font-size: 15px; border-radius: var(--r-s); box-shadow: 0 3px 0 var(--ball-strong), 0 6px 16px rgb(0 0 0 / .25); }
+.hero-pdf { order: 2; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 16px; font-size: 15px; border-radius: var(--r-s); box-shadow: 0 3px 0 var(--ball-strong), 0 6px 16px rgb(0 0 0 / .25); }
 .hero-pdf:disabled { opacity: .85; cursor: progress; }
+/* スマホ：青帯のいちばん下に、横いっぱいの大きなボタン（親指で押しやすい位置） */
 @media (max-width: 559px) {
   .admin-hero-side { display: contents; }
-  .hero-pdf { position: absolute; top: 12px; right: max(16px, env(safe-area-inset-right, 0px)); min-height: 40px; padding: 6px 12px; font-size: 14px; }
-  .admin-kicker { padding-right: 128px; }
+  .hero-admin .band-tools { order: 2; }
+  .hero-pdf { order: 3; width: 100%; justify-content: center; min-height: 52px; font-size: 17px; }
 }
-@media (max-width: 359px) {
-  .hero-pdf { padding: 6px 10px; font-size: 13px; }
-  .hero-pdf svg { display: none; }
-  .admin-kicker { padding-right: 96px; font-size: 12px; }
+
+/* 学年：ラベルの右に 1年・2年・3年 の3つのボタンを1行で（押すだけで選べる） */
+.grade-field { grid-template-columns: auto 1fr; align-items: center; column-gap: var(--s3); }
+.grade-field .error { grid-column: 1 / -1; order: 3; }
+.seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.seg-opt { position: relative; display: block; }
+.seg-opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.seg-opt span { display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1.5px solid var(--line-strong); border-radius: var(--r-s); background: var(--surface); color: var(--ink); font-size: 16px; font-weight: 700; transition: background .12s, border-color .12s; }
+.seg-opt input:checked + span { background: var(--navy); border-color: var(--navy); color: #ffffff; box-shadow: 0 2px 0 var(--ball-strong); }
+.seg-opt input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+.grade-field.has-error .seg-opt span { border-color: var(--danger); }
+.form-compact .grade-field .label { font-size: 15px; }
+/* 券面：学年の札 */
+.ticket-code { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.ticket-grade { display: inline-block; padding: 1px 10px; border-radius: var(--r-pill); background: var(--navy); color: #ffffff !important; font-size: 14px !important; }
+
+/* 学年別の表（購入する枚数の下）：行を押すとその学年だけを一覧で見る */
+.grade-wrap { margin-top: var(--s4); }
+.bd-caption { margin: 0 0 2px; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.breakdown tr.is-focus th, .breakdown tr.is-focus td { background: var(--ball-soft); }
+.breakdown tr.is-focus th { box-shadow: inset 4px 0 0 var(--ball-strong); }
+.grade-table tr.is-unset th { color: var(--warn); }
+/* 一覧：お名前の前に学年の札 */
+.row-grade { display: inline-block; margin-right: 8px; padding: 1px 9px; border-radius: var(--r-pill); background: var(--navy); color: #ffffff; font-size: 13px; font-weight: 700; vertical-align: 3px; }
+
+/* 背の低いスマホ（iPhone 13・多くの Android）でも、学年を足したまま［確認する］まで1画面に収める */
+@media (max-height: 720px) {
+  .page-form .hero-haruko { font-size: 44px; }
+  .page-form .hero-inner { padding-top: 6px; padding-bottom: 16px; }
+  .page-form .form-compact { gap: 9px; }
+  .page-form .seg-opt span { min-height: 42px; }
+  .page-form .grid-kind { display: flex; gap: 4px; align-items: baseline; justify-content: center; }   /* 「大人 ¥2,000」を1行に */
+  .page-form #to-confirm { min-height: 50px; }
+}
+@media (max-height: 660px) {
+  .page-form .hero-haruko { font-size: 40px; }
+  .page-form .hero-inner { padding-bottom: 12px; }
+  .page-form .form-compact { gap: 7px; padding-block: 12px; }
+  .page-form .sum-bar { padding-block: 2px; }
+  .page-form .notes summary { padding-block: 6px; }
 }
