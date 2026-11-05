@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>春高タオル 申し込み</title>
-<meta name="description" content="春高バレー出場記念タオルの申し込みフォーム">
+<title>春高チケット申し込み</title>
+<meta name="description" content="春高バレー 応援チケットの申し込みフォーム">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2312235a'/%3E%3Crect x='8' y='22' width='48' height='20' rx='2' fill='%23ffc52e'/%3E%3Crect x='14' y='22' width='2' height='20' fill='%2312235a'/%3E%3Crect x='48' y='22' width='2' height='20' fill='%2312235a'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ffffff'/%3E%3Crect x='6' y='18' width='52' height='28' rx='4' fill='%23ffc52e'/%3E%3Ccircle cx='6' cy='32' r='5' fill='%23ffffff'/%3E%3Ccircle cx='58' cy='32' r='5' fill='%23ffffff'/%3E%3Cpath d='M44 21v22' stroke='%2312235a' stroke-width='2' stroke-dasharray='3 3'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Barlow+Condensed:wght@600;700&family=Dela+Gothic+One&display=swap">
@@ -19,21 +19,20 @@
   <div class="wrap"><b>デモ表示</b>：入力はこの端末にだけ保存されます</div>
 </div>
 
-<!-- 見出し（1画面に収めるため、タオルの絵は小さく右に置く） -->
+<!-- 見出し（1画面に収めるため、チケットの絵は小さく右に置く） -->
 <header class="band band-compact">
   <div class="band-inner wrap">
     <div class="band-text">
-      <p class="eyebrow" id="team-line">春高バレー 出場記念</p>
-      <h1 class="title">記念タオル申し込み</h1>
+      <p class="eyebrow" id="team-line">春高バレー</p>
+      <h1 class="title" id="page-title">春高チケット申し込み</h1>
       <p class="band-meta" id="band-meta" hidden></p>
     </div>
-    <div class="towel-stage" aria-hidden="true">
-      <div class="towel-stack" id="towel-stack" data-count="1">
-        <div class="towel back b2"></div>
-        <div class="towel back b1"></div>
-        <div class="towel towel-front"><div class="towel-word">春高</div></div>
+    <div class="stub-stage" aria-hidden="true">
+      <div class="stub">
+        <span class="stub-main"><b>春高</b><small class="num">2027</small></span>
+        <span class="stub-side num">1.4<br>–1.6</span>
       </div>
-      <span class="towel-badge num" id="towel-badge">×1</span>
+      <span class="stub-badge num" id="stub-badge">×0</span>
     </div>
   </div>
 </header>
@@ -66,50 +65,57 @@
   <!-- 受付終了 -->
   <section class="card closed" id="closed" hidden>
     <h2 class="card-title">受付は終了しました</h2>
-    <p class="lead" id="closed-lead">たくさんのお申し込み、ありがとうございました。追加をご希望のときは役員にご相談ください。</p>
+    <p class="lead" id="closed-lead">たくさんのお申し込み、ありがとうございました。今回は1回限りの取りまとめのため、追加の注文はできません。</p>
   </section>
 
   <!-- 1. 入力 -->
   <form class="card form form-compact" id="form" novalidate>
-    <h2 class="form-title" id="form-title">1家庭1回、まとめてお申し込みください</h2>
+    <h2 class="visually-hidden" id="form-title">申し込み内容の入力</h2>
+    <p class="edit-title" id="edit-title" hidden></p>
+
+    <!-- 注意事項：いちばん間違えやすい2つを先に。全文は開いて読める（申し込む前の確認画面にも全部出す） -->
+    <details class="notes" id="notes">
+      <summary>
+        <span class="notes-mark" aria-hidden="true">!</span>
+        <span class="notes-head"><b id="notes-headline">部員の分は入れないでください。追加注文はできません。</b><small>注意事項をすべて見る</small></span>
+      </summary>
+      <ul class="notes-list" id="notes-list"></ul>
+    </details>
 
     <div class="error-summary" id="error-summary" role="alert" tabindex="-1" hidden>
       <p class="error-summary-title">入力内容を確認してください</p>
       <ul id="error-list"></ul>
     </div>
 
-    <div class="field" id="field-name">
-      <div class="label-row">
+    <div class="name-row">
+      <div class="field" id="field-name">
         <label class="label" for="name">お名前 <span class="tag tag-req">必須</span></label>
-        <p class="hint" id="name-hint">フルネーム（例：山田 花子）</p>
+        <p class="error" id="name-error" hidden></p>
+        <input class="input" id="name" name="name" type="text" autocomplete="name" maxlength="40" enterkeyhint="next" placeholder="例：山田 花子" aria-describedby="name-error">
       </div>
-      <p class="error" id="name-error" hidden></p>
-      <input class="input" id="name" name="name" type="text" autocomplete="name" maxlength="40" enterkeyhint="next" aria-describedby="name-hint name-error">
-    </div>
-
-    <div class="field" id="field-courtname">
-      <div class="label-row">
+      <div class="field" id="field-courtname">
         <label class="label" for="courtname"><span id="courtname-label">コートネーム</span> <span class="tag tag-opt" id="courtname-tag">任意</span></label>
-        <p class="hint" id="courtname-hint">選手のコートネーム（例：ニコ）</p>
+        <p class="error" id="courtname-error" hidden></p>
+        <input class="input" id="courtname" name="courtname" type="text" autocomplete="off" maxlength="30" enterkeyhint="done" placeholder="例：ニコ" aria-describedby="courtname-hint courtname-error">
       </div>
-      <p class="error" id="courtname-error" hidden></p>
-      <input class="input" id="courtname" name="courtname" type="text" autocomplete="off" maxlength="30" enterkeyhint="done" aria-describedby="courtname-hint courtname-error">
+      <p class="hint name-row-hint" id="courtname-hint">コートネームは選手のコートネームです</p>
     </div>
 
-    <div class="field" id="field-count" role="group" aria-labelledby="count-label">
+    <div class="field" id="field-counts" role="group" aria-labelledby="counts-label">
       <div class="label-row">
-        <p class="label" id="count-label">枚数 <span class="tag tag-req">必須</span></p>
-        <p class="hint" id="count-hint">1〜20枚</p>
+        <p class="label" id="counts-label">チケットの枚数 <span class="tag tag-req">必須</span></p>
+        <p class="hint" id="counts-hint">部員の分はのぞく</p>
       </div>
-      <p class="error" id="count-error" hidden></p>
-      <div class="stepper">
-        <button type="button" class="step-btn" id="minus" aria-label="1枚へらす">−</button>
-        <label class="step-value" for="count">
-          <input class="step-input" id="count" name="count" type="text" inputmode="numeric" autocomplete="off" value="1" maxlength="3" aria-describedby="count-hint count-error">
-          <span class="step-unit">枚</span>
-        </label>
-        <button type="button" class="step-btn" id="plus" aria-label="1枚ふやす">＋</button>
-      </div>
+      <p class="error" id="counts-error" hidden></p>
+      <div id="grid"></div>
+    </div>
+    <span id="counts" tabindex="-1"></span>
+
+    <!-- 合計（その場で更新） -->
+    <div class="sum-bar" id="sum-bar" aria-live="polite">
+      <span>合計</span>
+      <span class="sum-count"><b class="num" id="sum-count">0</b>枚</span>
+      <span class="sum-yen num" id="sum-yen">¥0</span>
     </div>
 
     <div class="hp" aria-hidden="true">
@@ -136,7 +142,7 @@
     </div>
   </form>
 
-  <!-- 2. 確認 と 3. 完了（同じカードで、名前と枚数をいちばん大きく見せる） -->
+  <!-- 2. 確認 と 3. 完了（同じカードで、名前と枚数・金額をいちばん大きく見せる） -->
   <section class="card result" id="result" hidden tabindex="-1" aria-labelledby="result-title">
     <div class="result-head">
       <div class="result-mark is-confirm" id="mark-confirm" aria-hidden="true">
@@ -155,9 +161,13 @@
       <p class="ticket-label">お名前</p>
       <p class="ticket-name"><span id="t-name"></span><small>さん</small></p>
       <p class="ticket-code" id="t-code-row"><span id="t-code-label">コートネーム</span>　<b id="t-code"></b></p>
-      <div class="ticket-count">
-        <p class="ticket-label">枚数</p>
-        <p><span class="num" id="t-count">0</span><span class="unit">枚</span><span class="ticket-yen" id="t-yen-row" hidden>お支払い <b class="num" id="t-yen"></b></span></p>
+      <table class="ticket-table" id="t-table">
+        <thead><tr id="t-head"></tr></thead>
+        <tbody id="t-body"></tbody>
+      </table>
+      <div class="ticket-total">
+        <p><span class="ticket-label">合計</span><span class="num" id="t-count">0</span><span class="unit">枚</span></p>
+        <p class="ticket-amount num" id="t-yen">¥0</p>
       </div>
       <div class="ticket-foot" id="t-foot" hidden>
         <span>受付番号 <b class="num" id="t-no">No.000</b></span>
@@ -165,10 +175,16 @@
       </div>
     </div>
 
+    <!-- 申し込む前に読んでもらう注意事項（GOV.UK の「申し込む前の確認事項」の型） -->
+    <div class="declare" id="declare">
+      <p class="declare-title">申し込む前に、ご確認ください</p>
+      <ul class="notes-list" id="declare-list"></ul>
+    </div>
+
     <p class="send-error" id="send-error" role="alert" hidden></p>
 
     <!-- 確認のとき -->
-    <div class="pair-actions" id="confirm-actions">
+    <div class="pair-actions sticky-actions" id="confirm-actions">
       <button type="button" class="btn btn-edit" id="confirm-back">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="22" height="22"><path d="M4 20h4L19 9l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2.2"/></svg>
         修正する
@@ -192,7 +208,7 @@
     <button type="button" class="btn btn-text" id="done-new" hidden>別のお名前でも申し込む</button>
   </section>
 
-  <!-- ご案内（受け取り・支払い。値段と締切は見出しに出す） -->
+  <!-- ご案内（受け取り・支払い。締切は見出しに出す） -->
   <dl class="info" id="info" hidden></dl>
 </main>
 

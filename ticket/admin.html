@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>春高タオル 集計</title>
-<meta name="description" content="春高バレー出場記念タオル 役員用の集計画面">
+<title>春高チケット 集計</title>
+<meta name="description" content="春高バレー 応援チケット 役員用の集計画面">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2312235a'/%3E%3Crect x='8' y='22' width='48' height='20' rx='2' fill='%23ffc52e'/%3E%3Crect x='14' y='22' width='2' height='20' fill='%2312235a'/%3E%3Crect x='48' y='22' width='2' height='20' fill='%2312235a'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ffffff'/%3E%3Crect x='6' y='18' width='52' height='28' rx='4' fill='%23ffc52e'/%3E%3Ccircle cx='6' cy='32' r='5' fill='%23ffffff'/%3E%3Ccircle cx='58' cy='32' r='5' fill='%23ffffff'/%3E%3Cpath d='M44 21v22' stroke='%2312235a' stroke-width='2' stroke-dasharray='3 3'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Barlow+Condensed:wght@600;700&family=Dela+Gothic+One&display=swap">
@@ -24,7 +24,7 @@
   <div class="band-inner wrap">
     <div>
       <p class="eyebrow" id="team-line">役員用</p>
-      <h1 class="title">記念タオル 集計</h1>
+      <h1 class="title">春高チケット 集計</h1>
     </div>
     <div class="band-tools" id="band-tools" hidden>
       <span class="updated" id="updated">読み込み中…</span>
@@ -67,15 +67,26 @@
   <!-- 集計 -->
   <section id="board" class="board" hidden aria-label="集計">
 
-    <!-- まず知りたい3つの数字 -->
+    <!-- 役員の仕事の順：1. 購入する枚数（日付×区分）→ 2. 集金 → 3. 受け渡し -->
     <div class="kpis">
       <div class="card kpi kpi-main">
-        <p class="kpi-label">申し込み合計<span>業者に発注する数</span></p>
-        <p class="kpi-value"><span class="num" id="k-total">0</span><small>枚</small></p>
-        <p class="kpi-sub" id="k-total-sub"></p>
-        <div id="k-target" hidden>
-          <div class="meter" role="img" id="k-target-meter-label"><span id="k-target-meter"></span></div>
-          <p class="kpi-sub" id="k-target-sub"></p>
+        <div class="kpi-main-top">
+          <div>
+            <p class="kpi-label">購入する枚数<span>日付ごと・部員の分はのぞく</span></p>
+            <p class="kpi-value"><span class="num" id="k-total">0</span><small>枚</small></p>
+            <p class="kpi-sub" id="k-total-sub"></p>
+          </div>
+          <div class="kpi-amount">
+            <p class="kpi-label">金額の合計</p>
+            <p class="num" id="k-amount">¥0</p>
+          </div>
+        </div>
+        <div class="breakdown-wrap">
+          <table class="breakdown" id="breakdown">
+            <thead><tr id="bd-head"></tr></thead>
+            <tbody id="bd-body"></tbody>
+            <tfoot><tr id="bd-foot"></tr></tfoot>
+          </table>
         </div>
         <div class="kpi-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="copy-summary">集計をコピー（LINEに貼る用）</button>
@@ -89,7 +100,7 @@
         <span class="kpi-go" id="k-paid-go">集金がまだの家庭を見る</span>
       </button>
       <button type="button" class="card kpi kpi-task" id="k-handed-card" data-goto="unhanded">
-        <span class="kpi-label">受け渡し</span>
+        <span class="kpi-label">チケットの受け渡し</span>
         <span class="kpi-value"><span class="num" id="k-handed">0</span><small id="k-handed-of">/ 0 家庭</small></span>
         <span class="meter" role="img" id="k-handed-meter-label"><span id="k-handed-meter"></span></span>
         <span class="kpi-sub" id="k-handed-sub"></span>
@@ -127,7 +138,7 @@
         </div>
       </div>
       <div class="row-head" aria-hidden="true">
-        <span>番号</span><span>お名前・コートネーム</span><span class="h-count">枚数</span><span>集金</span><span>受け渡し</span><span></span>
+        <span>番号</span><span>お名前・枚数の内訳</span><span class="h-count">枚数・金額</span><span>集金</span><span>受け渡し</span><span></span>
       </div>
       <ul class="rows" id="rows"></ul>
       <div class="empty" id="empty" hidden>
@@ -160,10 +171,11 @@
       <p class="error" id="d-courtname-error" hidden></p>
       <input class="input" id="d-courtname" type="text" maxlength="30" autocomplete="off">
     </div>
-    <div class="field" id="dfield-count">
-      <label class="label" for="d-count">枚数 <span class="tag tag-req">必須</span></label>
-      <p class="error" id="d-count-error" hidden></p>
-      <input class="input" id="d-count" type="text" inputmode="numeric" maxlength="3" autocomplete="off">
+    <div class="field" id="dfield-counts" role="group" aria-labelledby="d-counts-label">
+      <p class="label" id="d-counts-label">チケットの枚数 <span class="tag tag-req">必須</span></p>
+      <p class="error" id="d-counts-error" hidden></p>
+      <div id="d-grid"></div>
+      <p class="dlg-sum" id="d-sum" aria-live="polite"></p>
     </div>
     <div class="field">
       <label class="label" for="d-memo">役員メモ <span class="tag tag-opt">任意</span></label>

@@ -1,25 +1,24 @@
-/* form.js — 各家庭が使う申し込み画面。
+/* form.js — 各家庭が使う申し込み画面（春高バレー 応援チケット）。
  *
- * 流れ：1 入力 →［確認する］→ 2 確認（お名前と枚数を大きく表示）→［申し込む］→ 3 完了
- *   - 入力はスマホ1画面に収める（見出しを小さく、欄は3つ、ボタンまでスクロールなしで届く）
- *   - 確認でも完了でも［修正する］で入力に戻れる。完了の画面には［閉じる］も置く
+ * 流れ：1 入力 →［確認する］→ 2 確認（お名前・枚数・金額を大きく＋注意事項）→［申し込む］→ 3 完了
+ *   - 入力はスマホ1画面に収める（お名前とコートネームを横に並べ、枚数は 日付×区分 の表）
+ *   - いちばん間違えやすい注意（部員の分は入れない・追加注文はできない）は入力欄の上に、
+ *     5つの注意はすべて、申し込む直前の確認画面に出す
  *   - 送った申し込みは、この端末に「受付番号と合鍵（token）」だけ覚えておき、
  *     次に開いたときは「申し込み済みです」から修正・取り消しができる（入力欄は出さず、二重の申し込みを防ぐ）
  *   - 通信が切れて同じ申し込みを2回送っても、1件にしかならない（requestId）
  */
 (function () {
   'use strict';
-  var API = window.TowelAPI, CFG = API.config;
+  var API = window.TicketAPI, CFG = API.config;
   var $ = function (id) { return document.getElementById(id); };
-  var MAX = Number(CFG.maxPerOrder) || 20;
-  var PRICE = Number(CFG.price) || 0;
-  var STORE_KEY = API.demo ? 'towel.mine.demo.v2' : 'towel.mine.v1';
-  var NEW_TITLE = '1家庭1回、まとめてお申し込みください';
+  var STORE_KEY = API.demo ? 'ticket.mine.demo.v1' : 'ticket.mine.v1';
+  var grid = null;
 
   var state = {
     mode: 'new',          // 'new' | 'edit'
     editing: null,        // 修正中の申し込み { id, token, status }
-    draft: null,          // 確認画面に出している内容 { name, courtname, count }
+    draft: null,          // 確認画面に出している内容 { name, courtname, counts }
     last: null,           // 完了した申し込み
     sending: false,
     requestId: API.uuid() // 同じ申し込みの再送を1件にまとめるための番号（成功したら新しくする）
@@ -32,7 +31,7 @@
   function saveMine(list) {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(list.slice(-10))); } catch (e) { /* 保存できない端末でも申し込み自体はできる */ }
   }
-  function slim(it) { return { id: it.id, name: it.name, courtname: it.courtname, count: it.count, status: it.status, createdAt: it.createdAt, updatedAt: it.updatedAt }; }
+  function slim(it) { return { id: it.id, name: it.name, courtname: it.courtname, counts: it.counts, status: it.status, createdAt: it.createdAt, updatedAt: it.updatedAt }; }
   function upsertMine(item, token) {
     var list = loadMine(), found = null;
     list.forEach(function (x) { if (x.id === item.id) { found = x; Object.assign(x, slim(item)); if (token) x.token = token; } });
@@ -43,12 +42,7 @@
   function mineById(id) { return loadMine().filter(function (m) { return m.id === id; })[0] || null; }
 
   /* ---------- 画面の切り替え ----------
-   * input    入力
-   * confirm  確認
-   * done     完了
-   * finished 完了のあと［閉じる］（閉じられないブラウザ用）
-   * home     この端末から申し込み済みで開いたとき
-   * closed   受付終了 */
+   * input 入力 / confirm 確認 / done 完了 / finished 完了のあと［閉じる］/ home 申し込み済みの端末で開いたとき / closed 受付終了 */
   function show(step) {
     $('form').hidden = step !== 'input';
     $('result').hidden = step !== 'confirm' && step !== 'done';
@@ -69,33 +63,41 @@
   }
 
   /* ---------- 設定を画面に反映 ---------- */
+  function fillNotes(ul) {
+    ul.textContent = '';
+    (CFG.notes || []).forEach(function (t) { var li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+  }
   function applyConfig() {
     if (API.demo) $('demo-bar').hidden = false;
-    // チーム名と「春高バレー 出場記念」は、それぞれの途中で改行しない（切れ目でだけ折り返す）
+    // チーム名と「春高バレー」は、それぞれの途中で改行しない（切れ目でだけ折り返す）
     var tl = $('team-line'); tl.textContent = '';
-    (CFG.team ? [CFG.team, '春高バレー 出場記念'] : ['春高バレー 出場記念']).forEach(function (t, i) {
+    (CFG.team ? [CFG.team] : []).forEach(function (t, i) {
       if (i) tl.appendChild(document.createTextNode(' '));
       var sp = document.createElement('span'); sp.textContent = t; tl.appendChild(sp);
     });
-    if (CFG.item) document.title = CFG.item + ' 申し込み';
+    document.title = '春高チケット申し込み';
 
     var label = CFG.courtnameLabel || 'コートネーム';
     $('courtname-label').textContent = label;
     $('t-code-label').textContent = label;
-    if (CFG.courtnameHint) $('courtname-hint').textContent = CFG.courtnameHint;
+    if (CFG.courtnameHint) $('courtname-hint').textContent = label + '：' + CFG.courtnameHint;
     if (CFG.courtnameRequired) { $('courtname-tag').textContent = '必須'; $('courtname-tag').className = 'tag tag-req'; }
 
-    // 値段と締切は見出しの中に（申し込む前に必ず目に入る場所）
-    var meta = [], end = API.deadlineEnd();
-    if (PRICE > 0) meta.push('1枚 ' + API.yen(PRICE));
+    if (CFG.headline) $('notes-headline').textContent = CFG.headline;
+    fillNotes($('notes-list'));
+    fillNotes($('declare-list'));
+    if (!(CFG.notes || []).length) { $('notes').hidden = true; $('declare').hidden = true; }
+
+    // 締切は見出しの中に（申し込む前に必ず目に入る場所）
+    var end = API.deadlineEnd();
     if (end) {
       var days = Math.ceil((end.getTime() - Date.now()) / 86400000);
       var dl = '締切 ' + (end.getMonth() + 1) + '/' + end.getDate() + '（' + '日月火水木金土'[end.getDay()] + '）';
       if (days >= 0) dl += days === 0 ? ' 今日まで' : ' あと' + days + '日';
-      meta.push(dl);
+      $('band-meta').textContent = dl;
+      $('band-meta').hidden = false;
       if (days >= 0 && days <= 3) $('band-meta').classList.add('is-soon');
     }
-    if (meta.length) { $('band-meta').textContent = meta.join('　'); $('band-meta').hidden = false; }
 
     // 受け取り・支払いは、フォームの下のご案内に
     [['受け取り', CFG.delivery], ['お支払い', CFG.payment]].forEach(function (it) {
@@ -105,74 +107,82 @@
       box.appendChild(dt); box.appendChild(dd); $('info').appendChild(box);
     });
     if (CFG.contact) { $('contact').textContent = 'お問い合わせ：' + CFG.contact; $('foot').hidden = false; }
+
+    // 確認・完了の表の見出し（日付 / 大人 / 高校生以下）
+    var head = $('t-head');
+    var th0 = document.createElement('th'); th0.scope = 'col'; th0.textContent = '日付'; head.appendChild(th0);
+    API.kinds.forEach(function (k) { var th = document.createElement('th'); th.scope = 'col'; th.textContent = k.label; head.appendChild(th); });
   }
 
-  /* ---------- 枚数 ---------- */
-  function currentCount() { var n = API.toCount($('count').value); return isNaN(n) ? 0 : n; }
-  function setCount(n) {
-    n = Math.max(1, Math.min(MAX, n));
-    $('count').value = String(n);
-    onInput();
-    var b = $('towel-badge');
-    b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
-  }
-  function drawTowel(n) {
-    $('towel-stack').dataset.count = String(Math.min(Math.max(n, 1), 3));
-    $('towel-badge').textContent = '×' + (n || 0);
-  }
-
+  /* ---------- 合計（その場で更新） ---------- */
   function onInput() {
-    var n = currentCount();
-    $('minus').disabled = n <= 1;
-    $('plus').disabled = n >= MAX;
-    drawTowel(n);
-    $('count-hint').textContent = '1〜' + MAX + '枚' + (PRICE > 0 && n ? '　合計 ' + API.yen(PRICE * n) : '');
-    // 直したらその欄のエラー表示は消す（確認に進むときにもう一度確かめる）
-    ['name', 'courtname', 'count'].forEach(function (f) {
+    var c = API.cleanCounts(grid.get()), n = API.totalOf(c);
+    $('sum-count').textContent = String(n);
+    $('sum-yen').textContent = API.yen(API.amountOf(c));
+    $('sum-bar').classList.toggle('has-value', n > 0);
+    drawStub(n);
+    ['name', 'courtname', 'counts'].forEach(function (f) {
       if (!$('field-' + f).classList.contains('has-error')) return;
       if (!API.validate(readForm()).errors.some(function (e) { return e.field === f; })) clearError(f);
     });
   }
-  function readForm() { return { name: $('name').value, courtname: $('courtname').value, count: $('count').value }; }
+  function drawStub(n) {
+    var b = $('stub-badge');
+    if (b.textContent !== '×' + n) { b.textContent = '×' + n; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
+  }
+  function readForm() { return { name: $('name').value, courtname: $('courtname').value, counts: grid.get() }; }
 
   /* ---------- エラー表示（欄の横＋まとめ） ---------- */
   function clearError(f) {
     $('field-' + f).classList.remove('has-error');
     $(f + '-error').hidden = true;
-    $(f).removeAttribute('aria-invalid');
+    if (f !== 'counts') $(f).removeAttribute('aria-invalid');
   }
+  function focusField(f) { if (f === 'counts') grid.focus(); else $(f).focus(); }
   function showErrors(errors) {
-    ['name', 'courtname', 'count'].forEach(clearError);
+    ['name', 'courtname', 'counts'].forEach(clearError);
     var list = $('error-list');
     list.textContent = '';
     errors.forEach(function (e) {
       $('field-' + e.field).classList.add('has-error');
       var p = $(e.field + '-error'); p.textContent = e.msg; p.hidden = false;
-      $(e.field).setAttribute('aria-invalid', 'true');
+      if (e.field !== 'counts') $(e.field).setAttribute('aria-invalid', 'true');
       var li = document.createElement('li'), a = document.createElement('a');
       a.href = '#' + e.field; a.textContent = e.msg;
-      a.addEventListener('click', function (ev) { ev.preventDefault(); $(e.field).focus(); });
+      a.addEventListener('click', function (ev) { ev.preventDefault(); focusField(e.field); });
       li.appendChild(a); list.appendChild(li);
     });
     // 欄が1つだけのまちがいは欄の横の表示で足りる。2つ以上のときだけ上にまとめる（1画面に収めるため）
     $('error-summary').hidden = errors.length < 2;
     if (errors.length >= 2) $('error-summary').focus();
-    else if (errors.length === 1) $(errors[0].field).focus();
+    else if (errors.length === 1) focusField(errors[0].field);
   }
 
-  /* ---------- 1 → 2：確認する ---------- */
+  /* ---------- 確認・完了のチケット ---------- */
   function fillTicket(it) {
     $('t-name').textContent = it.name;
     $('t-code').textContent = it.courtname || '';
     $('t-code-row').hidden = !it.courtname;
-    $('t-count').textContent = String(it.count);
-    if (PRICE > 0) { $('t-yen').textContent = API.yen(PRICE * it.count); $('t-yen-row').hidden = false; }
-    else $('t-yen-row').hidden = true;
+    var body = $('t-body'); body.textContent = '';
+    API.byDay(it.counts).forEach(function (row) {
+      var tr = document.createElement('tr');
+      var th = document.createElement('th'); th.scope = 'row'; th.textContent = API.dayLabel(row.day); tr.appendChild(th);
+      API.kinds.forEach(function (k) {
+        var td = document.createElement('td'), n = Number(it.counts[row.day.id + '-' + k.id]) || 0;
+        td.className = 'num' + (n ? '' : ' is-zero');
+        td.textContent = n ? n + '枚' : '—';
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+    $('t-count').textContent = String(API.totalOf(it.counts));
+    $('t-yen').textContent = API.yen(API.amountOf(it.counts));
     var t = $('ticket');
     t.classList.remove('is-new'); void t.offsetWidth; t.classList.add('is-new');
-    drawTowel(it.count);
+    drawStub(API.totalOf(it.counts));
   }
 
+  /* ---------- 1 → 2：確認する ---------- */
   function toConfirm(ev) {
     ev.preventDefault();
     var v = API.validate(readForm());
@@ -187,12 +197,13 @@
     fillTicket(v.value);
     $('t-foot').hidden = !edit;
     if (edit) { $('t-no').textContent = API.no(state.editing.id); $('t-at').textContent = 'この番号の内容を書きかえます'; }
+    $('declare').hidden = !(CFG.notes || []).length;
     $('confirm-actions').hidden = false;
     $('done-actions').hidden = true;
     $('done-new').hidden = true;
     $('send-error').hidden = true;
     setSending(false);
-    $('result-note').textContent = edit ? 'よければ「保存する」を押してください' : 'よければ「申し込む」を押してください';
+    $('result-note').textContent = '';
     show('confirm');
     goTop($('result'));
   }
@@ -211,7 +222,7 @@
   function send() {
     if (state.sending || !state.draft) return;
     $('send-error').hidden = true;
-    var body = { name: state.draft.name, courtname: state.draft.courtname, count: state.draft.count, website: $('website').value };
+    var body = { name: state.draft.name, courtname: state.draft.courtname, counts: state.draft.counts, website: $('website').value };
     var edit = state.mode === 'edit';
     setSending(true);
     var p = edit
@@ -241,6 +252,7 @@
     $('t-no').textContent = API.no(entry.id);
     $('t-at').textContent = API.shortDate(edited ? entry.updatedAt : entry.createdAt) + (edited ? ' 修正' : ' 受付');
     $('t-foot').hidden = false;
+    $('declare').hidden = true;
     $('confirm-actions').hidden = true;
     $('done-actions').hidden = false;
     $('done-new').hidden = false;
@@ -260,14 +272,15 @@
   function fillForm(it) {
     $('name').value = it ? it.name || '' : '';
     $('courtname').value = it ? it.courtname || '' : '';
-    $('count').value = String(it ? it.count || 1 : 1);
+    grid.set(it ? it.counts : API.emptyCounts());
     showErrors([]);
     onInput();
   }
   function startEdit(entry) {   // 申し込み済みの内容を直す
     state.mode = 'edit';
     state.editing = { id: entry.id, token: entry.token, status: entry.status };
-    $('form-title').textContent = API.no(entry.id) + ' の内容を修正';
+    $('edit-title').textContent = API.no(entry.id) + ' の内容を修正';
+    $('edit-title').hidden = false;
     $('cancel-edit').hidden = false;
     $('danger-zone').hidden = entry.status === 'cancelled';
     $('withdraw-confirm').hidden = true; $('withdraw').hidden = false; $('withdraw-error').hidden = true;
@@ -286,7 +299,7 @@
     state.mode = 'new';
     state.editing = null;
     state.draft = null;
-    $('form-title').textContent = NEW_TITLE;
+    $('edit-title').hidden = true;
     $('cancel-edit').hidden = true;
     $('danger-zone').hidden = true;
     $('form-note').textContent = 'まだ送信されません。次の画面で内容を確かめます';
@@ -297,9 +310,8 @@
   function home() {             // 申し込み済みの端末で開いたとき・修正をやめたとき
     state.mode = 'new';
     state.editing = null;
-    var hasMine = loadMine().length > 0;
     if (API.isClosed()) show('closed');
-    else if (hasMine) show('home');
+    else if (loadMine().length) show('home');
     else startNew();
   }
 
@@ -321,14 +333,20 @@
   }
 
   /* ---------- この端末からの申し込み一覧 ---------- */
+  function countsText(c) {
+    return API.byDay(c).map(function (row) {
+      return API.dayLabel(row.day) + ' ' + row.parts.map(function (p) { return p.kind.label + p.n; }).join('・');
+    }).join('　');
+  }
   function renderMine(step) {
     var list = loadMine(), ul = $('mine-list');
     ul.textContent = '';
     if (!list.length) { $('mine').hidden = true; return; }
     var closed = API.isClosed();
     var active = list.filter(function (x) { return x.status !== 'cancelled'; }).length;
-    $('mine-title').textContent = step === 'finished' ? 'この端末からの申し込み' : (active ? '申し込み済みです' : 'この端末からの申し込み');
+    $('mine-title').textContent = step === 'finished' || !active ? 'この端末からの申し込み' : '申し込み済みです';
     list.slice().reverse().forEach(function (x) {
+      var c = API.cleanCounts(x.counts);
       var li = document.createElement('li');
       li.className = 'mine-item' + (x.status === 'cancelled' ? ' is-cancelled' : '');
       var who = document.createElement('div'); who.className = 'mine-who';
@@ -336,9 +354,12 @@
       var meta = document.createElement('p'); meta.className = 'mine-meta';
       meta.textContent = API.no(x.id) + (x.courtname ? '　' + x.courtname : '') + (x.status === 'cancelled' ? '　取り消し済み' : '');
       who.appendChild(meta);
+      var detail = document.createElement('p'); detail.className = 'mine-meta'; detail.textContent = countsText(c);
+      who.appendChild(detail);
       var cnt = document.createElement('p'); cnt.className = 'mine-count';
-      var n = document.createElement('span'); n.className = 'num'; n.textContent = String(x.count);
+      var n = document.createElement('span'); n.className = 'num'; n.textContent = String(API.totalOf(c));
       cnt.appendChild(n); cnt.appendChild(document.createTextNode(' 枚'));
+      var y = document.createElement('small'); y.className = 'num'; y.textContent = API.yen(API.amountOf(c)); cnt.appendChild(y);
       li.appendChild(who); li.appendChild(cnt);
       if (!closed) {
         var btn = document.createElement('button');
@@ -364,13 +385,10 @@
 
   /* ---------- はじめに ---------- */
   function init() {
+    grid = API.buildGrid($('grid'), 'c-', onInput);
     applyConfig();
     $('form').addEventListener('submit', toConfirm);
-    ['name', 'courtname', 'count'].forEach(function (id) { $(id).addEventListener('input', onInput); });
-    $('count').addEventListener('blur', function () { var n = currentCount(); if (n) setCount(n); });
-    $('count').addEventListener('focus', function () { $('count').select(); });
-    $('minus').addEventListener('click', function () { setCount((currentCount() || 1) - 1); });
-    $('plus').addEventListener('click', function () { setCount((currentCount() || 0) + 1); });
+    ['name', 'courtname'].forEach(function (id) { $(id).addEventListener('input', onInput); });
     $('cancel-edit').addEventListener('click', function () { home(); goTop(); });
     $('withdraw').addEventListener('click', function () { $('withdraw-confirm').hidden = false; $('withdraw').hidden = true; $('withdraw-yes').focus(); });
     $('withdraw-no').addEventListener('click', function () { $('withdraw-confirm').hidden = true; $('withdraw').hidden = false; $('withdraw').focus(); });

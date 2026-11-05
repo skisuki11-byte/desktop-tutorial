@@ -1,0 +1,55 @@
+/* config.js — 公開前に書き換える設定はここだけ。
+ *
+ * endpoint  集計先（Google Apps Script のウェブアプリURL）。設定方法は gas/README.md。
+ *           空のままだと「デモ表示」になり、入力はこの端末の中にだけ保存される。
+ * 空欄（'' や 0）にした項目は、画面に出さない。
+ *
+ * days / kinds（日付・区分・値段）を変えるときは、gas/Code.gs の DAYS / KINDS も同じにそろえる
+ * （tests/gas.test.js が食い違いを見つける）。
+ */
+window.TICKET_CONFIG = {
+  endpoint: 'https://script.google.com/macros/s/AKfycbzfFnxAh-pdsc1T14DPaaX4LZCVpBMPFdkZ3Lx4hW5aVnWZGx2RU8QThMKRZIlAv_a6/exec',
+
+  // 画面の見出しまわり
+  team: '土浦日大 女子バレーボール部',
+  item: '春高バレー 応援チケット',        // 申し込むものの名前
+
+  // 日付と区分（値段）
+  days: [
+    { id: '0104', label: '1/4', dow: '月', sub: '開会式のみでも必要' },
+    { id: '0105', label: '1/5', dow: '火', sub: '' },
+    { id: '0106', label: '1/6', dow: '水', sub: '' }
+  ],
+  kinds: [
+    { id: 'adult', label: '大人', short: '大', price: 2000 },
+    { id: 'student', label: '高校生以下', short: '高', price: 1500 }
+  ],
+  maxPerCell: 20,                   // 1か所（1日・1区分）に入れられる最大枚数
+
+  // 注意事項（申し込む直前の確認画面にすべて出す。headline は入力画面の上に出す要点）
+  headline: '部員の分は入れないでください。追加注文はできません。',
+  notes: [
+    '1月4日は開会式のみの参加でもチケットが必要です。',
+    '追加注文はできません。今回1回限りの取りまとめになりますので、必要枚数をよくご確認ください。',
+    '部員のチケットは保護者会または遠征時と同様、人数割りで購入しますので、部員分は人数に入れないでご購入ください。',
+    'お友達の分もまとめて購入できますが、チケットと代金の受け渡しは各ご家庭でお願いいたします。',
+    '今回購入するチケットは日大応援用です。他高の試合は観戦できませんので、購入される方へ事前にお伝えください。'
+  ],
+
+  // ご案内（締切は申し込み画面の上、それ以外はフォームの下に出す。空欄なら出さない）
+  deadline: '',                     // 締切日 'YYYY-MM-DD'（その日の 23:59 まで受け付ける）
+  delivery: '',                     // 受け取り方 例：'12月の保護者会でお渡しします'
+  payment: '',                      // 支払い方 例：'受け取りのときに現金で'
+  contact: '',                      // 問い合わせ先 例：'保護者会 役員（佐藤・鈴木）まで LINE で'
+
+  // 入力欄
+  courtnameLabel: 'コートネーム',
+  courtnameHint: '選手のコートネーム（例：ニコ）',
+  courtnameRequired: false,         // true にすると必須になる
+
+  // 受付を手動で締めるとき false にする（締切日を待たずに止められる）
+  accepting: true,
+
+  // 集計画面
+  sheetUrl: ''                      // 元データの Google スプレッドシートのURL（役員だけが開ける）
+};
