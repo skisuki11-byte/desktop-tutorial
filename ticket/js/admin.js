@@ -659,6 +659,85 @@ function clearAuth() {
     copyText(lines.join('\n'), '集計をコピーしました。LINE などに貼り付けられます');
   }
 
+  /* ---------- PDF（印刷）用の集計表 ----------
+     ブラウザの「印刷 → PDFに保存」を使う（日本語の文字がそのまま綺麗に出て、追加の読み込みもいらない）。
+     中身：日付×区分の購入枚数・金額／集金と受け渡しの状況／申し込み一覧（取り消しは除く・受付番号順） */
+  function buildPrintSheet() {
+    var s = stats(), d = new Date(), box = $('print-sheet');
+    box.textContent = '';
+    var stamp = d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + '（' + '日月火水木金土'[d.getDay()] + '） ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2);
+    var head = el('div', 'ps-head');
+    head.appendChild(el('h1', null, (CFG.item || '応援チケット') + ' 申し込み集計表'));
+    head.appendChild(el('p', null, (CFG.team ? CFG.team + '　' : '') + stamp + ' 時点' + (auth && auth.officer ? '　出力：' + auth.officer : '') + '　（部員の分はのぞく）'));
+    box.appendChild(head);
+
+    // 1. 購入する枚数（日付 × 区分）
+    box.appendChild(el('h2', null, '購入する枚数'));
+    var t1 = el('table', 'ps-table ps-sum'), h1 = el('tr');
+    h1.appendChild(el('th', null, '日付'));
+    API.kinds.forEach(function (k) { h1.appendChild(el('th', null, k.label + '（' + API.yen(k.price) + '）')); });
+    h1.appendChild(el('th', null, '計')); h1.appendChild(el('th', null, '金額'));
+    var th1 = el('thead'); th1.appendChild(h1); t1.appendChild(th1);
+    var tb1 = el('tbody'), kindSum = {};
+    API.kinds.forEach(function (k) { kindSum[k.id] = 0; });
+    API.days.forEach(function (day) {
+      var tr = el('tr'), sum = 0, yen = 0;
+      tr.appendChild(el('th', null, API.dayLabel(day)));
+      API.kinds.forEach(function (k) { var n = s.cells[day.id + '-' + k.id]; sum += n; yen += n * k.price; kindSum[k.id] += n; tr.appendChild(el('td', null, String(n))); });
+      tr.appendChild(el('td', 'ps-strong', String(sum))); tr.appendChild(el('td', null, API.yen(yen)));
+      tb1.appendChild(tr);
+    });
+    t1.appendChild(tb1);
+    var tf1 = el('tfoot'), fr1 = el('tr');
+    fr1.appendChild(el('th', null, '合計'));
+    API.kinds.forEach(function (k) { fr1.appendChild(el('td', null, String(kindSum[k.id]))); });
+    fr1.appendChild(el('td', 'ps-strong', String(s.total))); fr1.appendChild(el('td', 'ps-strong', API.yen(s.amount)));
+    tf1.appendChild(fr1); t1.appendChild(tf1);
+    box.appendChild(t1);
+
+    // 2. 集金・受け渡し
+    var st = el('p', 'ps-status');
+    st.textContent = '申し込み ' + s.orders + ' 家庭・' + s.total + ' 枚・' + API.yen(s.amount) +
+      '　／　集金済み ' + s.paidOrders + ' / ' + s.orders + ' 家庭（' + API.yen(s.paidAmount) + '、残り ' + API.yen(s.amount - s.paidAmount) + '）' +
+      '　／　受け渡し済み ' + s.handedOrders + ' / ' + s.orders + ' 家庭';
+    box.appendChild(st);
+
+    // 3. 申し込み一覧
+    box.appendChild(el('h2', null, '申し込み一覧'));
+    var t2 = el('table', 'ps-table ps-list'), th2 = el('thead'), r1 = el('tr'), r2 = el('tr');
+    ['No.', 'お名前', COURT].forEach(function (x) { var c = el('th', null, x); c.rowSpan = 2; r1.appendChild(c); });
+    API.days.forEach(function (day) { var c = el('th', 'ps-day', API.dayLabel(day)); c.colSpan = API.kinds.length; r1.appendChild(c); API.kinds.forEach(function (k) { r2.appendChild(el('th', null, k.label)); }); });
+    ['枚数', '金額', '集金', '受渡', 'メモ'].forEach(function (x) { var c = el('th', null, x); c.rowSpan = 2; r1.appendChild(c); });
+    th2.appendChild(r1); th2.appendChild(r2); t2.appendChild(th2);
+    var tb2 = el('tbody');
+    items.filter(function (x) { return x.status !== 'cancelled'; }).sort(function (a, b) { return a.id - b.id; }).forEach(function (x) {
+      var tr = el('tr');
+      tr.appendChild(el('td', 'ps-no', API.no(x.id)));
+      tr.appendChild(el('td', 'ps-name', x.name));
+      tr.appendChild(el('td', 'ps-name', x.courtname || ''));
+      API.items.forEach(function (it) { var n = x.counts[it.key]; tr.appendChild(el('td', n ? null : 'ps-zero', n ? String(n) : '')); });
+      tr.appendChild(el('td', 'ps-strong', String(x.total)));
+      tr.appendChild(el('td', null, API.yen(x.amount)));
+      tr.appendChild(el('td', 'ps-mark', x.paid ? '済' : ''));
+      tr.appendChild(el('td', 'ps-mark', x.handed ? '済' : ''));
+      tr.appendChild(el('td', 'ps-memo', x.memo || ''));
+      tb2.appendChild(tr);
+    });
+    t2.appendChild(tb2);
+    var tf2 = el('tfoot'), fr2 = el('tr'), lab = el('th', null, '合計'); lab.colSpan = 3; fr2.appendChild(lab);
+    API.items.forEach(function (it) { fr2.appendChild(el('td', null, String(s.cells[it.key]))); });
+    fr2.appendChild(el('td', 'ps-strong', String(s.total))); fr2.appendChild(el('td', 'ps-strong', API.yen(s.amount)));
+    fr2.appendChild(el('td', 'ps-mark', s.paidOrders + '/' + s.orders)); fr2.appendChild(el('td', 'ps-mark', s.handedOrders + '/' + s.orders)); fr2.appendChild(el('td'));
+    tf2.appendChild(fr2); t2.appendChild(tf2);
+    box.appendChild(t2);
+  }
+  function printPdf() {
+    if (!items.length) { toast('まだ申し込みがありません'); return; }
+    buildPrintSheet();
+    toast('印刷の画面で「PDFに保存」を選んでください（LINE の中で開いているときは、Safari や Chrome で開き直してください）');
+    setTimeout(function () { window.print(); }, 300);
+  }
+
   /* ---------- お知らせ ---------- */
   var toastTimer = null, undoFn = null;
   function toast(text, isError, undo) {
@@ -693,6 +772,7 @@ function clearAuth() {
     $('rows').addEventListener('change', onRowsChange);
     $('rows').addEventListener('click', onRowsClick);
     $('add').addEventListener('click', function () { openDialog(null); });
+    $('pdf').addEventListener('click', printPdf);
     $('csv').addEventListener('click', csv);
     $('copy-table').addEventListener('click', copyTable);
     $('copy-summary').addEventListener('click', copySummary);
