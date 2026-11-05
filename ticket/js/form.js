@@ -45,17 +45,20 @@
    * input 入力 / confirm 確認 / done 完了 / finished 完了のあと［閉じる］/ home 申し込み済みの端末で開いたとき / closed 受付終了 */
   function show(step) {
     $('form').hidden = step !== 'input';
-    $('result').hidden = step !== 'confirm' && step !== 'done';
+    state.step = step;
+    $('result').hidden = step !== 'confirm' && step !== 'done' && step !== 'saved';
     $('finished').hidden = step !== 'finished';
     $('closed').hidden = step !== 'closed';
-    $('info').hidden = !$('info').children.length || step === 'confirm' || step === 'done';
+    $('info').hidden = !$('info').children.length || step === 'confirm' || step === 'done' || step === 'saved';
     $('steps').hidden = !(step === 'input' || step === 'confirm' || step === 'done');
     Array.prototype.forEach.call($('steps').children, function (li) {
       var s = li.dataset.step;
       if (s === step) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
       li.classList.toggle('is-past', (step === 'confirm' && s === 'input') || (step === 'done' && s !== 'done'));
     });
-    if (step === 'home' || step === 'finished' || step === 'closed') renderMine(step); else $('mine').hidden = true;
+    if (step === 'home' || step === 'finished' || step === 'closed') renderMine(step);
+    else if (step === 'saved' && loadMine().length > 1) renderMine('home');   // 2件以上あるときだけ、下に一覧も出す
+    else $('mine').hidden = true;
   }
   function goTop(el) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -254,6 +257,8 @@
     $('confirm-actions').hidden = true;
     $('done-actions').hidden = false;
     $('done-new').hidden = true; // 1家庭1申し込み：別のお名前での申し込みは出さない
+    $('done-close').hidden = false; $('done-actions').classList.remove('is-single');
+    $('done-edit-label').textContent = '修正する';
     $('result-note').textContent = 'スクリーンショットを撮っておくと安心です';
     $('cheer').hidden = false;
     show('done');
@@ -264,7 +269,47 @@
      「ありがとうございました」と申し込み済みの一覧だけを残し、入力欄は出さない（もう一度送ってしまわないように）。 */
   function closeDone() {
     try { window.close(); } catch (e) { /* 閉じられないブラウザでは何も起きない */ }
-    setTimeout(function () { show('finished'); goTop($('finished')); }, 250);
+    setTimeout(function () { showSaved(true); }, 250);
+  }
+
+  /* 申し込み済みの内容を券面で見せ、そこから［修正する］できるようにする（閉じたあと・同じ端末で開き直したとき）。
+     いちばん新しい「有効な」申し込みを出す（なければ最新の取り消し済み） */
+  function latestEntry() {
+    var list = loadMine();
+    var active = list.filter(function (x) { return x.status !== 'cancelled'; });
+    return (active.length ? active : list).slice(-1)[0] || null;
+  }
+  function showSaved(thanks) {
+    var entry = latestEntry();
+    if (!entry) { startNew(); return; }
+    state.last = entry;
+    state.mode = 'new';
+    state.editing = null;
+    state.thanks = !!thanks;
+    var cancelled = entry.status === 'cancelled';
+    $('result-title').textContent = cancelled ? 'この申し込みは取り消し済みです' : (thanks ? 'お申し込みありがとうございました' : '申し込み済みです');
+    $('result-sub').textContent = cancelled ? 'もう一度申し込むときは、下のボタンを押してください' : '内容を直すときは「修正する」を押してください';
+    $('result-sub').className = 'result-sub ' + (cancelled ? 'is-pending' : 'is-ok');
+    $('mark-confirm').hidden = !cancelled; $('mark-done').hidden = cancelled;
+    var c = API.cleanCounts(entry.counts);
+    fillTicket({ name: entry.name, courtname: entry.courtname, counts: c });
+    $('t-no').textContent = API.no(entry.id);
+    var edited = entry.updatedAt && entry.createdAt && new Date(entry.updatedAt) - new Date(entry.createdAt) > 60000;
+    $('t-at').textContent = API.shortDate(edited ? entry.updatedAt : entry.createdAt) + (edited ? ' 修正' : ' 受付');
+    $('t-foot').hidden = false;
+    $('declare').hidden = true;
+    $('send-error').hidden = true;
+    $('confirm-actions').hidden = true;
+    var closed = API.isClosed();
+    $('done-actions').hidden = closed;               // 受付終了後は修正できない
+    $('done-close').hidden = true;                   // ここからは［修正する］だけ（大きく1つ）
+    $('done-actions').classList.add('is-single');
+    $('done-edit-label').textContent = cancelled ? 'もう一度申し込む' : '修正する';
+    $('done-new').hidden = true;
+    $('result-note').textContent = closed ? '受付は終了しました。修正は役員にご相談ください。' : (thanks ? 'このページは閉じてかまいません' : 'スクリーンショットを撮っておくと安心です');
+    $('cheer').hidden = cancelled;
+    show('saved');
+    goTop($('result'));
   }
 
   /* ---------- 入力に戻る（新規・修正） ---------- */
@@ -310,7 +355,7 @@
     state.mode = 'new';
     state.editing = null;
     if (API.isClosed()) show('closed');
-    else if (loadMine().length) show('home');
+    else if (loadMine().length) showSaved(false);
     else startNew();
   }
 
@@ -382,8 +427,9 @@
     // シートから消された申し込み（テストなど）は、この端末の記録からも外す
     var kept = loadMine().filter(function (x) { return got[x.id]; });
     saveMine(kept);
-    if (!kept.length) { if (!$('mine').hidden && $('form').hidden && $('result').hidden) startNew(); return; }
-    if (!$('mine').hidden) renderMine($('finished').hidden ? 'home' : 'finished');
+    if (!kept.length) { if (state.step === 'saved' || state.step === 'home' || state.step === 'finished') startNew(); return; }
+    if (state.step === 'saved') showSaved(state.thanks);
+    else if (!$('mine').hidden) renderMine($('finished').hidden ? 'home' : 'finished');
   }, function () { /* 取り直せなくても、覚えている内容で表示を続ける */ });
 }
 
