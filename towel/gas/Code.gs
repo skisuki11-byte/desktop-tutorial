@@ -11,9 +11,9 @@
  */
 
 var SHEET_NAME = '申込';
-var HEADERS = ['受付番号', '受付日時', '更新日時', 'お名前', 'コードネーム', '枚数', '状態',
+var HEADERS = ['受付番号', '受付日時', '更新日時', 'お名前', 'コートネーム', '枚数', '状態',
   '集金', '集金の記録', '受け渡し', '受け渡しの記録', '役員メモ', '経路', 'requestId', 'token'];
-var C = { id: 0, createdAt: 1, updatedAt: 2, name: 3, codename: 4, count: 5, status: 6,
+var C = { id: 0, createdAt: 1, updatedAt: 2, name: 3, courtname: 4, count: 5, status: 6,
   paid: 7, paidBy: 8, handed: 9, handedBy: 10, memo: 11, source: 12, requestId: 13, token: 14 };
 var STATUS_ACTIVE = '有効', STATUS_CANCELLED = '取り消し';
 var MAX_COUNT = 50;          // 1件の上限（画面側の上限 maxPerOrder より大きめにしておく）
@@ -56,7 +56,7 @@ function doPost(e) {
 /* ---------- 家庭の操作 ---------- */
 
 function submit_(d) {
-  if (d.website) return { ok: true, item: { id: 0, name: '', codename: '', count: 0, status: 'active' }, token: '' };  // ボット（見えない欄に入力）
+  if (d.website) return { ok: true, item: { id: 0, name: '', courtname: '', count: 0, status: 'active' }, token: '' };  // ボット（見えない欄に入力）
   if (!countUp_('submit', 3600, MAX_SUBMIT_PER_HOUR)) return { ok: false, error: 'rate' };
   var v = validate_(d);
   var requestId = str_(d.requestId, 64);
@@ -71,7 +71,7 @@ function submit_(d) {
     var now = new Date(), row = new Array(HEADERS.length);
     row[C.id] = nextId_(rows);
     row[C.createdAt] = now; row[C.updatedAt] = now;
-    row[C.name] = v.name; row[C.codename] = v.codename; row[C.count] = v.count;
+    row[C.name] = v.name; row[C.courtname] = v.courtname; row[C.count] = v.count;
     row[C.status] = STATUS_ACTIVE;
     row[C.paid] = false; row[C.paidBy] = ''; row[C.handed] = false; row[C.handedBy] = '';
     row[C.memo] = ''; row[C.source] = 'フォーム';
@@ -96,7 +96,7 @@ function updateOwn_(d) {
   var v = validate_(d);
   return withLock_(function () {
     var sh = sheet_(), r = own_(sh, d);
-    r.row[C.name] = v.name; r.row[C.codename] = v.codename; r.row[C.count] = v.count;
+    r.row[C.name] = v.name; r.row[C.courtname] = v.courtname; r.row[C.count] = v.count;
     r.row[C.status] = STATUS_ACTIVE;
     r.row[C.updatedAt] = new Date();
     writeRow_(sh, r);
@@ -151,9 +151,9 @@ function adminSave_(d) {
     if ('handed' in p) { r.row[C.handed] = !!p.handed; r.row[C.handedBy] = p.handed ? stamp : ''; }
     if ('status' in p) r.row[C.status] = p.status === 'cancelled' ? STATUS_CANCELLED : STATUS_ACTIVE;
     if ('memo' in p) r.row[C.memo] = str_(p.memo, 200);
-    if ('name' in p || 'codename' in p || 'count' in p) {
+    if ('name' in p || 'courtname' in p || 'count' in p) {
       var v = validate_(p);
-      r.row[C.name] = v.name; r.row[C.codename] = v.codename; r.row[C.count] = v.count;
+      r.row[C.name] = v.name; r.row[C.courtname] = v.courtname; r.row[C.count] = v.count;
       r.row[C.updatedAt] = new Date();
     }
     writeRow_(sh, r);
@@ -172,7 +172,7 @@ function adminAdd_(d) {
     var now = new Date(), row = new Array(HEADERS.length);
     row[C.id] = nextId_(rows);
     row[C.createdAt] = now; row[C.updatedAt] = now;
-    row[C.name] = v.name; row[C.codename] = v.codename; row[C.count] = v.count;
+    row[C.name] = v.name; row[C.courtname] = v.courtname; row[C.count] = v.count;
     row[C.status] = STATUS_ACTIVE;
     row[C.paid] = false; row[C.paidBy] = ''; row[C.handed] = false; row[C.handedBy] = '';
     row[C.memo] = str_(d.memo, 200);
@@ -195,7 +195,7 @@ function setup() {
   sh.setColumnWidth(C.id + 1, 80);
   sh.setColumnWidths(C.createdAt + 1, 2, 130);
   sh.setColumnWidth(C.name + 1, 160);
-  sh.setColumnWidth(C.codename + 1, 140);
+  sh.setColumnWidth(C.courtname + 1, 140);
   sh.setColumnWidth(C.count + 1, 60);
   sh.setColumnWidths(C.paid + 1, 4, 110);
   sh.setColumnWidth(C.memo + 1, 200);
@@ -244,7 +244,7 @@ function writeRow_(sh, r) {
 }
 
 /** シートに書く形：文字の欄は safe_ を通す（読み戻した値をそのまま書き戻しても数式にならない） */
-var TEXT_COLS = [C.name, C.codename, C.paidBy, C.handedBy, C.memo, C.source];
+var TEXT_COLS = [C.name, C.courtname, C.paidBy, C.handedBy, C.memo, C.source];
 function forSheet_(row) {
   var out = row.slice();
   TEXT_COLS.forEach(function (c) { out[c] = safe_(out[c]); });
@@ -276,7 +276,7 @@ function pub_(r) {
   return {
     id: Number(r[C.id]),
     name: String(r[C.name] || ''),
-    codename: String(r[C.codename] || ''),
+    courtname: String(r[C.courtname] || ''),
     count: Number(r[C.count]) || 0,
     status: String(r[C.status]) === STATUS_CANCELLED ? 'cancelled' : 'active',
     createdAt: iso_(r[C.createdAt]),
@@ -298,13 +298,13 @@ function adminView_(r) {
 /* ---------- 入力のチェック（画面側 api.js の validate とそろえる） ---------- */
 
 function validate_(d) {
-  var name = squish_(d.name), codename = squish_(d.codename);
+  var name = squish_(d.name), courtname = squish_(d.courtname);
   var raw = String(d.count == null ? '' : d.count).replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }).trim();
   var count = /^\d{1,3}$/.test(raw) ? Number(raw) : NaN;
   if (!name || name.length > 40) throw { code: 'invalid' };
-  if (codename.length > 30) throw { code: 'invalid' };
+  if (courtname.length > 30) throw { code: 'invalid' };
   if (isNaN(count) || count < 1 || count > MAX_COUNT) throw { code: 'invalid' };
-  return { name: name, codename: codename, count: count };
+  return { name: name, courtname: courtname, count: count };
 }
 
 function squish_(v) {
@@ -355,7 +355,7 @@ function json_(obj) {
 
 /** 動作確認：エディタで実行すると、テスト用の申し込みを1件入れて、すぐ取り消す */
 function testSubmit() {
-  var res = submit_({ name: 'テスト 太郎', codename: 'テスト', count: 1, requestId: Utilities.getUuid() });
+  var res = submit_({ name: 'テスト 太郎', courtname: 'テスト', count: 1, requestId: Utilities.getUuid() });
   console.log(JSON.stringify(res));
   if (res.ok) console.log(JSON.stringify(cancelOwn_({ id: res.item.id, token: res.token })));
 }

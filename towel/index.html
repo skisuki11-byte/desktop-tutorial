@@ -16,25 +16,22 @@
 <body class="page-form">
 
 <div class="demo-bar" id="demo-bar" hidden>
-  <div class="wrap"><b>デモ表示</b>：入力はこの端末の中にだけ保存され、役員の集計には届きません</div>
+  <div class="wrap"><b>デモ表示</b>：入力はこの端末にだけ保存されます</div>
 </div>
 
-<header class="band">
+<!-- 見出し（1画面に収めるため、タオルの絵は小さく右に置く） -->
+<header class="band band-compact">
   <div class="band-inner wrap">
-    <div>
+    <div class="band-text">
       <p class="eyebrow" id="team-line">春高バレー 出場記念</p>
-      <h1 class="title" id="page-title">記念タオルの<br>申し込み</h1>
-      <p class="deadline" id="deadline" hidden></p>
+      <h1 class="title">記念タオル申し込み</h1>
+      <p class="band-meta" id="band-meta" hidden></p>
     </div>
     <div class="towel-stage" aria-hidden="true">
       <div class="towel-stack" id="towel-stack" data-count="1">
         <div class="towel back b2"></div>
         <div class="towel back b1"></div>
-        <div class="towel towel-front">
-          <div class="towel-side"><span>SPRING</span><span>出場記念</span></div>
-          <div class="towel-word">春高</div>
-          <div class="towel-side"><span>VOLLEY</span><span id="towel-year">2027</span></div>
-        </div>
+        <div class="towel towel-front"><div class="towel-word">春高</div></div>
       </div>
       <span class="towel-badge num" id="towel-badge">×1</span>
     </div>
@@ -53,21 +50,18 @@
   <!-- 閉じたあと（タブを閉じられないブラウザでは、この画面で終わりにする） -->
   <section class="card finished" id="finished" hidden tabindex="-1" aria-labelledby="finished-title">
     <h2 class="card-title" id="finished-title">お申し込みありがとうございました</h2>
-    <p class="lead">このページは閉じてかまいません。内容を直したいときは、下の一覧の「修正・取り消し」を押してください。</p>
+    <p class="lead">このページは閉じてかまいません。</p>
   </section>
 
   <!-- この端末から申し込んだ分（修正・取り消しの入り口） -->
   <section class="card mine" id="mine" hidden aria-labelledby="mine-title">
     <div class="form-head">
-      <h2 class="card-title" id="mine-title">この端末からの申し込み</h2>
+      <h2 class="card-title" id="mine-title">申し込み済みです</h2>
       <p class="lead" id="mine-lead">内容を直したいときは「修正・取り消し」を押してください。</p>
     </div>
     <ul class="mine-list" id="mine-list"></ul>
-    <button type="button" class="btn btn-text" id="mine-new" hidden>別のお名前でも申し込む</button>
+    <button type="button" class="btn btn-ghost btn-block" id="mine-new" hidden>別のお名前でも申し込む</button>
   </section>
-
-  <!-- ご案内（値段・締切・受け取り・支払い） -->
-  <dl class="info" id="info" hidden></dl>
 
   <!-- 受付終了 -->
   <section class="card closed" id="closed" hidden>
@@ -76,11 +70,8 @@
   </section>
 
   <!-- 1. 入力 -->
-  <form class="card form" id="form" novalidate>
-    <div class="form-head">
-      <h2 class="card-title" id="form-title">申し込み内容の入力</h2>
-      <p class="lead" id="form-lead">ご家庭ごとに1回、必要な枚数をまとめてお申し込みください。</p>
-    </div>
+  <form class="card form form-compact" id="form" novalidate>
+    <h2 class="form-title" id="form-title">1家庭1回、まとめてお申し込みください</h2>
 
     <div class="error-summary" id="error-summary" role="alert" tabindex="-1" hidden>
       <p class="error-summary-title">入力内容を確認してください</p>
@@ -88,21 +79,28 @@
     </div>
 
     <div class="field" id="field-name">
-      <label class="label" for="name">お名前 <span class="tag tag-req">必須</span></label>
-      <p class="hint" id="name-hint">フルネームでご入力ください（例：山田 花子）</p>
+      <div class="label-row">
+        <label class="label" for="name">お名前 <span class="tag tag-req">必須</span></label>
+        <p class="hint" id="name-hint">フルネーム（例：山田 花子）</p>
+      </div>
       <p class="error" id="name-error" hidden></p>
       <input class="input" id="name" name="name" type="text" autocomplete="name" maxlength="40" enterkeyhint="next" aria-describedby="name-hint name-error">
     </div>
 
-    <div class="field" id="field-codename">
-      <label class="label" for="codename"><span id="codename-label">コードネーム</span> <span class="tag tag-opt" id="codename-tag">任意</span></label>
-      <p class="hint" id="codename-hint">役員が受け渡しのときに見分ける呼び名です</p>
-      <p class="error" id="codename-error" hidden></p>
-      <input class="input" id="codename" name="codename" type="text" autocomplete="off" maxlength="30" enterkeyhint="next" aria-describedby="codename-hint codename-error">
+    <div class="field" id="field-courtname">
+      <div class="label-row">
+        <label class="label" for="courtname"><span id="courtname-label">コートネーム</span> <span class="tag tag-opt" id="courtname-tag">任意</span></label>
+        <p class="hint" id="courtname-hint">選手のコートネーム（例：ハル）</p>
+      </div>
+      <p class="error" id="courtname-error" hidden></p>
+      <input class="input" id="courtname" name="courtname" type="text" autocomplete="off" maxlength="30" enterkeyhint="done" aria-describedby="courtname-hint courtname-error">
     </div>
 
-    <fieldset class="field" id="field-count">
-      <legend class="label">枚数 <span class="tag tag-req">必須</span></legend>
+    <div class="field" id="field-count" role="group" aria-labelledby="count-label">
+      <div class="label-row">
+        <p class="label" id="count-label">枚数 <span class="tag tag-req">必須</span></p>
+        <p class="hint" id="count-hint">1〜20枚</p>
+      </div>
       <p class="error" id="count-error" hidden></p>
       <div class="stepper">
         <button type="button" class="step-btn" id="minus" aria-label="1枚へらす">−</button>
@@ -112,10 +110,7 @@
         </label>
         <button type="button" class="step-btn" id="plus" aria-label="1枚ふやす">＋</button>
       </div>
-      <div class="quick" id="quick" role="group" aria-label="よく選ばれる枚数"></div>
-      <p class="hint" id="count-hint">数字を直接入力することもできます</p>
-      <p class="count-yen" id="count-yen" hidden></p>
-    </fieldset>
+    </div>
 
     <div class="hp" aria-hidden="true">
       <label for="website">この欄は空のままにしてください</label>
@@ -126,7 +121,7 @@
       <button type="submit" class="btn btn-primary btn-block" id="to-confirm">確認する</button>
       <button type="button" class="btn btn-ghost btn-block" id="cancel-edit" hidden>修正をやめる</button>
     </div>
-    <p class="note" id="form-note">まだ送信はされません。次の画面で内容を確かめてから申し込みます。</p>
+    <p class="note note-center" id="form-note">まだ送信されません。次の画面で内容を確かめます</p>
 
     <div class="danger-zone" id="danger-zone" hidden>
       <button type="button" class="btn-text-danger" id="withdraw">この申し込みを取り消す</button>
@@ -159,12 +154,11 @@
     <div class="ticket" id="ticket">
       <p class="ticket-label">お名前</p>
       <p class="ticket-name"><span id="t-name"></span><small>さん</small></p>
-      <p class="ticket-code" id="t-code-row"><span id="t-code-label">コードネーム</span>　<b id="t-code"></b></p>
+      <p class="ticket-code" id="t-code-row"><span id="t-code-label">コートネーム</span>　<b id="t-code"></b></p>
       <div class="ticket-count">
         <p class="ticket-label">枚数</p>
-        <p><span class="num" id="t-count">0</span><span class="unit">枚</span></p>
+        <p><span class="num" id="t-count">0</span><span class="unit">枚</span><span class="ticket-yen" id="t-yen-row" hidden>お支払い <b class="num" id="t-yen"></b></span></p>
       </div>
-      <p class="ticket-yen" id="t-yen-row" hidden>お支払い <b class="num" id="t-yen"></b></p>
       <div class="ticket-foot" id="t-foot" hidden>
         <span>受付番号 <b class="num" id="t-no">No.000</b></span>
         <span id="t-at"></span>
@@ -194,10 +188,12 @@
       </button>
     </div>
 
-    <p class="note" id="result-note"></p>
+    <p class="note note-center" id="result-note"></p>
     <button type="button" class="btn btn-text" id="done-new" hidden>別のお名前でも申し込む</button>
   </section>
 
+  <!-- ご案内（受け取り・支払い。値段と締切は見出しに出す） -->
+  <dl class="info" id="info" hidden></dl>
 </main>
 
 <footer class="foot wrap" id="foot" hidden>

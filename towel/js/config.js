@@ -11,7 +11,7 @@ window.TOWEL_CONFIG = {
   team: '',                         // 例：'〇〇高校 男子バレーボール部'
   item: '春高バレー出場記念タオル',   // 申し込むものの名前
 
-  // ご案内（申し込み画面の上に出す。空欄なら出さない）
+  // ご案内（値段と締切は申し込み画面の上、それ以外はフォームの下に出す。空欄なら出さない）
   price: 0,                         // 1枚の値段（円）。0 なら金額を出さない
   deadline: '',                     // 締切日 'YYYY-MM-DD'（その日の 23:59 まで受け付ける）
   delivery: '',                     // 受け取り方 例：'1月の壮行会でお渡しします'
@@ -20,9 +20,9 @@ window.TOWEL_CONFIG = {
 
   // 入力欄
   maxPerOrder: 20,                  // 1件で申し込める最大枚数
-  codenameLabel: 'コードネーム',
-  codenameHint: '役員が受け渡しのときに見分ける呼び名です（例：選手の名前・背番号）',
-  codenameRequired: false,          // true にすると必須になる
+  courtnameLabel: 'コートネーム',
+  courtnameHint: '選手のコートネーム（例：ハル）',
+  courtnameRequired: false,         // true にすると必須になる
 
   // 受付を手動で締めるとき false にする（締切日を待たずに止められる）
   accepting: true,
