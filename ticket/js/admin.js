@@ -44,7 +44,7 @@ function clearAuth() {
     stopTimer();
     auth = null;
     $('board').hidden = true;
-    $('band-tools').hidden = true;
+    $('band-tools').hidden = true; $('pdf').hidden = true;
     $('gate').hidden = false;
     var e = $('gate-error');
     if (msg) { e.textContent = msg; e.hidden = false; } else e.hidden = true;
@@ -78,7 +78,7 @@ function clearAuth() {
     $('logout').textContent = 'ログアウト' + (a.officer ? '（' + a.officer + '）' : '');
     $('gate').hidden = true;
     $('board').hidden = false;
-    $('band-tools').hidden = false;
+    $('band-tools').hidden = false; $('pdf').hidden = false;
     if (res) applyList(res); else load(true);
     startTimer();
   }
@@ -797,7 +797,7 @@ function clearAuth() {
   }
   function openPreview() {
     if (!items.length) { toast('まだ申し込みがありません'); return; }
-    var btn = $('pdf'); btn.disabled = true; btn.textContent = 'PDFを作っています…';
+    var btn = $('pdf'); btn.disabled = true; $('pdf-label').textContent = '作っています…';
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
     ready.then(function () {
       var pages = buildSummaryPages();
@@ -818,7 +818,7 @@ function clearAuth() {
       box.scrollTop = 0;
     }).catch(function (e) {
       toast('PDFを作れませんでした：' + (e && e.message ? e.message : 'もう一度お試しください'), true);
-    }).then(function () { btn.disabled = false; btn.textContent = 'PDFを表示（集計表）'; });
+    }).then(function () { btn.disabled = false; $('pdf-label').textContent = 'PDF集計表'; });
   }
   function closePreview() { if ($('pv').open) $('pv').close(); }
   function onPreviewClosed() {

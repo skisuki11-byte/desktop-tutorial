@@ -37,10 +37,14 @@
         <p class="hero-sub" aria-hidden="true">チケット集計</p>
       </div>
     </div>
-    <div class="band-tools" id="band-tools" hidden>
-      <span class="updated" id="updated">読み込み中…</span>
-      <button type="button" class="btn btn-ghost btn-sm" id="refresh">最新にする</button>
-      <button type="button" class="btn btn-ghost btn-sm" id="logout">ログアウト</button>
+    <div class="admin-hero-side">
+      <!-- いちばんよく使う書き出し（集計表 PDF）は、ログイン後に見出しの右上へ -->
+      <button type="button" class="btn btn-primary hero-pdf" id="pdf" hidden><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span id="pdf-label">PDF集計表</span></button>
+      <div class="band-tools" id="band-tools" hidden>
+        <span class="updated" id="updated">読み込み中…</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="refresh">最新にする</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="logout">ログアウト</button>
+      </div>
     </div>
   </div>
 </header>
@@ -156,7 +160,6 @@
       <div class="list-foot">
         <p class="list-foot-label">書き出し</p>
         <div class="group">
-          <button type="button" class="btn btn-dark btn-sm" id="pdf">PDFを表示（集計表）</button>
           <button type="button" class="btn btn-ghost btn-sm" id="csv">CSVで保存</button>
           <button type="button" class="btn btn-ghost btn-sm" id="copy-table">表をコピー</button>
           <a class="btn btn-ghost btn-sm" id="sheet-link" href="#" target="_blank" rel="noopener" hidden>スプレッドシートを開く</a>
