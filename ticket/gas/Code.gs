@@ -30,11 +30,14 @@ DAYS.forEach(function (d) { KINDS.forEach(function (k) { ITEMS.push({ key: d.id 
 
 var BASE_HEADERS = ['受付番号', '受付日時', '更新日時', 'お名前', 'コートネーム'];
 var TAIL_HEADERS = ['枚数', '金額', '状態', '集金', '集金の記録', '受け渡し', '受け渡しの記録', '役員メモ', '経路', 'requestId', 'token'];
-var HEADERS = BASE_HEADERS.concat(ITEMS.map(function (it) { return it.header; }), TAIL_HEADERS);
+// あとから足した列は、すでに入っている申し込みの列がずれないよう、いちばん右に足していく
+var EXTRA_HEADERS = ['学年'];
+var HEADERS = BASE_HEADERS.concat(ITEMS.map(function (it) { return it.header; }), TAIL_HEADERS, EXTRA_HEADERS);
+var GRADES = [1, 2, 3];   // 学年（画面側 config.js の grades とそろえる）
 var C = (function () {   // 列の位置（0始まり）
   var c = { id: 0, createdAt: 1, updatedAt: 2, name: 3, courtname: 4, item0: 5 };
   var t = c.item0 + ITEMS.length;
-  ['total', 'amount', 'status', 'paid', 'paidBy', 'handed', 'handedBy', 'memo', 'source', 'requestId', 'token'].forEach(function (k, i) { c[k] = t + i; });
+  ['total', 'amount', 'status', 'paid', 'paidBy', 'handed', 'handedBy', 'memo', 'source', 'requestId', 'token', 'grade'].forEach(function (k, i) { c[k] = t + i; });
   return c;
 })();
 var STATUS_ACTIVE = '有効', STATUS_CANCELLED = '取り消し';
@@ -166,7 +169,7 @@ function adminSave_(d) {
     if ('handed' in p) { r.row[C.handed] = !!p.handed; r.row[C.handedBy] = p.handed ? stamp : ''; }
     if ('status' in p) r.row[C.status] = p.status === 'cancelled' ? STATUS_CANCELLED : STATUS_ACTIVE;
     if ('memo' in p) r.row[C.memo] = str_(p.memo, 200);
-    if ('name' in p || 'courtname' in p || 'counts' in p) {
+    if ('name' in p || 'courtname' in p || 'counts' in p || 'grade' in p) {
       setValues_(r.row, validate_(p));
       r.row[C.updatedAt] = new Date();
     }
@@ -209,6 +212,7 @@ function newRow_(rows, v, source, requestId, memo) {
 function setValues_(row, v) {
   row[C.name] = v.name;
   row[C.courtname] = v.courtname;
+  if (v.grade !== undefined) row[C.grade] = v.grade || '';   // 学年を送ってこない古い画面からの修正では、入っている学年を消さない
   ITEMS.forEach(function (it, i) { row[C.item0 + i] = v.counts[it.key]; });
   row[C.total] = totalOf_(v.counts);
   row[C.amount] = amountOf_(v.counts);
@@ -241,6 +245,7 @@ function setup() {
   sh.getRange('B:C').setNumberFormat('yyyy/mm/dd hh:mm');
   sh.getRange(1, C.amount + 1, sh.getMaxRows(), 1).setNumberFormat('¥#,##0');
   sh.getRange(1, C.amount + 1).setNumberFormat('@');
+  sh.setColumnWidth(C.grade + 1, 70);
   sh.hideColumns(C.requestId + 1, 2);   // requestId と token は家庭の「合鍵」なので見えないようにしておく
   var props = PropertiesService.getScriptProperties();
   if (!props.getProperty('ADMIN_PASS')) console.log('スクリプトのプロパティ ADMIN_PASS（役員の合言葉）を設定してください');
@@ -251,7 +256,18 @@ function sheet_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_NAME);
   if (!sh) { setup(); sh = ss.getSheetByName(SHEET_NAME); }
+  ensureColumns_(sh);
   return sh;
+}
+
+/** 以前の形のシート（学年の列がない）なら、いちばん右に列と見出しを足す（1回だけ動く） */
+function ensureColumns_(sh) {
+  if (sh.getLastColumn() >= HEADERS.length) return;
+  if (sh.getMaxColumns() < HEADERS.length) sh.insertColumnsAfter(sh.getMaxColumns(), HEADERS.length - sh.getMaxColumns());
+  var from = Math.max(sh.getLastColumn(), C.token + 1);
+  sh.getRange(1, from + 1, 1, HEADERS.length - from).setValues([HEADERS.slice(from)])
+    .setFontWeight('bold').setBackground('#fff3c9').setFontColor('#0d1937');
+  sh.setColumnWidth(C.grade + 1, 70);
 }
 
 function rows_(sh) {
@@ -314,6 +330,7 @@ function pub_(r) {
     id: Number(r[C.id]),
     name: String(r[C.name] || ''),
     courtname: String(r[C.courtname] || ''),
+    grade: gradeOf_(r[C.grade]),
     counts: c,
     total: totalOf_(c),
     amount: amountOf_(c),
@@ -351,7 +368,19 @@ function validate_(d) {
   });
   var total = totalOf_(counts);
   if (total < 1 || total > MAX_TOTAL) throw { code: 'invalid' };
-  return { name: name, courtname: courtname, counts: counts };
+  var grade;                                  // 送ってこなければ undefined（今の学年をそのままにする）
+  if ('grade' in d && d.grade !== null && String(d.grade) !== '') {
+    grade = gradeOf_(d.grade);
+    if (!grade) throw { code: 'invalid' };
+  } else if ('grade' in d) grade = 0;          // 役員の画面で「未入力」に戻したとき
+  return { name: name, courtname: courtname, counts: counts, grade: grade };
+}
+
+/** 1 / '1' / '1年' / '１年' → 1。学年でなければ 0 */
+function gradeOf_(v) {
+  var m = String(v == null ? '' : v).replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }).match(/^\s*(\d)\s*(年|年生)?\s*$/);
+  var n = m ? Number(m[1]) : 0;
+  return GRADES.indexOf(n) >= 0 ? n : 0;
 }
 
 function squish_(v) {

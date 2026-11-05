@@ -24,8 +24,12 @@ function env(pass) {
     setDataValidation() { return this; }, setFontWeight() { return this; }, setBackground() { return this; },
     setFontColor() { return this; }, setNumberFormat() { return this; }
   });
+  let maxCols = 26;
   const sheet = {
     getLastRow: () => cells.length,
+    getLastColumn: () => cells.reduce((m, row) => Math.max(m, (row || []).reduce((k, v, j) => (v !== '' && v !== undefined ? j + 1 : k), 0)), 0),
+    getMaxColumns: () => maxCols,
+    insertColumnsAfter: (after, n) => { maxCols += n; },
     getMaxRows: () => 1000,
     getRange: (a, b, c, d) => typeof a === 'string' ? range(1, 1) : range(a, b, c, d),
     setFrozenRows() {}, setColumnWidth() {}, setColumnWidths() {}, hideColumns() {}
@@ -57,8 +61,9 @@ const C = (o) => Object.assign({ '0104-adult': 0, '0104-student': 0, '0105-adult
   same(cfg.days.map((d) => d.id), g.DAYS.map((d) => d.id));
   same(cfg.days.map((d) => d.label), g.DAYS.map((d) => d.label));
   same(cfg.kinds.map((k) => [k.id, k.price]), g.KINDS.map((k) => [k.id, k.price]));
+  same(cfg.grades, g.GRADES);
   assert.ok(cfg.maxPerCell <= g.MAX_CELL);
-  console.log('ok 画面（config.js）と集計先（Code.gs）の 日付・区分・値段 がそろっている');
+  console.log('ok 画面（config.js）と集計先（Code.gs）の 日付・区分・値段・学年 がそろっている');
 }
 
 let e = env('hinata2027'), r, a, b;
@@ -182,6 +187,41 @@ r = call(e, { app: 'towel', action: 'admin_list', pass: 'hinata2027' }); assert.
 r = call(e, '{broken'); assert.strictEqual(r.error, 'bad_request');
 r = call(e, JSON.stringify({ app: 'ticket', action: 'submit', name: 'x'.repeat(30000), counts: C({ '0104-adult': 1 }) })); assert.strictEqual(r.error, 'bad_request');
 console.log('ok 別アプリ（タオルの画面）・壊れたJSON・大きすぎる送信は拒否');
+
+// 学年
+{
+  const g = env('pw'), G = g.ctx.C.grade;
+  let x = call(g, { action: 'submit', name: '学年 太郎', grade: 2, counts: C({ '0104-adult': 1 }), requestId: 'g1' });
+  assert.ok(x.ok); assert.strictEqual(x.item.grade, 2);
+  assert.strictEqual(g.cells[0][G], '学年'); assert.strictEqual(g.cells[1][G], 2);
+  assert.strictEqual(g.cells[0].length, g.ctx.HEADERS.length);
+  // 学年を送ってこない（古い画面からの）修正では、学年を消さない
+  let y = call(g, { action: 'update', id: x.item.id, token: x.token, name: '学年 太郎', counts: C({ '0104-adult': 2 }) });
+  assert.ok(y.ok); assert.strictEqual(y.item.grade, 2); assert.strictEqual(g.cells[1][G], 2);
+  // 「１年」「3年生」も読める・学年でない値は受け付けない
+  assert.strictEqual(call(g, { action: 'update', id: x.item.id, token: x.token, name: '学年 太郎', grade: '１年', counts: C({ '0104-adult': 1 }) }).item.grade, 1);
+  assert.strictEqual(call(g, { action: 'update', id: x.item.id, token: x.token, name: '学年 太郎', grade: '3年生', counts: C({ '0104-adult': 1 }) }).item.grade, 3);
+  assert.strictEqual(call(g, { action: 'submit', name: 'x', grade: 4, counts: C({ '0104-adult': 1 }) }).error, 'invalid');
+  assert.strictEqual(call(g, { action: 'submit', name: 'x', grade: '=1+1', counts: C({ '0104-adult': 1 }) }).error, 'invalid');
+  // 学年なしの申し込みもできる（入れ替え前の画面から送られても失敗させない）
+  let z = call(g, { action: 'submit', name: '旧画面', counts: C({ '0104-adult': 1 }), requestId: 'g2' });
+  assert.ok(z.ok); assert.strictEqual(z.item.grade, 0);
+  // 役員は「未入力」に戻せる
+  assert.strictEqual(call(g, { action: 'admin_save', pass: 'pw', id: x.item.id, patch: { name: '学年 太郎', grade: '', counts: C({ '0104-adult': 1 }) } }).item.grade, 0);
+  assert.strictEqual(call(g, { action: 'admin_list', pass: 'pw' }).items.find((i) => i.name === '旧画面').grade, 0);
+  console.log('ok 学年：いちばん右の列に入る・古い画面からの修正では消えない・1〜3年以外は受け付けない・役員は未入力に戻せる');
+
+  // 学年の列がない以前のシートでも、最初の通信で右端に「学年」の見出しが足され、既存の行はずれない
+  const old = env('pw'), H = old.ctx.HEADERS, OG = old.ctx.C.grade;
+  call(old, { action: 'submit', name: '前からの人', counts: C({ '0105-adult': 3 }), requestId: 'o1' });
+  old.cells[0] = H.slice(0, OG); old.cells[1].length = OG;    // 以前の形（学年の列なし）に戻す
+  const before = old.cells[1].slice();
+  const lst = call(old, { action: 'admin_list', pass: 'pw' });
+  assert.ok(lst.ok); assert.strictEqual(old.cells[0][OG], '学年');
+  assert.strictEqual(JSON.stringify(old.cells[1].slice(0, OG)), JSON.stringify(before));
+  assert.strictEqual(lst.items[0].name, '前からの人'); assert.strictEqual(lst.items[0].total, 3); assert.strictEqual(lst.items[0].grade, 0);
+  console.log('ok 以前のシートには右端に「学年」の列を足すだけで、入っている申し込みはずれない');
+}
 
 const e4 = env('pw'); e4.ctx.LockService = { getScriptLock: () => ({ tryLock: () => false, releaseLock() { throw new Error('not held'); } }) };
 r = call(e4, { action: 'submit', name: 'x', counts: C({ '0104-adult': 1 }) }); assert.strictEqual(r.error, 'busy');

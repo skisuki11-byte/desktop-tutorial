@@ -1,6 +1,6 @@
 /* api.js — 集計先（Google Apps Script）とのやりとりと、両方の画面で使う小さな道具。
  *
- * 申し込み1件 = お名前・コートネーム・枚数（日付 × 区分 の表）。
+ * 申し込み1件 = お名前・コートネーム・学年・枚数（日付 × 区分 の表）。
  *   counts は { '0104-adult': 2, '0104-student': 1, '0105-adult': 0, ... } の形。
  * config.js の endpoint が空なら「デモ表示」。同じ呼び方のまま、この端末の
  * localStorage を集計先の代わりに使う（ほかの端末には届かない）。
@@ -13,6 +13,14 @@
   var DAYS = CFG.days || [];
   var KINDS = CFG.kinds || [];
   var MAX_CELL = Number(CFG.maxPerCell) || 20;
+  var GRADES = CFG.grades || [1, 2, 3];
+  function gradeLabel(n) { return n ? n + '年' : '未入力'; }
+  /* 1 / '1' / '1年' / '１年' → 1。学年でなければ 0（GAS 側の gradeOf_ と同じ） */
+  function toGrade(v) {
+    var m = String(v == null ? '' : v).replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }).match(/^\s*(\d)\s*(年|年生)?\s*$/);
+    var n = m ? Number(m[1]) : 0;
+    return GRADES.indexOf(n) >= 0 ? n : 0;
+  }
   var ITEMS = [];        // 日付 × 区分 の並び（表・CSV・合計で同じ順に使う）
   DAYS.forEach(function (d) { KINDS.forEach(function (k) { ITEMS.push({ key: d.id + '-' + k.id, day: d, kind: k }); }); });
 
@@ -93,15 +101,15 @@
     var db = demoLoad();
     if (db) return db;
     // 集計画面を開いたときに「どう見えるか」がわかるよう、見本の申し込みを入れておく
-    // [名前, コートネーム, [1/4大,1/4高,1/5大,1/5高,1/6大,1/6高], 何時間前, 集金済み, 集金した役員]
+    // [名前, コートネーム, [1/4大,1/4高,1/5大,1/5高,1/6大,1/6高], 何時間前, 集金済み, 集金した役員, 学年]
     var now = Date.now(), H = 3600 * 1000;
     var seed = [
-      ['見本 山田 花子', 'ニコ', [2, 1, 2, 1, 2, 1], 50, true, '佐藤'],
-      ['見本 佐々木 誠', 'ソウタ', [2, 0, 2, 0, 0, 0], 46, true, '佐藤'],
-      ['見本 高橋 由美', '', [1, 0, 0, 0, 0, 0], 30, false, ''],
-      ['見本 田中 健一', 'リク', [3, 2, 3, 2, 3, 2], 26, true, '鈴木'],
-      ['見本 伊藤 さくら', 'ユイ', [0, 0, 2, 2, 0, 0], 20, false, ''],
-      ['見本 渡辺 直子', 'ナオ', [2, 0, 2, 0, 2, 0], 9, false, '']
+      ['見本 山田 花子', 'ニコ', [2, 1, 2, 1, 2, 1], 50, true, '佐藤', 3],
+      ['見本 佐々木 誠', 'ソウタ', [2, 0, 2, 0, 0, 0], 46, true, '佐藤', 2],
+      ['見本 高橋 由美', '', [1, 0, 0, 0, 0, 0], 30, false, '', 1],
+      ['見本 田中 健一', 'リク', [3, 2, 3, 2, 3, 2], 26, true, '鈴木', 3],
+      ['見本 伊藤 さくら', 'ユイ', [0, 0, 2, 2, 0, 0], 20, false, '', 1],
+      ['見本 渡辺 直子', 'ナオ', [2, 0, 2, 0, 2, 0], 9, false, '', 2]
     ];
     db = { seq: 0, rows: [] };
     seed.forEach(function (s) {
@@ -109,7 +117,7 @@
       var t = new Date(now - s[3] * H).toISOString(), c = {};
       ITEMS.forEach(function (it, i) { c[it.key] = s[2][i] || 0; });
       db.rows.push({
-        id: db.seq, createdAt: t, updatedAt: t, name: s[0], courtname: s[1], counts: c,
+        id: db.seq, createdAt: t, updatedAt: t, name: s[0], courtname: s[1], grade: s[6] || 0, counts: c,
         status: 'active', paid: s[4], paidBy: s[4] ? s[5] + ' ' + shortDate(t) : '',
         handed: false, handedBy: '', memo: '', source: 'form', requestId: uuid(), token: uuid()
       });
@@ -119,7 +127,7 @@
   }
   function pub(r) {
     var c = cleanCounts(r.counts);
-    return { id: r.id, name: r.name, courtname: r.courtname, counts: c, total: totalOf(c), amount: amountOf(c),
+    return { id: r.id, name: r.name, courtname: r.courtname, grade: toGrade(r.grade), counts: c, total: totalOf(c), amount: amountOf(c),
       status: r.status, createdAt: r.createdAt, updatedAt: r.updatedAt };
   }
   function adminView(r) {
@@ -146,7 +154,7 @@
     }
     function make(v, source) {
       db.seq += 1;
-      var r = { id: db.seq, createdAt: now, updatedAt: now, name: v.name, courtname: v.courtname, counts: v.counts,
+      var r = { id: db.seq, createdAt: now, updatedAt: now, name: v.name, courtname: v.courtname, grade: v.grade || 0, counts: v.counts,
         status: 'active', paid: false, paidBy: '', handed: false, handedBy: '', memo: String(d.memo || '').slice(0, 200),
         source: source, requestId: d.requestId || uuid(), token: uuid() };
       db.rows.push(r); demoSave(db);
@@ -169,6 +177,7 @@
       case 'update': {
         var r2 = own(d.id, d.token), v2 = clean(d);
         r2.name = v2.name; r2.courtname = v2.courtname; r2.counts = v2.counts; r2.status = 'active'; r2.updatedAt = now;
+        if ('grade' in d) r2.grade = v2.grade;
         demoSave(db); return { ok: true, item: pub(r2) };
       }
       case 'cancel': {
@@ -185,9 +194,10 @@
         if ('handed' in p) { r4.handed = !!p.handed; r4.handedBy = r4.handed ? who : ''; }
         if ('status' in p) r4.status = p.status === 'cancelled' ? 'cancelled' : 'active';
         if ('memo' in p) r4.memo = String(p.memo || '').slice(0, 200);
-        if ('name' in p || 'counts' in p || 'courtname' in p) {
-          var v4 = clean({ name: p.name, courtname: p.courtname, counts: p.counts });
+        if ('name' in p || 'counts' in p || 'courtname' in p || 'grade' in p) {
+          var v4 = clean({ name: p.name, courtname: p.courtname, grade: p.grade, counts: p.counts });
           r4.name = v4.name; r4.courtname = v4.courtname; r4.counts = v4.counts; r4.updatedAt = now;
+          if ('grade' in p) r4.grade = v4.grade;
         }
         demoSave(db); return { ok: true, item: adminView(r4) };
       }
@@ -212,8 +222,10 @@
     if (typeof s.normalize === 'function') s = s.normalize('NFKC');
     return s.replace(/\s+/g, '').replace(/[ぁ-ゖ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) + 0x60); }).toLowerCase();
   }
-  function validate(src) {
+  /* opts.requireGrade：ご家庭の申し込み画面では学年を必ず選んでもらう（役員の画面では「未入力」も可） */
+  function validate(src, opts) {
     var name = squish(src.name), courtname = squish(src.courtname), counts = emptyCounts(), bad = false, over = false;
+    var rawGrade = src.grade == null ? '' : String(src.grade), grade = toGrade(rawGrade);
     ITEMS.forEach(function (it) {
       var n = toCount(src.counts && src.counts[it.key]);
       if (isNaN(n)) bad = true; else if (n > MAX_CELL) over = true; else counts[it.key] = n;
@@ -223,10 +235,11 @@
     else if (name.length > 40) errors.push({ field: 'name', msg: 'お名前は40文字以内で入力してください' });
     if (CFG.courtnameRequired && !courtname) errors.push({ field: 'courtname', msg: label + 'を入力してください' });
     else if (courtname.length > 30) errors.push({ field: 'courtname', msg: label + 'は30文字以内で入力してください' });
+    if ((rawGrade !== '' && !grade) || (opts && opts.requireGrade && !grade)) errors.push({ field: 'grade', msg: '学年を選んでください' });
     if (bad) errors.push({ field: 'counts', msg: '枚数は数字で入力してください' });
     else if (over) errors.push({ field: 'counts', msg: '1か所に入れられるのは' + MAX_CELL + '枚までです。もっと必要なときは役員にご相談ください' });
     else if (!totalOf(counts)) errors.push({ field: 'counts', msg: 'チケットの枚数を1枚以上入れてください' });
-    return { errors: errors, value: { name: name, courtname: courtname, counts: counts } };
+    return { errors: errors, value: { name: name, courtname: courtname, grade: grade, counts: counts } };
   }
 
   /* ---------- 枚数の表（日付 × 区分）：申し込み画面と、集計画面の「修正」で使う ---------- */
@@ -326,7 +339,8 @@
     config: CFG,
     demo: DEMO,
     demoPass: DEMO_PASS,
-    days: DAYS, kinds: KINDS, items: ITEMS, maxPerCell: MAX_CELL,
+    days: DAYS, kinds: KINDS, items: ITEMS, grades: GRADES, maxPerCell: MAX_CELL,
+    gradeLabel: gradeLabel, toGrade: toGrade,
     call: function (action, body) { return DEMO ? demo(action, body) : remote(action, body); },
     uuid: uuid, validate: validate, toCount: toCount, squish: squish,
     emptyCounts: emptyCounts, cleanCounts: cleanCounts, totalOf: totalOf, amountOf: amountOf, kindTotals: kindTotals, byDay: byDay, dayLabel: dayLabel,

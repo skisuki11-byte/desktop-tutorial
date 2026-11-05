@@ -20,7 +20,7 @@
   var auth = null;              // { pass, officer }
   var items = [];
   var pending = {};             // id → 保存中
-  var view = { q: '', f: 'all', sort: 'new', day: '' }; // day：日付で絞り込み（'' はすべての日）
+  var view = { q: '', f: 'all', sort: 'new', day: '', grade: '' }; // day：日付で絞り込み（'' はすべての日）／grade：学年（'' はすべて・'0' は未入力）
   var lastLoaded = 0, timer = null, dlgTarget = null, dGrid = null;
 
   /* ---------- 合言葉 ---------- */
@@ -176,11 +176,51 @@ function clearAuth() {
     foot.appendChild(el('td', 'num yen-col', API.yen(s.amount)));
   }
 
+  /* 学年別：家庭数・大人・高校生以下・計・金額（取り消しはのぞく）。未入力の家庭があれば最後に1行 */
+  function gradeStats() {
+    var active = items.filter(function (x) { return x.status !== 'cancelled'; });
+    var keys = API.grades.slice();
+    if (active.some(function (x) { return !x.grade; })) keys.push(0);
+    return keys.map(function (g) {
+      var r = { grade: g, orders: 0, kinds: {}, total: 0, amount: 0 };
+      API.kinds.forEach(function (k) { r.kinds[k.id] = 0; });
+      active.forEach(function (x) {
+        if ((x.grade || 0) !== g) return;
+        r.orders += 1; r.total += x.total; r.amount += x.amount;
+        API.kinds.forEach(function (k) { r.kinds[k.id] += API.days.reduce(function (a, d) { return a + (x.counts[d.id + '-' + k.id] || 0); }, 0); });
+      });
+      return r;
+    });
+  }
+  function renderGrades() {
+    var head = $('gd-head'), body = $('gd-body');
+    head.textContent = ''; body.textContent = '';
+    ['学年', '家庭'].concat(API.kinds.map(function (k) { return k.label; }), ['計', '金額']).forEach(function (t, i) {
+      var th = el('th', i ? 'num-col' + (i === API.kinds.length + 3 ? ' yen-col' : '') : null, t); th.scope = 'col'; head.appendChild(th);
+    });
+    gradeStats().forEach(function (r) {
+      var tr = el('tr', 'bd-day' + (view.grade === String(r.grade) ? ' is-focus' : '') + (r.grade ? '' : ' is-unset'));
+      tr.dataset.grade = String(r.grade); tr.title = 'この学年の家庭だけを一覧で見る（もう一度押すと元に戻る）';
+      var th = el('th', null, API.gradeLabel(r.grade)); th.scope = 'row'; tr.appendChild(th);
+      tr.appendChild(el('td', 'num' + (r.orders ? '' : ' is-zero'), String(r.orders)));
+      API.kinds.forEach(function (k) { tr.appendChild(el('td', 'num' + (r.kinds[k.id] ? '' : ' is-zero'), String(r.kinds[k.id]))); });
+      tr.appendChild(el('td', 'num row-sum', String(r.total)));
+      tr.appendChild(el('td', 'num yen-col' + (r.amount ? '' : ' is-zero'), API.yen(r.amount)));
+      body.appendChild(tr);
+    });
+  }
+  function setGrade(g, scroll) {
+    view.grade = view.grade === g ? '' : g;
+    render();
+    if (scroll && view.grade) $('list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function renderKpis(s) {
     $('k-total').textContent = String(s.total);
     $('k-amount').textContent = API.yen(s.amount);
     $('k-total-sub').textContent = s.orders ? s.orders + ' 家庭から申し込み' : 'まだ申し込みはありません';
     renderBreakdown(s);
+    renderGrades();
     var unpaid = s.orders - s.paidOrders, unhanded = s.orders - s.handedOrders;
     $('k-paid').textContent = String(s.paidOrders);
     $('k-paid-of').textContent = '/ ' + s.orders + ' 家庭';
@@ -215,15 +255,17 @@ function clearAuth() {
       if (view.f === 'unpaid' && x.paid) return false;
       if (view.f === 'unhanded' && x.handed) return false;
       if (view.day && !dayTotal(x, view.day)) return false;
+      if (view.grade !== '' && String(x.grade || 0) !== view.grade) return false;
       if (!q) return true;
-      return norm(x.name).indexOf(q) >= 0 || norm(x.courtname).indexOf(q) >= 0 || norm(x.memo).indexOf(q) >= 0 ||
+      return (x.grade && norm(API.gradeLabel(x.grade)) === q) || norm(x.name).indexOf(q) >= 0 || norm(x.courtname).indexOf(q) >= 0 || norm(x.memo).indexOf(q) >= 0 ||
         String(x.id) === q.replace(/^no\.?0*/, '') || norm(API.no(x.id)).indexOf(q) >= 0;
     });
     var by = {
       'new': function (a, b) { return b.id - a.id; },
       old: function (a, b) { return a.id - b.id; },
       name: function (a, b) { return String(a.name).localeCompare(String(b.name), 'ja'); },
-      count: function (a, b) { return b.total - a.total || a.id - b.id; }
+      count: function (a, b) { return b.total - a.total || a.id - b.id; },
+      grade: function (a, b) { return (a.grade || 9) - (b.grade || 9) || String(a.name).localeCompare(String(b.name), 'ja'); }
     }[view.sort];
     return list.sort(by);
   }
@@ -306,7 +348,10 @@ function clearAuth() {
     var d = view.day ? API.days.filter(function (x) { return x.id === view.day; })[0] : null;
     var head = el('p', 'ds-head');
     head.appendChild(el('b', null, d ? API.dayLabel(d) + ' の集計' : '全日程（' + API.days.map(function (x) { return x.label; }).join('・') + '）の集計'));
-    head.appendChild(el('span', null, list.length + ' 家庭' + (view.f === 'unpaid' ? '（集金まだ）' : view.f === 'unhanded' ? '（渡しまだ）' : view.f === 'cancelled' ? '（取り消し）' : '')));
+    var tags = [];
+    if (view.grade !== '') tags.push(view.grade === '0' ? '学年未入力' : API.gradeLabel(Number(view.grade)));
+    if (view.f !== 'all') tags.push({ unpaid: '集金まだ', unhanded: '渡しまだ', cancelled: '取り消し' }[view.f]);
+    head.appendChild(el('span', null, list.length + ' 家庭' + (tags.length ? '（' + tags.join('・') + '）' : '')));
     box.appendChild(head);
     var grid = el('div', 'ds-grid'), total = 0, yen = 0;
     API.kinds.forEach(function (k) {
@@ -361,6 +406,7 @@ function clearAuth() {
       top.appendChild(el('span', null, API.longDate(x.createdAt) + ' 受付'));
       who.appendChild(top);
       var name = el('p', 'row-name');
+      if (x.grade) name.appendChild(el('span', 'row-grade', API.gradeLabel(x.grade)));
       name.appendChild(el('span', null, x.name));
       name.appendChild(el('small', null, 'さん'));
       who.appendChild(name);
@@ -368,6 +414,7 @@ function clearAuth() {
       who.appendChild(detailTable(x));
       var chips = el('p', 'row-chips');
       if (cancelled) chips.appendChild(chip('chip-danger', '取り消し済み'));
+      if (!cancelled && !x.grade) chips.appendChild(chip('chip-warn', '学年が未入力（［修正］で入れられます）'));
       if (!cancelled && dup[norm(x.name)]) chips.appendChild(chip('chip-warn', '同じお名前が2件以上'));
       if (end && new Date(x.createdAt) > end) chips.appendChild(chip('chip-warn', '締切後の申し込み'));
       if (new Date(x.updatedAt) - new Date(x.createdAt) > 60000) chips.appendChild(chip('chip-info', API.shortDate(x.updatedAt) + ' に修正あり'));
@@ -416,6 +463,7 @@ function clearAuth() {
     var parts = [];
     if (view.f !== 'all') parts.push('「' + FILTER_NAMES[view.f] + '」');
     // 日付の絞り込みは「日付で見る」のボタン自体が選択中を示すので、帯には出さない
+    if (view.grade !== '') parts.push('「' + (view.grade === '0' ? '学年が未入力' : API.gradeLabel(Number(view.grade))) + '」');
     if (view.q) parts.push('「' + view.q + '」で検索');
     note.hidden = !parts.length;
     note.querySelector('.filter-note-text').textContent = parts.join('・') + 'の家庭だけを表示中';
@@ -429,7 +477,7 @@ function clearAuth() {
     });
   }
   function resetFilters() {
-    view.q = ''; $('q').value = '';
+    view.q = ''; $('q').value = ''; view.grade = '';
     if (view.day) { view.day = ''; Array.prototype.forEach.call($('days-filter').querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String(b.dataset.day === '')); }); }
     setFilter('all');
   }
@@ -548,13 +596,14 @@ function clearAuth() {
     $('d-sum').textContent = '合計 ' + API.totalOf(c) + ' 枚・' + API.yen(API.amountOf(c));
   }
   function clearDlgErrors() {
-    ['name', 'courtname', 'counts'].forEach(function (f) { $('dfield-' + f).classList.remove('has-error'); $('d-' + f + '-error').hidden = true; });
+    ['name', 'courtname', 'grade', 'counts'].forEach(function (f) { $('dfield-' + f).classList.remove('has-error'); $('d-' + f + '-error').hidden = true; });
   }
   function openDialog(x) {
     dlgTarget = x || null;
     $('dlg-title').textContent = x ? API.no(x.id) + ' ' + x.name + ' さんの内容を修正' : 'ご家庭の代わりに追加';
     $('d-name').value = x ? x.name : '';
     $('d-courtname').value = x ? (x.courtname || '') : '';
+    $('d-grade').value = x && x.grade ? String(x.grade) : '';
     dGrid.set(x ? x.counts : API.emptyCounts());
     updateDlgSum();
     $('d-memo').value = x ? (x.memo || '') : '';
@@ -566,7 +615,7 @@ function clearAuth() {
   }
   function onDialogSave(ev) {
     ev.preventDefault();
-    var v = API.validate({ name: $('d-name').value, courtname: $('d-courtname').value, counts: dGrid.get() });
+    var v = API.validate({ name: $('d-name').value, courtname: $('d-courtname').value, grade: $('d-grade').value, counts: dGrid.get() });
     clearDlgErrors();
     if (v.errors.length) {
       v.errors.forEach(function (e) { $('dfield-' + e.field).classList.add('has-error'); var p = $('d-' + e.field + '-error'); p.textContent = e.msg; p.hidden = false; });
@@ -580,11 +629,11 @@ function clearAuth() {
     if (dlgTarget) {
       var id = dlgTarget.id;
       pending[id] = true;
-      p = API.call('admin_save', { pass: auth.pass, officer: auth.officer || '', id: id, patch: { name: v.value.name, courtname: v.value.courtname, counts: v.value.counts, memo: memo } })
+      p = API.call('admin_save', { pass: auth.pass, officer: auth.officer || '', id: id, patch: { name: v.value.name, courtname: v.value.courtname, grade: v.value.grade || '', counts: v.value.counts, memo: memo } })
         .then(function (res) { delete pending[id]; Object.assign(find(id), normalize(res.item)); return res.item.name + ' さんの内容を修正しました'; },
           function (err) { delete pending[id]; throw err; });
     } else {
-      p = API.call('admin_add', { pass: auth.pass, officer: auth.officer || '', name: v.value.name, courtname: v.value.courtname, counts: v.value.counts, memo: memo, requestId: API.uuid() })
+      p = API.call('admin_add', { pass: auth.pass, officer: auth.officer || '', name: v.value.name, courtname: v.value.courtname, grade: v.value.grade || '', counts: v.value.counts, memo: memo, requestId: API.uuid() })
         .then(function (res) { items.push(normalize(res.item)); return res.item.name + ' さんを追加しました（' + API.no(res.item.id) + '）'; });
     }
     p.then(function (msg) {
@@ -598,11 +647,11 @@ function clearAuth() {
   }
 
   /* ---------- 書き出し・コピー ---------- */
-  var HEAD = ['受付番号', 'お名前', COURT].concat(API.items.map(function (it) { return it.day.label + ' ' + it.kind.label; }),
+  var HEAD = ['受付番号', 'お名前', COURT, '学年'].concat(API.items.map(function (it) { return it.day.label + ' ' + it.kind.label; }),
     ['枚数', '金額', '状態', '集金', '集金の記録', '受け渡し', '受け渡しの記録', '受付日時', '役員メモ']);
   function rowsForExport() {
     return items.slice().sort(function (a, b) { return a.id - b.id; }).map(function (x) {
-      return [API.no(x.id), x.name, x.courtname || ''].concat(API.items.map(function (it) { return x.counts[it.key]; }),
+      return [API.no(x.id), x.name, x.courtname || '', x.grade ? API.gradeLabel(x.grade) : ''].concat(API.items.map(function (it) { return x.counts[it.key]; }),
         [x.total, x.amount, x.status === 'cancelled' ? '取り消し' : '有効',
           x.paid ? '済' : '', x.paidBy || '', x.handed ? '済' : '', x.handedBy || '', API.longDate(x.createdAt), x.memo || '']);
     });
@@ -652,6 +701,7 @@ function clearAuth() {
       lines.push(API.dayLabel(day) + '　' + parts.join('・') + '（計 ' + sum + '・' + API.yen(yen) + '）');
     });
     lines.push('合計 ' + s.total + ' 枚（' + s.orders + ' 家庭）' + API.yen(s.amount));
+    lines.push('学年別　' + gradeStats().map(function (r) { return API.gradeLabel(r.grade) + ' ' + r.orders + '家庭・' + r.total + '枚'; }).join('／'));
     lines.push('集金 ' + s.paidOrders + ' / ' + s.orders + ' 家庭（' + API.yen(s.paidAmount) + ' / ' + API.yen(s.amount) + '）');
     lines.push('受け渡し ' + s.handedOrders + ' / ' + s.orders + ' 家庭');
     var end = API.deadlineEnd();
@@ -663,7 +713,7 @@ function clearAuth() {
      A4縦向きの紙面を canvas に描き、js/pdf.js で PDF ファイルにまとめる（家計簿アプリと同じ方式）。
      日本語はブラウザの文字で描くので、どの端末でも画面と同じ字形で出る。
      スマホは共有メニュー（ファイルに保存・LINEで送る）、PC はそのままダウンロード。
-     中身：購入する枚数（日付×区分・計・金額）／申し込み・集金・受け渡しの状況／申し込み一覧（取り消しは除く・受付番号順） */
+     中身：購入する枚数（日付×区分・計・金額）／学年別／申し込み・集金・受け渡しの状況／申し込み一覧（取り消しは除く・受付番号順） */
   var PMM = 8;                                   // 1mm あたりの画素数
   var PPG = { w: 210 * PMM, h: 297 * PMM, m: 10 * PMM };   // A4縦向き
   var PFONT = '"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
@@ -740,7 +790,17 @@ function clearAuth() {
     });
     pRow(x, y, RH, sc, ['合計'].concat(API.kinds.map(function (k) { return String(kindSum[k.id]); }), [String(s.total), API.yen(s.amount)]), { bg: PCOL.foot, bold: true }); y += RH + 18;
 
-    // 2. 状況
+    // 2. 学年別
+    section('学年別');
+    var gc = [{ w: 30 }, { w: 26, align: 'right' }].concat(API.kinds.map(function () { return { w: 36, align: 'right' }; }), [{ w: 26, align: 'right', bold: true }, { w: 36, align: 'right' }]);
+    pRow(x, y, RH, gc, ['学年', '家庭'].concat(API.kinds.map(function (k) { return k.label; }), ['計', '金額']), { bg: PCOL.head, bold: true, center: true, size: 21 }); y += RH;
+    gradeStats().forEach(function (r) {
+      pRow(x, y, RH, gc, [API.gradeLabel(r.grade), String(r.orders)].concat(API.kinds.map(function (k) { return String(r.kinds[k.id]); }), [String(r.total), API.yen(r.amount)]),
+        { color: r.grade ? null : '#8f4d00' }); y += RH;
+    });
+    y += 18;
+
+    // 3. 状況
     section('状況');
     var st = [{ w: 58 }, { w: 74 }, { w: 58 }];
     pRow(x, y, 40, st, ['申し込み', '集金', '受け渡し'], { bg: PCOL.head, bold: true, center: true, size: 20 }); y += 40;
@@ -748,16 +808,16 @@ function clearAuth() {
       '済み ' + s.paidOrders + ' / ' + s.orders + ' 家庭（残り ' + API.yen(s.amount - s.paidAmount) + '）',
       '済み ' + s.handedOrders + ' / ' + s.orders + ' 家庭'], { center: true, size: 21 }); y += 48 + 22;
 
-    // 3. 申し込み一覧（ページをまたぐときは見出しを付け直す）
-    var lc = [{ w: 12, align: 'center' }, { w: 29 }, { w: 20 }].concat(API.items.map(function () { return { w: 10, align: 'right' }; }),
+    // 4. 申し込み一覧（ページをまたぐときは見出しを付け直す）
+    var lc = [{ w: 12, align: 'center' }, { w: 27 }, { w: 18 }, { w: 9, align: 'center' }].concat(API.items.map(function () { return { w: 10, align: 'right' }; }),
       [{ w: 10, align: 'right', bold: true }, { w: 20, align: 'right' }, { w: 9, align: 'center' }, { w: 9, align: 'center' }]);
     var used = lc.reduce(function (a, c) { return a + c.w; }, 0);
     lc.push({ w: (PPG.w - PPG.m * 2) / PMM - used });   // メモは残りの幅
     var LH = 42, HT = 34, HB = 30, HH = HT + HB;
-    var K = API.kinds.length, I0 = 3, IN = I0 + API.items.length;      // 枚数の列は I0 から（日付ごとに K 列）
+    var K = API.kinds.length, I0 = 4, IN = I0 + API.items.length;      // 枚数の列は I0 から（日付ごとに K 列）
     var colX = [], lx = PPG.m;
     lc.forEach(function (c) { colX.push(lx); lx += c.w * PMM; }); colX.push(lx);
-    var lhead = ['No.', 'お名前', COURT].concat(API.items.map(function () { return ''; }), ['枚数', '金額', '集金', '受渡', 'メモ']);
+    var lhead = ['No.', 'お名前', COURT, '学年'].concat(API.items.map(function () { return ''; }), ['枚数', '金額', '集金', '受渡', 'メモ']);
     var legend = API.kinds.map(function (k) { return k.short + '＝' + k.label; }).join('　');
     // 日付ごとのまとまりを見やすく：1つおきに薄く色をつけ、日付の境目に太い紺の線
     var tint = lc.map(function (c, k) { return k >= I0 && k < IN && Math.floor((k - I0) / K) % 2 === 1 ? '#eef2fa' : null; });
@@ -787,12 +847,12 @@ function clearAuth() {
     list.forEach(function (it) {
       if (y + LH > PPG.h - PPG.m - LH) { header(); listHead(true); }
       var zero = [];
-      var cells = [('00' + it.id).slice(-3), it.name, it.courtname || ''].concat(API.items.map(function (item, k) { var n = it.counts[item.key]; zero[3 + k] = !n; return n ? String(n) : '・'; }),
+      var cells = [('00' + it.id).slice(-3), it.name, it.courtname || '', it.grade ? it.grade + '年' : '—'].concat(API.items.map(function (item, k) { var n = it.counts[item.key]; zero[I0 + k] = !n; return n ? String(n) : '・'; }),
         [String(it.total), API.yen(it.amount), it.paid ? '済' : '', it.handed ? '済' : '', it.memo || '']);
       pRow(x, y, LH, lc, cells, { zero: zero, colBg: tint }); dayLines(y, LH); y += LH;
     });
     if (y + LH > PPG.h - PPG.m) { header(); listHead(true); }
-    pRow(x, y, LH, lc, ['合計', '', ''].concat(API.items.map(function (item) { return String(s.cells[item.key]); }),
+    pRow(x, y, LH, lc, ['合計', '', '', ''].concat(API.items.map(function (item) { return String(s.cells[item.key]); }),
       [String(s.total), API.yen(s.amount), '', '', '']), { bg: PCOL.foot, bold: true, size: 21 });
     dayLines(y, LH);
     pages.forEach(function (c, i) {        // ページ番号「1 / 2」を下中央に
@@ -898,6 +958,8 @@ function clearAuth() {
     $('q').addEventListener('input', function () { view.q = $('q').value; render(); });
     $('sort').addEventListener('change', function () { view.sort = $('sort').value; render(); });
     buildDayFilter();
+    $('gd-body').addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-grade]'); if (tr) setGrade(tr.dataset.grade, true); });
+    API.grades.forEach(function (g) { var o = document.createElement('option'); o.value = String(g); o.textContent = API.gradeLabel(g); $('d-grade').appendChild(o); });
     $('bd-body').addEventListener('click', function (ev) { var tr = ev.target.closest('tr[data-day]'); if (tr) setDay(tr.dataset.day, true); });
     $('filters').addEventListener('click', function (ev) { var b = ev.target.closest('button[data-f]'); if (b) setFilter(b.dataset.f); });
     $('k-paid-card').addEventListener('click', function () { setFilter(view.f === 'unpaid' ? 'all' : 'unpaid', true); });

@@ -4,7 +4,7 @@
  *           空のままだと「デモ表示」になり、入力はこの端末の中にだけ保存される。
  * 空欄（'' や 0）にした項目は、画面に出さない。
  *
- * days / kinds（日付・区分・値段）を変えるときは、gas/Code.gs の DAYS / KINDS も同じにそろえる
+ * days / kinds / grades（日付・区分・値段・学年）を変えるときは、gas/Code.gs の DAYS / KINDS / GRADES も同じにそろえる
  * （tests/gas.test.js が食い違いを見つける）。
  */
 window.TICKET_CONFIG = {
@@ -24,10 +24,11 @@ window.TICKET_CONFIG = {
     { id: 'adult', label: '大人', short: '大', price: 2000 },
     { id: 'student', label: '高校生以下', short: '高', price: 1500 }
   ],
+  grades: [1, 2, 3],               // 学年（選手の学年。gas/Code.gs の GRADES とそろえる）
   maxPerCell: 20,                   // 1か所（1日・1区分）に入れられる最大枚数
 
   // 注意事項（申し込む直前の確認画面にすべて出す。headline は入力画面の上に出す要点）
-  headline: '部員の分は入れないでください。追加注文はできません。',
+  headline: '部員の分は入れないでください。',
   notes: [
     '1月4日は開会式のみの参加でもチケットが必要です。',
     '追加注文はできません。今回1回限りの取りまとめになりますので、必要枚数をよくご確認ください。',
