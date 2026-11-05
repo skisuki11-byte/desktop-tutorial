@@ -2,29 +2,49 @@
 // ↑ 権限を「このスプレッドシートだけ」に絞る印。消さないでください。
 
 /**
- * 春高タオル 申し込みの集計先（Google Apps Script）
+ * 春高バレー 応援チケット 申し込みの集計先（Google Apps Script）
  *
  * このスクリプトを「申し込みを貯める Google スプレッドシート」に入れて、ウェブアプリとして公開する。
- *   - 各家庭の申し込みは、シート「申込」に1件1行で貯まる
+ *   - 各家庭の申し込みは、シート「チケット申込」に1件1行で貯まる（なければ自動で作る）
+ *     列は 日付 × 区分（1/4 大人・1/4 高校生以下 …）ごとの枚数と、枚数・金額の合計
  *   - 役員の集計画面は、合言葉（スクリプトのプロパティ ADMIN_PASS）を知っている人だけが読める
- *   - 家庭は、自分の申し込みだけを「受付番号＋合鍵（token）」で変更・取り消しできる
+ *   - 家庭は、自分の申し込みだけを「受付番号＋合鍵（token）」で修正・取り消しできる
  *   - シートを役員が直接さわっても（チェックボックス・枚数の修正）、集計画面にそのまま反映される
  *
+ * 日付・区分・値段を変えるときは、画面側の js/config.js（days / kinds）も同じにそろえる。
  * 設定は gas/README.md を参照。
  */
 
-var SHEET_NAME = '申込';
-var HEADERS = ['受付番号', '受付日時', '更新日時', 'お名前', 'コートネーム', '枚数', '状態',
-  '集金', '集金の記録', '受け渡し', '受け渡しの記録', '役員メモ', '経路', 'requestId', 'token'];
-var C = { id: 0, createdAt: 1, updatedAt: 2, name: 3, courtname: 4, count: 5, status: 6,
-  paid: 7, paidBy: 8, handed: 9, handedBy: 10, memo: 11, source: 12, requestId: 13, token: 14 };
+var SHEET_NAME = 'チケット申込';
+var DAYS = [
+  { id: '0104', label: '1/4' },
+  { id: '0105', label: '1/5' },
+  { id: '0106', label: '1/6' }
+];
+var KINDS = [
+  { id: 'adult', label: '大人', price: 2000 },
+  { id: 'student', label: '高校生以下', price: 1500 }
+];
+var ITEMS = [];   // 日付 × 区分（シートの列の順）
+DAYS.forEach(function (d) { KINDS.forEach(function (k) { ITEMS.push({ key: d.id + '-' + k.id, header: d.label + ' ' + k.label, price: k.price }); }); });
+
+var BASE_HEADERS = ['受付番号', '受付日時', '更新日時', 'お名前', 'コートネーム'];
+var TAIL_HEADERS = ['枚数', '金額', '状態', '集金', '集金の記録', '受け渡し', '受け渡しの記録', '役員メモ', '経路', 'requestId', 'token'];
+var HEADERS = BASE_HEADERS.concat(ITEMS.map(function (it) { return it.header; }), TAIL_HEADERS);
+var C = (function () {   // 列の位置（0始まり）
+  var c = { id: 0, createdAt: 1, updatedAt: 2, name: 3, courtname: 4, item0: 5 };
+  var t = c.item0 + ITEMS.length;
+  ['total', 'amount', 'status', 'paid', 'paidBy', 'handed', 'handedBy', 'memo', 'source', 'requestId', 'token'].forEach(function (k, i) { c[k] = t + i; });
+  return c;
+})();
 var STATUS_ACTIVE = '有効', STATUS_CANCELLED = '取り消し';
-var MAX_COUNT = 50;          // 1件の上限（画面側の上限 maxPerOrder より大きめにしておく）
+var MAX_CELL = 50;           // 1か所（1日・1区分）の上限（画面側の maxPerCell より大きめにしておく）
+var MAX_TOTAL = 200;         // 1件の合計の上限
 var MAX_SUBMIT_PER_HOUR = 300;
 var MAX_FAIL = 20;           // 合言葉の失敗を10分あたり何回まで受け付けるか
 
 function doGet() {
-  return json_({ ok: true, app: 'towel' });   // 公開URLをブラウザで開いたときの動作確認用
+  return json_({ ok: true, app: 'ticket' });   // 公開URLをブラウザで開いたときの動作確認用
 }
 
 function doPost(e) {
@@ -35,7 +55,7 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, error: 'bad_request' });
   }
-  if (!d || d.app !== 'towel') return json_({ ok: false, error: 'bad_request' });
+  if (!d || d.app !== 'ticket') return json_({ ok: false, error: 'bad_request' });
   try {
     switch (d.action) {
       case 'ping': return json_({ ok: true });
@@ -59,7 +79,7 @@ function doPost(e) {
 /* ---------- 家庭の操作 ---------- */
 
 function submit_(d) {
-  if (d.website) return { ok: true, item: { id: 0, name: '', courtname: '', count: 0, status: 'active' }, token: '' };  // ボット（見えない欄に入力）
+  if (d.website) return { ok: true, item: { id: 0, name: '', courtname: '', counts: {}, total: 0, amount: 0, status: 'active' }, token: '' };  // ボット（見えない欄に入力）
   if (!countUp_('submit', 3600, MAX_SUBMIT_PER_HOUR)) return { ok: false, error: 'rate' };
   var v = validate_(d);
   var requestId = str_(d.requestId, 64);
@@ -71,15 +91,7 @@ function submit_(d) {
         if (rows[i][C.requestId] === requestId) return { ok: true, item: pub_(rows[i]), token: rows[i][C.token] };
       }
     }
-    var now = new Date(), row = new Array(HEADERS.length);
-    row[C.id] = nextId_(rows);
-    row[C.createdAt] = now; row[C.updatedAt] = now;
-    row[C.name] = v.name; row[C.courtname] = v.courtname; row[C.count] = v.count;
-    row[C.status] = STATUS_ACTIVE;
-    row[C.paid] = false; row[C.paidBy] = ''; row[C.handed] = false; row[C.handedBy] = '';
-    row[C.memo] = ''; row[C.source] = 'フォーム';
-    row[C.requestId] = requestId || Utilities.getUuid();
-    row[C.token] = Utilities.getUuid();
+    var row = newRow_(rows, v, 'フォーム', requestId, '');
     appendRow_(sh, row);
     return { ok: true, item: pub_(row), token: row[C.token] };
   });
@@ -99,7 +111,7 @@ function updateOwn_(d) {
   var v = validate_(d);
   return withLock_(function () {
     var sh = sheet_(), r = own_(sh, d);
-    r.row[C.name] = v.name; r.row[C.courtname] = v.courtname; r.row[C.count] = v.count;
+    setValues_(r.row, v);
     r.row[C.status] = STATUS_ACTIVE;
     r.row[C.updatedAt] = new Date();
     writeRow_(sh, r);
@@ -154,9 +166,8 @@ function adminSave_(d) {
     if ('handed' in p) { r.row[C.handed] = !!p.handed; r.row[C.handedBy] = p.handed ? stamp : ''; }
     if ('status' in p) r.row[C.status] = p.status === 'cancelled' ? STATUS_CANCELLED : STATUS_ACTIVE;
     if ('memo' in p) r.row[C.memo] = str_(p.memo, 200);
-    if ('name' in p || 'courtname' in p || 'count' in p) {
-      var v = validate_(p);
-      r.row[C.name] = v.name; r.row[C.courtname] = v.courtname; r.row[C.count] = v.count;
+    if ('name' in p || 'courtname' in p || 'counts' in p) {
+      setValues_(r.row, validate_(p));
       r.row[C.updatedAt] = new Date();
     }
     writeRow_(sh, r);
@@ -172,37 +183,64 @@ function adminAdd_(d) {
     if (requestId) {
       for (var i = 0; i < rows.length; i++) if (rows[i][C.requestId] === requestId) return { ok: true, item: adminView_(rows[i]) };
     }
-    var now = new Date(), row = new Array(HEADERS.length);
-    row[C.id] = nextId_(rows);
-    row[C.createdAt] = now; row[C.updatedAt] = now;
-    row[C.name] = v.name; row[C.courtname] = v.courtname; row[C.count] = v.count;
-    row[C.status] = STATUS_ACTIVE;
-    row[C.paid] = false; row[C.paidBy] = ''; row[C.handed] = false; row[C.handedBy] = '';
-    row[C.memo] = str_(d.memo, 200);
-    row[C.source] = '役員が追加（' + (str_(d.officer, 12) || '役員') + '）';
-    row[C.requestId] = requestId || Utilities.getUuid();
-    row[C.token] = Utilities.getUuid();
+    var row = newRow_(rows, v, '役員が追加（' + (str_(d.officer, 12) || '役員') + '）', requestId, str_(d.memo, 200));
     appendRow_(sh, row);
     return { ok: true, item: adminView_(row) };
   });
 }
 
+/* ---------- 行 ---------- */
+
+function newRow_(rows, v, source, requestId, memo) {
+  var now = new Date(), row = new Array(HEADERS.length);
+  row[C.id] = nextId_(rows);
+  row[C.createdAt] = now; row[C.updatedAt] = now;
+  setValues_(row, v);
+  row[C.status] = STATUS_ACTIVE;
+  row[C.paid] = false; row[C.paidBy] = ''; row[C.handed] = false; row[C.handedBy] = '';
+  row[C.memo] = memo || '';
+  row[C.source] = source;
+  row[C.requestId] = requestId || Utilities.getUuid();
+  row[C.token] = Utilities.getUuid();
+  return row;
+}
+
+/** お名前・コートネーム・枚数を行に入れ、枚数と金額の合計も入れ直す */
+function setValues_(row, v) {
+  row[C.name] = v.name;
+  row[C.courtname] = v.courtname;
+  ITEMS.forEach(function (it, i) { row[C.item0 + i] = v.counts[it.key]; });
+  row[C.total] = totalOf_(v.counts);
+  row[C.amount] = amountOf_(v.counts);
+}
+
+function countsOf_(row) {
+  var c = {};
+  ITEMS.forEach(function (it, i) { var n = Number(row[C.item0 + i]); c[it.key] = isFinite(n) && n > 0 ? Math.floor(n) : 0; });
+  return c;
+}
+function totalOf_(c) { return ITEMS.reduce(function (a, it) { return a + (c[it.key] || 0); }, 0); }
+function amountOf_(c) { return ITEMS.reduce(function (a, it) { return a + (c[it.key] || 0) * it.price; }, 0); }
+
 /* ---------- シート ---------- */
 
-/** 最初に1回だけ実行する：シート「申込」を作り、見出し・幅・チェックボックスを整える */
+/** 最初に1回だけ実行する：シート「チケット申込」を作り、見出し・幅を整える（なければ自動でも作る） */
 function setup() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME, 0);
-  sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold').setBackground('#12235a').setFontColor('#ffffff');
+  sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold').setBackground('#fff3c9').setFontColor('#0d1937');
   sh.setFrozenRows(1);
   sh.setColumnWidth(C.id + 1, 80);
   sh.setColumnWidths(C.createdAt + 1, 2, 130);
-  sh.setColumnWidth(C.name + 1, 160);
-  sh.setColumnWidth(C.courtname + 1, 140);
-  sh.setColumnWidth(C.count + 1, 60);
+  sh.setColumnWidth(C.name + 1, 150);
+  sh.setColumnWidth(C.courtname + 1, 110);
+  sh.setColumnWidths(C.item0 + 1, ITEMS.length, 92);
+  sh.setColumnWidths(C.total + 1, 2, 80);
   sh.setColumnWidths(C.paid + 1, 4, 110);
   sh.setColumnWidth(C.memo + 1, 200);
   sh.getRange('B:C').setNumberFormat('yyyy/mm/dd hh:mm');
+  sh.getRange(1, C.amount + 1, sh.getMaxRows(), 1).setNumberFormat('¥#,##0');
+  sh.getRange(1, C.amount + 1).setNumberFormat('@');
   sh.hideColumns(C.requestId + 1, 2);   // requestId と token は家庭の「合鍵」なので見えないようにしておく
   var props = PropertiesService.getScriptProperties();
   if (!props.getProperty('ADMIN_PASS')) console.log('スクリプトのプロパティ ADMIN_PASS（役員の合言葉）を設定してください');
@@ -240,18 +278,18 @@ function rowIndex_(sh, id) {
   return 0;
 }
 
-function writeRow_(sh, r) {
-  var at = rowIndex_(sh, r.id);
-  if (!at) throw { code: 'not_found' };
-  sh.getRange(at, 1, 1, HEADERS.length).setValues([forSheet_(r.row)]);
-}
-
 /** シートに書く形：文字の欄は safe_ を通す（読み戻した値をそのまま書き戻しても数式にならない） */
 var TEXT_COLS = [C.name, C.courtname, C.paidBy, C.handedBy, C.memo, C.source];
 function forSheet_(row) {
   var out = row.slice();
   TEXT_COLS.forEach(function (c) { out[c] = safe_(out[c]); });
   return out;
+}
+
+function writeRow_(sh, r) {
+  var at = rowIndex_(sh, r.id);
+  if (!at) throw { code: 'not_found' };
+  sh.getRange(at, 1, 1, HEADERS.length).setValues([forSheet_(r.row)]);
 }
 
 function reread_(sh, r) {
@@ -276,11 +314,14 @@ function nextId_(rows) {
 /* ---------- 返す形 ---------- */
 
 function pub_(r) {
+  var c = countsOf_(r);   // 役員がシートで枚数を直しても、合計と金額はここで数え直す
   return {
     id: Number(r[C.id]),
     name: String(r[C.name] || ''),
     courtname: String(r[C.courtname] || ''),
-    count: Number(r[C.count]) || 0,
+    counts: c,
+    total: totalOf_(c),
+    amount: amountOf_(c),
     status: String(r[C.status]) === STATUS_CANCELLED ? 'cancelled' : 'active',
     createdAt: iso_(r[C.createdAt]),
     updatedAt: iso_(r[C.updatedAt])
@@ -301,13 +342,21 @@ function adminView_(r) {
 /* ---------- 入力のチェック（画面側 api.js の validate とそろえる） ---------- */
 
 function validate_(d) {
-  var name = squish_(d.name), courtname = squish_(d.courtname);
-  var raw = String(d.count == null ? '' : d.count).replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }).trim();
-  var count = /^\d{1,3}$/.test(raw) ? Number(raw) : NaN;
+  var name = squish_(d.name), courtname = squish_(d.courtname), counts = {};
   if (!name || name.length > 40) throw { code: 'invalid' };
   if (courtname.length > 30) throw { code: 'invalid' };
-  if (isNaN(count) || count < 1 || count > MAX_COUNT) throw { code: 'invalid' };
-  return { name: name, courtname: courtname, count: count };
+  var src = d.counts && typeof d.counts === 'object' ? d.counts : {};
+  ITEMS.forEach(function (it) {
+    var raw = String(src[it.key] == null ? '' : src[it.key]).replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }).trim();
+    if (raw === '') raw = '0';
+    if (!/^\d{1,3}$/.test(raw)) throw { code: 'invalid' };
+    var n = Number(raw);
+    if (n > MAX_CELL) throw { code: 'invalid' };
+    counts[it.key] = n;
+  });
+  var total = totalOf_(counts);
+  if (total < 1 || total > MAX_TOTAL) throw { code: 'invalid' };
+  return { name: name, courtname: courtname, counts: counts };
 }
 
 function squish_(v) {
@@ -349,7 +398,7 @@ function countUp_(key, ttl, max) {
 function normPass_(s) {
   s = String(s == null ? '' : s);
   if (typeof s.normalize === 'function') s = s.normalize('NFKC');
-  return s.replace(/\s+/g, '').replace(/[\u3041-\u3096]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) + 0x60); }).toLowerCase();
+  return s.replace(/\s+/g, '').replace(/[ぁ-ゖ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) + 0x60); }).toLowerCase();
 }
 
 function safeEqual_(a, b) {
@@ -365,7 +414,9 @@ function json_(obj) {
 
 /** 動作確認：エディタで実行すると、テスト用の申し込みを1件入れて、すぐ取り消す */
 function testSubmit() {
-  var res = submit_({ name: 'テスト 太郎', courtname: 'テスト', count: 1, requestId: Utilities.getUuid() });
+  var counts = {};
+  ITEMS.forEach(function (it, i) { counts[it.key] = i === 0 ? 1 : 0; });
+  var res = submit_({ name: 'テスト 太郎', courtname: 'テスト', counts: counts, requestId: Utilities.getUuid() });
   console.log(JSON.stringify(res));
   if (res.ok) console.log(JSON.stringify(cancelOwn_({ id: res.item.id, token: res.token })));
 }
