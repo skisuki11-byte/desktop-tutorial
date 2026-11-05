@@ -1,10 +1,12 @@
 /* admin.js — 役員用の集計画面。
  *
  * 役員どうしで共有する「合言葉」1つで、だれのスマホ・PCからでも同じ集計を見られる。
- *   - いちばん上に合計枚数（業者に発注する数）を大きく出す
- *   - 一覧で「誰が・何枚」を見て、集金・受け渡しにチェックをつける（つけた役員の名前と時刻が残る）
- *   - 取り消しは確認ダイアログではなく「元に戻す」で取り返せるようにする
- *   - 1分ごとに最新にする（ほかの役員がつけたチェックも反映される）
+ * 画面は役員の3つの仕事に合わせて並べる：
+ *   1. 業者に発注する数を知る      → いちばん上に合計枚数
+ *   2. 集金する                    → 「集金」の数字を押すと、まだの家庭だけが並ぶ
+ *   3. タオルを渡す                → 「受け渡し」の数字を押すと、まだの家庭だけが並ぶ
+ * 申し込みの取り消しと、集金・受け渡しの記録を外すときは、必ず確認を出す。
+ * 取り消したあとも［元に戻す］で取り返せる。1分ごとに最新にする（ほかの役員のチェックも反映）。
  */
 (function () {
   'use strict';
@@ -13,6 +15,8 @@
   var KEY = API.demo ? 'towel.admin.demo.v1' : 'towel.admin.v1';
   var OFFICER_KEY = 'towel.officer.v1';
   var REFRESH_MS = 60000;
+  var PRICE = Number(CFG.price) || 0;
+  var COURT = CFG.courtnameLabel || 'コートネーム';
 
   var auth = null;              // { pass, officer }
   var items = [];
@@ -96,7 +100,7 @@
     stopTimer();
     timer = setInterval(function () {
       markStale();
-      if (document.hidden || $('dlg').open) return;
+      if (document.hidden || $('dlg').open || $('ask').open) return;
       if (Date.now() - lastLoaded >= REFRESH_MS - 1000) load();
     }, 15000);
   }
@@ -123,9 +127,7 @@
 
   function renderKpis(s) {
     $('k-total').textContent = String(s.total);
-    $('k-total-sub').textContent = s.orders
-      ? s.orders + ' 件のご家庭から（1件あたり平均 ' + (s.total / s.orders).toFixed(1) + ' 枚）'
-      : 'まだ申し込みはありません';
+    $('k-total-sub').textContent = s.orders ? s.orders + ' 家庭から申し込み' : 'まだ申し込みはありません';
     var target = Number(CFG.target) || 0;
     if (target > 0) {
       $('k-target').hidden = false;
@@ -133,23 +135,28 @@
       $('k-target-meter-label').setAttribute('aria-label', '発注の目安 ' + target + '枚に対して ' + pct(s.total, target) + '%');
       $('k-target-sub').textContent = s.total >= target ? '発注の目安 ' + target + ' 枚に届きました' : '発注の目安 ' + target + ' 枚まで あと ' + (target - s.total) + ' 枚';
     }
-    var price = Number(CFG.price) || 0;
+    var unpaid = s.orders - s.paidOrders, unhanded = s.orders - s.handedOrders;
     $('k-paid').textContent = String(s.paidOrders);
-    $('k-paid-of').textContent = '/ ' + s.orders + ' 件';
+    $('k-paid-of').textContent = '/ ' + s.orders + ' 家庭';
     $('k-paid-meter').style.width = pct(s.paidOrders, s.orders) + '%';
     $('k-paid-meter-label').setAttribute('aria-label', '集金 ' + pct(s.paidOrders, s.orders) + '%');
-    $('k-paid-sub').textContent = price > 0
-      ? '集金済み ' + API.yen(price * s.paidCount) + '／予定 ' + API.yen(price * s.total) + '（残り ' + API.yen(price * (s.total - s.paidCount)) + '）'
-      : '集金済み ' + s.paidCount + ' 枚分・残り ' + (s.orders - s.paidOrders) + ' 件';
+    $('k-paid-sub').textContent = unpaid
+      ? 'まだ ' + unpaid + ' 家庭' + (PRICE > 0 ? '（' + API.yen(PRICE * (s.total - s.paidCount)) + '）' : '')
+      : (s.orders ? 'すべての家庭から集金しました' : '');
+    if (PRICE > 0 && s.orders) $('k-paid-sub').textContent += '　集金済み ' + API.yen(PRICE * s.paidCount);
+    $('k-paid-go').hidden = !unpaid;
+    $('k-paid-card').classList.toggle('is-complete', !!s.orders && !unpaid);
     $('k-handed').textContent = String(s.handedOrders);
-    $('k-handed-of').textContent = '/ ' + s.orders + ' 件';
+    $('k-handed-of').textContent = '/ ' + s.orders + ' 家庭';
     $('k-handed-meter').style.width = pct(s.handedOrders, s.orders) + '%';
     $('k-handed-meter-label').setAttribute('aria-label', '受け渡し ' + pct(s.handedOrders, s.orders) + '%');
-    $('k-handed-sub').textContent = '渡し済み ' + s.handedCount + ' 枚・残り ' + (s.total - s.handedCount) + ' 枚';
+    $('k-handed-sub').textContent = unhanded ? 'まだ ' + unhanded + ' 家庭（' + (s.total - s.handedCount) + ' 枚）' : (s.orders ? 'すべての家庭に渡しました' : '');
+    $('k-handed-go').hidden = !unhanded;
+    $('k-handed-card').classList.toggle('is-complete', !!s.orders && !unhanded);
 
     $('f-all').textContent = String(s.orders);
-    $('f-unpaid').textContent = String(s.orders - s.paidOrders);
-    $('f-unhanded').textContent = String(s.orders - s.handedOrders);
+    $('f-unpaid').textContent = String(unpaid);
+    $('f-unhanded').textContent = String(unhanded);
     $('f-cancelled').textContent = String(s.cancelled);
   }
 
@@ -163,7 +170,7 @@
       if (view.f === 'unpaid' && x.paid) return false;
       if (view.f === 'unhanded' && x.handed) return false;
       if (!q) return true;
-      return norm(x.name).indexOf(q) >= 0 || norm(x.codename).indexOf(q) >= 0 || norm(x.memo).indexOf(q) >= 0 ||
+      return norm(x.name).indexOf(q) >= 0 || norm(x.courtname).indexOf(q) >= 0 || norm(x.memo).indexOf(q) >= 0 ||
         String(x.id) === q.replace(/^no\.?0*/, '') || norm(API.no(x.id)).indexOf(q) >= 0;
     });
     var by = {
@@ -181,6 +188,7 @@
   }
 
   var CHECK_SVG = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var WORDS = { paid: ['集金まだ', '集金済み', '集金'], handed: ['渡しまだ', '渡し済み', '受け渡し'] };
 
   function el(tag, cls, text) {
     var e = document.createElement(tag);
@@ -189,20 +197,24 @@
     return e;
   }
   function chip(cls, text) { return el('span', 'chip ' + cls, text); }
+  function btn(cls, text, act, id) {
+    var b = el('button', cls, text);
+    b.type = 'button'; b.dataset.act = act; b.dataset.id = String(id);
+    return b;
+  }
 
   function flag(x, key) {
     var on = !!x[key];
-    var label = el('label', 'flag' + (pending[x.id] ? ' is-busy' : ''));
+    var label = el('label', 'flag flag-' + key + (pending[x.id] ? ' is-busy' : ''));
     var input = document.createElement('input');
     input.type = 'checkbox'; input.checked = on; input.disabled = !!pending[x.id] || x.status === 'cancelled';
     input.dataset.id = String(x.id); input.dataset.key = key;
+    input.setAttribute('aria-label', x.name + ' さんの' + WORDS[key][2] + '（いま：' + (on ? WORDS[key][1] : WORDS[key][0]) + '）');
     var box = el('span', 'flag-box'); box.innerHTML = CHECK_SVG;
     var t = el('span', 'flag-text');
-    var words = key === 'paid' ? ['未集金', '集金済み'] : ['未渡し', '渡し済み'];
-    t.appendChild(el('b', null, on ? words[1] : words[0]));
+    t.appendChild(el('b', null, on ? WORDS[key][1] : WORDS[key][0]));
     var by = key === 'paid' ? x.paidBy : x.handedBy;
-    t.appendChild(el('small', null, on ? (by || '記録あり') : 'タップで記録'));
-    input.setAttribute('aria-label', (x.name || '') + ' ' + (key === 'paid' ? '集金' : '受け渡し'));
+    if (on && by) t.appendChild(el('small', null, by));
     label.appendChild(input); label.appendChild(box); label.appendChild(t);
     return label;
   }
@@ -211,50 +223,56 @@
     var s = stats();
     renderKpis(s);
     markStale();
-    var list = visible(), dup = dupNames(), end = API.deadlineEnd(), price = Number(CFG.price) || 0;
+    var list = visible(), dup = dupNames(), end = API.deadlineEnd();
     var ul = $('rows');
     ul.textContent = '';
     list.forEach(function (x) {
-      var li = el('li', 'row' + (x.status === 'cancelled' ? ' is-cancelled' : ''));
+      var cancelled = x.status === 'cancelled';
+      var li = el('li', 'row' + (cancelled ? ' is-cancelled' : ''));
       li.dataset.id = String(x.id);
 
-      li.appendChild(el('div', 'cell-no row-no', API.no(x.id)));
+      li.appendChild(el('div', 'cell-no', API.no(x.id)));
 
       var who = el('div', 'cell-who');
-      who.appendChild(el('p', 'row-no', API.no(x.id)));
-      who.appendChild(el('p', 'row-name', x.name));
-      if (x.codename) who.appendChild(el('p', 'row-code', x.codename));
-      var meta = el('p', 'row-meta');
-      meta.appendChild(el('span', null, API.longDate(x.createdAt) + ' 受付'));
-      if (x.source === 'admin') meta.appendChild(chip('chip-info', '役員が追加'));
-      if (new Date(x.updatedAt) - new Date(x.createdAt) > 60000) meta.appendChild(chip('chip-info', '変更 ' + API.shortDate(x.updatedAt)));
-      if (x.status !== 'cancelled' && dup[norm(x.name)]) meta.appendChild(chip('chip-warn', '同じお名前あり'));
-      if (end && new Date(x.createdAt) > end) meta.appendChild(chip('chip-warn', '締切後'));
-      if (x.status === 'cancelled') meta.appendChild(chip('chip-warn', '取り消し'));
-      if (/^見本 /.test(x.name) && API.demo) meta.appendChild(chip('chip-demo', '見本'));
-      who.appendChild(meta);
+      var top = el('p', 'row-top');
+      top.appendChild(el('span', 'row-no', API.no(x.id)));
+      top.appendChild(el('span', null, API.longDate(x.createdAt) + ' 受付'));
+      who.appendChild(top);
+      var name = el('p', 'row-name');
+      name.appendChild(el('span', null, x.name));
+      name.appendChild(el('small', null, 'さん'));
+      who.appendChild(name);
+      if (x.courtname) {
+        var court = el('p', 'row-court');
+        court.appendChild(el('span', 'row-court-label', COURT));
+        court.appendChild(el('b', null, x.courtname));
+        who.appendChild(court);
+      }
+      var chips = el('p', 'row-chips');
+      if (cancelled) chips.appendChild(chip('chip-danger', '取り消し済み'));
+      if (!cancelled && dup[norm(x.name)]) chips.appendChild(chip('chip-warn', '同じお名前が2件以上'));
+      if (end && new Date(x.createdAt) > end) chips.appendChild(chip('chip-warn', '締切後の申し込み'));
+      if (new Date(x.updatedAt) - new Date(x.createdAt) > 60000) chips.appendChild(chip('chip-info', API.shortDate(x.updatedAt) + ' に修正あり'));
+      if (x.source === 'admin') chips.appendChild(chip('chip-info', '役員が追加'));
+      if (API.demo && /^見本 /.test(x.name)) chips.appendChild(chip('chip-demo', '見本'));
+      if (chips.children.length) who.appendChild(chips);
       if (x.memo) who.appendChild(el('p', 'row-memo', x.memo));
       li.appendChild(who);
 
       var cnt = el('div', 'cell-count');
       cnt.appendChild(el('span', 'num', String(x.count)));
       cnt.appendChild(el('span', 'unit', '枚'));
-      if (price > 0) cnt.appendChild(el('small', null, API.yen(price * x.count)));
+      if (PRICE > 0) cnt.appendChild(el('small', null, API.yen(PRICE * x.count)));
       li.appendChild(cnt);
 
-      var flags = el('div', 'cell-flags');
-      flags.appendChild(flag(x, 'paid'));
-      flags.appendChild(flag(x, 'handed'));
-      li.appendChild(flags);
+      var paid = el('div', 'cell-paid'); paid.appendChild(flag(x, 'paid')); li.appendChild(paid);
+      var handed = el('div', 'cell-handed'); handed.appendChild(flag(x, 'handed')); li.appendChild(handed);
 
       var menu = el('div', 'cell-menu');
-      if (x.status === 'cancelled') {
-        var r = el('button', 'btn btn-ghost btn-sm', '元に戻す'); r.type = 'button'; r.dataset.act = 'restore'; r.dataset.id = String(x.id);
-        menu.appendChild(r);
-      } else {
-        var e1 = el('button', 'btn btn-ghost btn-sm', '直す'); e1.type = 'button'; e1.dataset.act = 'edit'; e1.dataset.id = String(x.id);
-        var e2 = el('button', 'btn btn-text btn-sm', '取り消す'); e2.type = 'button'; e2.dataset.act = 'cancel'; e2.dataset.id = String(x.id);
-        menu.appendChild(e1); menu.appendChild(e2);
+      if (cancelled) menu.appendChild(btn('btn btn-ghost btn-sm', '元に戻す', 'restore', x.id));
+      else {
+        menu.appendChild(btn('btn btn-ghost btn-sm', '修正', 'edit', x.id));
+        menu.appendChild(btn('btn btn-danger-ghost btn-sm', '取り消し', 'cancel', x.id));
       }
       li.appendChild(menu);
       ul.appendChild(li);
@@ -264,10 +282,43 @@
     if (!list.length) {
       empty.hidden = false;
       if (!items.length) { $('empty-title').textContent = 'まだ申し込みはありません'; $('empty-text').textContent = 'ご家庭が申し込みフォームから送ると、ここに届いた順に並びます。'; }
-      else { $('empty-title').textContent = '当てはまる申し込みはありません'; $('empty-text').textContent = 'さがす言葉やしぼりこみを変えてみてください。'; }
+      else if (view.f === 'unpaid' && !view.q) { $('empty-title').textContent = '集金がまだの家庭はありません'; $('empty-text').textContent = 'すべての家庭から集金しました。'; }
+      else if (view.f === 'unhanded' && !view.q) { $('empty-title').textContent = 'まだ渡していない家庭はありません'; $('empty-text').textContent = 'すべての家庭に渡しました。'; }
+      else if (view.f === 'cancelled' && !view.q) { $('empty-title').textContent = '取り消した申し込みはありません'; $('empty-text').textContent = ''; }
+      else { $('empty-title').textContent = '当てはまる申し込みはありません'; $('empty-text').textContent = 'さがす言葉を変えてみてください。'; }
     } else empty.hidden = true;
     var sumShown = list.reduce(function (a, x) { return a + x.count; }, 0);
-    $('result-count').textContent = list.length + ' 件・' + sumShown + ' 枚を表示中';
+    $('result-count').textContent = list.length + ' 家庭・' + sumShown + ' 枚';
+  }
+
+  function setFilter(f, scroll) {
+    view.f = f;
+    Array.prototype.forEach.call($('filters').querySelectorAll('button'), function (x) { x.setAttribute('aria-selected', String(x.dataset.f === f)); });
+    render();
+    if (scroll) $('list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ---------- 確認ダイアログ ---------- */
+  var askResolve = null;
+  function ask(o) {
+    $('ask-title').textContent = o.title;
+    var t = $('ask-target'); t.textContent = '';
+    if (o.item) {
+      t.appendChild(el('span', 'row-no', API.no(o.item.id)));
+      var n = el('b', null, o.item.name + ' さん'); t.appendChild(n);
+      t.appendChild(el('span', 'ask-count', o.item.count + ' 枚'));
+    }
+    $('ask-body').textContent = o.body;
+    $('ask-yes').textContent = o.ok;
+    $('ask').showModal();
+    $('ask-no').focus();   // うっかり Enter で実行されないよう、「やめる」に合わせておく
+    return new Promise(function (resolve) { askResolve = resolve; });
+  }
+  function closeAsk(yes) {
+    var r = askResolve;
+    askResolve = null;          // 先に外す（close で起きる close イベントが「やめる」扱いで上書きしないように）
+    if ($('ask').open) $('ask').close();
+    if (r) r(!!yes);
   }
 
   /* ---------- 保存 ---------- */
@@ -275,9 +326,10 @@
   function save(id, patch, opts) {
     var x = find(id); if (!x) return Promise.reject({ code: 'not_found' });
     var before = Object.assign({}, x);
+    var stamp = (auth.officer || '役員') + ' ' + API.shortDate(new Date().toISOString());
     // 先に画面に反映し、失敗したら戻す（体感を速くする）
-    if ('paid' in patch) { x.paid = patch.paid; x.paidBy = patch.paid ? (auth.officer || '役員') + ' ' + API.shortDate(new Date().toISOString()) : ''; }
-    if ('handed' in patch) { x.handed = patch.handed; x.handedBy = patch.handed ? (auth.officer || '役員') + ' ' + API.shortDate(new Date().toISOString()) : ''; }
+    if ('paid' in patch) { x.paid = patch.paid; x.paidBy = patch.paid ? stamp : ''; }
+    if ('handed' in patch) { x.handed = patch.handed; x.handedBy = patch.handed ? stamp : ''; }
     if ('status' in patch) x.status = patch.status;
     pending[id] = true;
     render();
@@ -300,11 +352,26 @@
   function onRowsChange(ev) {
     var t = ev.target;
     if (!t.matches('input[type="checkbox"][data-key]')) return;
-    var id = Number(t.dataset.id), key = t.dataset.key, patch = {};
-    patch[key] = t.checked;
-    var x = find(id);
-    var word = key === 'paid' ? (t.checked ? '集金済みにしました' : '未集金に戻しました') : (t.checked ? '渡し済みにしました' : '未渡しに戻しました');
-    save(id, patch, { toast: API.no(id) + ' ' + (x ? x.name : '') + '：' + word }).catch(function () {});
+    var id = Number(t.dataset.id), key = t.dataset.key, x = find(id);
+    if (!x) return;
+    var w = WORDS[key];
+    if (t.checked) {
+      save(id, (function () { var p = {}; p[key] = true; return p; })(), { toast: x.name + ' さん：' + w[1] + 'にしました' }).catch(function () {});
+      return;
+    }
+    // 記録を外すときは確認する（誰がいつ集金したかの記録が消えるため）
+    t.checked = true;
+    var by = key === 'paid' ? x.paidBy : x.handedBy;
+    ask({
+      title: w[2] + 'の記録を外しますか？',
+      item: x,
+      body: '「' + w[1] + (by ? '（' + by + '）' : '') + '」の記録を消して、「' + w[0] + '」に戻します。',
+      ok: '記録を外す'
+    }).then(function (yes) {
+      if (!yes) return;
+      var p = {}; p[key] = false;
+      save(id, p, { toast: x.name + ' さん：' + w[0] + 'に戻しました' }).catch(function () {});
+    });
   }
   function onRowsClick(ev) {
     var b = ev.target.closest('button[data-act]');
@@ -313,50 +380,61 @@
     if (!x) return;
     if (b.dataset.act === 'edit') openDialog(x);
     if (b.dataset.act === 'cancel') {
-      save(id, { status: 'cancelled' }, {
-        toast: API.no(id) + ' ' + x.name + ' を取り消しました',
-        undo: function () { save(id, { status: 'active' }, { toast: '元に戻しました' }).catch(function () {}); }
-      }).catch(function () {});
+      var note = [];
+      if (x.paid) note.push('集金済み');
+      if (x.handed) note.push('渡し済み');
+      ask({
+        title: 'この申し込みを取り消しますか？',
+        item: x,
+        body: '合計から ' + x.count + ' 枚が外れます。' + (note.length ? 'この家庭は「' + note.join('・') + '」です。返金や回収が必要かご確認ください。' : '') + '取り消した申し込みは「取り消し」から元に戻せます。',
+        ok: '取り消す'
+      }).then(function (yes) {
+        if (!yes) return;
+        save(id, { status: 'cancelled' }, {
+          toast: x.name + ' さんの申し込みを取り消しました',
+          undo: function () { save(id, { status: 'active' }, { toast: '元に戻しました' }).catch(function () {}); }
+        }).catch(function () {});
+      });
     }
-    if (b.dataset.act === 'restore') save(id, { status: 'active' }, { toast: API.no(id) + ' を元に戻しました' }).catch(function () {});
+    if (b.dataset.act === 'restore') save(id, { status: 'active' }, { toast: x.name + ' さんの申し込みを元に戻しました' }).catch(function () {});
   }
 
-  /* ---------- 直す・代わりに追加 ---------- */
+  /* ---------- 修正・代わりに追加 ---------- */
   function openDialog(x) {
     dlgTarget = x || null;
-    $('dlg-title').textContent = x ? API.no(x.id) + ' の内容を直す' : 'ご家庭の代わりに追加';
+    $('dlg-title').textContent = x ? API.no(x.id) + ' ' + x.name + ' さんの内容を修正' : 'ご家庭の代わりに追加';
     $('d-name').value = x ? x.name : '';
-    $('d-codename').value = x ? (x.codename || '') : '';
+    $('d-courtname').value = x ? (x.courtname || '') : '';
     $('d-count').value = x ? String(x.count) : '1';
     $('d-memo').value = x ? (x.memo || '') : '';
     $('dlg-save').textContent = x ? '保存する' : '追加する';
     $('dlg-error').hidden = true;
-    ['name', 'codename', 'count'].forEach(function (f) { $('dfield-' + f).classList.remove('has-error'); $('d-' + f + '-error').hidden = true; });
+    ['name', 'courtname', 'count'].forEach(function (f) { $('dfield-' + f).classList.remove('has-error'); $('d-' + f + '-error').hidden = true; });
     $('dlg').showModal();
     $('d-name').focus();
   }
   function onDialogSave(ev) {
     ev.preventDefault();
-    var v = API.validate({ name: $('d-name').value, codename: $('d-codename').value, count: $('d-count').value });
-    ['name', 'codename', 'count'].forEach(function (f) { $('dfield-' + f).classList.remove('has-error'); $('d-' + f + '-error').hidden = true; });
+    var v = API.validate({ name: $('d-name').value, courtname: $('d-courtname').value, count: $('d-count').value });
+    ['name', 'courtname', 'count'].forEach(function (f) { $('dfield-' + f).classList.remove('has-error'); $('d-' + f + '-error').hidden = true; });
     if (v.errors.length) {
       v.errors.forEach(function (e) { $('dfield-' + e.field).classList.add('has-error'); var p = $('d-' + e.field + '-error'); p.textContent = e.msg; p.hidden = false; });
       $('d-' + v.errors[0].field).focus();
       return;
     }
     var memo = $('d-memo').value.trim().slice(0, 200);
-    var btn = $('dlg-save');
-    btn.disabled = true;
+    var b = $('dlg-save');
+    b.disabled = true;
     var p;
     if (dlgTarget) {
       var id = dlgTarget.id;
       pending[id] = true;
-      p = API.call('admin_save', { pass: auth.pass, officer: auth.officer || '', id: id, patch: { name: v.value.name, codename: v.value.codename, count: v.value.count, memo: memo } })
-        .then(function (res) { delete pending[id]; Object.assign(find(id), res.item); return API.no(id) + ' を直しました'; },
+      p = API.call('admin_save', { pass: auth.pass, officer: auth.officer || '', id: id, patch: { name: v.value.name, courtname: v.value.courtname, count: v.value.count, memo: memo } })
+        .then(function (res) { delete pending[id]; Object.assign(find(id), res.item); return res.item.name + ' さんの内容を修正しました'; },
           function (err) { delete pending[id]; throw err; });
     } else {
-      p = API.call('admin_add', { pass: auth.pass, officer: auth.officer || '', name: v.value.name, codename: v.value.codename, count: v.value.count, memo: memo, requestId: API.uuid() })
-        .then(function (res) { items.push(res.item); return API.no(res.item.id) + ' ' + res.item.name + ' を追加しました'; });
+      p = API.call('admin_add', { pass: auth.pass, officer: auth.officer || '', name: v.value.name, courtname: v.value.courtname, count: v.value.count, memo: memo, requestId: API.uuid() })
+        .then(function (res) { items.push(res.item); return res.item.name + ' さんを追加しました（' + API.no(res.item.id) + '）'; });
     }
     p.then(function (msg) {
       $('dlg').close();
@@ -365,17 +443,17 @@
     }, function (err) {
       $('dlg-error').textContent = API.message(err);
       $('dlg-error').hidden = false;
-    }).then(function () { btn.disabled = false; });
+    }).then(function () { b.disabled = false; });
   }
 
   /* ---------- 書き出し・コピー ---------- */
   function rowsForExport() {
     return items.slice().sort(function (a, b) { return a.id - b.id; }).map(function (x) {
-      return [API.no(x.id), x.name, x.codename || '', x.count, x.status === 'cancelled' ? '取り消し' : '有効',
+      return [API.no(x.id), x.name, x.courtname || '', x.count, x.status === 'cancelled' ? '取り消し' : '有効',
         x.paid ? '済' : '', x.paidBy || '', x.handed ? '済' : '', x.handedBy || '', API.longDate(x.createdAt), x.memo || ''];
     });
   }
-  var HEAD = ['受付番号', 'お名前', CFG.codenameLabel || 'コードネーム', '枚数', '状態', '集金', '集金の記録', '受け渡し', '受け渡しの記録', '受付日時', '役員メモ'];
+  var HEAD = ['受付番号', 'お名前', COURT, '枚数', '状態', '集金', '集金の記録', '受け渡し', '受け渡しの記録', '受付日時', '役員メモ'];
   function safeCell(v) {   // 表計算ソフトで数式として動かないように（= + - @ で始まる文字）
     var s = String(v);
     return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
@@ -411,13 +489,13 @@
     copyText(text, '表をコピーしました（スプレッドシートに貼り付けられます）');
   }
   function copySummary() {
-    var s = stats(), price = Number(CFG.price) || 0, d = new Date();
+    var s = stats(), d = new Date();
     var lines = [
       '【' + (CFG.item || '記念タオル') + ' 申し込み集計】',
       (d.getMonth() + 1) + '/' + d.getDate() + '（' + '日月火水木金土'[d.getDay()] + '） ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2) + ' 時点',
-      '合計 ' + s.total + ' 枚（' + s.orders + ' 件）',
-      '集金 ' + s.paidOrders + ' / ' + s.orders + ' 件' + (price > 0 ? '（' + API.yen(price * s.paidCount) + ' / ' + API.yen(price * s.total) + '）' : ''),
-      '受け渡し ' + s.handedOrders + ' / ' + s.orders + ' 件'
+      '合計 ' + s.total + ' 枚（' + s.orders + ' 家庭）',
+      '集金 ' + s.paidOrders + ' / ' + s.orders + ' 家庭' + (PRICE > 0 ? '（' + API.yen(PRICE * s.paidCount) + ' / ' + API.yen(PRICE * s.total) + '）' : ''),
+      '受け渡し ' + s.handedOrders + ' / ' + s.orders + ' 家庭'
     ];
     var end = API.deadlineEnd();
     if (end && Date.now() < end.getTime()) lines.push('締切まで あと ' + Math.ceil((end - Date.now()) / 86400000) + ' 日');
@@ -434,15 +512,14 @@
     $('toast-btn').hidden = !undo;
     t.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove('show'); undoFn = null; }, undo ? 7000 : 3500);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); undoFn = null; }, undo ? 8000 : 3500);
   }
 
   /* ---------- はじめに ---------- */
   function init() {
     if (API.demo) { $('demo-bar').hidden = false; $('demo-hint').hidden = false; }
     $('team-line').textContent = (CFG.team ? CFG.team + '　' : '') + '役員用';
-    if (CFG.item) $('board').setAttribute('aria-label', CFG.item + ' の集計');
-    $('d-codename-label').textContent = CFG.codenameLabel || 'コードネーム';
+    $('d-courtname-label').textContent = COURT;
     if (CFG.sheetUrl) { $('sheet-link').href = CFG.sheetUrl; $('sheet-link').hidden = false; }
 
     $('gate-form').addEventListener('submit', onGate);
@@ -450,12 +527,9 @@
     $('logout').addEventListener('click', function () { clearAuth(); showGate(); });
     $('q').addEventListener('input', function () { view.q = $('q').value; render(); });
     $('sort').addEventListener('change', function () { view.sort = $('sort').value; render(); });
-    $('filters').addEventListener('click', function (ev) {
-      var b = ev.target.closest('button[data-f]'); if (!b) return;
-      view.f = b.dataset.f;
-      Array.prototype.forEach.call($('filters').querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', String(x === b)); });
-      render();
-    });
+    $('filters').addEventListener('click', function (ev) { var b = ev.target.closest('button[data-f]'); if (b) setFilter(b.dataset.f); });
+    $('k-paid-card').addEventListener('click', function () { setFilter('unpaid', true); });
+    $('k-handed-card').addEventListener('click', function () { setFilter('unhanded', true); });
     $('rows').addEventListener('change', onRowsChange);
     $('rows').addEventListener('click', onRowsClick);
     $('add').addEventListener('click', function () { openDialog(null); });
@@ -464,6 +538,10 @@
     $('copy-summary').addEventListener('click', copySummary);
     $('dlg-form').addEventListener('submit', onDialogSave);
     $('dlg-close').addEventListener('click', function () { $('dlg').close(); });
+    $('ask-yes').addEventListener('click', function () { closeAsk(true); });
+    $('ask-no').addEventListener('click', function () { closeAsk(false); });
+    $('ask').addEventListener('cancel', function () { closeAsk(false); });   // Esc キー
+    $('ask').addEventListener('close', function () { closeAsk(false); });
     $('toast-btn').addEventListener('click', function () { var f = undoFn; $('toast').classList.remove('show'); undoFn = null; if (f) f(); });
     document.addEventListener('visibilitychange', function () { if (!document.hidden && auth && Date.now() - lastLoaded > 20000) load(); });
 

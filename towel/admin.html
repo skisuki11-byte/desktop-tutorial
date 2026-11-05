@@ -60,10 +60,12 @@
   </section>
 
   <!-- 集計 -->
-  <section id="board" hidden aria-label="集計">
+  <section id="board" class="board" hidden aria-label="集計">
+
+    <!-- まず知りたい3つの数字 -->
     <div class="kpis">
       <div class="card kpi kpi-main">
-        <p class="kpi-label">申し込み合計</p>
+        <p class="kpi-label">申し込み合計<span>業者に発注する数</span></p>
         <p class="kpi-value"><span class="num" id="k-total">0</span><small>枚</small></p>
         <p class="kpi-sub" id="k-total-sub"></p>
         <div id="k-target" hidden>
@@ -71,76 +73,87 @@
           <p class="kpi-sub" id="k-target-sub"></p>
         </div>
         <div class="kpi-actions">
-          <button type="button" class="btn btn-ghost btn-sm" id="copy-summary">集計をコピー（LINE用）</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="copy-summary">集計をコピー（LINEに貼る用）</button>
         </div>
       </div>
-      <div class="card kpi">
-        <p class="kpi-label">集金</p>
-        <p class="kpi-value"><span class="num" id="k-paid">0</span><small id="k-paid-of">/ 0 件</small></p>
-        <div class="meter" role="img" id="k-paid-meter-label"><span id="k-paid-meter"></span></div>
-        <p class="kpi-sub" id="k-paid-sub"></p>
-      </div>
-      <div class="card kpi">
-        <p class="kpi-label">受け渡し</p>
-        <p class="kpi-value"><span class="num" id="k-handed">0</span><small id="k-handed-of">/ 0 件</small></p>
-        <div class="meter" role="img" id="k-handed-meter-label"><span id="k-handed-meter"></span></div>
-        <p class="kpi-sub" id="k-handed-sub"></p>
-      </div>
+      <button type="button" class="card kpi kpi-task" id="k-paid-card" data-goto="unpaid">
+        <span class="kpi-label">集金</span>
+        <span class="kpi-value"><span class="num" id="k-paid">0</span><small id="k-paid-of">/ 0 家庭</small></span>
+        <span class="meter" role="img" id="k-paid-meter-label"><span id="k-paid-meter"></span></span>
+        <span class="kpi-sub" id="k-paid-sub"></span>
+        <span class="kpi-go" id="k-paid-go">集金がまだの家庭を見る</span>
+      </button>
+      <button type="button" class="card kpi kpi-task" id="k-handed-card" data-goto="unhanded">
+        <span class="kpi-label">受け渡し</span>
+        <span class="kpi-value"><span class="num" id="k-handed">0</span><small id="k-handed-of">/ 0 家庭</small></span>
+        <span class="meter" role="img" id="k-handed-meter-label"><span id="k-handed-meter"></span></span>
+        <span class="kpi-sub" id="k-handed-sub"></span>
+        <span class="kpi-go" id="k-handed-go">まだ渡していない家庭を見る</span>
+      </button>
     </div>
 
-    <div class="card list-card">
+    <!-- 申し込み一覧 -->
+    <div class="card list-card" id="list">
+      <div class="list-head">
+        <h2 class="card-title">申し込み一覧</h2>
+        <button type="button" class="btn btn-dark btn-sm" id="add">＋ 代わりに追加</button>
+      </div>
       <div class="toolbar">
         <div class="search">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.4"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-          <input class="input" id="q" type="search" placeholder="名前・コードネーム・番号でさがす" aria-label="さがす" autocomplete="off">
+          <input class="input" id="q" type="search" placeholder="お名前・コートネーム・番号" aria-label="さがす" autocomplete="off">
         </div>
-        <div class="seg" role="group" aria-label="しぼりこみ" id="filters">
-          <button type="button" data-f="all" aria-pressed="true">すべて <span class="num" id="f-all"></span></button>
-          <button type="button" data-f="unpaid" aria-pressed="false">未集金 <span class="num" id="f-unpaid"></span></button>
-          <button type="button" data-f="unhanded" aria-pressed="false">未渡し <span class="num" id="f-unhanded"></span></button>
-          <button type="button" data-f="cancelled" aria-pressed="false">取り消し <span class="num" id="f-cancelled"></span></button>
+        <div class="tabs" role="tablist" aria-label="表示する申し込み" id="filters">
+          <button type="button" role="tab" data-f="all" aria-selected="true">すべて <span class="num" id="f-all"></span></button>
+          <button type="button" role="tab" data-f="unpaid" aria-selected="false">集金まだ <span class="num" id="f-unpaid"></span></button>
+          <button type="button" role="tab" data-f="unhanded" aria-selected="false">渡しまだ <span class="num" id="f-unhanded"></span></button>
+          <button type="button" role="tab" data-f="cancelled" aria-selected="false">取り消し <span class="num" id="f-cancelled"></span></button>
         </div>
-        <select class="select" id="sort" aria-label="並び順">
-          <option value="new">新しい順</option>
-          <option value="old">受付順</option>
-          <option value="name">名前順</option>
-          <option value="count">枚数の多い順</option>
-        </select>
-      </div>
-      <div class="toolbar-2">
-        <p class="result-count" id="result-count"></p>
-        <div class="group">
-          <button type="button" class="btn btn-ghost btn-sm" id="add">＋ 代わりに追加</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="copy-table">表をコピー</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="csv">CSVで保存</button>
-          <a class="btn btn-ghost btn-sm" id="sheet-link" href="#" target="_blank" rel="noopener" hidden>スプレッドシート</a>
+        <div class="toolbar-line">
+          <p class="result-count" id="result-count" aria-live="polite"></p>
+          <label class="sort"><span>並び順</span>
+            <select class="select" id="sort">
+              <option value="new">新しい順</option>
+              <option value="old">受付順</option>
+              <option value="name">お名前順</option>
+              <option value="count">枚数の多い順</option>
+            </select>
+          </label>
         </div>
       </div>
       <div class="row-head" aria-hidden="true">
-        <span>番号</span><span>お名前・コードネーム</span><span class="h-count">枚数</span><span>集金・受け渡し</span><span></span>
+        <span>番号</span><span>お名前・コートネーム</span><span class="h-count">枚数</span><span>集金</span><span>受け渡し</span><span></span>
       </div>
       <ul class="rows" id="rows"></ul>
       <div class="empty" id="empty" hidden>
         <b id="empty-title">まだ申し込みはありません</b>
         <p id="empty-text">ご家庭が申し込みフォームから送ると、ここに届いた順に並びます。</p>
       </div>
+      <div class="list-foot">
+        <p class="list-foot-label">書き出し</p>
+        <div class="group">
+          <button type="button" class="btn btn-ghost btn-sm" id="csv">CSVで保存</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="copy-table">表をコピー</button>
+          <a class="btn btn-ghost btn-sm" id="sheet-link" href="#" target="_blank" rel="noopener" hidden>スプレッドシートを開く</a>
+        </div>
+      </div>
     </div>
   </section>
 </main>
 
-<!-- 編集・追加 -->
+<!-- 修正・代わりに追加 -->
 <dialog id="dlg" aria-labelledby="dlg-title">
   <form class="dialog-body" id="dlg-form" method="dialog" novalidate>
-    <h2 class="card-title" id="dlg-title">内容を直す</h2>
+    <h2 class="card-title" id="dlg-title">内容を修正</h2>
     <div class="field" id="dfield-name">
       <label class="label" for="d-name">お名前 <span class="tag tag-req">必須</span></label>
       <p class="error" id="d-name-error" hidden></p>
       <input class="input" id="d-name" type="text" maxlength="40" autocomplete="off">
     </div>
-    <div class="field" id="dfield-codename">
-      <label class="label" for="d-codename"><span id="d-codename-label">コードネーム</span></label>
-      <p class="error" id="d-codename-error" hidden></p>
-      <input class="input" id="d-codename" type="text" maxlength="30" autocomplete="off">
+    <div class="field" id="dfield-courtname">
+      <label class="label" for="d-courtname"><span id="d-courtname-label">コートネーム</span></label>
+      <p class="error" id="d-courtname-error" hidden></p>
+      <input class="input" id="d-courtname" type="text" maxlength="30" autocomplete="off">
     </div>
     <div class="field" id="dfield-count">
       <label class="label" for="d-count">枚数 <span class="tag tag-req">必須</span></label>
@@ -158,6 +171,22 @@
       <button type="submit" class="btn btn-dark" id="dlg-save">保存する</button>
     </div>
   </form>
+</dialog>
+
+<!-- 取り消し・記録を外すときの確認 -->
+<dialog id="ask" class="ask" aria-labelledby="ask-title" aria-describedby="ask-body">
+  <div class="dialog-body">
+    <div class="ask-head">
+      <span class="ask-mark" aria-hidden="true">!</span>
+      <h2 class="card-title" id="ask-title">取り消しますか？</h2>
+    </div>
+    <div class="ask-target" id="ask-target"></div>
+    <p class="ask-body" id="ask-body"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="ask-no">やめる</button>
+      <button type="button" class="btn btn-danger" id="ask-yes">取り消す</button>
+    </div>
+  </div>
 </dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-text"></span><button type="button" id="toast-btn" hidden>元に戻す</button></div>

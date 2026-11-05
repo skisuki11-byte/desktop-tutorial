@@ -38,7 +38,7 @@
   }
 
   /* ---------- デモ：この端末の中だけ ---------- */
-  var DEMO_KEY = 'towel.demo.v1';
+  var DEMO_KEY = 'towel.demo.v2';
   var DEMO_PASS = 'demo';
   function demoLoad() {
     try { return JSON.parse(localStorage.getItem(DEMO_KEY)) || null; } catch (e) { return null; }
@@ -52,20 +52,20 @@
     // 集計画面を開いたときに「どう見えるか」がわかるよう、見本の申し込みを入れておく
     var now = Date.now(), H = 3600 * 1000;
     var seed = [
-      ['見本 山田 花子', '7番 はるき', 3, 50, true, '佐藤'],
-      ['見本 佐々木 誠', 'リベロ そうた', 2, 46, true, '佐藤'],
+      ['見本 山田 花子', 'ハル', 3, 50, true, '佐藤'],
+      ['見本 佐々木 誠', 'ソウタ', 2, 46, true, '佐藤'],
       ['見本 高橋 由美', '', 1, 30, false, ''],
-      ['見本 田中 健一', '主将 りく', 5, 26, true, '鈴木'],
-      ['見本 伊藤 さくら', '12番 ゆい', 2, 20, false, ''],
-      ['見本 渡辺 直子', 'マネージャー', 4, 9, false, ''],
-      ['見本 中村 大輔', '3番 けんと', 2, 3, false, '']
+      ['見本 田中 健一', 'リク', 5, 26, true, '鈴木'],
+      ['見本 伊藤 さくら', 'ユイ', 2, 20, false, ''],
+      ['見本 渡辺 直子', 'ナオ', 4, 9, false, ''],
+      ['見本 中村 大輔', 'ケント', 2, 3, false, '']
     ];
     db = { seq: 0, rows: [] };
     seed.forEach(function (s) {
       db.seq += 1;
       var t = new Date(now - s[3] * H).toISOString();
       db.rows.push({
-        id: db.seq, createdAt: t, updatedAt: t, name: s[0], codename: s[1], count: s[2],
+        id: db.seq, createdAt: t, updatedAt: t, name: s[0], courtname: s[1], count: s[2],
         status: 'active', paid: s[4], paidBy: s[4] ? s[5] + ' ' + shortDate(t) : '',
         handed: false, handedBy: '', memo: '', source: 'form', requestId: uuid(), token: uuid()
       });
@@ -74,7 +74,7 @@
     return db;
   }
   function pub(r) {
-    return { id: r.id, name: r.name, codename: r.codename, count: r.count, status: r.status,
+    return { id: r.id, name: r.name, courtname: r.courtname, count: r.count, status: r.status,
       createdAt: r.createdAt, updatedAt: r.updatedAt };
   }
   function demo(action, d) {
@@ -102,7 +102,7 @@
         }
         var v = clean(d);
         db.seq += 1;
-        var r = { id: db.seq, createdAt: now, updatedAt: now, name: v.name, codename: v.codename, count: v.count,
+        var r = { id: db.seq, createdAt: now, updatedAt: now, name: v.name, courtname: v.courtname, count: v.count,
           status: 'active', paid: false, paidBy: '', handed: false, handedBy: '', memo: '', source: 'form',
           requestId: d.requestId || uuid(), token: uuid() };
         db.rows.push(r); demoSave(db);
@@ -115,7 +115,7 @@
       }
       case 'update': {
         var r2 = own(d.id, d.token), v2 = clean(d);
-        r2.name = v2.name; r2.codename = v2.codename; r2.count = v2.count; r2.status = 'active'; r2.updatedAt = now;
+        r2.name = v2.name; r2.courtname = v2.courtname; r2.count = v2.count; r2.status = 'active'; r2.updatedAt = now;
         demoSave(db); return { ok: true, item: pub(r2) };
       }
       case 'cancel': {
@@ -132,9 +132,9 @@
         if ('handed' in p) { r4.handed = !!p.handed; r4.handedBy = r4.handed ? who : ''; }
         if ('status' in p) r4.status = p.status === 'cancelled' ? 'cancelled' : 'active';
         if ('memo' in p) r4.memo = String(p.memo || '').slice(0, 200);
-        if ('name' in p || 'count' in p || 'codename' in p) {
-          var v4 = clean({ name: p.name, codename: p.codename, count: p.count }, true);
-          r4.name = v4.name; r4.codename = v4.codename; r4.count = v4.count; r4.updatedAt = now;
+        if ('name' in p || 'count' in p || 'courtname' in p) {
+          var v4 = clean({ name: p.name, courtname: p.courtname, count: p.count }, true);
+          r4.name = v4.name; r4.courtname = v4.courtname; r4.count = v4.count; r4.updatedAt = now;
         }
         demoSave(db); return { ok: true, item: adminView(r4) };
       }
@@ -142,7 +142,7 @@
         admin();
         var v5 = clean(d);
         db.seq += 1;
-        var r5 = { id: db.seq, createdAt: now, updatedAt: now, name: v5.name, codename: v5.codename, count: v5.count,
+        var r5 = { id: db.seq, createdAt: now, updatedAt: now, name: v5.name, courtname: v5.courtname, count: v5.count,
           status: 'active', paid: false, paidBy: '', handed: false, handedBy: '', memo: String(d.memo || '').slice(0, 200),
           source: 'admin', requestId: d.requestId || uuid(), token: uuid() };
         db.rows.push(r5); demoSave(db); return { ok: true, item: adminView(r5) };
@@ -164,16 +164,16 @@
   }
   function validate(src) {
     var max = Number(CFG.maxPerOrder) || 20;
-    var name = squish(src.name), codename = squish(src.codename), count = toCount(src.count);
+    var name = squish(src.name), courtname = squish(src.courtname), count = toCount(src.count);
     var errors = [];
     if (!name) errors.push({ field: 'name', msg: 'お名前を入力してください' });
     else if (name.length > 40) errors.push({ field: 'name', msg: 'お名前は40文字以内で入力してください' });
-    if (CFG.codenameRequired && !codename) errors.push({ field: 'codename', msg: (CFG.codenameLabel || 'コードネーム') + 'を入力してください' });
-    else if (codename.length > 30) errors.push({ field: 'codename', msg: (CFG.codenameLabel || 'コードネーム') + 'は30文字以内で入力してください' });
+    if (CFG.courtnameRequired && !courtname) errors.push({ field: 'courtname', msg: (CFG.courtnameLabel || 'コートネーム') + 'を入力してください' });
+    else if (courtname.length > 30) errors.push({ field: 'courtname', msg: (CFG.courtnameLabel || 'コートネーム') + 'は30文字以内で入力してください' });
     if (isNaN(count)) errors.push({ field: 'count', msg: '枚数を数字で入力してください' });
     else if (count < 1) errors.push({ field: 'count', msg: '枚数は1枚以上にしてください' });
     else if (count > max) errors.push({ field: 'count', msg: '1回で申し込めるのは' + max + '枚までです。もっと必要なときは役員にご相談ください' });
-    return { errors: errors, value: { name: name, codename: codename, count: count } };
+    return { errors: errors, value: { name: name, courtname: courtname, count: count } };
   }
 
   /* ---------- 表示の道具 ---------- */

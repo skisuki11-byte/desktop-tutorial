@@ -1,9 +1,10 @@
 /* form.js — 各家庭が使う申し込み画面。
  *
  * 流れ：1 入力 →［確認する］→ 2 確認（お名前と枚数を大きく表示）→［申し込む］→ 3 完了
+ *   - 入力はスマホ1画面に収める（見出しを小さく、欄は3つ、ボタンまでスクロールなしで届く）
  *   - 確認でも完了でも［修正する］で入力に戻れる。完了の画面には［閉じる］も置く
  *   - 送った申し込みは、この端末に「受付番号と合鍵（token）」だけ覚えておき、
- *     次に開いたときに修正・取り消しができるようにする
+ *     次に開いたときは「申し込み済みです」から修正・取り消しができる（入力欄は出さず、二重の申し込みを防ぐ）
  *   - 通信が切れて同じ申し込みを2回送っても、1件にしかならない（requestId）
  */
 (function () {
@@ -11,12 +12,14 @@
   var API = window.TowelAPI, CFG = API.config;
   var $ = function (id) { return document.getElementById(id); };
   var MAX = Number(CFG.maxPerOrder) || 20;
-  var STORE_KEY = API.demo ? 'towel.mine.demo.v1' : 'towel.mine.v1';
+  var PRICE = Number(CFG.price) || 0;
+  var STORE_KEY = API.demo ? 'towel.mine.demo.v2' : 'towel.mine.v1';
+  var NEW_TITLE = '1家庭1回、まとめてお申し込みください';
 
   var state = {
     mode: 'new',          // 'new' | 'edit'
     editing: null,        // 修正中の申し込み { id, token, status }
-    draft: null,          // 確認画面に出している内容 { name, codename, count }
+    draft: null,          // 確認画面に出している内容 { name, courtname, count }
     last: null,           // 完了した申し込み
     sending: false,
     requestId: API.uuid() // 同じ申し込みの再送を1件にまとめるための番号（成功したら新しくする）
@@ -29,7 +32,7 @@
   function saveMine(list) {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(list.slice(-10))); } catch (e) { /* 保存できない端末でも申し込み自体はできる */ }
   }
-  function slim(it) { return { id: it.id, name: it.name, codename: it.codename, count: it.count, status: it.status, createdAt: it.createdAt, updatedAt: it.updatedAt }; }
+  function slim(it) { return { id: it.id, name: it.name, courtname: it.courtname, count: it.count, status: it.status, createdAt: it.createdAt, updatedAt: it.updatedAt }; }
   function upsertMine(item, token) {
     var list = loadMine(), found = null;
     list.forEach(function (x) { if (x.id === item.id) { found = x; Object.assign(x, slim(item)); if (token) x.token = token; } });
@@ -39,21 +42,26 @@
   }
   function mineById(id) { return loadMine().filter(function (m) { return m.id === id; })[0] || null; }
 
-  /* ---------- 画面の切り替え ---------- */
-  function show(step) {   // 'input' | 'confirm' | 'done' | 'finished' | 'closed'
-    var closed = step === 'closed';
+  /* ---------- 画面の切り替え ----------
+   * input    入力
+   * confirm  確認
+   * done     完了
+   * finished 完了のあと［閉じる］（閉じられないブラウザ用）
+   * home     この端末から申し込み済みで開いたとき
+   * closed   受付終了 */
+  function show(step) {
     $('form').hidden = step !== 'input';
     $('result').hidden = step !== 'confirm' && step !== 'done';
     $('finished').hidden = step !== 'finished';
-    $('closed').hidden = !closed;
-    $('info').hidden = !(step === 'input' || closed) || !$('info').children.length;
-    $('steps').hidden = step === 'finished' || closed;
+    $('closed').hidden = step !== 'closed';
+    $('info').hidden = !$('info').children.length || step === 'confirm' || step === 'done';
+    $('steps').hidden = !(step === 'input' || step === 'confirm' || step === 'done');
     Array.prototype.forEach.call($('steps').children, function (li) {
-      var on = li.dataset.step === step;
-      if (on) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
-      li.classList.toggle('is-past', (step === 'confirm' && li.dataset.step === 'input') || (step === 'done' && li.dataset.step !== 'done'));
+      var s = li.dataset.step;
+      if (s === step) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+      li.classList.toggle('is-past', (step === 'confirm' && s === 'input') || (step === 'done' && s !== 'done'));
     });
-    if (step === 'input' || step === 'finished' || closed) renderMine(step); else $('mine').hidden = true;
+    if (step === 'home' || step === 'finished' || step === 'closed') renderMine(step); else $('mine').hidden = true;
   }
   function goTop(el) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -63,53 +71,35 @@
   /* ---------- 設定を画面に反映 ---------- */
   function applyConfig() {
     if (API.demo) $('demo-bar').hidden = false;
-    var now = new Date();
-    $('towel-year').textContent = String(now.getMonth() >= 3 ? now.getFullYear() + 1 : now.getFullYear());
     $('team-line').textContent = (CFG.team ? CFG.team + '　' : '') + '春高バレー 出場記念';
     if (CFG.item) document.title = CFG.item + ' 申し込み';
 
-    var label = CFG.codenameLabel || 'コードネーム';
-    $('codename-label').textContent = label;
+    var label = CFG.courtnameLabel || 'コートネーム';
+    $('courtname-label').textContent = label;
     $('t-code-label').textContent = label;
-    if (CFG.codenameHint) $('codename-hint').textContent = CFG.codenameHint;
-    if (CFG.codenameRequired) { $('codename-tag').textContent = '必須'; $('codename-tag').className = 'tag tag-req'; }
-    $('count-hint').textContent = '1〜' + MAX + '枚。数字を直接入力することもできます';
+    if (CFG.courtnameHint) $('courtname-hint').textContent = CFG.courtnameHint;
+    if (CFG.courtnameRequired) { $('courtname-tag').textContent = '必須'; $('courtname-tag').className = 'tag tag-req'; }
 
-    // ご案内
-    var info = [];
-    if (CFG.price > 0) info.push(['1枚の値段', null, API.yen(CFG.price)]);
-    var end = API.deadlineEnd();
-    if (end) info.push(['締切', (end.getMonth() + 1) + '月' + end.getDate() + '日（' + '日月火水木金土'[end.getDay()] + '）まで']);
-    if (CFG.delivery) info.push(['受け取り', CFG.delivery]);
-    if (CFG.payment) info.push(['お支払い', CFG.payment]);
-    info.forEach(function (it) {
+    // 値段と締切は見出しの中に（申し込む前に必ず目に入る場所）
+    var meta = [], end = API.deadlineEnd();
+    if (PRICE > 0) meta.push('1枚 ' + API.yen(PRICE));
+    if (end) {
+      var days = Math.ceil((end.getTime() - Date.now()) / 86400000);
+      var dl = '締切 ' + (end.getMonth() + 1) + '/' + end.getDate() + '（' + '日月火水木金土'[end.getDay()] + '）';
+      if (days >= 0) dl += days === 0 ? ' 今日まで' : ' あと' + days + '日';
+      meta.push(dl);
+      if (days >= 0 && days <= 3) $('band-meta').classList.add('is-soon');
+    }
+    if (meta.length) { $('band-meta').textContent = meta.join('　'); $('band-meta').hidden = false; }
+
+    // 受け取り・支払いは、フォームの下のご案内に
+    [['受け取り', CFG.delivery], ['お支払い', CFG.payment]].forEach(function (it) {
+      if (!it[1]) return;
       var box = document.createElement('div'), dt = document.createElement('dt'), dd = document.createElement('dd');
-      dt.textContent = it[0];
-      if (it[2]) { var n = document.createElement('span'); n.className = 'num'; n.textContent = it[2]; dd.appendChild(n); }
-      else dd.textContent = it[1];
+      dt.textContent = it[0]; dd.textContent = it[1];
       box.appendChild(dt); box.appendChild(dd); $('info').appendChild(box);
     });
-    if (end) {
-      var days = Math.ceil((end.getTime() - Date.now()) / 86400000), el = $('deadline');
-      if (days >= 0) {
-        el.appendChild(document.createTextNode('締切まで あと'));
-        var b = document.createElement('b'); b.textContent = String(days); el.appendChild(b);
-        el.appendChild(document.createTextNode(days === 0 ? '日（今日まで）' : '日'));
-        if (days <= 3) el.classList.add('is-soon');
-        el.hidden = false;
-      }
-    }
     if (CFG.contact) { $('contact').textContent = 'お問い合わせ：' + CFG.contact; $('foot').hidden = false; }
-
-    // よく選ばれる枚数
-    [1, 2, 3, 5].filter(function (n) { return n <= MAX; }).forEach(function (n) {
-      var btn = document.createElement('button');
-      btn.type = 'button'; btn.className = 'quick-btn'; btn.dataset.n = String(n);
-      btn.textContent = n + '枚';
-      btn.setAttribute('aria-pressed', 'false');
-      btn.addEventListener('click', function () { setCount(n); });
-      $('quick').appendChild(btn);
-    });
   }
 
   /* ---------- 枚数 ---------- */
@@ -131,18 +121,14 @@
     $('minus').disabled = n <= 1;
     $('plus').disabled = n >= MAX;
     drawTowel(n);
-    Array.prototype.forEach.call(document.querySelectorAll('.quick-btn'), function (b) {
-      b.setAttribute('aria-pressed', String(Number(b.dataset.n) === n));
-    });
-    if (CFG.price > 0 && n) { $('count-yen').textContent = '合計 ' + API.yen(CFG.price * n); $('count-yen').hidden = false; }
-    else $('count-yen').hidden = true;
+    $('count-hint').textContent = '1〜' + MAX + '枚' + (PRICE > 0 && n ? '　合計 ' + API.yen(PRICE * n) : '');
     // 直したらその欄のエラー表示は消す（確認に進むときにもう一度確かめる）
-    ['name', 'codename', 'count'].forEach(function (f) {
+    ['name', 'courtname', 'count'].forEach(function (f) {
       if (!$('field-' + f).classList.contains('has-error')) return;
       if (!API.validate(readForm()).errors.some(function (e) { return e.field === f; })) clearError(f);
     });
   }
-  function readForm() { return { name: $('name').value, codename: $('codename').value, count: $('count').value }; }
+  function readForm() { return { name: $('name').value, courtname: $('courtname').value, count: $('count').value }; }
 
   /* ---------- エラー表示（欄の横＋まとめ） ---------- */
   function clearError(f) {
@@ -151,7 +137,7 @@
     $(f).removeAttribute('aria-invalid');
   }
   function showErrors(errors) {
-    ['name', 'codename', 'count'].forEach(clearError);
+    ['name', 'courtname', 'count'].forEach(clearError);
     var list = $('error-list');
     list.textContent = '';
     errors.forEach(function (e) {
@@ -163,17 +149,19 @@
       a.addEventListener('click', function (ev) { ev.preventDefault(); $(e.field).focus(); });
       li.appendChild(a); list.appendChild(li);
     });
-    $('error-summary').hidden = !errors.length;
-    if (errors.length) $('error-summary').focus();
+    // 欄が1つだけのまちがいは欄の横の表示で足りる。2つ以上のときだけ上にまとめる（1画面に収めるため）
+    $('error-summary').hidden = errors.length < 2;
+    if (errors.length >= 2) $('error-summary').focus();
+    else if (errors.length === 1) $(errors[0].field).focus();
   }
 
   /* ---------- 1 → 2：確認する ---------- */
   function fillTicket(it) {
     $('t-name').textContent = it.name;
-    $('t-code').textContent = it.codename || '';
-    $('t-code-row').hidden = !it.codename;
+    $('t-code').textContent = it.courtname || '';
+    $('t-code-row').hidden = !it.courtname;
     $('t-count').textContent = String(it.count);
-    if (CFG.price > 0) { $('t-yen').textContent = API.yen(CFG.price * it.count); $('t-yen-row').hidden = false; }
+    if (PRICE > 0) { $('t-yen').textContent = API.yen(PRICE * it.count); $('t-yen-row').hidden = false; }
     else $('t-yen-row').hidden = true;
     var t = $('ticket');
     t.classList.remove('is-new'); void t.offsetWidth; t.classList.add('is-new');
@@ -188,18 +176,18 @@
     state.draft = v.value;
     var edit = state.mode === 'edit';
     $('result-title').textContent = edit ? '修正した内容' : '申し込み内容';
-    $('result-sub').textContent = edit ? 'まだ保存されていません。よければ「保存する」を押してください' : 'まだ申し込みは終わっていません。よければ「申し込む」を押してください';
+    $('result-sub').textContent = edit ? 'まだ保存されていません' : 'まだ申し込みは終わっていません';
     $('result-sub').className = 'result-sub is-pending';
     $('mark-confirm').hidden = false; $('mark-done').hidden = true;
     fillTicket(v.value);
     $('t-foot').hidden = !edit;
-    if (edit) { $('t-no').textContent = API.no(state.editing.id); $('t-at').textContent = '修正前の内容を書きかえます'; }
+    if (edit) { $('t-no').textContent = API.no(state.editing.id); $('t-at').textContent = 'この番号の内容を書きかえます'; }
     $('confirm-actions').hidden = false;
     $('done-actions').hidden = true;
     $('done-new').hidden = true;
     $('send-error').hidden = true;
-    $('confirm-send').textContent = edit ? '保存する' : '申し込む';
-    $('result-note').textContent = '内容をお確かめください。直したいところがあれば「修正する」で入力に戻れます。';
+    setSending(false);
+    $('result-note').textContent = edit ? 'よければ「保存する」を押してください' : 'よければ「申し込む」を押してください';
     show('confirm');
     goTop($('result'));
   }
@@ -207,18 +195,18 @@
   /* ---------- 2 → 3：申し込む ---------- */
   function setSending(on) {
     state.sending = on;
-    var btn = $('confirm-send');
+    var btn = $('confirm-send'), edit = state.mode === 'edit';
     btn.disabled = on;
     $('confirm-back').disabled = on;
     btn.textContent = '';
     if (on) { var s = document.createElement('span'); s.className = 'spinner'; btn.appendChild(s); }
-    btn.appendChild(document.createTextNode(on ? (state.mode === 'edit' ? '保存しています…' : '送信しています…') : (state.mode === 'edit' ? '保存する' : '申し込む')));
+    btn.appendChild(document.createTextNode(on ? (edit ? '保存中…' : '送信中…') : (edit ? '保存する' : '申し込む')));
   }
 
   function send() {
     if (state.sending || !state.draft) return;
     $('send-error').hidden = true;
-    var body = { name: state.draft.name, codename: state.draft.codename, count: state.draft.count, website: $('website').value };
+    var body = { name: state.draft.name, courtname: state.draft.courtname, count: state.draft.count, website: $('website').value };
     var edit = state.mode === 'edit';
     setSending(true);
     var p = edit
@@ -246,12 +234,12 @@
     $('mark-confirm').hidden = true; $('mark-done').hidden = false;
     fillTicket(entry);
     $('t-no').textContent = API.no(entry.id);
-    $('t-at').textContent = API.longDate(edited ? entry.updatedAt : entry.createdAt) + (edited ? ' 修正' : ' 受付');
+    $('t-at').textContent = API.shortDate(edited ? entry.updatedAt : entry.createdAt) + (edited ? ' 修正' : ' 受付');
     $('t-foot').hidden = false;
     $('confirm-actions').hidden = true;
     $('done-actions').hidden = false;
     $('done-new').hidden = false;
-    $('result-note').textContent = 'この画面のスクリーンショットを撮っておくと安心です。あとから修正・取り消しをするときは、この端末でこのページを開いてください。';
+    $('result-note').textContent = 'スクリーンショットを撮っておくと安心です';
     show('done');
     goTop($('result'));
   }
@@ -266,7 +254,7 @@
   /* ---------- 入力に戻る（新規・修正） ---------- */
   function fillForm(it) {
     $('name').value = it ? it.name || '' : '';
-    $('codename').value = it ? it.codename || '' : '';
+    $('courtname').value = it ? it.courtname || '' : '';
     $('count').value = String(it ? it.count || 1 : 1);
     showErrors([]);
     onInput();
@@ -275,35 +263,39 @@
     state.mode = 'edit';
     state.editing = { id: entry.id, token: entry.token, status: entry.status };
     $('form-title').textContent = API.no(entry.id) + ' の内容を修正';
-    $('form-lead').textContent = '直したいところを書きかえて「確認する」を押してください。';
     $('cancel-edit').hidden = false;
     $('danger-zone').hidden = entry.status === 'cancelled';
     $('withdraw-confirm').hidden = true; $('withdraw').hidden = false; $('withdraw-error').hidden = true;
     $('form-note').textContent = entry.status === 'cancelled'
-      ? 'この申し込みは取り消し済みです。保存すると、もう一度申し込んだことになります。'
-      : 'まだ保存はされません。次の画面で内容を確かめてから保存します。';
+      ? '取り消し済みの申し込みです。保存すると、もう一度申し込んだことになります'
+      : 'まだ保存されません。次の画面で内容を確かめます';
     fillForm(entry);
     show('input');
     goTop();
-    $('name').focus({ preventScroll: true });
   }
   function backToInput() {      // 確認画面の［修正する］：入力した内容を残したまま戻る
     show('input');
     goTop();
-    $('name').focus({ preventScroll: true });
   }
   function startNew(focus) {
     state.mode = 'new';
     state.editing = null;
     state.draft = null;
-    $('form-title').textContent = '申し込み内容の入力';
-    $('form-lead').textContent = 'ご家庭ごとに1回、必要な枚数をまとめてお申し込みください。';
+    $('form-title').textContent = NEW_TITLE;
     $('cancel-edit').hidden = true;
     $('danger-zone').hidden = true;
-    $('form-note').textContent = 'まだ送信はされません。次の画面で内容を確かめてから申し込みます。';
+    $('form-note').textContent = 'まだ送信されません。次の画面で内容を確かめます';
     fillForm(null);
     show(API.isClosed() ? 'closed' : 'input');
     if (focus) { goTop(); $('name').focus({ preventScroll: true }); }
+  }
+  function home() {             // 申し込み済みの端末で開いたとき・修正をやめたとき
+    state.mode = 'new';
+    state.editing = null;
+    var hasMine = loadMine().length > 0;
+    if (API.isClosed()) show('closed');
+    else if (hasMine) show('home');
+    else startNew();
   }
 
   function withdraw() {
@@ -313,7 +305,7 @@
     API.call('cancel', { id: state.editing.id, token: state.editing.token }).then(function (res) {
       btn.disabled = false; btn.textContent = '取り消す';
       upsertMine(res.item);
-      startNew();
+      home();
       $('mine-lead').textContent = API.no(res.item.id) + ' を取り消しました。';
       goTop();
     }, function (err) {
@@ -327,15 +319,17 @@
   function renderMine(step) {
     var list = loadMine(), ul = $('mine-list');
     ul.textContent = '';
-    if (!list.length || state.mode === 'edit') { $('mine').hidden = true; return; }
+    if (!list.length) { $('mine').hidden = true; return; }
     var closed = API.isClosed();
+    var active = list.filter(function (x) { return x.status !== 'cancelled'; }).length;
+    $('mine-title').textContent = step === 'finished' ? 'この端末からの申し込み' : (active ? '申し込み済みです' : 'この端末からの申し込み');
     list.slice().reverse().forEach(function (x) {
       var li = document.createElement('li');
       li.className = 'mine-item' + (x.status === 'cancelled' ? ' is-cancelled' : '');
       var who = document.createElement('div'); who.className = 'mine-who';
       var b = document.createElement('b'); b.textContent = x.name + ' さん'; who.appendChild(b);
       var meta = document.createElement('p'); meta.className = 'mine-meta';
-      meta.textContent = API.no(x.id) + (x.codename ? '　' + x.codename : '') + (x.status === 'cancelled' ? '　取り消し済み' : '');
+      meta.textContent = API.no(x.id) + (x.courtname ? '　' + x.courtname : '') + (x.status === 'cancelled' ? '　取り消し済み' : '');
       who.appendChild(meta);
       var cnt = document.createElement('p'); cnt.className = 'mine-count';
       var n = document.createElement('span'); n.className = 'num'; n.textContent = String(x.count);
@@ -351,7 +345,7 @@
       ul.appendChild(li);
     });
     $('mine-lead').textContent = closed ? '受付は終了しました。修正は役員にご相談ください。' : '内容を直したいときは「修正・取り消し」を押してください。';
-    $('mine-new').hidden = step !== 'finished' || closed;
+    $('mine-new').hidden = closed;
     $('mine').hidden = false;
   }
   function refreshMine() {   // 役員が直した分も反映するため、開いたときに最新の内容を取り直す
@@ -359,7 +353,7 @@
     if (!list.length) return;
     API.call('mine', { items: list.map(function (x) { return { id: x.id, token: x.token }; }) }).then(function (res) {
       (res.items || []).forEach(function (it) { upsertMine(it); });
-      if (!$('mine').hidden) renderMine($('finished').hidden ? 'input' : 'finished');
+      if (!$('mine').hidden) renderMine($('finished').hidden ? 'home' : 'finished');
     }, function () { /* 取り直せなくても、覚えている内容で表示を続ける */ });
   }
 
@@ -367,12 +361,12 @@
   function init() {
     applyConfig();
     $('form').addEventListener('submit', toConfirm);
-    ['name', 'codename', 'count'].forEach(function (id) { $(id).addEventListener('input', onInput); });
+    ['name', 'courtname', 'count'].forEach(function (id) { $(id).addEventListener('input', onInput); });
     $('count').addEventListener('blur', function () { var n = currentCount(); if (n) setCount(n); });
     $('count').addEventListener('focus', function () { $('count').select(); });
     $('minus').addEventListener('click', function () { setCount((currentCount() || 1) - 1); });
     $('plus').addEventListener('click', function () { setCount((currentCount() || 0) + 1); });
-    $('cancel-edit').addEventListener('click', function () { startNew(true); });
+    $('cancel-edit').addEventListener('click', function () { home(); goTop(); });
     $('withdraw').addEventListener('click', function () { $('withdraw-confirm').hidden = false; $('withdraw').hidden = true; $('withdraw-yes').focus(); });
     $('withdraw-no').addEventListener('click', function () { $('withdraw-confirm').hidden = true; $('withdraw').hidden = false; $('withdraw').focus(); });
     $('withdraw-yes').addEventListener('click', withdraw);
@@ -388,7 +382,8 @@
     var warmed = false;
     $('form').addEventListener('focusin', function () { if (!warmed) { warmed = true; API.call('ping').catch(function () {}); } });
 
-    startNew();
+    fillForm(null);
+    home();
     refreshMine();
   }
   init();

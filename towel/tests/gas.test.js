@@ -50,15 +50,15 @@ const call = (e, d) => JSON.parse(e.ctx.doPost({ postData: { contents: typeof d 
 
 let e = env('hinata2027'), r, a, b;
 
-r = call(e, { action: 'submit', name: '山田 花子', codename: '7番', count: 3, requestId: 'q1' });
+r = call(e, { action: 'submit', name: '山田 花子', courtname: '7番', count: 3, requestId: 'q1' });
 assert.ok(r.ok && r.item.id === 1 && r.item.count === 3 && r.token); a = r;
 console.log('ok 申し込むと受付番号1と合鍵が返る');
 
-r = call(e, { action: 'submit', name: '山田 花子', codename: '7番', count: 3, requestId: 'q1' });
+r = call(e, { action: 'submit', name: '山田 花子', courtname: '7番', count: 3, requestId: 'q1' });
 assert.strictEqual(r.item.id, 1); assert.strictEqual(e.cells.length - 1, 1);
 console.log('ok 同じ requestId の再送は1件にまとまる（通信が切れて押し直しても二重にならない）');
 
-r = call(e, { action: 'submit', name: '　佐藤\t太郎  ', codename: '', count: '２', requestId: 'q2' });
+r = call(e, { action: 'submit', name: '　佐藤\t太郎  ', courtname: '', count: '２', requestId: 'q2' });
 assert.strictEqual(r.item.name, '佐藤 太郎'); assert.strictEqual(r.item.count, 2); b = r;
 console.log('ok 前後の空白・タブを整え、全角数字も受け付ける');
 
@@ -72,8 +72,8 @@ r = call(e, { action: 'submit', name: 'bot', count: 1, website: 'http://spam' })
 assert.ok(r.ok); assert.strictEqual(e.cells.length, before);
 console.log('ok 見えない欄に入力（ボット）は貯めない');
 
-r = call(e, { action: 'update', id: a.item.id, token: a.token, name: '山田 花子', codename: '7番 はるき', count: 4 });
-assert.ok(r.ok && r.item.count === 4 && r.item.codename === '7番 はるき');
+r = call(e, { action: 'update', id: a.item.id, token: a.token, name: '山田 花子', courtname: '7番 はるき', count: 4 });
+assert.ok(r.ok && r.item.count === 4 && r.item.courtname === '7番 はるき');
 console.log('ok 合鍵があれば自分の申し込みを変更できる');
 
 r = call(e, { action: 'update', id: a.item.id, token: b.token, name: '乗っ取り', count: 1 });
@@ -104,11 +104,11 @@ r = call(e, { action: 'admin_save', pass: 'hinata2027', id: 2, patch: { status: 
 assert.strictEqual(r.item.status, 'active');
 console.log('ok 役員の取り消しは「元に戻す」で取り返せる');
 
-r = call(e, { action: 'admin_add', pass: 'hinata2027', officer: '佐藤', name: '高橋 由美', codename: '', count: 2, memo: 'LINEで受付', requestId: 'a1' });
+r = call(e, { action: 'admin_add', pass: 'hinata2027', officer: '佐藤', name: '高橋 由美', courtname: '', count: 2, memo: 'LINEで受付', requestId: 'a1' });
 assert.ok(r.item.id === 3 && r.item.source === 'admin' && r.item.memo === 'LINEで受付');
 console.log('ok 役員がご家庭の代わりに追加できる（経路が残る）');
 
-r = call(e, { action: 'submit', name: '=HYPERLINK("http://evil","x")', codename: '+1', count: 1, requestId: 'f1' });
+r = call(e, { action: 'submit', name: '=HYPERLINK("http://evil","x")', courtname: '+1', count: 1, requestId: 'f1' });
 call(e, { action: 'admin_save', pass: 'hinata2027', id: r.item.id, patch: { handed: true } });
 call(e, { action: 'admin_save', pass: 'hinata2027', id: r.item.id, patch: { memo: '@memo' } });
 assert.deepStrictEqual(e.formulas, []);
