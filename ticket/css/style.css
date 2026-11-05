@@ -982,3 +982,23 @@ dialog .grid { margin-top: 6px; }
 .fam tr.is-focus th:first-child { padding-left: 6px; }
 .breakdown tr.bd-day { cursor: pointer; }
 .breakdown tr.bd-day:hover th, .breakdown tr.bd-day:hover td { background: var(--ball-soft); }
+
+/* 管理画面：日付ごとの金額（上の内訳表）と、日付を選んだときの集計 */
+.breakdown .yen-col { font-size: 17px; color: var(--ink-2); }
+.breakdown tfoot .yen-col { color: var(--navy); }
+.breakdown td.yen-col.is-zero { color: var(--line-strong); }
+@media (max-width: 420px) { .breakdown th, .breakdown td { padding: 8px 6px; } .breakdown td { font-size: 20px; } .breakdown .yen-col { font-size: 15px; } }
+.day-summary { border-radius: var(--r-m); background: var(--ball-soft); border: 1.5px solid var(--ball); padding: 10px 12px 12px; }
+@media (min-width: 900px) { .day-summary { grid-column: 1 / -1; } }
+.ds-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.ds-head b { font-size: 17px; color: var(--navy); }
+.ds-head span { font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.ds-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.ds-cell { display: grid; gap: 2px; padding: 6px 8px; border-radius: 8px; background: var(--surface); }
+.ds-label { font-size: 12px; font-weight: 700; color: var(--ink-3); white-space: nowrap; }
+.ds-value { font-size: 24px; font-weight: 700; line-height: 1.1; color: var(--ink); white-space: nowrap; }
+.ds-value small { font-size: 13px; margin-left: 2px; color: var(--ink-2); }
+.ds-total .ds-value { color: var(--navy); }
+.ds-yen { grid-column: span 3; display: flex; align-items: baseline; justify-content: space-between; }
+.ds-yen .ds-value { font-size: 26px; color: var(--navy); }
+@media (min-width: 900px) { .ds-grid { grid-template-columns: repeat(3, 1fr) 1.4fr; } .ds-yen { grid-column: auto; display: grid; } }
