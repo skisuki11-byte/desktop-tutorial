@@ -49,6 +49,9 @@ function clearAuth() {
     var e = $('gate-error');
     if (msg) { e.textContent = msg; e.hidden = false; } else e.hidden = true;
     try { $('officer').value = localStorage.getItem(OFFICER_KEY) || ''; } catch (err) { /* なにもしない */ }
+    if (!$('officer').value && !API.demo) {   // 端末の保存が消えていたら、クッキーに残した名前で埋める
+      API.call('officer').then(function (res) { if (res.officer && !$('officer').value) $('officer').value = res.officer; }, function () {});
+    }
     $('pass').value = '';
     $('pass').focus();
   }
@@ -63,7 +66,8 @@ function clearAuth() {
     btn.disabled = true; btn.textContent = '確かめています…';
     var a = { pass: pass, officer: officerName };
     // 合言葉の確認と一覧の読み込みを、1回の問い合わせでまとめて行う（admin_list は合言葉が違えば wrong_pass を返す）
-    API.call('admin_list', { pass: a.pass }).then(function (res) {
+    // 「次からお名前の入力を省く」：名前だけを集計先がクッキー（60日）にも残す（この端末の保存が消えても残る）
+    API.call('admin_list', { pass: a.pass, remember: $('remember').checked ? officerName : '' }).then(function (res) {
       writeAuth(a, $('remember').checked);
       enter(a, res);
     }, function (err) {

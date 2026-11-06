@@ -101,7 +101,7 @@ function tokyo(dt, withYear) {   // 日本時間で 'M/d H:mm'（withYear なら
   new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit', hourCycle: 'h23' })
     .formatToParts(dt).forEach((x) => { p[x.type] = x.value; });
   if (withYear) return p.year + '/' + ('0' + p.month).slice(-2) + '/' + ('0' + p.day).slice(-2) + ' ' + ('0' + p.hour).slice(-2) + ':' + p.minute;
-  return p.month + '/' + p.day + ' ' + p.hour + ':' + p.minute;
+  return Number(p.month) + '/' + Number(p.day) + ' ' + Number(p.hour) + ':' + p.minute;
 }
 function fail(code) { const e = new Error(code); e.code = code; e.app = true; return e; }   // 画面に返すエラー（invalid・closed など）
 

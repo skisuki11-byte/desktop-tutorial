@@ -2,6 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "outputDirectory": "public",
+  "regions": ["hnd1"],
   "functions": {
     "api/ticket.js": { "includeFiles": "public/js/config.js", "maxDuration": 15 }
   },

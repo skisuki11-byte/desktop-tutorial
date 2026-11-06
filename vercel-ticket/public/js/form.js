@@ -462,16 +462,19 @@
     $('mine-new').hidden = true; // 1家庭1申し込み
     $('mine').hidden = false;
   }
-  function refreshMine() { // 役員が直した分も反映するため、開いたときに最新の内容を取り直す
+  /* 開いたときに集計先へ1回問い合わせる：役員が直した分も反映し、最新の締め切り日も受け取る。
+     この端末の保存領域が消えていても、集計先がクッキーの合札（60日）から申し込みを見つけて返すので、ここで覚え直す
+     （LINE の中のブラウザで、しばらく開かずに保存が消えても「申し込み済み」が出る） */
+  function refreshMine() {
   var list = loadMine();
-  if (!list.length) return;
   API.call('mine', { items: list.map(function (x) { return { id: x.id, token: x.token }; }) }).then(function (res) {
     var got = {};
-    (res.items || []).forEach(function (it) { got[it.id] = true; upsertMine(it); });
-    // シートから消された申し込み（テストなど）は、この端末の記録からも外す
+    (res.items || []).forEach(function (it) { got[it.id] = true; upsertMine(it, it.token); });
+    // 集計先から消された申し込み（テストなど）は、この端末の記録からも外す
     var kept = loadMine().filter(function (x) { return got[x.id]; });
     saveMine(kept);
     if (!kept.length) { if (state.step === 'saved' || state.step === 'home' || state.step === 'finished') startNew(); return; }
+    if (!list.length && state.step === 'input' && state.mode === 'new' && !$('name').value) { home(); return; }   // クッキーから戻せた
     if (state.step === 'saved') showSaved(state.thanks);
     else if (!$('mine').hidden) renderMine($('finished').hidden ? 'home' : 'finished');
   }, function () { /* 取り直せなくても、覚えている内容で表示を続ける */ });
@@ -497,9 +500,6 @@
     $('mine-new').addEventListener('click', function () { startNew(true); });
 
     API.onDeadline(onDeadlineChange);
-    // 開いたらすぐ集計先に1回だけ問い合わせる：最新の締め切り日を受け取り、ついでに GAS を起こしておく（起動に数秒かかることがある）
-    // （申し込み済みの端末は、開いたときの「最新の内容の取り直し」で同じことが起きるので送らない）
-    if (!loadMine().length) API.call('ping').catch(function () {});
 
     fillForm(null);
     home();
