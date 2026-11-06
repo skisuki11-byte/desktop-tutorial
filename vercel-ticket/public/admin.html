@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>春高チケット 集計</title>
+<meta name="description" content="春高バレー 応援チケット 役員用の集計画面">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ffffff'/%3E%3Crect x='6' y='18' width='52' height='28' rx='4' fill='%23ffc52e'/%3E%3Ccircle cx='6' cy='32' r='5' fill='%23ffffff'/%3E%3Ccircle cx='58' cy='32' r='5' fill='%23ffffff'/%3E%3Cpath d='M44 21v22' stroke='%2312235a' stroke-width='2' stroke-dasharray='3 3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<!-- 見出しの太字は、使う文字だけを読み込む（日本語フォント全体を落とさない） -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap&text=%E3%82%B1%E3%83%81%E3%83%83%E3%83%88%E6%98%A5%E8%A8%88%E9%9B%86%E9%AB%98">
+<link rel="stylesheet" href="css/style.css?v=20261106d">
+</head>
+<body class="page-admin">
+
+<div class="demo-bar" id="demo-bar" hidden>
+  <div class="wrap"><b>デモ表示</b>：見本の申し込みを表示しています（この端末の中だけ）</div>
+</div>
+
+<!-- 見出し：役員用は紺地（白い保護者用ページと取りちがえない） -->
+<header class="hero hero-admin">
+  <div class="hero-net" aria-hidden="true"></div>
+  <div class="hero-stripe" aria-hidden="true"></div>
+  <div class="hero-inner wrap admin-hero">
+    <div>
+      <p class="admin-kicker"><span class="only-badge">役員専用</span><span id="team-line">土浦日大 女子バレーボール部</span></p>
+      <div class="hero-title">
+        <h1 class="hero-haruko">春高<span class="visually-hidden">チケット集計</span></h1>
+        <svg class="hero-ball" aria-hidden="true" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="#FFC52E" stroke="#FFFFFF" stroke-width="3"/><path d="M24 2.5c-7 8-7 18 0 21.5M24 24c9.5 3 17.5-.5 21.5-7M24 24c-3.5 9.5-.5 17 6.5 21.5" fill="none" stroke="#12235A" stroke-width="3" stroke-linecap="round"/></svg>
+        <p class="hero-sub" aria-hidden="true">チケット集計</p>
+      </div>
+    </div>
+    <div class="admin-hero-side">
+      <!-- いちばんよく使う書き出し（集計表 PDF）は、ログイン後に見出しの右上へ -->
+      <button type="button" class="btn hero-pdf" id="pdf" hidden>
+        <span class="hero-pdf-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>
+        <span class="hero-pdf-text"><b id="pdf-label">PDF集計表</b><small>A4縦・保存／LINEで送る</small></span>
+        <span class="hero-pdf-go" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </button>
+      <div class="band-tools" id="band-tools" hidden>
+        <span class="updated" id="updated">読み込み中…</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="refresh">最新にする</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="logout">ログアウト</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap main" id="main">
+
+  <!-- 合言葉 -->
+  <section class="card gate" id="gate" aria-labelledby="gate-title">
+    <form class="form" id="gate-form" novalidate>
+      <div class="form-head">
+        <h2 class="card-title" id="gate-title">役員の合言葉を入力</h2>
+        <p class="lead">申し込んだご家庭のお名前が並ぶため、役員だけが見られるようにしています。</p>
+      </div>
+      <p class="demo-hint" id="demo-hint" hidden>デモ表示の合言葉は <b>demo</b> です</p>
+      <div class="field">
+        <label class="label" for="pass">合言葉</label>
+        <p class="hint" id="pass-hint">ひらがな・カタカナ、大文字・小文字、全角・半角のちがいは気にしなくて大丈夫です</p>
+        <input class="input" id="pass" type="text" lang="ja" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-describedby="pass-hint">
+      </div>
+      <div class="field">
+        <label class="label" for="officer">あなたのお名前 <span class="tag tag-req">必須</span></label>
+        <p class="hint" id="officer-hint">集金・受け渡しの記録に「誰がつけたか」として残ります（例：佐藤）</p>
+        <input class="input" id="officer" type="text" autocomplete="nickname" maxlength="12" aria-describedby="officer-hint">
+      </div>
+      <label class="check"><input type="checkbox" id="remember" checked> この端末では次からお名前の入力を省く（おすすめ）</label>
+      <p class="hint">チェックしたままにすると、次からお名前は入った状態で開きます。合言葉は毎回入力します</p>
+      <p class="send-error" id="gate-error" role="alert" hidden></p>
+      <button type="submit" class="btn btn-dark btn-block" id="gate-submit">集計を見る</button>
+    </form>
+  </section>
+
+  <!-- 集計 -->
+  <section id="board" class="board" hidden aria-label="集計">
+
+    <!-- 役員の仕事の順：1. 購入する枚数（日付×区分）→ 2. 集金 → 3. 受け渡し -->
+    <div class="kpis">
+      <div class="card kpi kpi-main">
+        <div class="kpi-main-top">
+          <div>
+            <p class="kpi-label"><b class="kpi-no num">01</b>購入する枚数<span>日付ごと・部員の分はのぞく</span></p>
+            <p class="kpi-value"><span class="num" id="k-total">0</span><small>枚</small></p>
+            <p class="kpi-sub" id="k-total-sub"></p>
+          </div>
+          <div class="kpi-amount">
+            <p class="kpi-label">金額の合計</p>
+            <p class="num" id="k-amount">¥0</p>
+          </div>
+        </div>
+        <div class="breakdown-wrap">
+          <table class="breakdown" id="breakdown">
+            <thead><tr id="bd-head"></tr></thead>
+            <tbody id="bd-body"></tbody>
+            <tfoot><tr id="bd-foot"></tr></tfoot>
+          </table>
+        </div>
+        <!-- 学年別（行を押すとその学年の家庭だけを一覧で見る） -->
+        <div class="breakdown-wrap grade-wrap">
+          <p class="bd-caption">学年別</p>
+          <table class="breakdown grade-table" id="grade-table">
+            <thead><tr id="gd-head"></tr></thead>
+            <tbody id="gd-body"></tbody>
+          </table>
+        </div>
+        <div class="kpi-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="copy-summary">集計をコピー（LINEに貼る用）</button>
+        </div>
+      </div>
+      <button type="button" class="card kpi kpi-task" id="k-paid-card" data-goto="unpaid">
+        <span class="kpi-label"><b class="kpi-no num">02</b>集金</span>
+        <span class="kpi-value"><span class="num" id="k-paid">0</span><small id="k-paid-of">/ 0 家庭</small></span>
+        <span class="meter" role="img" id="k-paid-meter-label"><span id="k-paid-meter"></span></span>
+        <span class="kpi-sub" id="k-paid-sub"></span>
+        <span class="kpi-go" id="k-paid-go">集金がまだの家庭を見る</span>
+      </button>
+      <button type="button" class="card kpi kpi-task" id="k-handed-card" data-goto="unhanded">
+        <span class="kpi-label"><b class="kpi-no num">03</b>チケットの受け渡し</span>
+        <span class="kpi-value"><span class="num" id="k-handed">0</span><small id="k-handed-of">/ 0 家庭</small></span>
+        <span class="meter" role="img" id="k-handed-meter-label"><span id="k-handed-meter"></span></span>
+        <span class="kpi-sub" id="k-handed-sub"></span>
+        <span class="kpi-go" id="k-handed-go">まだ渡していない家庭を見る</span>
+      </button>
+    </div>
+
+    <!-- 申し込みの締め切り（ここで決めた日は、申し込み画面の見出しにも出る。過ぎるとご家庭は申し込み・修正できなくなる） -->
+    <div class="card deadline-card" id="deadline-card">
+      <div class="dl-row">
+        <div class="dl-now">
+          <p class="kpi-label">申し込みの締め切り</p>
+          <p class="dl-value" id="dl-value">設定していません</p>
+          <p class="dl-sub" id="dl-sub"></p>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="dl-edit">締め切りを決める</button>
+      </div>
+      <form class="dl-form" id="dl-form" hidden novalidate>
+        <label class="label" for="dl-date">締め切り日 <small class="dl-hint">その日の 23:59 まで受け付けます</small></label>
+        <input class="input dl-date" type="date" id="dl-date" min="2020-01-01" max="2100-12-31">
+        <p class="send-error" id="dl-error" role="alert" hidden></p>
+        <div class="dl-actions">
+          <button type="button" class="btn-text-danger" id="dl-clear">締め切りをなくす</button>
+          <button type="button" class="btn btn-ghost" id="dl-cancel">やめる</button>
+          <button type="submit" class="btn btn-dark" id="dl-save">保存する</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 申し込み一覧 -->
+    <div class="card list-card" id="list">
+      <div class="list-head">
+        <h2 class="card-title">申し込み一覧</h2>
+        <button type="button" class="btn btn-dark btn-sm" id="add">＋ 代わりに追加</button>
+      </div>
+      <div class="toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.4"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          <input class="input" id="q" type="search" placeholder="お名前・コートネーム・番号" aria-label="さがす" autocomplete="off">
+        </div>
+        <div class="tabs" role="tablist" aria-label="表示する申し込み" id="filters">
+          <button type="button" role="tab" data-f="all" aria-selected="true">すべて <span class="num" id="f-all"></span></button>
+          <button type="button" role="tab" data-f="unpaid" aria-selected="false">集金まだ <span class="num" id="f-unpaid"></span></button>
+          <button type="button" role="tab" data-f="unhanded" aria-selected="false">渡しまだ <span class="num" id="f-unhanded"></span></button>
+          <button type="button" role="tab" data-f="cancelled" aria-selected="false">取り消し <span class="num" id="f-cancelled"></span></button>
+        </div>
+        <div class="toolbar-line">
+          <p class="result-count" id="result-count" aria-live="polite"></p>
+          <label class="sort"><span>並び順</span>
+            <select class="select" id="sort">
+              <option value="new">新しい順</option>
+              <option value="old">受付順</option>
+              <option value="name">お名前順</option>
+              <option value="count">枚数の多い順</option>
+              <option value="grade">学年順</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="row-head" aria-hidden="true">
+        <span>番号</span><span>お名前・枚数の内訳</span><span class="h-count">枚数・金額</span><span>集金</span><span>受け渡し</span><span></span>
+      </div>
+      <ul class="rows" id="rows"></ul>
+      <div class="empty" id="empty" hidden>
+        <b id="empty-title">まだ申し込みはありません</b>
+        <p id="empty-text">ご家庭が申し込みフォームから送ると、ここに届いた順に並びます。</p>
+      </div>
+      <div class="list-foot">
+        <p class="list-foot-label">書き出し</p>
+        <div class="group">
+          <button type="button" class="btn btn-ghost btn-sm" id="csv">CSVで保存</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="copy-table">表をコピー</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 修正・代わりに追加 -->
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <form class="dialog-body" id="dlg-form" method="dialog" novalidate>
+    <h2 class="card-title" id="dlg-title">内容を修正</h2>
+    <div class="field" id="dfield-name">
+      <label class="label" for="d-name">お名前 <span class="tag tag-req">必須</span></label>
+      <p class="error" id="d-name-error" hidden></p>
+      <input class="input" id="d-name" type="text" maxlength="40" autocomplete="off">
+    </div>
+    <div class="field" id="dfield-courtname">
+      <label class="label" for="d-courtname"><span id="d-courtname-label">コートネーム</span></label>
+      <p class="error" id="d-courtname-error" hidden></p>
+      <input class="input" id="d-courtname" type="text" maxlength="30" autocomplete="off">
+    </div>
+    <div class="field" id="dfield-grade">
+      <label class="label" for="d-grade">学年</label>
+      <p class="error" id="d-grade-error" hidden></p>
+      <select class="select" id="d-grade"><option value="">未入力</option></select>
+    </div>
+    <div class="field" id="dfield-counts" role="group" aria-labelledby="d-counts-label">
+      <p class="label" id="d-counts-label">チケットの枚数 <span class="tag tag-req">必須</span></p>
+      <p class="error" id="d-counts-error" hidden></p>
+      <div id="d-grid"></div>
+      <p class="dlg-sum" id="d-sum" aria-live="polite"></p>
+    </div>
+    <div class="field">
+      <label class="label" for="d-memo">役員メモ <span class="tag tag-opt">任意</span></label>
+      <p class="hint">ご家庭には見えません（例：LINEで受付・お釣りあり）</p>
+      <textarea class="input" id="d-memo" maxlength="200"></textarea>
+    </div>
+    <p class="send-error" id="dlg-error" role="alert" hidden></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="dlg-close">やめる</button>
+      <button type="submit" class="btn btn-dark" id="dlg-save">保存する</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 取り消し・記録を外すときの確認 -->
+<dialog id="ask" class="ask" aria-labelledby="ask-title" aria-describedby="ask-body">
+  <div class="dialog-body">
+    <div class="ask-head">
+      <span class="ask-mark" aria-hidden="true">!</span>
+      <h2 class="card-title" id="ask-title">取り消しますか？</h2>
+    </div>
+    <div class="ask-target" id="ask-target"></div>
+    <p class="ask-body" id="ask-body"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="ask-no">やめる</button>
+      <button type="button" class="btn btn-danger" id="ask-yes">取り消す</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 集計表 PDF のプレビュー（まず画面で見て、よければ保存） -->
+<dialog id="pv" class="pv" aria-labelledby="pv-title">
+  <div class="pv-head">
+    <div>
+      <h2 class="card-title" id="pv-title">集計表（PDF）</h2>
+      <p class="pv-meta" id="pv-meta"></p>
+    </div>
+    <button type="button" class="pv-x" id="pv-x" aria-label="閉じる">×</button>
+  </div>
+  <div class="pv-pages" id="pv-pages"></div>
+  <div class="pv-foot">
+    <p class="pv-hint" id="pv-hint"></p>
+    <div class="pv-actions">
+      <button type="button" class="btn btn-ghost" id="pv-close">閉じる</button>
+      <button type="button" class="btn btn-dark" id="pv-save">PDFを保存</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-text"></span><button type="button" id="toast-btn" hidden>元に戻す</button></div>
+
+<script src="js/config.js?v=20261106d"></script>
+<script src="js/api.js?v=20261106d"></script>
+<script src="js/pdf.js?v=20261106d"></script>
+<script src="js/admin.js?v=20261106d"></script>
+</body>
+</html>

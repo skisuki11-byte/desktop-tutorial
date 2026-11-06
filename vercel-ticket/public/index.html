@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>春高チケット申し込み</title>
+<meta name="description" content="春高バレー 応援チケットの申し込みフォーム">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ffffff'/%3E%3Crect x='6' y='18' width='52' height='28' rx='4' fill='%23ffc52e'/%3E%3Ccircle cx='6' cy='32' r='5' fill='%23ffffff'/%3E%3Ccircle cx='58' cy='32' r='5' fill='%23ffffff'/%3E%3Cpath d='M44 21v22' stroke='%2312235a' stroke-width='2' stroke-dasharray='3 3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<!-- 見出しの太字は、使う文字だけを読み込む（日本語フォント全体を落とさない） -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap&text=%E3%80%81%E3%81%97%E3%81%BF%E3%82%A1%E3%82%A4%E3%82%B1%E3%83%81%E3%83%83%E3%83%88%E3%83%95%E5%A4%A7%E5%B0%82%E6%97%A5%E6%98%A5%E7%94%A8%E7%94%B3%E8%BE%BC%E9%AB%98%EF%BC%81">
+<link rel="stylesheet" href="css/style.css?v=20261106d">
+</head>
+<body class="page-form">
+
+<div class="demo-bar" id="demo-bar" hidden>
+  <div class="wrap"><b>デモ表示</b>：入力はこの端末にだけ保存されます</div>
+</div>
+
+<!-- 見出し：全国大会の熱さ（極太の「春高」・ボール・スピード帯・ネット目）と「部の専用ページ」 -->
+<header class="hero">
+  <div class="hero-net" aria-hidden="true"></div>
+  <div class="hero-stripe" aria-hidden="true"></div>
+  <div class="hero-stripe2" aria-hidden="true"></div>
+  <div class="hero-inner wrap">
+    <p class="hero-kicker num">NATIONAL CHAMPIONSHIP · 2027.1.4–1.6</p>
+    <div class="hero-title">
+      <h1 class="hero-haruko">春高<span class="visually-hidden">チケット申し込み</span></h1>
+      <svg class="hero-ball" aria-hidden="true" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21.5" fill="#FFC52E" stroke="#12235A" stroke-width="3"/><path d="M24 2.5c-7 8-7 18 0 21.5M24 24c9.5 3 17.5-.5 21.5-7M24 24c-3.5 9.5-.5 17 6.5 21.5" fill="none" stroke="#12235A" stroke-width="3" stroke-linecap="round"/></svg>
+      <p class="hero-sub" aria-hidden="true">チケット<br>申し込み</p>
+    </div>
+    <p class="team-badge" id="team-line"><span class="team-name"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1l2 4.3 4.7.6-3.4 3.3.9 4.7L8 11.6 3.8 13.9l.9-4.7L1.3 5.9 6 5.3z" fill="#FFC52E"/></svg><span id="team-name">土浦日大 女子バレーボール部</span></span><span class="team-only">専用</span></p>
+    <p class="band-meta" id="band-meta" hidden></p>
+  </div>
+</header>
+
+<main class="wrap main" id="main">
+
+  <!-- いまどの段階か（入力 → 確認 → 完了） -->
+  <ol class="steps" id="steps" aria-label="申し込みの流れ">
+    <li data-step="input" aria-current="step"><span class="num">1</span>入力</li>
+    <li data-step="confirm"><span class="num">2</span>確認</li>
+    <li data-step="done"><span class="num">3</span>完了</li>
+  </ol>
+
+  <!-- 閉じたあと（タブを閉じられないブラウザでは、この画面で終わりにする） -->
+  <section class="card finished" id="finished" hidden tabindex="-1" aria-labelledby="finished-title">
+    <h2 class="card-title" id="finished-title">お申し込みありがとうございました</h2>
+    <p class="lead">このページは閉じてかまいません。</p>
+  </section>
+
+  <!-- この端末から申し込んだ分（修正・取り消しの入り口） -->
+  <section class="card mine" id="mine" hidden aria-labelledby="mine-title">
+    <div class="form-head">
+      <h2 class="card-title" id="mine-title">申し込み済みです</h2>
+      <p class="lead" id="mine-lead">内容を直したいときは「修正・取り消し」を押してください。</p>
+    </div>
+    <ul class="mine-list" id="mine-list"></ul>
+    <button type="button" class="btn btn-ghost btn-block" id="mine-new" hidden>別のお名前でも申し込む</button>
+  </section>
+
+  <!-- 受付終了 -->
+  <section class="card closed" id="closed" hidden>
+    <h2 class="card-title">受付は終了しました</h2>
+    <p class="lead" id="closed-lead">たくさんのお申し込み、ありがとうございました。今回は1回限りの取りまとめのため、追加の注文はできません。</p>
+    <p class="note" id="closed-date" hidden></p>
+  </section>
+
+  <!-- 1. 入力 -->
+  <form class="card form form-compact" id="form" novalidate>
+    <h2 class="visually-hidden" id="form-title">申し込み内容の入力</h2>
+    <p class="edit-title" id="edit-title" hidden></p>
+
+    <!-- 注意事項：いちばん間違えやすい2つを先に。全文は開いて読める（申し込む前の確認画面にも全部出す） -->
+    <details class="notes" id="notes">
+      <summary>
+        <span class="notes-mark" aria-hidden="true">!</span>
+        <span class="notes-head"><b id="notes-headline">部員の分は入れないでください。</b><small>注意事項をすべて見る</small></span>
+      </summary>
+      <ul class="notes-list" id="notes-list"></ul>
+    </details>
+
+    <div class="error-summary" id="error-summary" role="alert" tabindex="-1" hidden>
+      <p class="error-summary-title">入力内容を確認してください</p>
+      <ul id="error-list"></ul>
+    </div>
+
+    <div class="name-row">
+      <div class="field" id="field-name">
+        <label class="label" for="name">お名前（生徒名） <span class="tag tag-req">必須</span></label>
+        <p class="error" id="name-error" hidden></p>
+        <input class="input" id="name" name="name" type="text" autocomplete="off" maxlength="40" enterkeyhint="next" placeholder="例：山田 花子" aria-describedby="name-error">
+      </div>
+      <div class="field" id="field-courtname">
+        <label class="label" for="courtname"><span id="courtname-label">コートネーム</span> <span class="tag tag-opt" id="courtname-tag">任意</span></label>
+        <p class="error" id="courtname-error" hidden></p>
+        <input class="input" id="courtname" name="courtname" type="text" autocomplete="off" maxlength="30" enterkeyhint="done" placeholder="例：ニコ" aria-describedby="courtname-hint courtname-error">
+      </div>
+      <p class="hint name-row-hint" id="courtname-hint">コートネームは選手のコートネームです</p>
+    </div>
+
+    <!-- 学年：3つのうち1つを押して選ぶ（打たなくてよい） -->
+    <div class="field grade-field" id="field-grade" role="radiogroup" aria-labelledby="grade-label" aria-describedby="grade-error">
+      <p class="label" id="grade-label">学年 <span class="tag tag-req">必須</span></p>
+      <div class="seg" id="grade-seg"></div>
+      <p class="error" id="grade-error" hidden></p>
+    </div>
+
+    <div class="field" id="field-counts" role="group" aria-labelledby="counts-label">
+      <div class="label-row">
+        <p class="label" id="counts-label">チケットの枚数 <span class="tag tag-req">必須</span></p>
+        <p class="hint" id="counts-hint">部員の分はのぞく</p>
+      </div>
+      <p class="error" id="counts-error" hidden></p>
+      <div id="grid"></div>
+    </div>
+    <span id="counts" tabindex="-1"></span>
+
+    <!-- 合計（その場で更新） -->
+    <div class="sum-bar" id="sum-bar" aria-live="polite">
+      <span>合計</span>
+      <span class="sum-count"><b class="num" id="sum-count">0</b>枚</span>
+      <span class="sum-yen num" id="sum-yen">¥0</span>
+    </div>
+
+    <div class="hp" aria-hidden="true">
+      <label for="website">この欄は空のままにしてください</label>
+      <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn btn-primary btn-block" id="to-confirm">確認する →</button>
+      <button type="button" class="btn btn-ghost btn-block" id="cancel-edit" hidden>修正をやめる</button>
+    </div>
+    <p class="note note-center" id="form-note">まだ送信されません。次の画面で内容を確かめます</p>
+
+    <div class="danger-zone" id="danger-zone" hidden>
+      <button type="button" class="btn-text-danger" id="withdraw">この申し込みを取り消す</button>
+      <div class="confirm" id="withdraw-confirm" hidden>
+        <p>取り消すと、役員の集計から外れます。取り消してよろしいですか？</p>
+        <div class="confirm-actions">
+          <button type="button" class="btn btn-danger" id="withdraw-yes">取り消す</button>
+          <button type="button" class="btn btn-ghost" id="withdraw-no">やめる</button>
+        </div>
+      </div>
+      <p class="send-error" id="withdraw-error" role="alert" hidden></p>
+    </div>
+  </form>
+
+  <!-- 2. 確認 と 3. 完了（同じカードで、名前と枚数・金額をいちばん大きく見せる） -->
+  <section class="card result" id="result" hidden tabindex="-1" aria-labelledby="result-title">
+    <div class="result-head">
+      <div class="result-mark is-confirm" id="mark-confirm" aria-hidden="true">
+        <svg viewBox="0 0 40 40" fill="none"><rect x="10" y="8" width="20" height="25" rx="3" stroke="currentColor" stroke-width="3.2"/><path d="M15 16h10M15 22h10M15 28h6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="result-mark is-done" id="mark-done" aria-hidden="true" hidden>
+        <svg viewBox="0 0 40 40" fill="none"><path d="M10 21l7 7 14-15" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <h2 class="result-title" id="result-title">申し込み内容</h2>
+        <p class="result-sub" id="result-sub">まだ申し込みは終わっていません</p>
+      </div>
+    </div>
+
+    <div class="ticket" id="ticket">
+      <div class="ticket-strip"><span class="num">ADMISSION · 2027</span><span>応援チケット</span></div>
+      <div class="ticket-body">
+      <p class="ticket-label">お名前（生徒名）</p>
+      <p class="ticket-name"><span id="t-name"></span><small>さん</small></p>
+      <p class="ticket-code" id="t-code-row"><b class="ticket-grade" id="t-grade"></b><span id="t-court"><span id="t-code-label">コートネーム</span>　<b id="t-code"></b></span></p>
+      <table class="ticket-table" id="t-table">
+        <thead><tr id="t-head"></tr></thead>
+        <tbody id="t-body"></tbody>
+      </table>
+      </div>
+      <div class="ticket-total">
+        <p><span class="ticket-label">合計</span><span class="num" id="t-count">0</span><span class="unit">枚</span></p>
+        <p class="ticket-amount num" id="t-yen">¥0</p>
+      </div>
+      <div class="ticket-foot" id="t-foot" hidden>
+        <span>受付番号 <b class="num" id="t-no">No.000</b></span>
+        <span id="t-at"></span>
+      </div>
+    </div>
+
+    <!-- 申し込む前に読んでもらう注意事項（GOV.UK の「申し込む前の確認事項」の型） -->
+    <div class="declare" id="declare">
+      <p class="declare-title">申し込む前に、ご確認ください</p>
+      <ul class="notes-list" id="declare-list"></ul>
+    </div>
+
+    <p class="send-error" id="send-error" role="alert" hidden></p>
+
+    <!-- 確認のとき -->
+    <div class="pair-actions sticky-actions" id="confirm-actions">
+      <button type="button" class="btn btn-edit" id="confirm-back">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="22" height="22"><path d="M4 20h4L19 9l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2.2"/></svg>
+        修正する
+      </button>
+      <button type="button" class="btn btn-primary" id="confirm-send">申し込む</button>
+    </div>
+
+    <!-- 完了のとき -->
+    <div class="pair-actions" id="done-actions" hidden>
+      <button type="button" class="btn btn-edit" id="done-edit">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="22" height="22"><path d="M4 20h4L19 9l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2.2"/></svg>
+        <span id="done-edit-label">修正する</span>
+      </button>
+      <button type="button" class="btn btn-close" id="done-close">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="22" height="22"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+        閉じる
+      </button>
+    </div>
+
+    <p class="note note-center" id="result-note"></p>
+    <p class="cheer" id="cheer" hidden>日大、ファイト！</p>
+    <button type="button" class="btn btn-text" id="done-new" hidden>別のお名前でも申し込む</button>
+  </section>
+
+  <!-- ご案内（受け取り・支払い。締切は見出しに出す） -->
+  <dl class="info" id="info" hidden></dl>
+</main>
+
+<footer class="foot wrap" id="foot" hidden>
+  <p id="contact"></p>
+</footer>
+
+<script src="js/config.js?v=20261106d"></script>
+<script src="js/api.js?v=20261106d"></script>
+<script src="js/form.js?v=20261106d"></script>
+</body>
+</html>
