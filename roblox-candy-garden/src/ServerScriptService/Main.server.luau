@@ -1,0 +1,198 @@
+-- 起動。マップ生成 → Remote待ち受け → 参加者ごとにデータ読込・庭の割り当て。
+local Players = game:GetService("Players")
+
+local StarterPlayer = game:GetService("StarterPlayer")
+
+local Services = script.Parent.Services
+local Data = require(Services.Data)
+local World = require(Services.World)
+local Garden = require(Services.Garden)
+local Shop = require(Services.Shop)
+local RateLimit = require(Services.RateLimit)
+local Pals = require(Services.Pals)
+local Weather = require(Services.Weather)
+local Tree = require(Services.Tree)
+local Monetization = require(Services.Monetization)
+local Cosmetics = require(Services.Cosmetics)
+local Daily = require(Services.Daily)
+local Codes = require(Services.Codes)
+local Season = require(Services.Season)
+local LimitedShop = require(Services.LimitedShop)
+local Quests = require(Services.Quests)
+local Trade = require(Services.Trade)
+local Visit = require(Services.Visit)
+local Decor = require(Services.Decor)
+local Friends = require(Services.Friends)
+local Gloom = require(Services.Gloom)
+local Rush = require(Services.Rush)
+local Funnel = require(Services.Funnel)
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
+local Remotes = require(game:GetService("ReplicatedStorage").Shared.Remotes)
+
+-- データ読込と庭の準備が終わってからキャラクターを出す
+Players.CharacterAutoLoads = false
+
+World.build(Garden.interact)
+Tree.build()
+Shop.init()
+Pals.init()
+Monetization.init()
+-- みんなの木に おうえん: そのサーバーの 全員の作物が ぐんと育つ。だれが おうえんしたか みんなに知らせる
+Monetization.onProduct("treeCheer", function(player)
+	Garden.boostAll(Config.Products.treeCheer.speedUp)
+	Remotes.Toast:FireAllClients("toast.treeCheer", player.DisplayName)
+end)
+Cosmetics.init()
+Daily.init()
+Codes.init()
+Season.init()
+LimitedShop.init()
+Quests.init()
+Trade.init()
+Visit.init()
+Decor.init()
+Friends.init()
+Gloom.init()
+Garden.onExpanded = Decor.render
+Weather.start()
+Rush.start()
+
+Remotes.Teleport.OnServerEvent:Connect(function(player, dest)
+	if (dest == "home" or dest == "tree") and RateLimit.ok(player, "teleport", 1.5) then
+		World.teleport(player, dest)
+	end
+end)
+-- BGMのオン/オフ。保存して、次に来たときも同じにする
+-- あたらしい遊びの おしらせを 見た（Config.NewThings の key だけ受け付ける）
+Remotes.MarkSeen.OnServerEvent:Connect(function(player, key)
+	local d = Data.get(player)
+	local version = type(key) == "string" and Config.NewThings[key]
+	if d and version and RateLimit.ok(player, "seen_" .. key, 0.2) then -- 項目ごと（いっしょに送られても 落とさない）
+		d.seen = d.seen or {}
+		if d.seen[key] ~= version then
+			d.seen[key] = version
+			Data.push(player)
+			Data.saveSoon(player)
+		end
+	end
+end)
+Remotes.SetMusic.OnServerEvent:Connect(function(player, on)
+	local d = Data.get(player)
+	if d and type(on) == "boolean" and RateLimit.ok(player, "music", 0.5) then
+		d.music = on
+		Data.saveSoon(player)
+	end
+end)
+-- じょうろ: ひろばのふんすいで水をくむ / どうぐ屋で大きくする
+World.pumpPrompt().Triggered:Connect(Garden.refill)
+Remotes.UpgradeCan.OnServerEvent:Connect(Garden.upgradeCan)
+Remotes.BuyFertilizer.OnServerEvent:Connect(Garden.buyFertilizer)
+Remotes.SelectTool.OnServerEvent:Connect(Garden.selectTool)
+Remotes.BuyDrop.OnServerEvent:Connect(Garden.buyDrop)
+Remotes.ExpandPlot.OnServerEvent:Connect(Garden.expand)
+Garden.startGrowthLoop()
+Data.startAutoSave()
+
+-- 最初に生まれるキャラクターにも同じ速さを使う
+StarterPlayer.CharacterWalkSpeed = Config.WalkSpeed
+StarterPlayer.CharacterUseJumpPower = false
+StarterPlayer.CharacterJumpHeight = Config.JumpHeight
+-- スマホの移動は、いつも左下に見えている固定のスティック（どこを触ればよいか、子供にも分かる）
+StarterPlayer.DevTouchMovementMode = Enum.DevTouchMovementMode.Thumbstick
+-- スマホの「ぶつかると自動でジャンプ」はオフ。柵などは、自分でジャンプボタンを押して越える
+StarterPlayer.AutoJumpEnabled = false
+
+local function spawnCharacter(player: Player)
+	if player.Parent == Players then
+		player:LoadCharacter()
+	end
+end
+
+local function onPlayerAdded(player: Player)
+	Data.load(player)
+	if player.Parent ~= Players then
+		-- 読みこみの 待ち時間に ぬけた人。PlayerRemoving は もう 終わっているので、ここで 鍵を はずして 片づける
+		-- （そのままだと 鍵が 残って、すぐ 入りなおすと 最大30秒 待たされる）
+		Data.release(player)
+		return
+	end
+
+	local plotIndex = World.claim(player)
+	if not plotIndex then
+		-- 満員（庭は Config.MaxPlots 人分）。庭が ないまま 遊ばせない（入り直すと 空いているサーバーに 入れる）。
+		-- ふつうは 最大人数（Max Players）を 庭の数と そろえておくので 起きないが、念のため。
+		-- （同じ場所への テレポートは、また この満員のサーバーに 戻されることがあるので 使わない）
+		warn("[Main] 空いている庭がありません: " .. player.Name)
+		player:Kick("いまは まんいんです。もういちど 入ってね / This server is full. Please join again.")
+		return
+	end
+	Monetization.load(player)
+	if player.Parent ~= Players then
+		return -- パスの 確認を 待つあいだに ぬけた（片づけは PlayerRemoving で 済んでいる）
+	end
+	Funnel.step(player, "Joined")
+	Season.sync(player) -- シーズンの切り替えと、取りこぼしの受け取り
+	Garden.attach(player)
+	Decor.render(player) -- 庭の飾りと、名札のランク
+	Friends.onPlayerReady(player) -- やくそくの鉢（と、友だちが水をあげていたら さかせる）
+	Pals.refreshAttribute(player)
+	Cosmetics.track(player)
+
+	player.CharacterAdded:Connect(function(character)
+		local humanoid = character:WaitForChild("Humanoid") :: Humanoid
+		-- 軽快に歩けるように（Config.WalkSpeed / JumpHeight）
+		humanoid.WalkSpeed = Config.WalkSpeed
+		humanoid.UseJumpPower = false
+		humanoid.JumpHeight = Config.JumpHeight
+		humanoid.AutoJumpEnabled = false
+		humanoid.Died:Connect(function()
+			task.wait(3)
+			spawnCharacter(player)
+		end)
+	end)
+
+	Data.push(player)
+	spawnCharacter(player)
+	Tree.onPlayerReady(player) -- ほしぞらの木なら、おくりもの（1回だけ）
+
+	-- おかえりメッセージ: しばらくぶりに来た人に「いない間に ○こ 実ったよ」を見せる（翌日また来る理由）
+	-- （初めての人のチュートリアル中は出さない）
+	local d = Data.get(player)
+	if d and d.tutorialDone and Data.awaySeconds(player) >= Config.WelcomeBackSeconds then
+		Remotes.WelcomeBack:FireClient(player, Garden.readyCount(player))
+	end
+end
+
+local function onPlayerRemoving(player: Player)
+	Decor.clear(player)
+	Friends.clear(player)
+	Data.release(player)
+	World.release(player)
+	Monetization.release(player)
+	Codes.release(player)
+	RateLimit.clear(player)
+end
+
+Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerRemoving:Connect(onPlayerRemoving)
+for _, player in Players:GetPlayers() do
+	task.spawn(onPlayerAdded, player)
+end
+
+game:BindToClose(function()
+	-- サーバーが閉じるときは、全員ぶんを いっしょに保存する（1人ずつだと 時間切れになることがある）
+	local left = 0
+	for _, player in Players:GetPlayers() do
+		left += 1
+		task.spawn(function()
+			Data.save(player, true, true) -- サーバーが 閉じるので 鍵も はずす
+			left -= 1
+		end)
+	end
+	local deadline = os.clock() + 25
+	while left > 0 and os.clock() < deadline do
+		task.wait(0.2)
+	end
+	-- 先に ぬけた人の 保存（PlayerRemoving）が まだ 書きこみ中なら、それも 待つ（待たないと データが 消える）
+	Data.waitForSaves(deadline)
+end)
